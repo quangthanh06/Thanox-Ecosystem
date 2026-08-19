@@ -131,8 +131,15 @@ export default function App() {
             />
           </Route>
 
-          {/* Admin Experience (/qtri) */}
-          <Route path="/qtri" element={<AdminLayout />}>
+          {/* Admin Experience (/qtri) - Protected for Admin role only */}
+          <Route
+            path="/qtri"
+            element={
+              <ProtectedRoute requireAdmin={true}>
+                <AdminLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<DashboardView />} />
             <Route path="dashboard" element={<DashboardView />} />
             <Route path="analytics" element={<AnalyticsView />} />
@@ -146,6 +153,10 @@ export default function App() {
             <Route path="support" element={<SupportView />} />
             <Route path="settings" element={<SettingsView />} />
           </Route>
+
+          {/* Alias /admin to /qtri */}
+          <Route path="/admin" element={<Navigate to="/qtri" replace />} />
+          <Route path="/admin/*" element={<Navigate to="/qtri" replace />} />
 
           {/* 404 Catch-All */}
           <Route path="*" element={<NotFoundPage />} />
