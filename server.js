@@ -225,9 +225,64 @@ const getInitialDB = () => {
       cardSettings: {
         enabled: true,
         feePercentage: 15,
+        userReceiveRate: 85,
+        wrongAmountAction: 'real_amount',
+        maxPerUserPerMinute: 10,
+        maxPerUserPerDay: 100,
         allowedNetworks: ['Viettel', 'Vinaphone', 'Mobifone', 'Vietnamobile', 'Zing', 'Garena'],
         minAmount: 10000,
-        maxAmount: 1000000
+        maxAmount: 1000000,
+        networkMatrix: {
+          'GARENA': [
+            { amount: 10000, receiveAmount: 8500, feePercent: 15.0, enabled: true },
+            { amount: 20000, receiveAmount: 17000, feePercent: 15.0, enabled: true },
+            { amount: 50000, receiveAmount: 42000, feePercent: 16.0, enabled: true },
+            { amount: 100000, receiveAmount: 85000, feePercent: 15.0, enabled: true },
+            { amount: 200000, receiveAmount: 170000, feePercent: 15.0, enabled: true },
+            { amount: 500000, receiveAmount: 425000, feePercent: 15.0, enabled: true }
+          ],
+          'MOBIFONE': [
+            { amount: 10000, receiveAmount: 7900, feePercent: 21.0, enabled: true },
+            { amount: 20000, receiveAmount: 15800, feePercent: 21.0, enabled: true },
+            { amount: 50000, receiveAmount: 39750, feePercent: 20.5, enabled: true },
+            { amount: 100000, receiveAmount: 79500, feePercent: 20.5, enabled: true },
+            { amount: 200000, receiveAmount: 162000, feePercent: 19.0, enabled: true },
+            { amount: 500000, receiveAmount: 405000, feePercent: 19.0, enabled: true }
+          ],
+          'VIETTEL': [
+            { amount: 10000, receiveAmount: 7300, feePercent: 27.0, enabled: true },
+            { amount: 20000, receiveAmount: 14800, feePercent: 26.0, enabled: true },
+            { amount: 50000, receiveAmount: 38000, feePercent: 24.0, enabled: true },
+            { amount: 100000, receiveAmount: 78000, feePercent: 22.0, enabled: true },
+            { amount: 200000, receiveAmount: 155000, feePercent: 22.5, enabled: true },
+            { amount: 500000, receiveAmount: 385000, feePercent: 23.0, enabled: true },
+            { amount: 1000000, receiveAmount: 770000, feePercent: 23.0, enabled: true }
+          ],
+          'VINAPHONE': [
+            { amount: 10000, receiveAmount: 8300, feePercent: 17.0, enabled: true },
+            { amount: 20000, receiveAmount: 16500, feePercent: 17.5, enabled: true },
+            { amount: 50000, receiveAmount: 42500, feePercent: 15.0, enabled: true },
+            { amount: 100000, receiveAmount: 86000, feePercent: 14.0, enabled: true },
+            { amount: 200000, receiveAmount: 175000, feePercent: 12.5, enabled: true },
+            { amount: 500000, receiveAmount: 440000, feePercent: 12.0, enabled: true }
+          ],
+          'ZING': [
+            { amount: 10000, receiveAmount: 8500, feePercent: 15.0, enabled: true },
+            { amount: 20000, receiveAmount: 17000, feePercent: 15.0, enabled: true },
+            { amount: 50000, receiveAmount: 42500, feePercent: 15.0, enabled: true },
+            { amount: 100000, receiveAmount: 85000, feePercent: 15.0, enabled: true },
+            { amount: 200000, receiveAmount: 170000, feePercent: 15.0, enabled: true },
+            { amount: 500000, receiveAmount: 425000, feePercent: 15.0, enabled: true }
+          ],
+          'VIETNAMOBILE': [
+            { amount: 10000, receiveAmount: 8000, feePercent: 20.0, enabled: true },
+            { amount: 20000, receiveAmount: 16000, feePercent: 20.0, enabled: true },
+            { amount: 50000, receiveAmount: 40000, feePercent: 20.0, enabled: true },
+            { amount: 100000, receiveAmount: 80000, feePercent: 20.0, enabled: true },
+            { amount: 200000, receiveAmount: 160000, feePercent: 20.0, enabled: true },
+            { amount: 500000, receiveAmount: 400000, feePercent: 20.0, enabled: true }
+          ]
+        }
       }
     }
   };

@@ -225,6 +225,26 @@ export interface MusicTrack {
   autoPlay?: boolean;
 }
 
+export interface CardDenominationConfig {
+  amount: number;
+  receiveAmount: number;
+  feePercent: number;
+  enabled: boolean;
+}
+
+export interface CardSettings {
+  enabled: boolean;
+  feePercentage: number;
+  userReceiveRate?: number;
+  wrongAmountAction?: string;
+  maxPerUserPerMinute?: number;
+  maxPerUserPerDay?: number;
+  networkMatrix?: Record<string, CardDenominationConfig[]>;
+  allowedNetworks?: string[];
+  minAmount?: number;
+  maxAmount?: number;
+}
+
 export interface StoreEffects {
   glassEffect: boolean;
   avatarFrame: boolean;

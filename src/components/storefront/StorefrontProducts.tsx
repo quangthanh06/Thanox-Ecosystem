@@ -13,6 +13,7 @@ import {
   Layers,
   Flame,
   CheckCircle2,
+  ChevronDown,
 } from 'lucide-react';
 
 export const StorefrontProducts: React.FC = () => {
@@ -29,6 +30,16 @@ export const StorefrontProducts: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'sold'>('featured');
+  const [isSortOpen, setIsSortOpen] = useState<boolean>(false);
+
+  const SORT_OPTIONS = [
+    { value: 'featured', label: 'Nổi bật', icon: '✨' },
+    { value: 'sold', label: 'Bán chạy', icon: '🔥' },
+    { value: 'price-asc', label: 'Giá thấp → cao', icon: '💵' },
+    { value: 'price-desc', label: 'Giá cao → thấp', icon: '💎' },
+  ];
+
+  const currentSortOption = SORT_OPTIONS.find((s) => s.value === sortBy) || SORT_OPTIONS[0];
 
   const activeProducts = products.filter((p) => p.status !== 'hidden');
 
@@ -43,7 +54,7 @@ export const StorefrontProducts: React.FC = () => {
     .sort((a, b) => {
       if (sortBy === 'price-asc') return a.price - b.price;
       if (sortBy === 'price-desc') return b.price - a.price;
-      if (sortBy === 'sold') return b.soldCount - a.soldCount;
+      if (sortBy === 'sold') return (b.soldCount || 0) - (a.soldCount || 0);
       return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
     });
 
@@ -93,16 +104,44 @@ export const StorefrontProducts: React.FC = () => {
               />
             </div>
 
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-[#0F0F1A] border border-white/10 rounded-xl px-2.5 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
-            >
-              <option value="featured">✨ Nổi bật</option>
-              <option value="sold">🔥 Bán chạy</option>
-              <option value="price-asc">💵 Giá thấp &rarr; cao</option>
-              <option value="price-desc">💎 Giá cao &rarr; thấp</option>
-            </select>
+            {/* Custom Cyberpunk Styled Sort Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsSortOpen(!isSortOpen)}
+                className="flex items-center gap-2 bg-[#0F0F1A] border border-white/10 hover:border-[#7C3AED]/60 rounded-xl px-3 py-2 text-xs font-bold text-[#F0EDFF] transition-all cursor-pointer shadow-md shadow-black/20"
+              >
+                <span>{currentSortOption.icon}</span>
+                <span className="whitespace-nowrap">{currentSortOption.label}</span>
+                <ChevronDown className={`w-3.5 h-3.5 text-[#8B84A8] transition-transform ${isSortOpen ? 'rotate-180 text-[#9D5CF6]' : ''}`} />
+              </button>
+
+              {isSortOpen && (
+                <>
+                  <div className="fixed inset-0 z-20" onClick={() => setIsSortOpen(false)} />
+                  <div className="absolute right-0 mt-1.5 w-44 bg-[#0F0F1A]/95 backdrop-blur-xl border border-[#7C3AED]/40 rounded-2xl p-1.5 shadow-[0_10px_35px_rgba(124,58,237,0.35)] z-30 space-y-1 animate-in fade-in zoom-in-95 duration-150">
+                    {SORT_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                          setSortBy(opt.value as any);
+                          setIsSortOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                          sortBy === opt.value
+                            ? 'bg-[#7C3AED] text-white shadow-md shadow-[#7C3AED]/30'
+                            : 'text-[#CBC7E0] hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        <span>{opt.icon}</span>
+                        <span>{opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

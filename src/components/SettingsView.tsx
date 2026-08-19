@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { StoreSettings } from '../types';
+import { DEFAULT_CARD_MATRIX } from '../data/mockData';
 import { Card, CardHeader } from './ui/Card';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
@@ -32,6 +33,7 @@ import {
   FileAudio,
   Check,
   CheckCircle2,
+  Layers,
 } from 'lucide-react';
 
 export const SettingsView: React.FC = () => {
@@ -502,117 +504,296 @@ export const SettingsView: React.FC = () => {
                 </p>
               </Card>
 
-              {/* Card Recharge Configuration */}
-              <Card className="p-5 space-y-4" variant="default">
-                <CardHeader
-                  title="Nạp Thẻ Cào Tự Động & Tỷ Lệ Thực Nhận"
-                  subtitle="Cấu hình % chiết khấu và số tiền User thực nhận vào ví khi nạp thẻ"
-                  icon={<CreditCard className="w-4 h-4 text-[#06B6D4]" />}
-                />
-                <label className="flex items-center justify-between p-3 rounded-2xl bg-[#161626] border border-white/5 cursor-pointer text-xs">
-                  <div>
-                    <div className="font-semibold text-[#F0EDFF]">Bật Cổng Nạp Thẻ Cào</div>
-                    <div className="text-[10.5px] text-[#6B658E]">Cho phép khách hàng nạp ví qua thẻ Viettel, Vina, Mobi, Zing, Garena</div>
+              {/* Card Recharge Configuration Matrix (Images 3, 4, 5) */}
+              <div className="space-y-6">
+                {/* 1. Kênh nạp thẻ cào */}
+                <Card className="p-5 space-y-4" variant="default">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-[#06B6D4]" />
+                      <h3 className="font-display font-extrabold text-sm text-[#F0EDFF]">💳 Kênh nạp thẻ cào</h3>
+                    </div>
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={formData.scratchCardEnabled}
-                    onChange={(e) => setFormData({ ...formData, scratchCardEnabled: e.target.checked })}
-                    className="rounded bg-[#0F0F1A] border-white/10 text-[#7C3AED] focus:ring-0 w-4 h-4 cursor-pointer"
-                  />
-                </label>
 
-                {formData.scratchCardEnabled && (
-                  <div className="space-y-4 text-xs pt-1">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
-                          Phí Chiết Khấu Hệ Thống (%)
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            min={0}
-                            max={50}
-                            value={formData.cardSettings?.feePercentage ?? 15}
-                            onChange={(e) => {
-                              const fee = Number(e.target.value);
-                              setFormData({
-                                ...formData,
-                                cardSettings: {
-                                  ...(formData.cardSettings || {
-                                    enabled: true,
-                                    feePercentage: 15,
-                                    userReceiveRate: 85,
-                                    minAmount: 10000,
-                                    maxAmount: 1000000,
-                                    allowedNetworks: ['Viettel', 'Vinaphone', 'Mobifone', 'Vietnamobile', 'Zing', 'Garena'],
-                                  }),
-                                  feePercentage: fee,
-                                  userReceiveRate: 100 - fee,
-                                },
-                              });
-                            }}
-                            className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-amber-400 font-bold focus:outline-none focus:border-[#7C3AED]"
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-amber-400">%</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                    {/* Bật toàn bộ kênh thẻ */}
+                    <div className="p-3 rounded-2xl bg-[#161626] border border-white/5 flex items-center justify-between">
+                      <span className="font-semibold text-[#F0EDFF]">Bật toàn bộ kênh thẻ</span>
+                      <input
+                        type="checkbox"
+                        checked={formData.scratchCardEnabled}
+                        onChange={(e) => setFormData({ ...formData, scratchCardEnabled: e.target.checked })}
+                        className="rounded bg-[#0F0F1A] border-white/10 text-[#7C3AED] focus:ring-0 w-4 h-4 cursor-pointer"
+                      />
+                    </div>
+
+                    {/* Thẻ sai mệnh giá */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-[#8B84A8] tracking-wider">
+                        THẺ SAI MỆNH GIÁ
+                      </label>
+                      <select
+                        value={formData.cardSettings?.wrongAmountAction || 'real_amount'}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            cardSettings: {
+                              ...(formData.cardSettings || {}),
+                              wrongAmountAction: e.target.value,
+                            },
+                          })
+                        }
+                        className="w-full bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
+                      >
+                        <option value="real_amount">Cộng theo mệnh giá thật nhà mạng</option>
+                        <option value="penalty_50">Phạt 50% mệnh giá thực tế</option>
+                        <option value="reject">Không cộng tiền (Từ chối thẻ)</option>
+                      </select>
+                    </div>
+
+                    {/* Tối đa / người / phút */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-[#8B84A8] tracking-wider">
+                        TỐI ĐA / NGƯỜI / PHÚT
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={formData.cardSettings?.maxPerUserPerMinute || 10}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            cardSettings: {
+                              ...(formData.cardSettings || {}),
+                              maxPerUserPerMinute: Number(e.target.value),
+                            },
+                          })
+                        }
+                        className="w-full bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                      />
+                    </div>
+
+                    {/* Tối đa / người / ngày */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-[#8B84A8] tracking-wider">
+                        TỐI ĐA / NGƯỜI / NGÀY
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={1000}
+                        value={formData.cardSettings?.maxPerUserPerDay || 100}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            cardSettings: {
+                              ...(formData.cardSettings || {}),
+                              maxPerUserPerDay: Number(e.target.value),
+                            },
+                          })
+                        }
+                        className="w-full bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={handleSave}
+                      leftIcon={<Save className="w-3.5 h-3.5" />}
+                      className="w-full sm:w-auto font-bold shadow-lg shadow-[#7C3AED]/20"
+                    >
+                      💾 Lưu cài đặt kênh thẻ
+                    </Button>
+                  </div>
+                </Card>
+
+                {/* 2. Bảng phí thẻ (Matrix Table) */}
+                <Card className="p-5 space-y-6" variant="default">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-amber-400" />
+                      <div>
+                        <h3 className="font-display font-extrabold text-sm text-[#F0EDFF]">📜 Bảng phí thẻ</h3>
+                        <span className="text-[11px] text-[#8B84A8]">25 mệnh giá</span>
+                      </div>
+                    </div>
+                    <Button
+                      variant="secondary"
+                      size="xs"
+                      onClick={() => {
+                        const amountStr = prompt('Nhập mệnh giá mới cần thêm (VD: 30000 hoặc 300000):');
+                        if (!amountStr) return;
+                        const newAmt = parseInt(amountStr.replace(/\D/g, ''));
+                        if (isNaN(newAmt) || newAmt <= 0) {
+                          showToast('Mệnh giá không hợp lệ', 'error');
+                          return;
+                        }
+                        const matrix = { ...(formData.cardSettings?.networkMatrix || DEFAULT_CARD_MATRIX) };
+                        Object.keys(matrix).forEach((net) => {
+                          if (!matrix[net].some((item) => item.amount === newAmt)) {
+                            matrix[net].push({
+                              amount: newAmt,
+                              receiveAmount: Math.round(newAmt * 0.8),
+                              feePercent: 20.0,
+                              enabled: true,
+                            });
+                            matrix[net].sort((a, b) => a.amount - b.amount);
+                          }
+                        });
+                        setFormData({
+                          ...formData,
+                          cardSettings: {
+                            ...(formData.cardSettings || {}),
+                            networkMatrix: matrix,
+                          },
+                        });
+                        showToast(`Đã thêm mệnh giá ${newAmt.toLocaleString('vi-VN')}đ vào bảng phí`, 'success');
+                      }}
+                      className="font-bold border-white/10 hover:border-cyan-400 text-xs"
+                    >
+                      + Thêm mệnh giá
+                    </Button>
+                  </div>
+
+                  {/* Notice callout */}
+                  <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300">
+                    Chủ shop đã chốt <strong>không nhận thẻ 30.000đ và 300.000đ</strong>. Hai mức này mặc định tắt; chỉ bật lại khi đã chủ động đối soát với nhà mạng.
+                  </div>
+
+                  {/* Matrix tables for each network */}
+                  {Object.entries(formData.cardSettings?.networkMatrix || DEFAULT_CARD_MATRIX).map(([networkName, rates]) => (
+                    <div key={networkName} className="space-y-2.5 pt-2 border-t border-white/5 first:border-0 first:pt-0">
+                      <div className="flex items-center justify-between">
+                        <div className="font-display font-black text-sm text-[#F0EDFF] tracking-wider uppercase flex items-center gap-2">
+                          <span className="text-[#9D5CF6]">●</span>
+                          <span>{networkName}</span>
+                          <span className="text-[10px] font-bold text-[#8B84A8] lowercase">({rates.length} mức)</span>
                         </div>
                       </div>
 
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
-                          % User Thực Nhận Vào Ví (%)
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            min={50}
-                            max={100}
-                            value={100 - (formData.cardSettings?.feePercentage ?? 15)}
-                            onChange={(e) => {
-                              const receiveRate = Number(e.target.value);
-                              const fee = Math.max(0, 100 - receiveRate);
-                              setFormData({
-                                ...formData,
-                                cardSettings: {
-                                  ...(formData.cardSettings || {
-                                    enabled: true,
-                                    feePercentage: 15,
-                                    userReceiveRate: 85,
-                                    minAmount: 10000,
-                                    maxAmount: 1000000,
-                                    allowedNetworks: ['Viettel', 'Vinaphone', 'Mobifone', 'Vietnamobile', 'Zing', 'Garena'],
-                                  }),
-                                  feePercentage: fee,
-                                  userReceiveRate: receiveRate,
-                                },
-                              });
-                            }}
-                            className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-emerald-400 font-bold focus:outline-none focus:border-[#7C3AED]"
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-400">%</span>
-                        </div>
-                      </div>
-                    </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="border-b border-white/10 text-[10px] font-extrabold uppercase text-[#8B84A8] tracking-wider">
+                              <th className="py-2.5 px-3">MỆNH GIÁ</th>
+                              <th className="py-2.5 px-3">THỰC NHẬN</th>
+                              <th className="py-2.5 px-3 text-center">PHÍ</th>
+                              <th className="py-2.5 px-3 text-center">NHẬN THẺ</th>
+                              <th className="py-2.5 px-3 text-right">VIỆC</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-white/5">
+                            {rates.map((rateItem) => {
+                              const calculatedFee = rateItem.amount > 0 
+                                ? (((rateItem.amount - rateItem.receiveAmount) / rateItem.amount) * 100).toFixed(1)
+                                : '0.0';
 
-                    <div className="p-3 rounded-2xl bg-[#161626]/80 border border-white/5 space-y-1.5 text-[11px]">
-                      <div className="font-semibold text-[#F0EDFF]">Ví dụ thực tế khi User nạp thẻ:</div>
-                      <div className="text-[#8B84A8] flex justify-between">
-                        <span>• Thẻ 100.000đ:</span>
-                        <strong className="text-emerald-400">
-                          User nhận +{(100000 * (1 - (formData.cardSettings?.feePercentage ?? 15) / 100)).toLocaleString('vi-VN')}đ
-                        </strong>
-                      </div>
-                      <div className="text-[#8B84A8] flex justify-between">
-                        <span>• Thẻ 500.000đ:</span>
-                        <strong className="text-emerald-400">
-                          User nhận +{(500000 * (1 - (formData.cardSettings?.feePercentage ?? 15) / 100)).toLocaleString('vi-VN')}đ
-                        </strong>
+                              return (
+                                <tr key={rateItem.amount} className="hover:bg-white/[0.02] transition-colors">
+                                  {/* Mệnh giá */}
+                                  <td className="py-2.5 px-3 font-bold text-[#F0EDFF] whitespace-nowrap">
+                                    {rateItem.amount.toLocaleString('vi-VN')}đ
+                                  </td>
+
+                                  {/* Thực nhận input */}
+                                  <td className="py-2.5 px-3">
+                                    <div className="relative max-w-[140px]">
+                                      <input
+                                        type="number"
+                                        min={0}
+                                        max={rateItem.amount}
+                                        value={rateItem.receiveAmount}
+                                        onChange={(e) => {
+                                          const val = Number(e.target.value);
+                                          const matrix = { ...(formData.cardSettings?.networkMatrix || DEFAULT_CARD_MATRIX) };
+                                          matrix[networkName] = matrix[networkName].map((item) =>
+                                            item.amount === rateItem.amount
+                                              ? {
+                                                  ...item,
+                                                  receiveAmount: val,
+                                                  feePercent: parseFloat(
+                                                    (((item.amount - val) / item.amount) * 100).toFixed(1)
+                                                  ),
+                                                }
+                                              : item
+                                          );
+                                          setFormData({
+                                            ...formData,
+                                            cardSettings: {
+                                              ...(formData.cardSettings || {}),
+                                              networkMatrix: matrix,
+                                            },
+                                          });
+                                        }}
+                                        className="w-full bg-[#0F0F1A] border border-white/10 focus:border-[#7C3AED] rounded-xl px-3 py-1.5 text-xs font-bold text-emerald-400 focus:outline-none"
+                                      />
+                                    </div>
+                                  </td>
+
+                                  {/* Phí */}
+                                  <td className="py-2.5 px-3 text-center">
+                                    <span className="inline-block px-2 py-0.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold text-[11px]">
+                                      {calculatedFee}%
+                                    </span>
+                                  </td>
+
+                                  {/* Nhận thẻ (Bật / Tắt) */}
+                                  <td className="py-2.5 px-3 text-center">
+                                    <label className="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                                      <input
+                                        type="checkbox"
+                                        checked={rateItem.enabled}
+                                        onChange={(e) => {
+                                          const isChecked = e.target.checked;
+                                          const matrix = { ...(formData.cardSettings?.networkMatrix || DEFAULT_CARD_MATRIX) };
+                                          matrix[networkName] = matrix[networkName].map((item) =>
+                                            item.amount === rateItem.amount
+                                              ? { ...item, enabled: isChecked }
+                                              : item
+                                          );
+                                          setFormData({
+                                            ...formData,
+                                            cardSettings: {
+                                              ...(formData.cardSettings || {}),
+                                              networkMatrix: matrix,
+                                            },
+                                          });
+                                        }}
+                                        className="rounded bg-[#0F0F1A] border-white/10 text-[#7C3AED] focus:ring-0 w-3.5 h-3.5 cursor-pointer"
+                                      />
+                                      <span className={`text-[11px] font-semibold ${rateItem.enabled ? 'text-[#F0EDFF]' : 'text-[#6B658E]'}`}>
+                                        Bật
+                                      </span>
+                                    </label>
+                                  </td>
+
+                                  {/* Việc / Thao tác */}
+                                  <td className="py-2.5 px-3 text-right">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        updateSettings(formData);
+                                        showToast(`Đã lưu cấu hình thẻ ${networkName} ${rateItem.amount.toLocaleString('vi-VN')}đ`, 'success');
+                                      }}
+                                      className="px-3 py-1 rounded-xl bg-white/5 hover:bg-emerald-500/20 hover:text-emerald-400 border border-white/10 text-xs font-bold text-[#CBC7E0] transition-colors cursor-pointer"
+                                    >
+                                      Lưu
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
-                  </div>
-                )}
-              </Card>
+                  ))}
+                </Card>
+              </div>
             </div>
           </div>
         )}

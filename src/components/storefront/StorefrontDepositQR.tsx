@@ -247,8 +247,12 @@ export const StorefrontDepositQR: React.FC = () => {
     return cardRecharges.filter((c) => c.userId === currentUser.id);
   }, [cardRecharges, currentUser.id]);
 
-  const cardFeePercent = settings.cardSettings?.feePercentage ?? 15;
-  const cardReceiveAmount = Math.round(cardAmount * (1 - cardFeePercent / 100));
+  const currentNetworkKey = (cardNetwork || 'VIETTEL').toUpperCase();
+  const networkConfigs = settings.cardSettings?.networkMatrix?.[currentNetworkKey] || [];
+  const matchedConfig = networkConfigs.find((c) => c.amount === cardAmount);
+
+  const cardFeePercent = matchedConfig ? matchedConfig.feePercent : (settings.cardSettings?.feePercentage ?? 15);
+  const cardReceiveAmount = matchedConfig ? matchedConfig.receiveAmount : Math.round(cardAmount * (1 - cardFeePercent / 100));
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 py-4">
