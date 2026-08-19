@@ -262,7 +262,13 @@ export const StorefrontHome: React.FC = () => {
               }}
               className="p-4 rounded-2xl bg-[#0F0F1A] border border-white/5 hover:border-[#7C3AED]/40 hover:bg-[#161626] transition-all cursor-pointer text-center group"
             >
-              <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">{cat.icon}</div>
+              <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-[#161626] border border-white/10 flex items-center justify-center overflow-hidden group-hover:scale-110 group-hover:border-[#7C3AED]/50 transition-transform shadow-sm">
+                {cat.image || (cat.icon && (cat.icon.startsWith('http') || cat.icon.startsWith('data:image'))) ? (
+                  <img src={cat.image || cat.icon} alt={cat.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-xl">{cat.icon || '📱'}</span>
+                )}
+              </div>
               <div className="font-bold text-xs text-[#F0EDFF] group-hover:text-[#9D5CF6] transition-colors line-clamp-1">
                 {cat.name}
               </div>

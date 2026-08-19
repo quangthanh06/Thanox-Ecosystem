@@ -175,7 +175,11 @@ export const StorefrontProducts: React.FC = () => {
                   : 'bg-[#161626]/80 text-[#CBC7E0] border border-white/5 hover:border-white/20'
               }`}
             >
+            {c.image || (c.icon && (c.icon.startsWith('http') || c.icon.startsWith('data:image'))) ? (
+              <img src={c.image || c.icon} alt={c.name} className="w-4 h-4 rounded-md object-cover flex-shrink-0" />
+            ) : (
               <span>{c.icon}</span>
+            )}
               <span>{c.name}</span>
               <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${active ? 'bg-white/20 text-white' : 'bg-white/5 text-[#8B84A8]'}`}>
                 {count}
