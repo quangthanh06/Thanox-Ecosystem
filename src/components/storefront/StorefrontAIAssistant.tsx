@@ -324,8 +324,8 @@ export const StorefrontAIAssistant: React.FC = () => {
 
   return (
     <>
-      {/* 1. FLOATING MASCOT TRIGGER BUTTON (Bottom Right) */}
-      <div className="fixed bottom-5 right-5 z-[999999] flex flex-col items-end pointer-events-auto select-none">
+      {/* 1. FLOATING MASCOT TRIGGER BUTTON (Bottom Right - Lifted on mobile to avoid bottom navigation bar) */}
+      <div className="fixed bottom-24 sm:bottom-6 right-4 sm:right-6 z-[999999] flex flex-col items-end pointer-events-auto select-none">
         {/* Animated Speech Bubble */}
         {!isOpen && !isBubbleDismissed && (
           <div
@@ -396,7 +396,7 @@ export const StorefrontAIAssistant: React.FC = () => {
 
       {/* 2. MAIN AI ASSISTANT CHAT MODAL (Exactly matching Image 1 style) */}
       {isOpen && (
-        <div className="fixed bottom-24 right-3 sm:right-6 w-[calc(100vw-24px)] sm:w-[420px] max-h-[85vh] h-[640px] z-[999999] flex flex-col bg-[#0B0B17]/95 backdrop-blur-2xl border-2 border-cyan-500/30 rounded-3xl shadow-2xl shadow-cyan-950/80 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed bottom-36 sm:bottom-24 right-3 sm:right-6 w-[calc(100vw-24px)] sm:w-[420px] max-h-[78vh] h-[600px] z-[999999] flex flex-col bg-[#0B0B17]/95 backdrop-blur-2xl border-2 border-cyan-500/30 rounded-3xl shadow-2xl shadow-cyan-950/80 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           {/* Header */}
           <div className="p-4 sm:p-4.5 bg-gradient-to-r from-[#6366F1] via-[#7C3AED] to-[#4F46E5] flex items-center justify-between shadow-lg shrink-0">
             <div className="flex items-center gap-3">

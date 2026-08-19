@@ -384,6 +384,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [resetTokens]);
 
+  // Global Typography & Font Family Real-Time Injection
+  useEffect(() => {
+    const fontFamily = settings.typography?.fontFamily || 'Space Grotesk';
+    const weight = settings.typography?.titleWeight === 'bold' ? '700' : settings.typography?.titleWeight === 'extrabold' ? '800' : '900';
+    document.documentElement.style.setProperty('--thanox-font-family', `'${fontFamily}', sans-serif`);
+    document.documentElement.style.setProperty('--thanox-title-weight', weight);
+    document.body.style.fontFamily = `'${fontFamily}', sans-serif`;
+  }, [settings.typography?.fontFamily, settings.typography?.titleWeight]);
+
   // Global Security & Anti-Tamper Protection Listener
   useEffect(() => {
     // 1. Console Self-XSS Warning Banner

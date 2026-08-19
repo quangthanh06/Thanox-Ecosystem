@@ -71,42 +71,14 @@ export const StorefrontLayout: React.FC = () => {
     navigate('/');
   };
 
-  const renderContent = () => {
-    // If maintenance mode is active and user is not admin, show maintenance screen
-    if (settings.maintenanceMode && currentUser?.role !== 'admin') {
-      return <StorefrontMaintenanceScreen />;
-    }
-
-    switch (storefrontPage) {
-      case 'home':
-        return <StorefrontHome />;
-      case 'products':
-        return <StorefrontProducts />;
-      case 'product-detail':
-        return <StorefrontProductDetail />;
-      case 'cart':
-        return <StorefrontCart />;
-      case 'account-wallet-deposit':
-        return <StorefrontDepositQR />;
-      case 'account':
-        return <StorefrontAccount />;
-      case 'account-orders':
-        return <StorefrontOrders />;
-      case 'account-transactions':
-        return <StorefrontTransactions />;
-      case 'support':
-      case 'account-support':
-        return <StorefrontSupport />;
-      case 'affiliate':
-        return <StorefrontAffiliate />;
-      case 'categories':
-        return <StorefrontProducts />;
-      case 'checkout':
-        return <StorefrontCart />;
-      default:
-        return <StorefrontHome />;
-    }
-  };
+  // If maintenance mode is active and user is not admin, immediately render full-page maintenance screen
+  if (settings.maintenanceMode && currentUser?.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-[#08080F] text-[#F0EDFF] flex flex-col justify-center items-center font-sans">
+        <StorefrontMaintenanceScreen />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0A0A12] text-[#F0EDFF] flex flex-col font-sans selection:bg-[#7C3AED]/30">
@@ -529,32 +501,36 @@ export const StorefrontLayout: React.FC = () => {
         <Outlet />
       </main>
 
-      {/* Fixed Mobile Bottom Navigation Bar (App-like chunky navigation on smartphones) */}
+      {/* Fixed Mobile Bottom Navigation Bar (Chunky high-tech navigation on smartphones) */}
       <nav
         aria-label="Mobile Navigation"
-        className="block md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0D1020]/95 backdrop-blur-2xl border-t border-slate-800/90 h-[68px] px-1 shadow-[0_-10px_25px_rgba(0,0,0,0.5)]"
+        className="block md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0B0B17]/95 backdrop-blur-2xl border-t border-cyan-500/20 h-[70px] px-1 shadow-[0_-10px_30px_rgba(0,0,0,0.7)]"
       >
         <div className="grid grid-cols-5 h-full items-center">
           {/* 1. Shop */}
           <button
             type="button"
-            onClick={() => navigateToStorefront('products')}
-            className="flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 group active:scale-95"
+            onClick={() => {
+              navigateToStorefront('products');
+              navigate('/products');
+            }}
+            className="flex flex-col items-center justify-center gap-1 transition-all cursor-pointer py-1.5 relative group active:scale-90"
             style={themeTypo.fontStyle}
           >
-            <Package
+            {(storefrontPage === 'products' || storefrontPage === 'home') && (
+              <div className="absolute top-0 w-8 h-1 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full shadow-[0_0_8px_#06B6D4]" />
+            )}
+            <ShoppingBag
               className={`w-5 h-5 transition-transform group-hover:scale-110 ${
-                storefrontPage === 'products'
-                  ? themeTypo.isFlowEnabled
-                    ? 'text-[#22D3EE]'
-                    : 'text-white'
+                storefrontPage === 'products' || storefrontPage === 'home'
+                  ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]'
                   : 'text-[#8B84A8]'
               }`}
             />
             <span
               className={`text-[11px] ${
-                storefrontPage === 'products'
-                  ? themeTypo.navClass
+                storefrontPage === 'products' || storefrontPage === 'home'
+                  ? 'text-cyan-300 font-black'
                   : 'text-[#8B84A8] font-bold'
               }`}
             >
@@ -565,23 +541,27 @@ export const StorefrontLayout: React.FC = () => {
           {/* 2. Nạp */}
           <button
             type="button"
-            onClick={() => navigateToStorefront('account-wallet-deposit')}
-            className="flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 group active:scale-95"
+            onClick={() => {
+              navigateToStorefront('account-wallet-deposit');
+              navigate('/account/wallet');
+            }}
+            className="flex flex-col items-center justify-center gap-1 transition-all cursor-pointer py-1.5 relative group active:scale-90"
             style={themeTypo.fontStyle}
           >
-            <Wallet
+            {storefrontPage === 'account-wallet-deposit' && (
+              <div className="absolute top-0 w-8 h-1 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full shadow-[0_0_8px_#F59E0B]" />
+            )}
+            <Zap
               className={`w-5 h-5 transition-transform group-hover:scale-110 ${
                 storefrontPage === 'account-wallet-deposit'
-                  ? themeTypo.isFlowEnabled
-                    ? 'text-[#22D3EE]'
-                    : 'text-white'
+                  ? 'text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]'
                   : 'text-[#8B84A8]'
               }`}
             />
             <span
               className={`text-[11px] ${
                 storefrontPage === 'account-wallet-deposit'
-                  ? themeTypo.navClass
+                  ? 'text-amber-300 font-black'
                   : 'text-[#8B84A8] font-bold'
               }`}
             >
@@ -592,23 +572,27 @@ export const StorefrontLayout: React.FC = () => {
           {/* 3. Đơn */}
           <button
             type="button"
-            onClick={() => navigateToStorefront('account-orders')}
-            className="flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 relative group active:scale-95"
+            onClick={() => {
+              navigateToStorefront('account-orders');
+              navigate('/account/orders');
+            }}
+            className="flex flex-col items-center justify-center gap-1 transition-all cursor-pointer py-1.5 relative group active:scale-90"
             style={themeTypo.fontStyle}
           >
-            <ShoppingBag
+            {storefrontPage === 'account-orders' && (
+              <div className="absolute top-0 w-8 h-1 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full shadow-[0_0_8px_#C084FC]" />
+            )}
+            <Package
               className={`w-5 h-5 transition-transform group-hover:scale-110 ${
                 storefrontPage === 'account-orders'
-                  ? themeTypo.isFlowEnabled
-                    ? 'text-[#22D3EE]'
-                    : 'text-white'
+                  ? 'text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.8)]'
                   : 'text-[#8B84A8]'
               }`}
             />
             <span
               className={`text-[11px] ${
                 storefrontPage === 'account-orders'
-                  ? themeTypo.navClass
+                  ? 'text-purple-300 font-black'
                   : 'text-[#8B84A8] font-bold'
               }`}
             >
@@ -621,57 +605,79 @@ export const StorefrontLayout: React.FC = () => {
             )}
           </button>
 
-          {/* 4. Hỗ trợ */}
+          {/* 4. Hỗ Trợ */}
           <button
             type="button"
-            onClick={() => navigateToStorefront('support')}
-            className="flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 group active:scale-95"
+            onClick={() => {
+              navigateToStorefront('support');
+              navigate('/account/support');
+            }}
+            className="flex flex-col items-center justify-center gap-1 transition-all cursor-pointer py-1.5 relative group active:scale-90"
             style={themeTypo.fontStyle}
           >
+            {(storefrontPage === 'support' || storefrontPage === 'account-support') && (
+              <div className="absolute top-0 w-8 h-1 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full shadow-[0_0_8px_#10B981]" />
+            )}
             <MessageCircle
               className={`w-5 h-5 transition-transform group-hover:scale-110 ${
-                storefrontPage === 'support'
-                  ? themeTypo.isFlowEnabled
-                    ? 'text-[#22D3EE]'
-                    : 'text-white'
+                storefrontPage === 'support' || storefrontPage === 'account-support'
+                  ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]'
                   : 'text-[#8B84A8]'
               }`}
             />
             <span
               className={`text-[11px] ${
-                storefrontPage === 'support'
-                  ? themeTypo.navClass
+                storefrontPage === 'support' || storefrontPage === 'account-support'
+                  ? 'text-emerald-300 font-black'
                   : 'text-[#8B84A8] font-bold'
               }`}
             >
-              Hỗ trợ
+              Hỗ Trợ
             </span>
           </button>
 
-          {/* 5. Tài khoản */}
+          {/* 5. Tài Khoản (Góc cuối bên phải: Chưa đăng nhập -> vào /login, Đã đăng nhập -> vào /account) */}
           <button
             type="button"
-            onClick={() => navigateToStorefront('account')}
-            className="flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 group active:scale-95"
+            onClick={() => {
+              if (isAuthenticated) {
+                navigateToStorefront('account');
+                navigate('/account');
+              } else {
+                navigate('/login');
+              }
+            }}
+            className="flex flex-col items-center justify-center gap-1 transition-all cursor-pointer py-1.5 relative group active:scale-90"
             style={themeTypo.fontStyle}
           >
-            <User
-              className={`w-5 h-5 transition-transform group-hover:scale-110 ${
-                storefrontPage === 'account'
-                  ? themeTypo.isFlowEnabled
-                    ? 'text-[#22D3EE]'
-                    : 'text-white'
-                  : 'text-[#8B84A8]'
-              }`}
-            />
+            {(storefrontPage === 'account' || (!isAuthenticated && window.location.pathname === '/login')) && (
+              <div className="absolute top-0 w-8 h-1 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full shadow-[0_0_8px_#06B6D4]" />
+            )}
+            {isAuthenticated ? (
+              <UserCheck
+                className={`w-5 h-5 transition-transform group-hover:scale-110 ${
+                  storefrontPage === 'account'
+                    ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]'
+                    : 'text-[#8B84A8]'
+                }`}
+              />
+            ) : (
+              <User
+                className={`w-5 h-5 transition-transform group-hover:scale-110 ${
+                  storefrontPage === 'account'
+                    ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]'
+                    : 'text-[#8B84A8]'
+                }`}
+              />
+            )}
             <span
               className={`text-[11px] ${
                 storefrontPage === 'account'
-                  ? themeTypo.navClass
+                  ? 'text-cyan-300 font-black'
                   : 'text-[#8B84A8] font-bold'
               }`}
             >
-              Tài khoản
+              Tài Khoản
             </span>
           </button>
         </div>
