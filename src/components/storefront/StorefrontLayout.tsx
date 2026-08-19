@@ -778,9 +778,6 @@ export const StorefrontLayout: React.FC = () => {
           </div>
         </div>
       </footer>
-
-      {/* 🤖 THANOX 24/7 AI Smart Assistant Mascot Widget */}
-      <StorefrontAIAssistant />
     </div>
   );
 };

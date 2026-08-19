@@ -26,6 +26,7 @@ import { StorefrontAffiliate } from './components/storefront/StorefrontAffiliate
 import { StorefrontLogin } from './components/storefront/StorefrontLogin';
 import { StorefrontRegister } from './components/storefront/StorefrontRegister';
 import { StorefrontForgotPassword } from './components/storefront/StorefrontForgotPassword';
+import { StorefrontAIAssistant } from './components/storefront/StorefrontAIAssistant';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Admin Views
@@ -153,6 +154,9 @@ export default function App() {
           {/* 404 Catch-All */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
+
+        {/* 🤖 24/7 AI Smart Assistant Mascot Widget */}
+        <StorefrontAIAssistant />
       </StoreProvider>
     </BrowserRouter>
   );

@@ -325,13 +325,20 @@ export const StorefrontAIAssistant: React.FC = () => {
   return (
     <>
       {/* 1. FLOATING MASCOT TRIGGER BUTTON (Bottom Right) */}
-      <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end pointer-events-auto select-none">
+      <div className="fixed bottom-5 right-5 z-[999999] flex flex-col items-end pointer-events-auto select-none">
         {/* Animated Speech Bubble */}
         {!isOpen && !isBubbleDismissed && (
-          <div className="relative mb-2 animate-bounce flex items-center gap-1.5 bg-gradient-to-r from-[#161626] to-[#201B4D] border border-cyan-400/40 text-white text-xs font-bold py-1.5 px-3.5 rounded-2xl shadow-xl shadow-cyan-500/20 backdrop-blur-md cursor-pointer">
-            <span className="text-cyan-300 flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-spin" />
-              Bạn cần hỗ trợ gì?
+          <div
+            onClick={() => {
+              setIsOpen(true);
+              setIsBubbleDismissed(true);
+            }}
+            className="relative mb-2 animate-bounce flex items-center gap-2 bg-gradient-to-r from-[#161626] via-[#1E1B4B] to-[#0E1726] border-2 border-cyan-400/60 text-white text-xs font-extrabold py-2 px-4 rounded-2xl shadow-2xl shadow-cyan-500/30 backdrop-blur-xl cursor-pointer hover:scale-105 transition-all"
+          >
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
+            <span className="text-cyan-300 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]">
+              <Sparkles className="w-4 h-4 text-amber-300 animate-spin" />
+              <span>💬 THANOX AI - Tư vấn & Báo giá!</span>
             </span>
             <button
               type="button"
@@ -339,12 +346,13 @@ export const StorefrontAIAssistant: React.FC = () => {
                 e.stopPropagation();
                 setIsBubbleDismissed(true);
               }}
-              className="text-[#8B84A8] hover:text-white ml-1.5 cursor-pointer"
+              className="text-[#8B84A8] hover:text-white ml-2 p-0.5 rounded-lg hover:bg-white/10 cursor-pointer"
+              title="Đóng thông báo"
             >
-              <X className="w-3 h-3" />
+              <X className="w-3.5 h-3.5" />
             </button>
             {/* Tooltip Arrow */}
-            <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-[#161626] border-b border-r border-cyan-400/40 transform rotate-45" />
+            <div className="absolute -bottom-2 right-7 w-3.5 h-3.5 bg-[#161626] border-b-2 border-r-2 border-cyan-400/60 transform rotate-45" />
           </div>
         )}
 
@@ -355,28 +363,32 @@ export const StorefrontAIAssistant: React.FC = () => {
             setIsOpen(!isOpen);
             setIsBubbleDismissed(true);
           }}
-          className={`relative group p-1.5 rounded-full transition-all duration-300 cursor-pointer shadow-2xl ${
+          className={`relative group p-1 rounded-full transition-all duration-300 cursor-pointer shadow-2xl ${
             isOpen
-              ? 'bg-gradient-to-r from-red-500 to-pink-600 scale-105 ring-4 ring-pink-500/30'
-              : 'bg-gradient-to-r from-[#7C3AED] via-[#06B6D4] to-[#3B82F6] hover:scale-110 ring-4 ring-[#7C3AED]/40 hover:ring-[#06B6D4]/60'
+              ? 'bg-gradient-to-r from-red-500 to-pink-600 scale-105 ring-4 ring-pink-500/40 shadow-red-500/30'
+              : 'bg-gradient-to-r from-[#7C3AED] via-[#06B6D4] to-[#3B82F6] hover:scale-110 ring-4 ring-cyan-400/50 hover:ring-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.6)]'
           }`}
-          title="Trợ lý AI THANOX Bot"
+          title="Trợ lý ảo AI THANOX Bot (Nhấp để mở tư vấn)"
         >
           {isOpen ? (
-            <div className="w-13 h-13 flex items-center justify-center text-white">
-              <X className="w-7 h-7" />
+            <div className="w-14 h-14 flex items-center justify-center text-white bg-[#0F0F1A] rounded-full">
+              <X className="w-8 h-8" />
             </div>
           ) : (
-            <div className="w-13 h-13 rounded-full bg-[#0F0F1A] border-2 border-white/20 flex items-center justify-center relative overflow-hidden">
-              {/* Glowing Pulse */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-[#7C3AED]/30 to-[#06B6D4]/30 animate-pulse" />
-              {/* Bot Mascot Icon / Face */}
-              <div className="relative z-10 flex flex-col items-center">
-                <Bot className="w-7 h-7 text-cyan-300 group-hover:scale-110 transition-transform drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
-                <span className="text-[8.5px] font-black tracking-widest text-[#F0EDFF] uppercase">AI</span>
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0F0F1A] via-[#161626] to-[#0A0A14] border-2 border-cyan-400 flex items-center justify-center relative overflow-hidden">
+              {/* Glowing Laser Scan Ring */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-[#7C3AED]/40 via-cyan-400/20 to-[#06B6D4]/40 animate-pulse" />
+
+              {/* High-tech Robot Mascot Icon */}
+              <div className="relative z-10 flex flex-col items-center justify-center">
+                <Bot className="w-8 h-8 text-cyan-300 group-hover:scale-110 transition-transform drop-shadow-[0_0_12px_rgba(6,182,212,0.9)]" />
+                <span className="text-[8px] font-black tracking-widest text-[#F0EDFF] uppercase bg-cyan-950/80 px-1.5 py-0.2 rounded-full border border-cyan-400/40 -mt-0.5">
+                  AI BOT
+                </span>
               </div>
-              {/* Online Green Indicator */}
-              <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#0F0F1A] animate-pulse" />
+
+              {/* Online Green Pulse Indicator */}
+              <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#0F0F1A] shadow-md shadow-emerald-400/80 animate-pulse" />
             </div>
           )}
         </button>
@@ -384,7 +396,7 @@ export const StorefrontAIAssistant: React.FC = () => {
 
       {/* 2. MAIN AI ASSISTANT CHAT MODAL (Exactly matching Image 1 style) */}
       {isOpen && (
-        <div className="fixed bottom-22 right-3 sm:right-6 w-[calc(100vw-24px)] sm:w-[410px] max-h-[85vh] h-[640px] z-50 flex flex-col bg-[#0B0B17]/95 backdrop-blur-2xl border border-white/15 rounded-3xl shadow-2xl shadow-purple-950/80 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed bottom-24 right-3 sm:right-6 w-[calc(100vw-24px)] sm:w-[420px] max-h-[85vh] h-[640px] z-[999999] flex flex-col bg-[#0B0B17]/95 backdrop-blur-2xl border-2 border-cyan-500/30 rounded-3xl shadow-2xl shadow-cyan-950/80 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           {/* Header */}
           <div className="p-4 sm:p-4.5 bg-gradient-to-r from-[#6366F1] via-[#7C3AED] to-[#4F46E5] flex items-center justify-between shadow-lg shrink-0">
             <div className="flex items-center gap-3">

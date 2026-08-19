@@ -125,8 +125,11 @@ export const StorefrontHome: React.FC = () => {
                 </span>
               </div>
 
-              {/* Huge Bold Title with Pure Thanox Digital Gradient (Purple ➔ Pink ➔ Cyan) */}
-              <h1 className="font-display text-3xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#9D5CF6] via-[#C084FC] to-[#06B6D4] tracking-tight uppercase leading-[1.15] drop-shadow-[0_5px_30px_rgba(124,58,237,0.4)] line-clamp-2">
+              {/* Huge Bold Title with Pure Thanox Digital Gradient (Purple ➔ Pink ➔ Cyan) or Admin Typography */}
+              <h1
+                style={themeTypo.fontStyle}
+                className={`text-3xl sm:text-5xl md:text-6xl ${themeTypo.headingClass} tracking-tight uppercase leading-[1.15] drop-shadow-[0_5px_30px_rgba(124,58,237,0.4)] line-clamp-2`}
+              >
                 {currentSlide.name}
               </h1>
 
@@ -578,8 +581,8 @@ export const StorefrontHome: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
           <div className="p-5 rounded-2xl bg-[#161626] border border-white/5 text-center space-y-3 relative group hover:border-[#7C3AED]/50 transition-all shadow-lg">
-            <div className="w-12 h-12 rounded-2xl bg-[#7C3AED]/20 border border-[#7C3AED]/40 flex items-center justify-center text-[#9D5CF6] font-display font-black text-lg mx-auto shadow-md">
-              1
+            <div className="w-12 h-12 rounded-2xl bg-[#7C3AED]/20 border border-[#7C3AED]/40 flex items-center justify-center text-lg mx-auto shadow-md">
+              <span className={themeTypo.headingClass}>1</span>
             </div>
             <h4
               style={themeTypo.fontStyle}
@@ -593,8 +596,8 @@ export const StorefrontHome: React.FC = () => {
           </div>
 
           <div className="p-5 rounded-2xl bg-[#161626] border border-white/5 text-center space-y-3 relative group hover:border-[#06B6D4]/50 transition-all shadow-lg">
-            <div className="w-12 h-12 rounded-2xl bg-[#06B6D4]/20 border border-[#06B6D4]/40 flex items-center justify-center text-[#06B6D4] font-display font-black text-lg mx-auto shadow-md">
-              2
+            <div className="w-12 h-12 rounded-2xl bg-[#06B6D4]/20 border border-[#06B6D4]/40 flex items-center justify-center text-lg mx-auto shadow-md">
+              <span className={themeTypo.headingClass}>2</span>
             </div>
             <h4
               style={themeTypo.fontStyle}
@@ -608,8 +611,8 @@ export const StorefrontHome: React.FC = () => {
           </div>
 
           <div className="p-5 rounded-2xl bg-[#161626] border border-white/5 text-center space-y-3 relative group hover:border-emerald-500/50 transition-all shadow-lg">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-display font-black text-lg mx-auto shadow-md">
-              3
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-lg mx-auto shadow-md">
+              <span className={themeTypo.headingClass}>3</span>
             </div>
             <h4
               style={themeTypo.fontStyle}

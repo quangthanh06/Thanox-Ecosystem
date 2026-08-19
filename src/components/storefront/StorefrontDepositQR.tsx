@@ -169,18 +169,26 @@ export const StorefrontDepositQR: React.FC = () => {
   const safeBankCode = typeof settings.bankCode === 'string' ? settings.bankCode : 'MB';
   const safeAccountHolder = typeof settings.accountHolder === 'string' ? settings.accountHolder : (settings.bankAccount as any)?.accountHolder || 'TRAN QUANG THANH';
 
-  // Generate VietQR URL ONLY when amount is valid and bank config is available
-  const qrUrl = useMemo(() => {
-    if (!isValidAmount || !transactionCode) return null;
+  // Multi-tier resilient VietQR URLs with automatic fallback
+  const [qrFallbackIndex, setQrFallbackIndex] = useState(0);
 
-    const bankCode = safeBankCode;
-    const bankAccount = safeAccountNumber;
-    const accountHolder = encodeURIComponent(safeAccountHolder);
-    const memo = encodeURIComponent(transactionCode);
+  const qrUrls = useMemo(() => {
+    if (!isValidAmount || !transactionCode) return [];
+    const bankCode = safeBankCode || 'MB';
+    const bankAccount = safeAccountNumber || '0326884292';
+    const accountHolder = safeAccountHolder || 'TRAN QUANG THANH';
+    const memo = transactionCode;
     const template = settings.qrTemplate || 'compact2';
 
-    return `https://img.vietqr.io/image/${bankCode}-${bankAccount}-${template}.png?amount=${activeAmount}&addInfo=${memo}&accountName=${accountHolder}`;
+    return [
+      `https://img.vietqr.io/image/${bankCode}-${bankAccount}-${template}.png?amount=${activeAmount}&addInfo=${encodeURIComponent(memo)}&accountName=${encodeURIComponent(accountHolder)}`,
+      `https://api.vietqr.io/image/${bankCode}-${bankAccount}-${template}.jpg?amount=${activeAmount}&addInfo=${encodeURIComponent(memo)}&accountName=${encodeURIComponent(accountHolder)}`,
+      `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`https://img.vietqr.io/image/${bankCode}-${bankAccount}-${template}.png?amount=${activeAmount}&addInfo=${encodeURIComponent(memo)}&accountName=${encodeURIComponent(accountHolder)}`)}&margin=10`,
+      `https://quickchart.io/qr?text=${encodeURIComponent(`https://img.vietqr.io/image/${bankCode}-${bankAccount}-${template}.png?amount=${activeAmount}&addInfo=${encodeURIComponent(memo)}&accountName=${encodeURIComponent(accountHolder)}`)}&size=300`,
+    ];
   }, [isValidAmount, activeAmount, transactionCode, safeBankCode, safeAccountNumber, safeAccountHolder, settings.qrTemplate]);
+
+  const activeQrUrl = qrUrls[qrFallbackIndex] || qrUrls[0];
 
   const copyToClipboard = (text: string, fieldName: string) => {
     navigator.clipboard.writeText(text);
@@ -535,7 +543,10 @@ export const StorefrontDepositQR: React.FC = () => {
                             <p className="text-xs font-bold">Không thể tải mã QR</p>
                             <button
                               type="button"
-                              onClick={() => setQrLoadError(false)}
+                              onClick={() => {
+                                setQrFallbackIndex(0);
+                                setQrLoadError(false);
+                              }}
                               className="mt-3 px-3 py-1 bg-zinc-900 text-white text-[10px] font-bold rounded-lg cursor-pointer"
                             >
                               Thử lại
@@ -543,9 +554,15 @@ export const StorefrontDepositQR: React.FC = () => {
                           </div>
                         ) : (
                           <img
-                            src={qrUrl!}
+                            src={activeQrUrl}
                             alt={`VietQR ${activeAmount} VND`}
-                            onError={() => setQrLoadError(true)}
+                            onError={() => {
+                              if (qrFallbackIndex < qrUrls.length - 1) {
+                                setQrFallbackIndex((prev) => prev + 1);
+                              } else {
+                                setQrLoadError(true);
+                              }
+                            }}
                             className="w-full aspect-square object-contain rounded-lg relative z-10"
                             referrerPolicy="no-referrer"
                           />

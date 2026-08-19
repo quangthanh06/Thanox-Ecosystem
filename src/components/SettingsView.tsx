@@ -965,30 +965,120 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                         >
                           {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
                         </div>
-                        <div className="space-y-0.5 min-w-0">
-                          <div className="text-xs font-bold text-[#F0EDFF]">{mode.title}</div>
-                          <div className="text-[11px] text-[#8B84A8] leading-relaxed">{mode.desc}</div>
-                        </div>
+                      <div className="space-y-0.5 min-w-0">
+                        <div className="text-xs font-bold text-[#F0EDFF]">{mode.title}</div>
+                        <div className="text-[11px] text-[#8B84A8] leading-relaxed">{mode.desc}</div>
                       </div>
-                    );
-                  })}
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+
+            {/* Option 2: Lựa Chọn Phông Chữ & Độ Béo Phồng */}
+            <Card className="p-5 space-y-4" variant="default">
+              <CardHeader
+                title="Phông Chữ & Độ Béo Phồng"
+                subtitle="Tùy chọn phông chữ hiện đại và độ dày phồng của tiêu đề"
+                icon={<Type className="w-4 h-4 text-[#9D5CF6]" />}
+              />
+
+              <div className="space-y-4 pt-1">
+                {/* Font Family Selection */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-[#CBC7E0]">Phông Chữ Toàn Hệ Thống (Font Family):</label>
+                  <select
+                    value={formData.typography?.fontFamily || 'Space Grotesk'}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        typography: {
+                          ...(formData.typography || {
+                            fontFamily: 'Space Grotesk',
+                            titleWeight: 'black',
+                            enableColorFlow: true,
+                            colorMode: 'rainbow_flow',
+                            enableTextGlow: true,
+                            enableChunkyTitles: true,
+                            applyToNavAndButtons: true,
+                            applyToSectionHeadings: true,
+                          }),
+                          fontFamily: e.target.value as any,
+                        },
+                      })
+                    }
+                    className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                  >
+                    <option value="Space Grotesk">Space Grotesk (Gaming Cyberpunk - Mặc Định)</option>
+                    <option value="Montserrat">Montserrat (Hiện Đại & Mạnh Mẽ)</option>
+                    <option value="Russo One">Russo One (Chữ Khối Đậm Chất Game)</option>
+                    <option value="Chakra Petch">Chakra Petch (Cyber Mecha Tech)</option>
+                    <option value="Orbitron">Orbitron (Futuristic Sci-Fi Game)</option>
+                    <option value="Be Vietnam Pro">Be Vietnam Pro (Chuẩn Tiếng Việt Cao Cấp)</option>
+                    <option value="Plus Jakarta Sans">Plus Jakarta Sans (Tech Premium Sang Trọng)</option>
+                    <option value="Inter">Inter (Chuẩn Quốc Tế & Tối Giản)</option>
+                    <option value="Outfit">Outfit (Đậm Nét & Nổi Bật)</option>
+                    <option value="Manrope">Manrope (Bo Tròn Mềm Mại)</option>
+                    <option value="Syne">Syne (Artistic & Độc Đáo)</option>
+                    <option value="Rajdhani">Rajdhani (Góc Cạnh Cyber Gaming)</option>
+                  </select>
                 </div>
-              </Card>
 
-              {/* Option 2: Lựa Chọn Phông Chữ & Độ Béo Phồng */}
-              <Card className="p-5 space-y-4" variant="default">
-                <CardHeader
-                  title="Phông Chữ & Độ Béo Phồng"
-                  subtitle="Tùy chọn phông chữ hiện đại và độ dày phồng của tiêu đề"
-                  icon={<Type className="w-4 h-4 text-[#9D5CF6]" />}
-                />
+                {/* Title Weight / Boldness */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-[#CBC7E0]">Độ Béo Phồng Của Tiêu Đề & Logo:</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'bold', label: 'Bold 700' },
+                      { id: 'extrabold', label: 'ExtraBold 800' },
+                      { id: 'black', label: 'Black 900 (Béo Phồng)' },
+                    ].map((w) => {
+                      const isSelected = (formData.typography?.titleWeight || 'black') === w.id;
+                      return (
+                        <button
+                          key={w.id}
+                          type="button"
+                          onClick={() =>
+                            setFormData({
+                              ...formData,
+                              typography: {
+                                ...(formData.typography || {
+                                  fontFamily: 'Space Grotesk',
+                                  titleWeight: 'black',
+                                  enableColorFlow: true,
+                                  colorMode: 'rainbow_flow',
+                                  enableTextGlow: true,
+                                  enableChunkyTitles: true,
+                                  applyToNavAndButtons: true,
+                                  applyToSectionHeadings: true,
+                                }),
+                                titleWeight: w.id as any,
+                              },
+                            })
+                          }
+                          className={`py-2 px-2 rounded-xl text-center text-xs font-bold transition-all cursor-pointer border ${
+                            isSelected
+                              ? 'bg-[#7C3AED] text-white border-[#9D5CF6] shadow-sm'
+                              : 'bg-[#161626] text-[#8B84A8] border-white/5 hover:text-white'
+                          }`}
+                        >
+                          {w.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-                <div className="space-y-4 pt-1">
-                  {/* Font Family Selection */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#CBC7E0]">Phông Chữ Toàn Hệ Thống (Font Family):</label>
-                    <select
-                      value={formData.typography?.fontFamily || 'Space Grotesk'}
+                {/* Glow Toggle */}
+                <div className="p-3.5 rounded-xl bg-[#161626]/70 border border-white/5 flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div className="text-xs font-bold text-[#F0EDFF]">Hiệu Ứng Phát Sáng Neon (Drop Shadow Glow)</div>
+                    <div className="text-[11px] text-[#8B84A8]">Bổ sung hào quang phát sáng xung quanh chữ trên nền tối</div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.typography?.enableTextGlow !== false}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -1003,101 +1093,78 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                               applyToNavAndButtons: true,
                               applyToSectionHeadings: true,
                             }),
-                            fontFamily: e.target.value as any,
+                            enableTextGlow: e.target.checked,
                           },
                         })
                       }
-                      className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
-                    >
-                      <option value="Space Grotesk">Space Grotesk (Gaming Cyberpunk - Mặc Định)</option>
-                      <option value="Plus Jakarta Sans">Plus Jakarta Sans (Tech Premium Sang Trọng)</option>
-                      <option value="Inter">Inter (Chuẩn Quốc Tế & Tối Giản)</option>
-                      <option value="Manrope">Manrope (Bo Tròn Mềm Mại Hiện Đại)</option>
-                      <option value="Outfit">Outfit (Đậm Nét & Nổi Bật)</option>
-                      <option value="Orbitron">Orbitron (Futuristic Sci-Fi Game)</option>
-                    </select>
-                  </div>
-
-                  {/* Title Weight / Boldness */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#CBC7E0]">Độ Béo Phồng Của Tiêu Đề & Logo:</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { id: 'bold', label: 'Bold 700' },
-                        { id: 'extrabold', label: 'ExtraBold 800' },
-                        { id: 'black', label: 'Black 900 (Béo Phồng)' },
-                      ].map((w) => {
-                        const isSelected = (formData.typography?.titleWeight || 'black') === w.id;
-                        return (
-                          <button
-                            key={w.id}
-                            type="button"
-                            onClick={() =>
-                              setFormData({
-                                ...formData,
-                                typography: {
-                                  ...(formData.typography || {
-                                    fontFamily: 'Space Grotesk',
-                                    titleWeight: 'black',
-                                    enableColorFlow: true,
-                                    colorMode: 'rainbow_flow',
-                                    enableTextGlow: true,
-                                    enableChunkyTitles: true,
-                                    applyToNavAndButtons: true,
-                                    applyToSectionHeadings: true,
-                                  }),
-                                  titleWeight: w.id as any,
-                                },
-                              })
-                            }
-                            className={`py-2 px-2 rounded-xl text-center text-xs font-bold transition-all cursor-pointer border ${
-                              isSelected
-                                ? 'bg-[#7C3AED] text-white border-[#9D5CF6] shadow-sm'
-                                : 'bg-[#161626] text-[#8B84A8] border-white/5 hover:text-white'
-                            }`}
-                          >
-                            {w.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Glow Toggle */}
-                  <div className="p-3.5 rounded-xl bg-[#161626]/70 border border-white/5 flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <div className="text-xs font-bold text-[#F0EDFF]">Hiệu Ứng Phát Sáng Neon (Drop Shadow Glow)</div>
-                      <div className="text-[11px] text-[#8B84A8]">Bổ sung hào quang phát sáng xung quanh chữ trên nền tối</div>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.typography?.enableTextGlow !== false}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            typography: {
-                              ...(formData.typography || {
-                                fontFamily: 'Space Grotesk',
-                                titleWeight: 'black',
-                                enableColorFlow: true,
-                                colorMode: 'rainbow_flow',
-                                enableTextGlow: true,
-                                enableChunkyTitles: true,
-                                applyToNavAndButtons: true,
-                                applyToSectionHeadings: true,
-                              }),
-                              enableTextGlow: e.target.checked,
-                            },
-                          })
-                        }
-                        className="sr-only peer"
-                      />
-                      <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#22D3EE]"></div>
-                    </label>
-                  </div>
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#22D3EE]"></div>
+                  </label>
                 </div>
-              </Card>
+
+                {/* Scope Selection */}
+                <div className="space-y-2 pt-1 border-t border-white/5">
+                  <div className="text-[11px] font-bold text-[#8B84A8] uppercase tracking-wider">
+                    Phạm vi áp dụng hiệu ứng chuyển động màu:
+                  </div>
+
+                  <label className="flex items-center justify-between p-2.5 rounded-xl bg-[#161626] border border-white/5 cursor-pointer text-xs">
+                    <span className="text-[#CBC7E0]">Áp dụng cho Tiêu đề các mục (Hero Banner, Quy Trình 3 Bước, Kho Sản phẩm)</span>
+                    <input
+                      type="checkbox"
+                      checked={formData.typography?.applyToSectionHeadings !== false}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          typography: {
+                            ...(formData.typography || {
+                              fontFamily: 'Space Grotesk',
+                              titleWeight: 'black',
+                              enableColorFlow: true,
+                              colorMode: 'rainbow_flow',
+                              enableTextGlow: true,
+                              enableChunkyTitles: true,
+                              applyToNavAndButtons: true,
+                              applyToSectionHeadings: true,
+                            }),
+                            applyToSectionHeadings: e.target.checked,
+                          },
+                        })
+                      }
+                      className="rounded bg-[#0F0F1A] border-white/10 text-cyan-500 focus:ring-0 w-4 h-4 cursor-pointer"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-between p-2.5 rounded-xl bg-[#161626] border border-white/5 cursor-pointer text-xs">
+                    <span className="text-[#CBC7E0]">Áp dụng cho Thanh Menu & Nút Bấm (Shop, Nạp, Đơn, Hỗ trợ, Giỏ Hàng)</span>
+                    <input
+                      type="checkbox"
+                      checked={formData.typography?.applyToNavAndButtons !== false}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          typography: {
+                            ...(formData.typography || {
+                              fontFamily: 'Space Grotesk',
+                              titleWeight: 'black',
+                              enableColorFlow: true,
+                              colorMode: 'rainbow_flow',
+                              enableTextGlow: true,
+                              enableChunkyTitles: true,
+                              applyToNavAndButtons: true,
+                              applyToSectionHeadings: true,
+                            }),
+                            applyToNavAndButtons: e.target.checked,
+                          },
+                        })
+                      }
+                      className="rounded bg-[#0F0F1A] border-white/10 text-cyan-500 focus:ring-0 w-4 h-4 cursor-pointer"
+                    />
+                  </label>
+                </div>
+              </div>
+            </Card>
             </div>
 
             {/* Save Button */}
