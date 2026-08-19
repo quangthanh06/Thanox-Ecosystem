@@ -280,13 +280,6 @@ export const SettingsView: React.FC = () => {
                     </span>
                   </div>
                 </div>
-
-                <div className="relative z-10 flex items-center justify-between pt-3 mt-3 border-t border-white/10 text-[10px]">
-                  <span className="text-cyan-400 font-bold">● ● ● ●</span>
-                  <span className="text-blue-300 font-bold bg-blue-600/30 px-2 py-0.5 rounded-lg border border-blue-400/30">
-                    ZALO HỖ TRỢ: {formData.heroBanner?.hotlineZalo || formData.zaloHotline || '0916396901'}
-                  </span>
-                </div>
               </div>
             </Card>
 

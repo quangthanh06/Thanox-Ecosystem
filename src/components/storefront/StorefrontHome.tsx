@@ -179,59 +179,6 @@ export const StorefrontHome: React.FC = () => {
               </div>
             </div>
           </div>
-
-          {/* Carousel Slider Controls (Dots, Hotline & Arrows) */}
-          <div className="relative z-10 flex flex-wrap items-center justify-between gap-4 pt-6 mt-6 border-t border-white/10">
-            {/* Indicator Dots */}
-            <div className="flex items-center gap-2">
-              {activeProducts.slice(0, 8).map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentSlideIndex(idx)}
-                  className={`h-2 rounded-full transition-all cursor-pointer ${
-                    currentSlideIndex === idx
-                      ? 'w-8 bg-cyan-400 shadow-md shadow-cyan-400/50'
-                      : 'w-2 bg-white/20 hover:bg-white/40'
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* Middle Hotline Badge */}
-            <a
-              href={`https://zalo.me/${bannerHotline.replace(/\D/g, '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-400/40 text-blue-300 hover:text-white font-extrabold text-xs transition-all cursor-pointer"
-            >
-              <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping" />
-              <span>ZALO HỖ TRỢ: {bannerHotline}</span>
-            </a>
-
-            {/* Prev / Next Arrows */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() =>
-                  setCurrentSlideIndex((prev) => (prev - 1 + activeProducts.length) % activeProducts.length)
-                }
-                className="w-9 h-9 rounded-xl bg-[#161626]/80 hover:bg-[#1E1E32] border border-white/10 flex items-center justify-center text-white transition-all cursor-pointer hover:border-cyan-400/50"
-                title="Sản phẩm trước"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  setCurrentSlideIndex((prev) => (prev + 1) % activeProducts.length)
-                }
-                className="w-9 h-9 rounded-xl bg-[#161626]/80 hover:bg-[#1E1E32] border border-white/10 flex items-center justify-center text-white transition-all cursor-pointer hover:border-cyan-400/50"
-                title="Sản phẩm tiếp theo"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
         </section>
       )}
 
