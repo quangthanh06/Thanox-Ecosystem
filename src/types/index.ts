@@ -340,6 +340,8 @@ export interface StoreSettings {
 
   // Security & System
   enable2FA: boolean;
+  twoFactorSecret?: string;
+  twoFactorBackupCode?: string;
   rateLimiting: boolean;
   adminLogs: boolean;
   maintenanceMode: boolean;

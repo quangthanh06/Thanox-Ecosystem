@@ -45,7 +45,11 @@ import {
   Activity,
   Lock,
   ExternalLink,
+  Smartphone,
+  KeyRound,
+  Copy,
 } from 'lucide-react';
+import { generateTotpUri, generateGoogleAuthQrUrl, verifyTotpCode } from '../utils/totp';
 
 interface SettingsViewProps {
   initialTab?: 'banner' | 'typography' | 'payments' | 'general' | 'maintenance' | 'security' | 'affiliate' | 'music' | 'data';
@@ -68,6 +72,43 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
   const [scanProgress, setScanProgress] = useState(0);
   const [scanCompleted, setScanCompleted] = useState(false);
   const [newBlockedIp, setNewBlockedIp] = useState('');
+
+  // 2FA Google Authenticator testing state
+  const [totpTestCode, setTotpTestCode] = useState('');
+  const [totpTestResult, setTotpTestResult] = useState<{ valid: boolean; reason?: string } | null>(null);
+
+  const handleVerifyTotpTest = () => {
+    if (!totpTestCode.trim()) {
+      showToast('Vui lòng nhập mã 6 số từ Google Authenticator trên điện thoại', 'error');
+      return;
+    }
+    const secret = formData.twoFactorSecret || 'JBSWY3DPEHPK3PXP';
+    const backup = formData.twoFactorBackupCode || '888999';
+    const res = verifyTotpCode(secret, totpTestCode.trim(), backup);
+    setTotpTestResult(res);
+    if (res.valid) {
+      showToast('✅ Mã OTP chính xác! Google Authenticator đã kết nối thành công với Shop.', 'success');
+    } else {
+      showToast(res.reason || 'Mã OTP không đúng hoặc đã hết hạn', 'error');
+    }
+  };
+
+  const handleGenerateNewSecret = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let newSec = '';
+    for (let i = 0; i < 16; i++) {
+      newSec += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setFormData({ ...formData, twoFactorSecret: newSec });
+    setTotpTestResult(null);
+    setTotpTestCode('');
+    showToast(`Đã tạo Secret Key mới: ${newSec}. Hãy quét lại mã QR trên điện thoại!`, 'info');
+  };
+
+  const copySecretToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    showToast('Đã sao chép Secret Key vào bộ nhớ tạm!', 'success');
+  };
 
   useEffect(() => {
     const tabParam = searchParams.get('tab') as any;
@@ -2009,10 +2050,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                   <div>
                     <div className="font-semibold text-[#F0EDFF] flex items-center gap-1.5">
                       <Lock className="w-3.5 h-3.5 text-amber-400" />
-                      Xác Thực Hai Lớp 2FA
+                      Xác Thực Hai Lớp 2FA (Google Authenticator)
                     </div>
                     <div className="text-[10.5px] text-[#6B658E]">
-                      Yêu cầu mã xác thực khi đăng nhập Admin
+                      Bắt buộc nhập mã OTP 6 số từ ứng dụng trên điện thoại khi đăng nhập Admin
                     </div>
                   </div>
                   <input
@@ -2022,6 +2063,124 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                     className="rounded bg-[#0F0F1A] border-white/10 text-amber-500 focus:ring-0 w-4 h-4"
                   />
                 </label>
+              </div>
+            </Card>
+
+            {/* 📱 DEDICATED GOOGLE AUTHENTICATOR SETUP & LIVE OTP TESTER */}
+            <Card className="p-5 space-y-4 border-amber-500/30" variant="default">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-3">
+                <div>
+                  <h3 className="font-display font-bold text-sm sm:text-base text-[#F0EDFF] flex items-center gap-2">
+                    <Smartphone className="w-5 h-5 text-amber-400" />
+                    Thiết Lập Google Authenticator Cho Điện Thoại (2FA)
+                  </h3>
+                  <p className="text-xs text-[#8B84A8] mt-0.5">
+                    Mở ứng dụng Google Authenticator trên điện thoại Android hoặc iPhone, quét mã QR dưới đây để kích hoạt bảo vệ 2 lớp.
+                  </p>
+                </div>
+                <Badge variant={formData.enable2FA ? 'success' : 'default'} size="sm">
+                  {formData.enable2FA ? '🟢 2FA Đang Bật' : '⚪ 2FA Đang Tắt'}
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center pt-2">
+                {/* Left: Google Authenticator QR Code */}
+                <div className="md:col-span-5 flex flex-col items-center justify-center p-4 rounded-2xl bg-white border-2 border-amber-400/40 shadow-xl shadow-amber-500/10 text-center">
+                  <img
+                    src={generateGoogleAuthQrUrl(
+                      generateTotpUri(formData.twoFactorSecret || 'JBSWY3DPEHPK3PXP', 'admin@thanox.vn', formData.storeName || 'THANOX STORE')
+                    )}
+                    alt="Google Authenticator QR"
+                    className="w-48 h-48 rounded-xl object-contain"
+                  />
+                  <div className="mt-2 text-[11px] font-bold text-zinc-800 flex items-center gap-1">
+                    <QrCode className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Quét mã trên Google Authenticator</span>
+                  </div>
+                </div>
+
+                {/* Right: Secret Key & Interactive OTP Tester */}
+                <div className="md:col-span-7 space-y-4 text-xs">
+                  {/* Secret Key Box */}
+                  <div className="space-y-1.5 p-3.5 rounded-2xl bg-[#161626] border border-white/10">
+                    <div className="flex items-center justify-between text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                      <span className="flex items-center gap-1 text-cyan-300">
+                        <KeyRound className="w-3.5 h-3.5" />
+                        Khóa Bí Mật (Secret Key)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleGenerateNewSecret}
+                        className="text-amber-400 hover:text-amber-300 font-bold lowercase hover:underline cursor-pointer"
+                      >
+                        (tạo khóa mới)
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={formData.twoFactorSecret || 'JBSWY3DPEHPK3PXP'}
+                        className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl px-3 py-2 font-mono font-bold text-sm text-amber-300 tracking-wider"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => copySecretToClipboard(formData.twoFactorSecret || 'JBSWY3DPEHPK3PXP')}
+                        className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer shrink-0"
+                        title="Sao chép Secret Key"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-[#8B84A8]">
+                      Nhập mã này thủ công vào app nếu camera điện thoại không thể quét mã QR.
+                    </p>
+                  </div>
+
+                  {/* Live OTP Test Box */}
+                  <div className="space-y-2 p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-[#161626] to-[#161626] border border-emerald-500/30">
+                    <div className="text-[11px] font-bold text-emerald-300 flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5 text-emerald-400" />
+                      Kiểm Tra Thử Mã OTP Trên Điện Thoại Của Bạn
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        maxLength={6}
+                        value={totpTestCode}
+                        onChange={(e) => setTotpTestCode(e.target.value.replace(/\D/g, ''))}
+                        placeholder="Nhập mã 6 số (VD: 492810)..."
+                        className="flex-1 bg-[#0F0F1A] border border-emerald-500/40 rounded-xl px-3 py-2 font-mono font-bold text-sm text-emerald-300 text-center tracking-widest focus:outline-none focus:border-emerald-400"
+                      />
+                      <Button variant="primary" size="sm" onClick={handleVerifyTotpTest}>
+                        Kiểm Tra Ngay
+                      </Button>
+                    </div>
+
+                    {totpTestResult && (
+                      <div className={`p-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                        totpTestResult.valid
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                          : 'bg-red-500/20 text-red-300 border border-red-500/40'
+                      }`}>
+                        {totpTestResult.valid ? (
+                          <>
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                            <span>Mã OTP 6 số hợp lệ! Google Authenticator đã kết nối thành công 100%!</span>
+                          </>
+                        ) : (
+                          <span>❌ {totpTestResult.reason || 'Mã OTP không đúng hoặc đã hết hạn'}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Emergency Master Backup Key */}
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-black/40 border border-white/5 text-[11px]">
+                    <span className="text-[#8B84A8]">Mã cứu hộ khẩn cấp khi mất điện thoại:</span>
+                    <span className="font-mono font-bold text-amber-400">888999</span>
+                  </div>
+                </div>
               </div>
             </Card>
 

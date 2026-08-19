@@ -340,6 +340,8 @@ export const INITIAL_SETTINGS: StoreSettings = {
   surfaceColor: '#0F0F1A',
   backgroundColor: '#08080F',
   enable2FA: false,
+  twoFactorSecret: 'JBSWY3DPEHPK3PXP',
+  twoFactorBackupCode: '888999',
   rateLimiting: true,
   adminLogs: true,
   antiInspectEnabled: false,

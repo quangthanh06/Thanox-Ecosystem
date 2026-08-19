@@ -40,6 +40,7 @@ import { StorefrontTransactions } from './StorefrontTransactions';
 import { StorefrontSupport } from './StorefrontSupport';
 import { StorefrontAffiliate } from './StorefrontAffiliate';
 import { StorefrontMaintenanceScreen } from './StorefrontMaintenanceScreen';
+import { StorefrontAIAssistant } from './StorefrontAIAssistant';
 import { MusicPlayer } from './MusicPlayer';
 import { getThemeTypography } from '../../utils/themeStyles';
 
@@ -777,6 +778,9 @@ export const StorefrontLayout: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* 🤖 THANOX 24/7 AI Smart Assistant Mascot Widget */}
+      <StorefrontAIAssistant />
     </div>
   );
 };

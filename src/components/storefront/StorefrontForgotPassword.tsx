@@ -111,17 +111,40 @@ export const StorefrontForgotPassword: React.FC = () => {
             </div>
 
             {/* Header / Icon */}
-            <div className="space-y-1">
-              <div className="w-10 h-10 rounded-2xl bg-[#7C3AED]/20 border border-[#7C3AED]/30 flex items-center justify-center text-[#9D5CF6] shadow-lg shadow-[#7C3AED]/20 mb-3">
+            <div className="space-y-2">
+              <div className="w-10 h-10 rounded-2xl bg-[#7C3AED]/20 border border-[#7C3AED]/30 flex items-center justify-center text-[#9D5CF6] shadow-lg shadow-[#7C3AED]/20 mb-2">
                 <KeyRound className="w-5 h-5" />
               </div>
               <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#F0EDFF] tracking-tight">
                 {step === 'request' ? 'Khôi phục mật khẩu 🔑' : 'Thiết lập mật khẩu mới 🔒'}
               </h1>
-              <p className="text-xs sm:text-sm text-[#8B84A8]">
+
+              {/* 🌟 USER REQUESTED SPECIAL ANIMATED COLOR MOTION BANNER */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-[#7C3AED]/20 via-[#06B6D4]/15 to-[#EC4899]/20 border border-[#06B6D4]/40 shadow-lg shadow-cyan-500/10 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-300 animate-spin" />
+                  <span className="text-xs uppercase font-extrabold tracking-wider text-cyan-300">Yêu cầu từ hệ thống</span>
+                </div>
+                <div className="text-sm sm:text-base font-black leading-snug thanox-color-cycle drop-shadow-[0_0_12px_rgba(34,211,238,0.5)]">
+                  "Liên hệ ADMIN để reset mật khẩu , Nhớ kèm email của bạn nhé"
+                </div>
+                <div className="pt-1 flex flex-wrap items-center gap-2">
+                  <a
+                    href={`https://zalo.me/0916396901`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold text-xs shadow-md shadow-blue-500/30 transition-all hover:scale-105"
+                  >
+                    <span>💬 Nhắn Tin Zalo Admin Reset Mật Khẩu (0916396901)</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+
+              <p className="text-xs sm:text-sm text-[#8B84A8] pt-1">
                 {step === 'request'
-                  ? 'Nhập email tài khoản để nhận mã xác thực khôi phục mật khẩu tức thì'
-                  : 'Nhập mã xác thực vừa nhận và mật khẩu mới cho tài khoản của bạn'}
+                  ? 'Hoặc bạn có thể nhập email bên dưới để gửi yêu cầu đặt lại mật khẩu tự động:'
+                  : 'Nhập mã xác thực vừa nhận và mật khẩu mới cho tài khoản của bạn:'}
               </p>
             </div>
 
