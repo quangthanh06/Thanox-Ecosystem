@@ -643,10 +643,10 @@ export const StorefrontDepositQR: React.FC = () => {
                     Tôi Đã Chuyển Khoản — Xác Nhận Nạp Tiền
                   </Button>
 
-                  <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#8B84A8]">
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#9D5CF6]" />
+                  <div className="flex items-center justify-center gap-1.5 text-[11px] text-emerald-400 font-medium">
+                    <Zap className="w-3.5 h-3.5 text-amber-300" />
                     <span>
-                      Hệ thống tự động đối soát và cộng tiền trong 1-3 phút. Nếu quá 5 phút, vui lòng liên hệ hỗ trợ.
+                      ⚡ Hệ thống tự động đối soát & cộng tiền siêu tốc trong 5-10 giây. Tiền vào ví tức thì.
                     </span>
                   </div>
                 </div>
