@@ -94,8 +94,8 @@ export const StorefrontHome: React.FC = () => {
                 </span>
               </div>
 
-              {/* Huge Bold Title with Thanox Digital Gradient (Bolder & Punchier) */}
-              <h1 className="font-display text-3xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-[#C084FC] to-[#06B6D4] tracking-tight uppercase leading-[1.15] drop-shadow-[0_5px_30px_rgba(124,58,237,0.4)] line-clamp-2">
+              {/* Huge Bold Title with Pure Thanox Digital Gradient (Purple ➔ Pink ➔ Cyan) */}
+              <h1 className="font-display text-3xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#9D5CF6] via-[#C084FC] to-[#06B6D4] tracking-tight uppercase leading-[1.15] drop-shadow-[0_5px_30px_rgba(124,58,237,0.4)] line-clamp-2">
                 {currentSlide.name}
               </h1>
 
