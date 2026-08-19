@@ -518,8 +518,17 @@ export const StorefrontDepositQR: React.FC = () => {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
-                    <div className="sm:col-span-6 flex flex-col items-center">
-                      <div className="p-3 sm:p-4 bg-white rounded-2xl shadow-2xl shadow-black/60 border border-white/20 w-full max-w-[280px] sm:max-w-[300px] flex items-center justify-center">
+                    <div className="sm:col-span-6 flex flex-col items-center justify-center p-3 sm:p-5 bg-[#0F0F1A] rounded-2xl border border-white/5">
+                      <div className="p-3 sm:p-4 bg-white rounded-2xl shadow-2xl shadow-cyan-500/10 border-2 border-cyan-400/40 w-full max-w-[280px] sm:max-w-[300px] flex items-center justify-center relative overflow-hidden group">
+                        {/* 4 Cyber Corner Framing Brackets */}
+                        <div className="vietqr-corner-bracket top-2 left-2 border-t-2 border-l-2 rounded-tl-sm" />
+                        <div className="vietqr-corner-bracket top-2 right-2 border-t-2 border-r-2 rounded-tr-sm" />
+                        <div className="vietqr-corner-bracket bottom-2 left-2 border-b-2 border-l-2 rounded-bl-sm" />
+                        <div className="vietqr-corner-bracket bottom-2 right-2 border-b-2 border-r-2 rounded-br-sm" />
+
+                        {/* Laser Scanner Line (Quét lên quét xuống) */}
+                        {!qrLoadError && <div className="vietqr-scan-laser-line" />}
+
                         {qrLoadError ? (
                           <div className="aspect-square w-full flex flex-col items-center justify-center p-4 text-center text-zinc-800">
                             <AlertCircle className="w-8 h-8 text-red-500 mb-2" />
@@ -537,7 +546,7 @@ export const StorefrontDepositQR: React.FC = () => {
                             src={qrUrl!}
                             alt={`VietQR ${activeAmount} VND`}
                             onError={() => setQrLoadError(true)}
-                            className="w-full aspect-square object-contain rounded-lg"
+                            className="w-full aspect-square object-contain rounded-lg relative z-10"
                             referrerPolicy="no-referrer"
                           />
                         )}

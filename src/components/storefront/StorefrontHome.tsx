@@ -23,6 +23,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { getThemeTypography } from '../../utils/themeStyles';
+import { useDragScroll } from '../../hooks/useDragScroll';
 
 export const StorefrontHome: React.FC = () => {
   const {
@@ -37,6 +38,7 @@ export const StorefrontHome: React.FC = () => {
   } = useStore();
 
   const themeTypo = getThemeTypography(settings);
+  const { dragProps: homeCatDragProps } = useDragScroll<HTMLDivElement>();
 
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
   const [localSearch, setLocalSearch] = useState<string>('');
@@ -423,14 +425,10 @@ export const StorefrontHome: React.FC = () => {
           </div>
         </div>
 
-        {/* Category Filter Pills with Mouse Wheel Scrolling Support */}
+        {/* Category Filter Pills with Mouse Drag & Wheel Scrolling Support */}
         <div
-          onWheel={(e) => {
-            if (e.deltaY !== 0) {
-              e.currentTarget.scrollLeft += e.deltaY;
-            }
-          }}
-          className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none no-scrollbar cursor-grab active:cursor-grabbing"
+          {...homeCatDragProps}
+          className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none no-scrollbar"
         >
           <button
             onClick={() => setActiveCategoryFilter('all')}

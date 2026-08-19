@@ -7,6 +7,11 @@ export type PageId =
   | 'wallet'
   | 'transactions'
   | 'affiliate'
+  | 'theme-settings'
+  | 'payment-settings'
+  | 'maintenance-settings'
+  | 'security-settings'
+  | 'music-settings'
   | 'users'
   | 'support'
   | 'settings';
@@ -338,6 +343,16 @@ export interface StoreSettings {
   rateLimiting: boolean;
   adminLogs: boolean;
   maintenanceMode: boolean;
+  maintenanceMessage?: string;
+  adminZalo?: string;
+  adminHotline?: string;
+  adminTelegram?: string;
+  antiInspectEnabled?: boolean;
+  antiDDoSEnabled?: boolean;
+  antiBotShield?: boolean;
+  blockedIps?: string[];
+  whitelistedIps?: string[];
+  securityMode?: 'strict' | 'normal' | 'auto_shield';
   sessionTimeoutMinutes: number;
   
   // Affiliate Configuration (Daily Cap + Qualifying order >= 200k)

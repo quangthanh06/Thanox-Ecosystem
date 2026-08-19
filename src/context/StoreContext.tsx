@@ -177,15 +177,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Persistent States with Safe LocalStorage Parsing
   const [products, setProducts] = useState<Product[]>(() => {
-    const loaded = safeGetItem('thanox_products', INITIAL_PRODUCTS);
-    return loaded.map((p: Product) => {
-      const match = INITIAL_PRODUCTS.find((init) => init.id === p.id || init.category === p.category);
-      return {
-        ...p,
-        image: p.image || match?.image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
-        packages: (p.packages && p.packages.length > 0) ? p.packages : (match?.packages || []),
-      };
-    });
+    const loaded = safeGetItem<Product[] | null>('thanox_products', null);
+    if (loaded && Array.isArray(loaded) && loaded.length > 0) {
+      return loaded;
+    }
+    return INITIAL_PRODUCTS;
   });
 
   const [categories, setCategories] = useState<Category[]>(() =>
@@ -388,6 +384,44 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [resetTokens]);
 
+  // Global Security & Anti-Tamper Protection Listener
+  useEffect(() => {
+    // 1. Console Self-XSS Warning Banner
+    console.log(
+      '%c🛑 DỪNG LẠI! CẢNH BÁO BẢO MẬT THANOX 🛑',
+      'color: #EF4444; font-size: 22px; font-weight: bold;'
+    );
+    console.log(
+      '%cĐây là tính năng dành riêng cho nhà phát triển. Tuyệt đối KHÔNG dán bất kỳ đoạn mã script nào vào đây để tránh bị hacker đánh cắp tài khoản!',
+      'color: #F59E0B; font-size: 13px; font-weight: 600;'
+    );
+
+    // 2. Anti-Inspect / F12 blocker if enabled by Admin
+    if (settings.antiInspectEnabled) {
+      const handleContextMenu = (e: MouseEvent) => {
+        e.preventDefault();
+      };
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (
+          e.key === 'F12' ||
+          (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j')) ||
+          (e.ctrlKey && (e.key === 'U' || e.key === 'u'))
+        ) {
+          e.preventDefault();
+        }
+      };
+
+      window.addEventListener('contextmenu', handleContextMenu);
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        window.removeEventListener('contextmenu', handleContextMenu);
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [settings.antiInspectEnabled]);
+
   // Live Sync with Server Backend for real-time multi-device updates (Customer <-> Admin)
   useEffect(() => {
     let isMounted = true;
@@ -418,17 +452,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               setProducts((prev) => {
                 const map = new Map<string, Product>();
                 d.products.forEach((p: Product) => {
-                  const match = INITIAL_PRODUCTS.find((init) => init.id === p.id);
-                  map.set(p.id, {
-                    ...p,
-                    image: p.image || match?.image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
-                    plans: (p.plans && p.plans.length > 0) ? p.plans : (p.packages && p.packages.length > 0 ? p.packages : (match?.plans || [])),
-                    packages: (p.plans && p.plans.length > 0) ? p.plans : (p.packages && p.packages.length > 0 ? p.packages : (match?.packages || [])),
-                  });
+                  map.set(p.id, p);
                 });
-                // Locked products always override with local locked state
+                // Local products and locked products always take precedence
                 prev.forEach((local) => {
-                  if (local.isLocked) {
+                  if (local.isLocked || !map.has(local.id)) {
                     map.set(local.id, local);
                   }
                 });

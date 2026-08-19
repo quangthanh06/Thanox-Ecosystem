@@ -16,6 +16,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { getThemeTypography } from '../../utils/themeStyles';
+import { useDragScroll } from '../../hooks/useDragScroll';
 
 export const StorefrontProducts: React.FC = () => {
   const {
@@ -30,6 +31,7 @@ export const StorefrontProducts: React.FC = () => {
   } = useStore();
 
   const themeTypo = getThemeTypography(settings);
+  const { dragProps: catDragProps } = useDragScroll<HTMLDivElement>();
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -153,14 +155,10 @@ export const StorefrontProducts: React.FC = () => {
         </div>
       </div>
 
-      {/* 1. HORIZONTAL TOUCH-FRIENDLY CATEGORY BAR WITH MOUSE WHEEL SCROLLING */}
+      {/* 1. HORIZONTAL TOUCH-FRIENDLY CATEGORY BAR WITH MOUSE DRAG & WHEEL SCROLLING */}
       <div
-        onWheel={(e) => {
-          if (e.deltaY !== 0) {
-            e.currentTarget.scrollLeft += e.deltaY;
-          }
-        }}
-        className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none no-scrollbar -mx-2 px-2 sm:mx-0 sm:px-0 cursor-grab active:cursor-grabbing"
+        {...catDragProps}
+        className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none no-scrollbar -mx-2 px-2 sm:mx-0 sm:px-0"
       >
         <button
           type="button"

@@ -20,6 +20,9 @@ import {
   Sparkles,
   RotateCcw,
   X,
+  Music,
+  QrCode,
+  Wrench,
 } from 'lucide-react';
 
 interface NavItem {
@@ -44,6 +47,7 @@ export const Sidebar: React.FC = () => {
     orders,
     topups,
     tickets,
+    settings,
     navigateToStorefront,
     navigateToAdmin,
   } = useStore();
@@ -92,8 +96,24 @@ export const Sidebar: React.FC = () => {
       ],
     },
     {
-      title: 'QUẢN TRỊ & HỆ THỐNG',
+      title: 'GIAO DIỆN & TÙY BIẾN',
       items: [
+        { id: 'theme-settings', label: 'Banner & Phông Chữ', icon: <Sparkles className="w-4 h-4 text-[#C084FC]" /> },
+        { id: 'music-settings', label: 'Quản Lý Nhạc Nền', icon: <Music className="w-4 h-4 text-pink-400" /> },
+      ],
+    },
+    {
+      title: 'HỆ THỐNG & BẢO MẬT',
+      items: [
+        { id: 'payment-settings', label: 'Cổng Nạp VietQR', icon: <QrCode className="w-4 h-4 text-cyan-400" /> },
+        {
+          id: 'maintenance-settings',
+          label: 'Bảo Trì & Zalo Admin',
+          icon: <Wrench className="w-4 h-4 text-amber-400" />,
+          badge: settings.maintenanceMode ? 'BẬT' : undefined,
+          badgeVariant: 'danger',
+        },
+        { id: 'security-settings', label: 'Trung Tâm Bảo Mật', icon: <Shield className="w-4 h-4 text-emerald-400" /> },
         { id: 'users', label: 'Người Dùng', icon: <Users className="w-4 h-4" /> },
         {
           id: 'support',

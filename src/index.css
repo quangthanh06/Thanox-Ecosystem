@@ -179,4 +179,53 @@ html, body {
   }
 }
 
+/* VietQR High-Tech Cyber Laser Scanning Animation */
+@keyframes qrScanMotion {
+  0% {
+    top: 2%;
+    opacity: 0.85;
+  }
+  50% {
+    top: 96%;
+    opacity: 1;
+  }
+  100% {
+    top: 2%;
+    opacity: 0.85;
+  }
+}
+
+.vietqr-scan-laser-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0) 0%, #22D3EE 20%, #10B981 50%, #22D3EE 80%, rgba(34, 211, 238, 0) 100%);
+  box-shadow: 0 0 12px #22D3EE, 0 0 24px #10B981, 0 0 36px #06B6D4;
+  animation: qrScanMotion 2.2s ease-in-out infinite;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.vietqr-scan-laser-line::after {
+  content: '';
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  top: -8px;
+  height: 18px;
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.25) 0%, rgba(16, 185, 129, 0.1) 50%, transparent 100%);
+  pointer-events: none;
+}
+
+.vietqr-corner-bracket {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: #22D3EE;
+  pointer-events: none;
+  z-index: 20;
+}
+
+
 

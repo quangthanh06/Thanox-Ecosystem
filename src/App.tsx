@@ -138,6 +138,11 @@ export default function App() {
             <Route path="affiliate" element={<AffiliateView />} />
             <Route path="users" element={<UsersView />} />
             <Route path="support" element={<SupportView />} />
+            <Route path="theme-settings" element={<SettingsView initialTab="banner" />} />
+            <Route path="payment-settings" element={<SettingsView initialTab="payments" />} />
+            <Route path="maintenance-settings" element={<SettingsView initialTab="maintenance" />} />
+            <Route path="security-settings" element={<SettingsView initialTab="security" />} />
+            <Route path="music-settings" element={<SettingsView initialTab="music" />} />
             <Route path="settings" element={<SettingsView />} />
           </Route>
 

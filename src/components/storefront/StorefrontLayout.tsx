@@ -26,6 +26,7 @@ import {
   LogOut,
   ShoppingBag,
   Package,
+  Wrench,
 } from 'lucide-react';
 
 import { StorefrontHome } from './StorefrontHome';
@@ -38,6 +39,7 @@ import { StorefrontOrders } from './StorefrontOrders';
 import { StorefrontTransactions } from './StorefrontTransactions';
 import { StorefrontSupport } from './StorefrontSupport';
 import { StorefrontAffiliate } from './StorefrontAffiliate';
+import { StorefrontMaintenanceScreen } from './StorefrontMaintenanceScreen';
 import { MusicPlayer } from './MusicPlayer';
 import { getThemeTypography } from '../../utils/themeStyles';
 
@@ -69,6 +71,11 @@ export const StorefrontLayout: React.FC = () => {
   };
 
   const renderContent = () => {
+    // If maintenance mode is active and user is not admin, show maintenance screen
+    if (settings.maintenanceMode && currentUser?.role !== 'admin') {
+      return <StorefrontMaintenanceScreen />;
+    }
+
     switch (storefrontPage) {
       case 'home':
         return <StorefrontHome />;
@@ -102,6 +109,21 @@ export const StorefrontLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#0A0A12] text-[#F0EDFF] flex flex-col font-sans selection:bg-[#7C3AED]/30">
+      {/* Admin Maintenance Alert Banner */}
+      {settings.maintenanceMode && currentUser?.role === 'admin' && (
+        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-black text-xs font-black py-2.5 px-4 text-center flex items-center justify-center gap-2 shadow-lg z-50">
+          <Wrench className="w-4 h-4 text-black animate-spin" style={{ animationDuration: '6s' }} />
+          <span>⚠️ CHẾ ĐỘ BẢO TRÌ ĐANG BẬT: Khách hàng ngoài web đang thấy màn hình bảo trì & nút Zalo Admin.</span>
+          <button
+            type="button"
+            onClick={() => navigateToAdmin('maintenance-settings')}
+            className="underline ml-2 bg-black text-amber-300 px-3 py-1 rounded-lg hover:bg-zinc-900 cursor-pointer transition-all text-xs font-bold"
+          >
+            Vào Tắt Bảo Trì →
+          </button>
+        </div>
+      )}
+
       {/* 1. TOP ANNOUNCEMENT BAR */}
       {(settings.announcementBar?.enabled ?? settings.announcementEnabled) && (
         <div className="bg-gradient-to-r from-[#7C3AED] via-[#6D28D9] to-[#06B6D4] text-white text-[11px] sm:text-xs font-semibold py-1.5 px-4 text-center flex items-center justify-center gap-2 shadow-sm">

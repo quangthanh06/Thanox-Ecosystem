@@ -39,7 +39,10 @@ import {
   Percent,
   Paperclip,
   File as FileIcon,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
+import { useDragScroll } from '../hooks/useDragScroll';
 
 export const ProductsView: React.FC = () => {
   const {
@@ -51,6 +54,8 @@ export const ProductsView: React.FC = () => {
     toggleProductLock,
     showToast,
   } = useStore();
+
+  const { dragProps: drawerDragProps, scrollLeft: drawerScrollLeft, scrollRight: drawerScrollRight } = useDragScroll<HTMLDivElement>();
 
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [searchQuery, setSearchQuery] = useState('');
@@ -814,93 +819,116 @@ export const ProductsView: React.FC = () => {
         }
       >
         <div className="space-y-4 text-xs">
-          {/* Drawer Tab Switcher (Thanh ngang đa năng) */}
-          <div className="flex items-center gap-1 bg-[#161626] p-1 rounded-2xl border border-white/10 overflow-x-auto scrollbar-none">
+          {/* Drawer Tab Switcher (Thanh ngang đa năng với kéo chuột & mũi tên) */}
+          <div className="relative flex items-center gap-1">
             <button
               type="button"
-              onClick={() => setDrawerTab('basic')}
-              className={`flex-1 py-2 px-2.5 rounded-xl text-center font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                drawerTab === 'basic'
-                  ? 'bg-[#7C3AED] text-white shadow-sm'
-                  : 'text-[#8B84A8] hover:text-white'
-              }`}
+              onClick={drawerScrollLeft}
+              className="p-1.5 rounded-xl bg-[#161626] border border-white/10 text-[#CBC7E0] hover:text-white shrink-0 cursor-pointer shadow-sm"
+              title="Cuộn sang trái"
             >
-              <FileText className="w-3.5 h-3.5" />
-              <span>1. Thông Tin</span>
+              <ChevronLeft className="w-3.5 h-3.5" />
             </button>
+
+            <div
+              {...drawerDragProps}
+              className="flex items-center gap-1 bg-[#161626] p-1 rounded-2xl border border-white/10 overflow-x-auto scrollbar-none no-scrollbar flex-1"
+            >
+              <button
+                type="button"
+                onClick={() => setDrawerTab('basic')}
+                className={`flex-1 py-2 px-2.5 rounded-xl text-center font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer flex items-center justify-center gap-1 shrink-0 ${
+                  drawerTab === 'basic'
+                    ? 'bg-[#7C3AED] text-white shadow-sm'
+                    : 'text-[#8B84A8] hover:text-white'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>1. Thông Tin</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDrawerTab('pricing')}
+                className={`flex-1 py-2 px-2.5 rounded-xl text-center font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer flex items-center justify-center gap-1 shrink-0 ${
+                  drawerTab === 'pricing'
+                    ? 'bg-[#7C3AED] text-white shadow-sm'
+                    : 'text-[#8B84A8] hover:text-white'
+                }`}
+              >
+                <DollarSign className="w-3.5 h-3.5" />
+                <span>2. Giá & Sale & CTV</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDrawerTab('files')}
+                className={`flex-1 py-2 px-2.5 rounded-xl text-center font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer flex items-center justify-center gap-1 shrink-0 ${
+                  drawerTab === 'files'
+                    ? 'bg-[#7C3AED] text-white shadow-sm'
+                    : 'text-[#8B84A8] hover:text-white'
+                }`}
+              >
+                <Paperclip className="w-3.5 h-3.5" />
+                <span>3. Tệp Đính Kèm {formData.attachedFileName ? '✓' : ''}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDrawerTab('packages')}
+                className={`flex-1 py-2 px-2.5 rounded-xl text-center font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer flex items-center justify-center gap-1 shrink-0 ${
+                  drawerTab === 'packages'
+                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#06B6D4] text-white shadow-sm'
+                    : 'text-[#8B84A8] hover:text-white'
+                }`}
+              >
+                {isAccountCategory(formData.category) ? (
+                  <>
+                    <ShieldCheck className="w-3.5 h-3.5 text-cyan-300" />
+                    <span>4. Kho Acc</span>
+                  </>
+                ) : (
+                  <>
+                    <Key className="w-3.5 h-3.5 text-cyan-300" />
+                    <span>4. Gói Key ({(formData.packages || []).length})</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDrawerTab('images')}
+                className={`flex-1 py-2 px-2.5 rounded-xl text-center font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer flex items-center justify-center gap-1 shrink-0 ${
+                  drawerTab === 'images'
+                    ? 'bg-[#7C3AED] text-white shadow-sm'
+                    : 'text-[#8B84A8] hover:text-white'
+                }`}
+              >
+                <ImageIcon className="w-3.5 h-3.5" />
+                <span>5. Ảnh ({(formData.images || []).length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDrawerTab('delivery')}
+                className={`flex-1 py-2 px-2.5 rounded-xl text-center font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer flex items-center justify-center gap-1 shrink-0 ${
+                  drawerTab === 'delivery'
+                    ? 'bg-[#7C3AED] text-white shadow-sm'
+                    : 'text-[#8B84A8] hover:text-white'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>6. Giao Hàng</span>
+              </button>
+            </div>
 
             <button
               type="button"
-              onClick={() => setDrawerTab('pricing')}
-              className={`flex-1 py-2 px-2.5 rounded-xl text-center font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                drawerTab === 'pricing'
-                  ? 'bg-[#7C3AED] text-white shadow-sm'
-                  : 'text-[#8B84A8] hover:text-white'
-              }`}
+              onClick={drawerScrollRight}
+              className="p-1.5 rounded-xl bg-[#161626] border border-white/10 text-[#CBC7E0] hover:text-white shrink-0 cursor-pointer shadow-sm"
+              title="Cuộn sang phải"
             >
-              <DollarSign className="w-3.5 h-3.5" />
-              <span>2. Giá & Sale & CTV</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setDrawerTab('files')}
-              className={`flex-1 py-2 px-2.5 rounded-xl text-center font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                drawerTab === 'files'
-                  ? 'bg-[#7C3AED] text-white shadow-sm'
-                  : 'text-[#8B84A8] hover:text-white'
-              }`}
-            >
-              <Paperclip className="w-3.5 h-3.5" />
-              <span>3. Tệp Đính Kèm {formData.attachedFileName ? '✓' : ''}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setDrawerTab('packages')}
-              className={`flex-1 py-2 px-2.5 rounded-xl text-center font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                drawerTab === 'packages'
-                  ? 'bg-gradient-to-r from-[#7C3AED] to-[#06B6D4] text-white shadow-sm'
-                  : 'text-[#8B84A8] hover:text-white'
-              }`}
-            >
-              {isAccountCategory(formData.category) ? (
-                <>
-                  <ShieldCheck className="w-3.5 h-3.5 text-cyan-300" />
-                  <span>4. Kho Acc</span>
-                </>
-              ) : (
-                <>
-                  <Key className="w-3.5 h-3.5 text-cyan-300" />
-                  <span>4. Gói Key ({(formData.packages || []).length})</span>
-                </>
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setDrawerTab('images')}
-              className={`flex-1 py-2 px-2.5 rounded-xl text-center font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                drawerTab === 'images'
-                  ? 'bg-[#7C3AED] text-white shadow-sm'
-                  : 'text-[#8B84A8] hover:text-white'
-              }`}
-            >
-              <ImageIcon className="w-3.5 h-3.5" />
-              <span>5. Ảnh ({(formData.images || []).length})</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setDrawerTab('delivery')}
-              className={`flex-1 py-2 px-2.5 rounded-xl text-center font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                drawerTab === 'delivery'
-                  ? 'bg-[#7C3AED] text-white shadow-sm'
-                  : 'text-[#8B84A8] hover:text-white'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>6. Giao Hàng</span>
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
