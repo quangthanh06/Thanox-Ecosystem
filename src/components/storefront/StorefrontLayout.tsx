@@ -344,16 +344,18 @@ export const StorefrontLayout: React.FC = () => {
               </div>
             )}
 
-            {/* Desktop Switch to Admin Button */}
-            <Button
-              variant="secondary"
-              size="xs"
-              onClick={() => navigateToAdmin()}
-              leftIcon={<Shield className="w-3.5 h-3.5 text-[#9D5CF6]" />}
-              className="hidden lg:flex font-bold border-[#7C3AED]/30 hover:border-[#7C3AED]"
-            >
-              Vào Admin
-            </Button>
+            {/* Desktop Switch to Admin Button (Admin only) */}
+            {isAuthenticated && currentUser.role === 'admin' && (
+              <Button
+                variant="secondary"
+                size="xs"
+                onClick={() => navigateToAdmin()}
+                leftIcon={<Shield className="w-3.5 h-3.5 text-[#9D5CF6]" />}
+                className="hidden lg:flex font-bold border-[#7C3AED]/30 hover:border-[#7C3AED]"
+              >
+                Vào Admin
+              </Button>
+            )}
 
             {/* Mobile Menu Toggle */}
             <button

@@ -122,7 +122,7 @@ export const StorefrontHome: React.FC = () => {
           </div>
           <div>
             <div className="font-bold text-xs sm:text-sm text-[#F0EDFF]">Bảo Hành 100%</div>
-            <div className="text-[11px] text-[#8B84A8]">Hoàn tiền nếu lỗi file</div>
+            <div className="text-[11px] text-[#8B84A8]">1 đổi 1 & hỗ trợ key</div>
           </div>
         </div>
 

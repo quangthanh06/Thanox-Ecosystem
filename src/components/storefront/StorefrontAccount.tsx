@@ -18,10 +18,27 @@ import {
 } from 'lucide-react';
 
 export const StorefrontAccount: React.FC = () => {
-  const { currentUser, orders, topups, transactions, navigateToStorefront } = useStore();
+  const {
+    currentUser,
+    orders,
+    topups,
+    transactions,
+    navigateToStorefront,
+    applySeller,
+    showToast,
+  } = useStore();
 
   const userOrders = orders.filter((o) => o.userId === currentUser.id);
   const userTopups = topups.filter((t) => t.userId === currentUser.id);
+
+  const handleApplySeller = () => {
+    const res = applySeller('Đăng ký trở thành đại lý phân phối Thanox');
+    if (res.success) {
+      showToast('Gửi hồ sơ đại lý thành công! Admin sẽ duyệt sớm nhất.', 'success');
+    } else {
+      showToast(res.message, 'warning');
+    }
+  };
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 py-4">
@@ -221,9 +238,7 @@ export const StorefrontAccount: React.FC = () => {
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => {
-                  useStore.getState().applySeller('Đăng ký trở thành đại lý phân phối Thanox');
-                }}
+                onClick={handleApplySeller}
                 className="font-bold shadow-lg shadow-[#7C3AED]/20 cursor-pointer"
               >
                 Đăng Ký Làm Đại Lý Ngay
