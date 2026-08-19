@@ -4,12 +4,15 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import {
   Search,
-  SlidersHorizontal,
   ShoppingCart,
   Zap,
   ArrowUpDown,
   Filter,
   Package,
+  Sparkles,
+  Layers,
+  Flame,
+  CheckCircle2,
 } from 'lucide-react';
 
 export const StorefrontProducts: React.FC = () => {
@@ -57,189 +60,209 @@ export const StorefrontProducts: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 py-4">
-      {/* Breadcrumb & Title */}
-      <div className="border-b border-white/5 pb-5">
-        <div className="flex items-center gap-2 text-xs text-[#8B84A8] mb-1.5">
+    <div className="space-y-6 py-2 sm:py-4">
+      {/* Breadcrumb & Header Title */}
+      <div className="border-b border-white/5 pb-4">
+        <div className="flex items-center gap-2 text-[11px] text-[#8B84A8] mb-1">
           <button onClick={() => navigateToStorefront('home')} className="hover:text-white transition-colors cursor-pointer">
             Trang Chủ
           </button>
           <span>/</span>
           <span className="text-[#9D5CF6] font-medium">Tất Cả Sản Phẩm</span>
         </div>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <h1 className="font-display text-2xl font-extrabold text-[#F0EDFF]">
-              Danh Mục Sản Phẩm & Key Bản Quyền
+            <h1 className="font-display text-xl sm:text-3xl font-extrabold text-[#F0EDFF] tracking-tight">
+              Kho Sản Phẩm & Key Bản Quyền
             </h1>
-            <p className="text-xs text-[#8B84A8] mt-0.5">
-              Hệ thống cung cấp file tối ưu hóa game, menu VIP và acc an toàn 100%
+            <p className="text-[11px] sm:text-xs text-[#8B84A8] mt-0.5">
+              Hệ thống tối ưu game, file mod an toàn và proxy tốc độ cao 24/7
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-[#8B84A8] whitespace-nowrap">Sắp xếp theo:</span>
+          {/* Search & Sort on Desktop/Mobile */}
+          <div className="flex items-center gap-2.5">
+            <div className="relative flex-1 sm:w-64">
+              <Search className="w-3.5 h-3.5 text-[#8B84A8] absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Tìm nhanh file, key..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl pl-8 pr-3 py-2 text-xs text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED]"
+              />
+            </div>
+
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-[#0F0F1A] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
+              className="bg-[#0F0F1A] border border-white/10 rounded-xl px-2.5 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
             >
-              <option value="featured">Nổi bật nhất</option>
-              <option value="sold">Bán chạy nhất</option>
-              <option value="price-asc">Giá thấp đến cao</option>
-              <option value="price-desc">Giá cao đến thấp</option>
+              <option value="featured">✨ Nổi bật</option>
+              <option value="sold">🔥 Bán chạy</option>
+              <option value="price-asc">💵 Giá thấp &rarr; cao</option>
+              <option value="price-desc">💎 Giá cao &rarr; thấp</option>
             </select>
           </div>
         </div>
       </div>
 
-      {/* Main Layout: Sidebar Categories (4 cols) + Products Grid (8 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Filter Column */}
-        <div className="lg:col-span-3 space-y-5">
-          {/* Search Box */}
-          <div className="relative">
-            <Search className="w-4 h-4 text-[#8B84A8] absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Tìm kiếm sản phẩm..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED]"
-            />
-          </div>
+      {/* 1. HORIZONTAL TOUCH-FRIENDLY CATEGORY BAR (ALL DEVICES) */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none no-scrollbar -mx-2 px-2 sm:mx-0 sm:px-0">
+        <button
+          type="button"
+          onClick={() => setSelectedCategory('all')}
+          className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0 ${
+            selectedCategory === 'all'
+              ? 'bg-[#7C3AED] text-white shadow-lg shadow-[#7C3AED]/30 scale-105'
+              : 'bg-[#161626]/80 text-[#CBC7E0] border border-white/5 hover:border-white/20'
+          }`}
+        >
+          <Layers className="w-3.5 h-3.5" />
+          <span>Tất Cả ({activeProducts.length})</span>
+        </button>
 
-          {/* Categories Filter Card */}
-          <div className="bg-[#0F0F1A] border border-white/10 rounded-2xl p-4 space-y-3">
-            <div className="flex items-center gap-2 text-xs font-bold text-[#F0EDFF] uppercase tracking-wider border-b border-white/5 pb-3">
-              <Filter className="w-3.5 h-3.5 text-[#9D5CF6]" />
-              <span>Danh Mục</span>
-            </div>
+        {categories.map((c) => {
+          const count = activeProducts.filter((p) => p.category === c.name).length;
+          const active = selectedCategory === c.name;
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => setSelectedCategory(c.name)}
+              className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                active
+                  ? 'bg-[#7C3AED] text-white shadow-lg shadow-[#7C3AED]/30 scale-105'
+                  : 'bg-[#161626]/80 text-[#CBC7E0] border border-white/5 hover:border-white/20'
+              }`}
+            >
+              <span>{c.icon}</span>
+              <span>{c.name}</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${active ? 'bg-white/20 text-white' : 'bg-white/5 text-[#8B84A8]'}`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
 
-            <div className="space-y-1">
-              <button
-                onClick={() => setSelectedCategory('all')}
-                className={`w-full p-2.5 rounded-xl text-left text-xs font-semibold transition-all cursor-pointer flex items-center justify-between ${
-                  selectedCategory === 'all'
-                    ? 'bg-[#7C3AED] text-white shadow-sm shadow-[#7C3AED]/20'
-                    : 'text-[#CBC7E0] hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <span>Tất cả sản phẩm</span>
-                <span className="text-[10.5px] opacity-80">{activeProducts.length}</span>
-              </button>
-
-              {categories.map((c) => {
-                const count = activeProducts.filter((p) => p.category === c.name).length;
-                return (
-                  <button
-                    key={c.id}
-                    onClick={() => setSelectedCategory(c.name)}
-                    className={`w-full p-2.5 rounded-xl text-left text-xs font-semibold transition-all cursor-pointer flex items-center justify-between ${
-                      selectedCategory === c.name
-                        ? 'bg-[#7C3AED] text-white shadow-sm shadow-[#7C3AED]/20'
-                        : 'text-[#CBC7E0] hover:bg-white/5 hover:text-white'
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span>{c.icon}</span>
-                      <span>{c.name}</span>
-                    </span>
-                    <span className="text-[10.5px] opacity-80">{count}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+      {/* 2. PRODUCTS GRID (1 col mobile, 2 sm, 3 lg, 4 xl) */}
+      {filteredProducts.length === 0 ? (
+        <div className="p-12 text-center text-xs text-[#8B84A8] bg-[#0F0F1A] border border-dashed border-white/10 rounded-3xl space-y-2">
+          <Package className="w-10 h-10 text-[#6B658E] mx-auto" />
+          <div className="font-bold text-sm text-[#F0EDFF]">Không tìm thấy sản phẩm phù hợp</div>
+          <div>Hãy thử tìm bằng từ khóa khác hoặc chuyển sang danh mục khác.</div>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+          {filteredProducts.map((product) => {
+            const isSeller = currentUser?.sellerStatus === 'active' && !!product.sellerPrice;
+            const effectivePrice = isSeller ? product.sellerPrice! : product.price;
+            const originalDisplayPrice = isSeller ? product.price : product.originalPrice;
 
-        {/* Right Products Grid Column */}
-        <div className="lg:col-span-9 space-y-4">
-          {filteredProducts.length === 0 ? (
-            <div className="p-12 text-center text-xs text-[#8B84A8] bg-[#0F0F1A] border border-dashed border-white/5 rounded-2xl space-y-2">
-              <Package className="w-8 h-8 text-[#6B658E] mx-auto" />
-              <div>Không tìm thấy sản phẩm nào phù hợp với từ khóa hoặc danh mục đã chọn.</div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-              {filteredProducts.map((product) => {
-                const isSeller = currentUser?.sellerStatus === 'active' && !!product.sellerPrice;
-                const effectivePrice = isSeller ? product.sellerPrice! : product.price;
-                const originalDisplayPrice = isSeller ? product.price : product.originalPrice;
+            const discount = originalDisplayPrice
+              ? Math.round(((originalDisplayPrice - effectivePrice) / originalDisplayPrice) * 100)
+              : null;
 
-                const discount = originalDisplayPrice
-                  ? Math.round(((originalDisplayPrice - effectivePrice) / originalDisplayPrice) * 100)
-                  : null;
-
-                return (
+            return (
+              <div
+                key={product.id}
+                className="bg-[rgba(255,255,255,0.03)] backdrop-blur-[26px] border border-white/10 hover:border-[#7C3AED]/50 hover:shadow-[0_0_25px_rgba(124,58,237,0.2)] rounded-3xl p-4 sm:p-4.5 flex flex-col justify-between transition-all duration-300 group hover:-translate-y-1"
+              >
+                <div className="space-y-3">
+                  {/* Thumbnail Cover with Badge */}
                   <div
-                    key={product.id}
-                    className="bg-[#0F0F1A] border border-white/5 hover:border-[#7C3AED]/40 rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all group hover:bg-[#121222]"
+                    onClick={() => navigateToStorefront('product-detail', product.id)}
+                    className="relative aspect-video sm:aspect-square rounded-2xl bg-[#161626] border border-white/5 overflow-hidden flex items-center justify-center cursor-pointer group-hover:border-[#7C3AED]/30 transition-colors"
                   >
-                    <div className="space-y-2.5">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#7C3AED]/15 text-[#9D5CF6]">
-                          {product.category}
-                        </span>
-                        {isSeller ? (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-300">
-                            Giá Đại Lý
-                          </span>
-                        ) : discount ? (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400">
-                            -{discount}%
-                          </span>
-                        ) : null}
+                    {product.image ? (
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-2xl bg-[#7C3AED]/20 border border-[#7C3AED]/30 flex items-center justify-center text-[#9D5CF6] font-bold">
+                        <Package className="w-6 h-6" />
                       </div>
+                    )}
 
-                      <h3
-                        onClick={() => navigateToStorefront('product-detail', product.id)}
-                        className="font-display font-bold text-sm text-[#F0EDFF] group-hover:text-[#9D5CF6] transition-colors cursor-pointer line-clamp-2"
-                      >
-                        {product.name}
-                      </h3>
-
-                      <p className="text-[11.5px] text-[#6B658E] line-clamp-2 leading-relaxed">
-                        {product.description}
-                      </p>
-
-                      <div className="pt-2">
-                        <div className="font-display font-extrabold text-base text-emerald-400">
-                          {effectivePrice.toLocaleString('vi-VN')} <span className="text-xs">đ</span>
-                        </div>
-                        {originalDisplayPrice && originalDisplayPrice > effectivePrice && (
-                          <div className="text-[11px] text-[#6B658E] line-through">
-                            {originalDisplayPrice.toLocaleString('vi-VN')}đ
-                          </div>
-                        )}
-                      </div>
+                    {/* Top Badges */}
+                    <div className="absolute top-2 left-2 flex gap-1.5 z-10">
+                      <span className="px-2 py-0.5 rounded-lg text-[9.5px] font-bold bg-[#0F0F1A]/90 text-[#9D5CF6] border border-white/10 backdrop-blur-md">
+                        {product.category}
+                      </span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 pt-4 mt-3 border-t border-white/5">
-                      <Button
-                        variant="secondary"
-                        size="xs"
-                        onClick={() => addToCart(product)}
-                        className="justify-center"
-                      >
-                        + Giỏ Hàng
-                      </Button>
-                      <Button
-                        variant="primary"
-                        size="xs"
-                        onClick={() => handleQuickBuy(product.id, effectivePrice)}
-                        className="justify-center font-bold"
-                      >
-                        Mua Ngay
-                      </Button>
+                    <div className="absolute top-2 right-2 flex gap-1 z-10">
+                      {isSeller ? (
+                        <span className="px-2 py-0.5 rounded-lg text-[9.5px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 backdrop-blur-md">
+                          CTV
+                        </span>
+                      ) : discount ? (
+                        <span className="px-2 py-0.5 rounded-lg text-[9.5px] font-bold bg-red-500/20 text-red-400 border border-red-500/30 backdrop-blur-md">
+                          -{discount}%
+                        </span>
+                      ) : null}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
+
+                  {/* Title & Description */}
+                  <div>
+                    <h3
+                      onClick={() => navigateToStorefront('product-detail', product.id)}
+                      className="font-display font-extrabold text-sm text-[#F0EDFF] group-hover:text-[#9D5CF6] transition-colors cursor-pointer line-clamp-2 leading-snug"
+                    >
+                      {product.name}
+                    </h3>
+                    <p className="text-[11px] text-[#8B84A8] line-clamp-2 leading-relaxed mt-1">
+                      {product.description || 'Giao key và link tải file tự động sau 3 giây.'}
+                    </p>
+                  </div>
+
+                  {/* Price Block */}
+                  <div className="pt-1 flex items-baseline justify-between">
+                    <div>
+                      <div className="font-display font-extrabold text-base sm:text-lg text-emerald-400">
+                        {effectivePrice.toLocaleString('vi-VN')} <span className="text-[11px]">đ</span>
+                      </div>
+                      {originalDisplayPrice && originalDisplayPrice > effectivePrice && (
+                        <div className="text-[10.5px] text-[#6B658E] line-through">
+                          {originalDisplayPrice.toLocaleString('vi-VN')}đ
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="text-[10.5px] text-[#8B84A8] font-medium">
+                      Đã bán: <strong className="text-[#CBC7E0]">{product.soldCount}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="grid grid-cols-2 gap-2 pt-3 mt-3 border-t border-white/5">
+                  <button
+                    type="button"
+                    onClick={() => addToCart(product)}
+                    className="py-2 px-2.5 rounded-xl bg-[#161626] hover:bg-[#1E1E30] text-[#CBC7E0] hover:text-white text-xs font-bold transition-all text-center cursor-pointer border border-white/5"
+                  >
+                    + Giỏ Hàng
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleQuickBuy(product.id, effectivePrice)}
+                    className="py-2 px-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold transition-all text-center cursor-pointer shadow-md shadow-[#7C3AED]/25 flex items-center justify-center gap-1"
+                  >
+                    <Zap className="w-3 h-3 text-amber-300" />
+                    <span>Mua Ngay</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
-      </div>
+      )}
     </div>
   );
 };

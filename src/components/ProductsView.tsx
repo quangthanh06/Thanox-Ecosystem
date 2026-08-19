@@ -65,6 +65,9 @@ export const ProductsView: React.FC = () => {
     stock: number | 'unlimited';
     status: ProductStatus;
     description: string;
+    downloadUrl?: string;
+    licenseKeys?: string;
+    instructions?: string;
     downloadLinkOrKeys: string;
     featured: boolean;
   }>({
@@ -78,6 +81,9 @@ export const ProductsView: React.FC = () => {
     stock: 'unlimited',
     status: 'active',
     description: '',
+    downloadUrl: '',
+    licenseKeys: '',
+    instructions: '',
     downloadLinkOrKeys: '',
     featured: false,
   });
@@ -147,6 +153,9 @@ export const ProductsView: React.FC = () => {
       stock: 'unlimited',
       status: 'active',
       description: '',
+      downloadUrl: '',
+      licenseKeys: '',
+      instructions: '',
       downloadLinkOrKeys: '',
       featured: false,
     });
@@ -167,7 +176,10 @@ export const ProductsView: React.FC = () => {
       stock: product.stock,
       status: product.status,
       description: product.description,
-      downloadLinkOrKeys: product.downloadLinkOrKeys,
+      downloadUrl: product.downloadUrl || '',
+      licenseKeys: product.licenseKeys || '',
+      instructions: product.instructions || '',
+      downloadLinkOrKeys: product.downloadLinkOrKeys || '',
       featured: product.featured,
     });
     setIsDrawerOpen(true);
@@ -180,10 +192,15 @@ export const ProductsView: React.FC = () => {
       return;
     }
 
+    const payload = {
+      ...formData,
+      downloadLinkOrKeys: formData.licenseKeys || formData.downloadUrl || formData.downloadLinkOrKeys,
+    };
+
     if (editingProduct) {
-      updateProduct(editingProduct.id, formData);
+      updateProduct(editingProduct.id, payload);
     } else {
-      addProduct(formData);
+      addProduct(payload);
     }
     setIsDrawerOpen(false);
   };
@@ -200,6 +217,9 @@ export const ProductsView: React.FC = () => {
       stock: product.stock,
       status: product.status,
       description: product.description,
+      downloadUrl: product.downloadUrl,
+      licenseKeys: product.licenseKeys,
+      instructions: product.instructions,
       downloadLinkOrKeys: product.downloadLinkOrKeys,
       featured: false,
     };
@@ -829,34 +849,88 @@ export const ProductsView: React.FC = () => {
               </div>
             )}
 
-            {/* TAB 3: AUTO DELIVERY & DESCRIPTION */}
+            {/* TAB 3: AUTO DELIVERY & FILE DOWNLOAD & INSTRUCTIONS */}
             {drawerTab === 'delivery' && (
               <div className="space-y-4">
-                {/* Download Link or Auto Key Delivery */}
+                {/* 1. Direct Download Link */}
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider flex items-center gap-1.5">
-                    <Key className="w-3.5 h-3.5 text-[#9D5CF6]" />
-                    <span>Nội Dung Bàn Giao Tự Động (Key / Link Drive) *</span>
+                  <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 text-cyan-400">
+                      <Download className="w-3.5 h-3.5" />
+                      <span>1. Link Tải File Cài Đặt (Google Drive / OneDrive / Direct Link)</span>
+                    </span>
+                    {formData.downloadUrl && (
+                      <a
+                        href={formData.downloadUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] text-[#9D5CF6] hover:underline"
+                      >
+                        Mở link thử &rarr;
+                      </a>
+                    )}
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.downloadUrl || ''}
+                    onChange={(e) => setFormData({ ...formData, downloadUrl: e.target.value })}
+                    placeholder="https://drive.google.com/file/d/.../view?usp=sharing"
+                    className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-cyan-300 placeholder-[#6B658E] font-mono focus:outline-none focus:border-[#7C3AED]"
+                  />
+                  <span className="text-[10px] text-[#6B658E]">
+                    Link này sẽ hiển thị thành nút &ldquo;📥 Tải File Cài Đặt&rdquo; trong chi tiết đơn hàng của khách.
+                  </span>
+                </div>
+
+                {/* 2. License Key / Auto Delivery Content */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider flex items-center gap-1.5 text-amber-300">
+                    <Key className="w-3.5 h-3.5" />
+                    <span>2. Mã License Key / Tài Khoản Bàn Giao Tự Động</span>
                   </label>
                   <textarea
-                    rows={5}
-                    value={formData.downloadLinkOrKeys}
-                    onChange={(e) => setFormData({ ...formData, downloadLinkOrKeys: e.target.value })}
-                    placeholder="Nhập link Google Drive tải file, mã bản quyền hoặc key kích hoạt. Hệ thống sẽ tự động giao nội dung này sau khi khách thanh toán thành công."
-                    className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED] font-mono"
+                    rows={3}
+                    value={formData.licenseKeys || formData.downloadLinkOrKeys || ''}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        licenseKeys: e.target.value,
+                        downloadLinkOrKeys: e.target.value,
+                      })
+                    }
+                    placeholder="VD: TX-PRO-2026-889922 (Mỗi key 1 dòng hoặc ghi chú kích hoạt)"
+                    className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-amber-300 placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED] font-mono"
+                  />
+                  <span className="text-[10px] text-[#6B658E]">
+                    Khách hàng có thể bấm 1 nút để sao chép mã Key này ngay sau khi thanh toán.
+                  </span>
+                </div>
+
+                {/* 3. Setup Instructions */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider flex items-center gap-1.5 text-emerald-400">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>3. Hướng Dẫn Cài Đặt & Lưu Ý Kỹ Thuật (Tùy chọn)</span>
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={formData.instructions || ''}
+                    onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
+                    placeholder="VD: 1. Cài đặt file APK -> 2. Cấp quyền Root / Magisk -> 3. Dán key để kích hoạt..."
+                    className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED]"
                   />
                 </div>
 
-                {/* Description */}
+                {/* 4. Description */}
                 <div className="space-y-1">
                   <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
-                    Mô Tả Chi Tiết Sản Phẩm
+                    4. Mô Tả Tổng Quan Sản Phẩm
                   </label>
                   <textarea
-                    rows={4}
+                    rows={3}
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Tính năng nổi bật, hướng dẫn cài đặt sơ lược..."
+                    placeholder="Mô tả các tính năng ưu việt, tương thích thiết bị..."
                     className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED]"
                   />
                 </div>

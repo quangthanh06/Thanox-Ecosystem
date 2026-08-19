@@ -36,6 +36,7 @@ import { StorefrontOrders } from './StorefrontOrders';
 import { StorefrontTransactions } from './StorefrontTransactions';
 import { StorefrontSupport } from './StorefrontSupport';
 import { StorefrontAffiliate } from './StorefrontAffiliate';
+import { MusicPlayer } from './MusicPlayer';
 
 export const StorefrontLayout: React.FC = () => {
   const {
@@ -187,7 +188,7 @@ export const StorefrontLayout: React.FC = () => {
                     : 'text-[#8B84A8] hover:text-white'
                 }`}
               >
-                Affiliate
+                Giới Thiệu
               </Link>
               <Link
                 to="/support"
@@ -449,7 +450,7 @@ export const StorefrontLayout: React.FC = () => {
               onClick={() => setMobileMenuOpen(false)}
               className="block w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
             >
-              Tiếp Thị Affiliate
+              Giới Thiệu & Kiếm Tiền
             </Link>
             <Link
               to="/support"
@@ -462,7 +463,7 @@ export const StorefrontLayout: React.FC = () => {
             {isAuthenticated && (
               <button
                 onClick={handleLogout}
-                className="w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-500/10"
+                className="w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-500/10 cursor-pointer"
               >
                 Đăng Xuất
               </button>
@@ -475,7 +476,7 @@ export const StorefrontLayout: React.FC = () => {
                     navigateToAdmin();
                     setMobileMenuOpen(false);
                   }}
-                  className="w-full text-left py-2 px-3 rounded-xl text-xs font-bold text-[#9D5CF6] bg-[#7C3AED]/10 hover:bg-[#7C3AED]/20"
+                  className="w-full text-left py-2 px-3 rounded-xl text-xs font-bold text-[#9D5CF6] bg-[#7C3AED]/10 hover:bg-[#7C3AED]/20 cursor-pointer"
                 >
                   ⚡ Chuyển Sang Admin Panel
                 </button>
@@ -489,6 +490,9 @@ export const StorefrontLayout: React.FC = () => {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Outlet />
       </main>
+
+      {/* Floating Music Player for Customer */}
+      <MusicPlayer />
 
       {/* Global Toast in Storefront */}
       <Toast />

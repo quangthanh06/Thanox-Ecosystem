@@ -22,13 +22,25 @@ import {
   Send,
   PhoneCall,
   Bot,
+  Music,
+  Play,
+  Trash2,
+  Plus,
+  Disc,
+  Volume2,
 } from 'lucide-react';
 
 export const SettingsView: React.FC = () => {
   const { settings, updateSettings, resetToDefaultData, resetToZeroData, showToast } = useStore();
 
-  const [activeTab, setActiveTab] = useState<'general' | 'payments' | 'security' | 'affiliate' | 'data'>('payments');
+  const [activeTab, setActiveTab] = useState<'general' | 'payments' | 'security' | 'affiliate' | 'music' | 'data'>('payments');
   const [formData, setFormData] = useState<StoreSettings>({ ...settings });
+
+  // Music form state
+  const [newTrackTitle, setNewTrackTitle] = useState('');
+  const [newTrackArtist, setNewTrackArtist] = useState('');
+  const [newTrackUrl, setNewTrackUrl] = useState('');
+  const [previewAudioUrl, setPreviewAudioUrl] = useState<string | null>(null);
 
   // VietQR Admin Preview states
   const [previewAmount, setPreviewAmount] = useState<number>(200000);
@@ -114,7 +126,20 @@ export const SettingsView: React.FC = () => {
           }`}
         >
           <Share2 className="w-3.5 h-3.5 text-amber-400" />
-          <span>Tiếp Thị Liên Kết</span>
+          <span>Giới Thiệu & Kiếm Tiền</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('music')}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+            activeTab === 'music'
+              ? 'bg-[#7C3AED]/15 text-white border border-[#7C3AED]/30 shadow-sm'
+              : 'text-[#8B84A8] hover:text-white bg-[#161626]'
+          }`}
+        >
+          <Music className="w-3.5 h-3.5 text-[#9D5CF6]" />
+          <span>Quản Lý Nhạc Nền</span>
         </button>
 
         <button
@@ -436,12 +461,16 @@ export const SettingsView: React.FC = () => {
               </Card>
 
               {/* Card Recharge Configuration */}
-              <Card className="p-4 space-y-3" variant="default">
-                <CardHeader title="Nạp Thẻ Cào Tự Động" subtitle="Cấu hình chiết khấu và nhà mạng hỗ trợ" />
-                <label className="flex items-center justify-between p-2.5 rounded-xl bg-[#161626] border border-white/5 cursor-pointer text-xs">
+              <Card className="p-5 space-y-4" variant="default">
+                <CardHeader
+                  title="Nạp Thẻ Cào Tự Động & Tỷ Lệ Thực Nhận"
+                  subtitle="Cấu hình % chiết khấu và số tiền User thực nhận vào ví khi nạp thẻ"
+                  icon={<CreditCard className="w-4 h-4 text-[#06B6D4]" />}
+                />
+                <label className="flex items-center justify-between p-3 rounded-2xl bg-[#161626] border border-white/5 cursor-pointer text-xs">
                   <div>
-                    <div className="font-semibold text-[#F0EDFF]">Bật Nạp Thẻ Cào</div>
-                    <div className="text-[10px] text-[#6B658E]">Cho phép khách hàng nạp tiền qua thẻ cào Viettel, Vina, Mobi, Zing, Garena</div>
+                    <div className="font-semibold text-[#F0EDFF]">Bật Cổng Nạp Thẻ Cào</div>
+                    <div className="text-[10.5px] text-[#6B658E]">Cho phép khách hàng nạp ví qua thẻ Viettel, Vina, Mobi, Zing, Garena</div>
                   </div>
                   <input
                     type="checkbox"
@@ -450,32 +479,94 @@ export const SettingsView: React.FC = () => {
                     className="rounded bg-[#0F0F1A] border-white/10 text-[#7C3AED] focus:ring-0 w-4 h-4 cursor-pointer"
                   />
                 </label>
+
                 {formData.scratchCardEnabled && (
-                  <div className="space-y-3 text-xs pt-1">
-                    <div className="space-y-1">
-                      <label className="text-[10.5px] font-semibold text-[#8B84A8]">Phí Chiết Khấu Gạch Thẻ (%):</label>
-                      <input
-                        type="number"
-                        min={0}
-                        max={50}
-                        value={formData.cardSettings?.feePercentage ?? 15}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            cardSettings: {
-                              ...(formData.cardSettings || {
-                                enabled: true,
-                                feePercentage: 15,
-                                minAmount: 10000,
-                                maxAmount: 1000000,
-                                allowedNetworks: ['Viettel', 'Vinaphone', 'Mobifone', 'Vietnamobile', 'Zing', 'Garena'],
-                              }),
-                              feePercentage: Number(e.target.value),
-                            },
-                          })
-                        }
-                        className="w-full bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-amber-400 font-bold focus:outline-none"
-                      />
+                  <div className="space-y-4 text-xs pt-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                          Phí Chiết Khấu Hệ Thống (%)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            min={0}
+                            max={50}
+                            value={formData.cardSettings?.feePercentage ?? 15}
+                            onChange={(e) => {
+                              const fee = Number(e.target.value);
+                              setFormData({
+                                ...formData,
+                                cardSettings: {
+                                  ...(formData.cardSettings || {
+                                    enabled: true,
+                                    feePercentage: 15,
+                                    userReceiveRate: 85,
+                                    minAmount: 10000,
+                                    maxAmount: 1000000,
+                                    allowedNetworks: ['Viettel', 'Vinaphone', 'Mobifone', 'Vietnamobile', 'Zing', 'Garena'],
+                                  }),
+                                  feePercentage: fee,
+                                  userReceiveRate: 100 - fee,
+                                },
+                              });
+                            }}
+                            className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-amber-400 font-bold focus:outline-none focus:border-[#7C3AED]"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-amber-400">%</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                          % User Thực Nhận Vào Ví (%)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            min={50}
+                            max={100}
+                            value={100 - (formData.cardSettings?.feePercentage ?? 15)}
+                            onChange={(e) => {
+                              const receiveRate = Number(e.target.value);
+                              const fee = Math.max(0, 100 - receiveRate);
+                              setFormData({
+                                ...formData,
+                                cardSettings: {
+                                  ...(formData.cardSettings || {
+                                    enabled: true,
+                                    feePercentage: 15,
+                                    userReceiveRate: 85,
+                                    minAmount: 10000,
+                                    maxAmount: 1000000,
+                                    allowedNetworks: ['Viettel', 'Vinaphone', 'Mobifone', 'Vietnamobile', 'Zing', 'Garena'],
+                                  }),
+                                  feePercentage: fee,
+                                  userReceiveRate: receiveRate,
+                                },
+                              });
+                            }}
+                            className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-emerald-400 font-bold focus:outline-none focus:border-[#7C3AED]"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-400">%</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-2xl bg-[#161626]/80 border border-white/5 space-y-1.5 text-[11px]">
+                      <div className="font-semibold text-[#F0EDFF]">Ví dụ thực tế khi User nạp thẻ:</div>
+                      <div className="text-[#8B84A8] flex justify-between">
+                        <span>• Thẻ 100.000đ:</span>
+                        <strong className="text-emerald-400">
+                          User nhận +{(100000 * (1 - (formData.cardSettings?.feePercentage ?? 15) / 100)).toLocaleString('vi-VN')}đ
+                        </strong>
+                      </div>
+                      <div className="text-[#8B84A8] flex justify-between">
+                        <span>• Thẻ 500.000đ:</span>
+                        <strong className="text-emerald-400">
+                          User nhận +{(500000 * (1 - (formData.cardSettings?.feePercentage ?? 15) / 100)).toLocaleString('vi-VN')}đ
+                        </strong>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -681,7 +772,204 @@ export const SettingsView: React.FC = () => {
           </Card>
         )}
 
-        {/* 5. DATA MANAGEMENT & ZERO RESET TAB */}
+        {/* 5. MUSIC MANAGEMENT TAB */}
+        {activeTab === 'music' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            {/* Left: Music Config & Add Track (5 cols) */}
+            <div className="lg:col-span-5 space-y-4">
+              <Card className="p-5 space-y-4" variant="default">
+                <CardHeader
+                  title="Cấu Hình Nhạc Nền Khách Hàng"
+                  subtitle="Phát nhạc tự động khi khách vào web Shop Thanox"
+                  icon={<Music className="w-4 h-4 text-[#9D5CF6]" />}
+                />
+
+                <label className="flex items-center justify-between p-3 rounded-2xl bg-[#161626] border border-white/5 cursor-pointer text-xs">
+                  <div>
+                    <div className="font-semibold text-[#F0EDFF]">Bật Trình Phát Nhạc Nền</div>
+                    <div className="text-[10.5px] text-[#6B658E]">
+                      Hiển thị thanh nghe nhạc nổi góc trái cho tất cả khách hàng
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={formData.musicEnabled}
+                    onChange={(e) => setFormData({ ...formData, musicEnabled: e.target.checked })}
+                    className="rounded bg-[#0F0F1A] border-white/10 text-[#7C3AED] focus:ring-0 w-4 h-4 cursor-pointer"
+                  />
+                </label>
+              </Card>
+
+              {/* Add New Track Card */}
+              <Card className="p-5 space-y-4 border-[#7C3AED]/30" variant="default">
+                <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+                  <Plus className="w-4 h-4 text-[#9D5CF6]" />
+                  <h4 className="font-display font-bold text-xs uppercase tracking-wider text-[#F0EDFF]">
+                    Thêm Bài Hát Mới
+                  </h4>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                      Tên Bài Hát *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="VD: Cyberpunk Phonk VIP"
+                      value={newTrackTitle}
+                      onChange={(e) => setNewTrackTitle(e.target.value)}
+                      className="w-full bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                      Nghệ Sĩ / Tác Giả
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="VD: Thanox Audio Team"
+                      value={newTrackArtist}
+                      onChange={(e) => setNewTrackArtist(e.target.value)}
+                      className="w-full bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                      Link MP3 / Âm Thanh Trực Tiếp (URL) *
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://.../music.mp3"
+                      value={newTrackUrl}
+                      onChange={(e) => setNewTrackUrl(e.target.value)}
+                      className="w-full bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#06B6D4] font-mono focus:outline-none focus:border-[#7C3AED]"
+                    />
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    className="w-full justify-center"
+                    leftIcon={<Plus className="w-4 h-4" />}
+                    onClick={() => {
+                      if (!newTrackTitle.trim() || !newTrackUrl.trim()) {
+                        showToast('Vui lòng nhập đầy đủ tên bài hát và link URL audio', 'error');
+                        return;
+                      }
+                      const newTrack = {
+                        id: 'track-' + Date.now(),
+                        title: newTrackTitle.trim(),
+                        artist: newTrackArtist.trim() || 'Thanox Gaming',
+                        url: newTrackUrl.trim(),
+                      };
+                      setFormData({
+                        ...formData,
+                        musicTracks: [...(formData.musicTracks || []), newTrack],
+                      });
+                      setNewTrackTitle('');
+                      setNewTrackArtist('');
+                      setNewTrackUrl('');
+                      showToast(`Đã thêm bài hát "${newTrack.title}" vào danh sách phát!`, 'success');
+                    }}
+                  >
+                    Thêm Vào Danh Sách Nhạc
+                  </Button>
+                </div>
+              </Card>
+            </div>
+
+            {/* Right: Music Track Playlist (7 cols) */}
+            <div className="lg:col-span-7 space-y-4">
+              <Card className="p-5 space-y-4" variant="default">
+                <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Disc className="w-4 h-4 text-[#9D5CF6]" />
+                    <h3 className="font-display font-bold text-sm text-[#F0EDFF]">
+                      Danh Sách Bài Hát (Playlist: {(formData.musicTracks || []).length} bài)
+                    </h3>
+                  </div>
+                  <Badge variant="brand" size="xs">
+                    Auto-Loop
+                  </Badge>
+                </div>
+
+                {(!formData.musicTracks || formData.musicTracks.length === 0) ? (
+                  <div className="p-8 text-center text-xs text-[#8B84A8] border border-dashed border-white/10 rounded-2xl bg-[#161626]/40 space-y-2">
+                    <Music className="w-8 h-8 text-[#6B658E] mx-auto" />
+                    <div>Chưa có bài hát nào trong playlist. Hãy thêm bài hát ở khung bên trái!</div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {formData.musicTracks.map((track, idx) => (
+                      <div
+                        key={track.id || idx}
+                        className="p-3.5 rounded-2xl bg-[#161626] border border-white/5 hover:border-white/15 flex items-center justify-between gap-3 transition-colors"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center font-bold text-xs text-[#9D5CF6]">
+                            {idx + 1}
+                          </span>
+                          <div className="min-w-0">
+                            <div className="font-bold text-xs text-[#F0EDFF] truncate">{track.title}</div>
+                            <div className="text-[10.5px] text-[#8B84A8] truncate">{track.artist}</div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (previewAudioUrl === track.url) {
+                                setPreviewAudioUrl(null);
+                              } else {
+                                setPreviewAudioUrl(track.url);
+                              }
+                            }}
+                            className="p-2 rounded-xl bg-[#7C3AED]/20 hover:bg-[#7C3AED]/40 text-[#9D5CF6] transition-colors cursor-pointer"
+                            title="Nghe thử"
+                          >
+                            <Play className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData({
+                                ...formData,
+                                musicTracks: formData.musicTracks.filter((_, i) => i !== idx),
+                              });
+                              showToast('Đã xóa bài hát khỏi danh sách', 'info');
+                            }}
+                            className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors cursor-pointer"
+                            title="Xóa bài hát"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {previewAudioUrl && (
+                  <div className="p-3 rounded-2xl bg-[#7C3AED]/10 border border-[#7C3AED]/30 space-y-2">
+                    <div className="text-[11px] font-bold text-[#9D5CF6] flex items-center gap-1.5">
+                      <Volume2 className="w-3.5 h-3.5" />
+                      <span>Đang nghe thử:</span>
+                    </div>
+                    <audio src={previewAudioUrl} autoPlay controls className="w-full h-8" />
+                  </div>
+                )}
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* 6. DATA MANAGEMENT & ZERO RESET TAB */}
         {activeTab === 'data' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {/* Reset to Zero Card */}

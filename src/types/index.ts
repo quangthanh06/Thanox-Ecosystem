@@ -25,6 +25,9 @@ export interface Product {
   status: ProductStatus;
   description: string;
   downloadLinkOrKeys: string;
+  downloadUrl?: string; // Link tải file riêng biệt (Google Drive/OneDrive/Direct link)
+  licenseKeys?: string; // Key bản quyền hoặc thông tin giao dịch tự động
+  instructions?: string; // Hướng dẫn cài đặt & lưu ý kỹ thuật
   featured: boolean;
   image?: string;
   images?: string[];
@@ -131,7 +134,9 @@ export interface CardRechargeRequest {
 
 export interface CardSettings {
   enabled: boolean;
-  feePercentage: number;
+  feePercentage: number; // Chiết khấu hệ thống (ví dụ 15%)
+  userReceiveRate?: number; // % Thực nhận của user vào ví (ví dụ 85%)
+  networkRates?: Partial<Record<CardNetwork, number>>; // % Thực nhận theo từng nhà mạng
   minAmount: number;
   maxAmount: number;
   allowedNetworks: CardNetwork[];

@@ -77,7 +77,7 @@ export const StorefrontAffiliate: React.FC = () => {
             <span className="text-[#9D5CF6] font-medium">Đối Tác Giới Thiệu</span>
           </div>
           <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#F0EDFF] flex items-center gap-3">
-            <span>Chương Trình Đối Tác & Tiếp Thị Liên Kết</span>
+            <span>Chương Trình Giới Thiệu & Kiếm Tiền</span>
             <Badge variant="brand" size="sm" className="font-mono">
               +10.000đ / Đơn hợp lệ
             </Badge>

@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 export const StorefrontOrders: React.FC = () => {
-  const { orders, currentUser, navigateToStorefront, showToast } = useStore();
+  const { orders, products, currentUser, navigateToStorefront, showToast } = useStore();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const userOrders = orders.filter((o) => o.userId === currentUser.id);
@@ -132,36 +132,91 @@ export const StorefrontOrders: React.FC = () => {
                     </strong>
                   </div>
                 </div>
-
-                {/* Delivered License Key Box */}
-                {(order.key || order.deliveredContent) && (
-                  <div className="p-3 rounded-xl bg-[#161626] border border-white/10 space-y-1.5 min-w-[280px]">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] uppercase font-bold text-[#9D5CF6] flex items-center gap-1">
-                        <Key className="w-3 h-3" />
-                        License Key Kích Hoạt
-                      </span>
-                      <button
-                        onClick={() => handleCopyKey(order.key || order.deliveredContent || '')}
-                        className="text-[11px] font-bold text-[#CBC7E0] hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
-                      >
-                        {copiedKey === (order.key || order.deliveredContent) ? (
-                          <span className="text-emerald-400 flex items-center gap-1">
-                            <Check className="w-3 h-3" /> Đã chép
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1">
-                            <Copy className="w-3 h-3" /> Sao chép
-                          </span>
-                        )}
-                      </button>
-                    </div>
-                    <div className="font-mono text-xs font-bold text-amber-300 bg-[#0F0F1A] px-2.5 py-1.5 rounded-lg border border-white/5 select-all">
-                      {order.key || order.deliveredContent}
-                    </div>
-                  </div>
-                )}
               </div>
+
+              {/* Order Delivery Content (Download Link & License Key) */}
+              {(() => {
+                const prod = products.find((p) => p.id === order.productId);
+                const rawContent = order.key || order.deliveredContent || prod?.downloadLinkOrKeys || '';
+                
+                // Extract URL if exists
+                const urlMatch = (prod?.downloadUrl || rawContent).match(/https?:\/\/[^\s]+/);
+                const downloadLink = prod?.downloadUrl || (urlMatch ? urlMatch[0] : null);
+                
+                // Extract clean key
+                const cleanKey = prod?.licenseKeys || rawContent.replace(/https?:\/\/[^\s]+/g, '').trim() || rawContent;
+
+                return (
+                  <div className="space-y-3 pt-2">
+                    {/* Direct Download Button */}
+                    {downloadLink && (
+                      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-[#161626] to-[#7C3AED]/20 border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                            <Download className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <div className="font-display font-bold text-xs text-[#F0EDFF]">
+                              File Cài Đặt Sẵn Sàng Tải Xuống
+                            </div>
+                            <div className="text-[10.5px] text-[#8B84A8] line-clamp-1 font-mono">
+                              {downloadLink}
+                            </div>
+                          </div>
+                        </div>
+
+                        <a
+                          href={downloadLink}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#06B6D4] to-[#0891B2] hover:from-[#0891B2] hover:to-[#06B6D4] text-black font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/25 transition-transform active:scale-95 text-center shrink-0 cursor-pointer"
+                        >
+                          <Download className="w-4 h-4" />
+                          <span>📥 Tải File Cài Đặt Ngay</span>
+                        </a>
+                      </div>
+                    )}
+
+                    {/* Delivered License Key Box */}
+                    {cleanKey && (
+                      <div className="p-3.5 rounded-2xl bg-[#161626] border border-white/10 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] uppercase font-bold text-[#9D5CF6] flex items-center gap-1.5">
+                            <Key className="w-3.5 h-3.5" />
+                            Mã Bản Quyền / License Key Kích Hoạt
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyKey(cleanKey)}
+                            className="text-xs font-bold text-[#CBC7E0] hover:text-white flex items-center gap-1 transition-colors cursor-pointer bg-white/5 hover:bg-white/10 px-2.5 py-1 rounded-lg"
+                          >
+                            {copiedKey === cleanKey ? (
+                              <span className="text-emerald-400 flex items-center gap-1">
+                                <Check className="w-3.5 h-3.5" /> Đã sao chép!
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1">
+                                <Copy className="w-3.5 h-3.5" /> Sao chép Key
+                              </span>
+                            )}
+                          </button>
+                        </div>
+                        <div className="font-mono text-xs font-bold text-amber-300 bg-[#0A0A10] p-3 rounded-xl border border-white/5 select-all whitespace-pre-wrap break-all leading-relaxed">
+                          {cleanKey}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Instructions if available */}
+                    {prod?.instructions && (
+                      <div className="p-3 rounded-xl bg-purple-950/20 border border-purple-500/20 text-[11px] text-[#CBC7E0] space-y-1">
+                        <div className="font-bold text-[#9D5CF6]">📖 Hướng dẫn kích hoạt & lưu ý:</div>
+                        <div className="whitespace-pre-wrap">{prod.instructions}</div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/5 text-xs">
