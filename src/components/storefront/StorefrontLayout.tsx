@@ -138,12 +138,12 @@ export const StorefrontLayout: React.FC = () => {
             </button>
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center gap-1.5 bg-[#0F0F1A]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-lg shadow-black/40">
+            <nav className="hidden xl:flex items-center gap-1 bg-[#0F0F1A]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1 shadow-lg shadow-black/40 shrink-0">
               <Link
                 to="/"
-                className={`px-3.5 py-2 rounded-xl text-[12.5px] font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   storefrontPage === 'home'
-                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40 scale-105'
+                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40'
                     : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -151,9 +151,9 @@ export const StorefrontLayout: React.FC = () => {
               </Link>
               <Link
                 to="/products"
-                className={`px-3.5 py-2 rounded-xl text-[12.5px] font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   storefrontPage === 'products'
-                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40 scale-105'
+                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40'
                     : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -161,9 +161,9 @@ export const StorefrontLayout: React.FC = () => {
               </Link>
               <Link
                 to="/account/wallet/deposit"
-                className={`px-3.5 py-2 rounded-xl text-[12.5px] font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   storefrontPage === 'account-wallet-deposit'
-                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40 scale-105'
+                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40'
                     : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -172,9 +172,9 @@ export const StorefrontLayout: React.FC = () => {
               </Link>
               <Link
                 to="/account/orders"
-                className={`px-3.5 py-2 rounded-xl text-[12.5px] font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   storefrontPage === 'account-orders'
-                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40 scale-105'
+                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40'
                     : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -182,9 +182,9 @@ export const StorefrontLayout: React.FC = () => {
               </Link>
               <Link
                 to="/affiliate"
-                className={`px-3.5 py-2 rounded-xl text-[12.5px] font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   storefrontPage === 'affiliate'
-                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40 scale-105'
+                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40'
                     : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -192,9 +192,9 @@ export const StorefrontLayout: React.FC = () => {
               </Link>
               <Link
                 to="/support"
-                className={`px-3.5 py-2 rounded-xl text-[12.5px] font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   storefrontPage === 'support'
-                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40 scale-105'
+                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40'
                     : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -204,19 +204,19 @@ export const StorefrontLayout: React.FC = () => {
           </div>
 
           {/* Right Action Bar */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Customer Wallet Pill (When authenticated) */}
             {isAuthenticated ? (
-              <div className="hidden sm:flex items-center bg-[#161626] border border-white/10 rounded-xl p-1 pl-3 gap-2">
-                <div className="text-left">
-                  <div className="text-[9.5px] uppercase font-bold text-[#8B84A8]">Số dư ví</div>
-                  <div className="font-display font-extrabold text-xs text-emerald-400">
-                    {currentUser.balance.toLocaleString('vi-VN')} <span className="text-[10px]">đ</span>
+              <div className="hidden sm:flex items-center bg-[#161626] border border-white/10 rounded-xl p-1.5 pl-3 gap-2.5 shrink-0 whitespace-nowrap">
+                <div className="text-left whitespace-nowrap">
+                  <div className="text-[10px] uppercase font-bold text-[#8B84A8] whitespace-nowrap leading-none mb-0.5">Số dư ví</div>
+                  <div className="font-display font-extrabold text-xs text-emerald-400 whitespace-nowrap leading-none">
+                    {currentUser.balance.toLocaleString('vi-VN')} <span className="text-[10px] font-bold">VND</span>
                   </div>
                 </div>
                 <Link
                   to="/account/wallet/deposit"
-                  className="px-2.5 py-1 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
+                  className="px-2.5 py-1.5 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-sm shrink-0 whitespace-nowrap"
                 >
                   <Zap className="w-3 h-3 text-amber-300" />
                   <span>Nạp</span>
@@ -352,7 +352,7 @@ export const StorefrontLayout: React.FC = () => {
                 size="xs"
                 onClick={() => navigateToAdmin()}
                 leftIcon={<Shield className="w-3.5 h-3.5 text-[#9D5CF6]" />}
-                className="hidden lg:flex font-bold border-[#7C3AED]/30 hover:border-[#7C3AED]"
+                className="hidden xl:flex font-bold border-[#7C3AED]/30 hover:border-[#7C3AED] shrink-0 whitespace-nowrap"
               >
                 Vào Admin
               </Button>

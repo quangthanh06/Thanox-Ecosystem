@@ -94,14 +94,15 @@ export const StorefrontHome: React.FC = () => {
                 </span>
               </div>
 
-              {/* Huge Bold Title */}
-              <h1 className="font-display text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight uppercase leading-none drop-shadow-md line-clamp-2">
+              {/* Huge Bold Title with Thanox Digital Gradient (Bolder & Punchier) */}
+              <h1 className="font-display text-3xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-[#C084FC] to-[#06B6D4] tracking-tight uppercase leading-[1.15] drop-shadow-[0_5px_30px_rgba(124,58,237,0.4)] line-clamp-2">
                 {currentSlide.name}
               </h1>
 
-              {/* Golden / Orange Price */}
-              <div className="font-display font-black text-2xl sm:text-3xl md:text-4xl text-[#FBBF24] tracking-tight">
-                {currentSlide.price.toLocaleString('vi-VN')} <span className="text-lg sm:text-2xl font-bold">đ</span>
+              {/* Golden / Orange Price with VND */}
+              <div className="font-display font-black text-2xl sm:text-3xl md:text-4xl text-[#FBBF24] tracking-tight flex items-baseline gap-1.5">
+                <span>{currentSlide.price.toLocaleString('vi-VN')}</span>
+                <span className="text-lg sm:text-2xl font-black text-amber-400">VND</span>
               </div>
 
               {/* Action Buttons Side-by-Side (Image 2 style) */}
