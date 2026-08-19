@@ -13,6 +13,16 @@ export type PageId =
 
 export type ProductStatus = 'active' | 'hidden' | 'out_of_stock';
 
+export interface ProductPackage {
+  id: string;
+  name: string; // e.g. '1 GIỜ', '1 NGÀY', '7 NGÀY', '1 THÁNG', 'VĨNH VIỄN'
+  price: number;
+  originalPrice?: number;
+  sellerPrice?: number;
+  keys?: string;
+  downloadUrl?: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -32,7 +42,8 @@ export interface Product {
   image?: string;
   images?: string[];
   primaryImage?: string;
-  updatedAt: string;
+  updatedAt?: string;
+  packages?: ProductPackage[]; // Gói dịch vụ / thời hạn key (1 Giờ, 1 Ngày, 7 Ngày, 1 Tháng, Vĩnh Viễn...)
 }
 
 export interface Category {
@@ -67,6 +78,7 @@ export interface Order {
   createdAt: string;
   deliveredContent?: string;
   key?: string;
+  packageName?: string;
   isSellerOrder?: boolean;
 }
 
@@ -340,6 +352,7 @@ export type StorefrontPageId =
 export interface CartItem {
   product: Product;
   quantity: number;
+  selectedPackage?: ProductPackage;
 }
 
 export interface ToastNotification {

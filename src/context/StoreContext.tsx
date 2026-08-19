@@ -52,7 +52,7 @@ interface StoreContextType {
 
   // Cart
   cart: CartItem[];
-  addToCart: (product: Product, quantity?: number) => void;
+  addToCart: (product: Product, quantity?: number, selectedPackage?: ProductPackage) => void;
   removeFromCart: (productId: string) => void;
   updateCartQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -113,7 +113,7 @@ interface StoreContextType {
   deleteCategory: (id: string) => void;
 
   updateOrderStatus: (id: string, status: Order['status']) => void;
-  createOrder: (productId: string, quantity: number, paymentMethod: Order['paymentMethod']) => boolean;
+  createOrder: (productId: string, quantity: number, paymentMethod: Order['paymentMethod'], selectedPackage?: ProductPackage) => boolean;
 
   approveTopup: (id: string) => void;
   rejectTopup: (id: string, reason: string) => void;
@@ -178,14 +178,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [products, setProducts] = useState<Product[]>(() => {
     const loaded = safeGetItem('thanox_products', INITIAL_PRODUCTS);
     return loaded.map((p: Product) => {
-      if (!p.image) {
-        const match = INITIAL_PRODUCTS.find((init) => init.id === p.id || init.category === p.category);
-        return {
-          ...p,
-          image: match?.image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
-        };
-      }
-      return p;
+      const match = INITIAL_PRODUCTS.find((init) => init.id === p.id || init.category === p.category);
+      return {
+        ...p,
+        image: p.image || match?.image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
+        packages: (p.packages && p.packages.length > 0) ? p.packages : (match?.packages || []),
+      };
     });
   });
 
@@ -417,14 +415,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             }
             if (d.products && Array.isArray(d.products) && d.products.length > 0) {
               setProducts(d.products.map((p: Product) => {
-                if (!p.image) {
-                  const match = INITIAL_PRODUCTS.find((init) => init.id === p.id || init.category === p.category);
-                  return {
-                    ...p,
-                    image: match?.image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
-                  };
-                }
-                return p;
+                const match = INITIAL_PRODUCTS.find((init) => init.id === p.id || init.category === p.category);
+                return {
+                  ...p,
+                  image: p.image || match?.image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
+                  packages: (p.packages && p.packages.length > 0) ? p.packages : (match?.packages || []),
+                };
               }));
             }
             if (d.orders && Array.isArray(d.orders)) {
@@ -642,19 +638,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Cart operations
-  const addToCart = (product: Product, quantity: number = 1) => {
+  const addToCart = (product: Product, quantity: number = 1, selectedPackage?: ProductPackage) => {
     setCart((prev) => {
-      const existing = prev.find((item) => item.product.id === product.id);
+      const existing = prev.find(
+        (item) => item.product.id === product.id && item.selectedPackage?.id === selectedPackage?.id
+      );
       if (existing) {
         return prev.map((item) =>
-          item.product.id === product.id
+          item.product.id === product.id && item.selectedPackage?.id === selectedPackage?.id
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
-      return [...prev, { product, quantity }];
+      return [...prev, { product, quantity, selectedPackage }];
     });
-    showToast(`Đã thêm "${product.name}" vào giỏ hàng!`, 'success');
+    showToast(
+      `Đã thêm "${product.name}${selectedPackage ? ` [${selectedPackage.name}]` : ''}" vào giỏ hàng!`,
+      'success'
+    );
   };
 
   const removeFromCart = (productId: string) => {
@@ -1070,7 +1071,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Customer creates order in storefront
-  const createOrder = (productId: string, quantity: number, paymentMethod: Order['paymentMethod']): boolean => {
+  const createOrder = (
+    productId: string,
+    quantity: number,
+    paymentMethod: Order['paymentMethod'],
+    selectedPackage?: ProductPackage
+  ): boolean => {
     const product = products.find((p) => p.id === productId);
     if (!product) return false;
 
@@ -1081,7 +1087,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const buyer = currentUser;
     const isSeller = buyer.sellerStatus === 'approved';
-    const unitPrice = getItemEffectivePrice(product, buyer);
+    const unitPrice = selectedPackage
+      ? isSeller && selectedPackage.sellerPrice
+        ? selectedPackage.sellerPrice
+        : selectedPackage.price
+      : getItemEffectivePrice(product, buyer);
     const total = unitPrice * quantity;
 
     if (paymentMethod === 'wallet' && buyer.balance < total) {
@@ -1108,6 +1118,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       );
     }
 
+    const deliveredText =
+      selectedPackage?.keys ||
+      selectedPackage?.downloadUrl ||
+      product.downloadLinkOrKeys ||
+      'Hệ thống đã gửi link kích hoạt đến email của bạn.';
+
     const newOrder: Order = {
       id: 'ord-' + Date.now(),
       orderCode: newOrderCode,
@@ -1125,8 +1141,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       paymentMethod,
       status: 'completed',
       createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-      deliveredContent: product.downloadLinkOrKeys || 'Hệ thống đã gửi link kích hoạt đến email của bạn.',
-      key: product.downloadLinkOrKeys?.split('\n')[0] || 'KEY-TX-' + Math.floor(100000 + Math.random() * 900000),
+      deliveredContent: deliveredText,
+      key: deliveredText.split('\n')[0] || 'KEY-TX-' + Math.floor(100000 + Math.random() * 900000),
+      packageName: selectedPackage?.name,
       isSellerOrder: isSeller,
     };
 
@@ -1144,7 +1161,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       type: 'purchase',
       userId: buyer.id,
       userName: buyer.username,
-      description: `Thanh toán mua ${product.name} (x${quantity})`,
+      description: `Thanh toán mua ${product.name}${selectedPackage ? ` [${selectedPackage.name}]` : ''} (x${quantity})`,
       amount: -total,
       balanceAfter: newBalance,
       createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),

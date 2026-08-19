@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
-import { Product, ProductStatus } from '../types';
+import { Product, ProductStatus, ProductPackage } from '../types';
 import { Card, CardHeader } from './ui/Card';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
@@ -30,6 +30,7 @@ import {
   Star,
   X,
   Check,
+  Clock,
 } from 'lucide-react';
 
 export const ProductsView: React.FC = () => {
@@ -51,7 +52,14 @@ export const ProductsView: React.FC = () => {
   // Form Drawer State
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [drawerTab, setDrawerTab] = useState<'basic' | 'images' | 'delivery'>('basic');
+  const [drawerTab, setDrawerTab] = useState<'basic' | 'packages' | 'images' | 'delivery'>('basic');
+
+  // Package Form State
+  const [pkgNameInput, setPkgNameInput] = useState('1 NGÀY');
+  const [pkgPriceInput, setPkgPriceInput] = useState(90000);
+  const [pkgOrigPriceInput, setPkgOrigPriceInput] = useState(120000);
+  const [pkgSellerPriceInput, setPkgSellerPriceInput] = useState(60000);
+  const [pkgKeysInput, setPkgKeysInput] = useState('');
 
   // Form Fields
   const [formData, setFormData] = useState<{
@@ -62,6 +70,7 @@ export const ProductsView: React.FC = () => {
     sellerPrice?: number;
     image?: string;
     images?: string[];
+    packages?: ProductPackage[];
     stock: number | 'unlimited';
     status: ProductStatus;
     description: string;
@@ -78,6 +87,7 @@ export const ProductsView: React.FC = () => {
     sellerPrice: 35000,
     image: '',
     images: [],
+    packages: [],
     stock: 'unlimited',
     status: 'active',
     description: '',
@@ -150,6 +160,12 @@ export const ProductsView: React.FC = () => {
       sellerPrice: 35000,
       image: '',
       images: [],
+      packages: [
+        { id: 'pkg-' + Date.now() + '-1', name: '1 NGÀY', price: 25000, originalPrice: 40000, sellerPrice: 15000 },
+        { id: 'pkg-' + Date.now() + '-2', name: '7 NGÀY', price: 60000, originalPrice: 90000, sellerPrice: 35000 },
+        { id: 'pkg-' + Date.now() + '-3', name: '30 NGÀY', price: 99000, originalPrice: 150000, sellerPrice: 60000 },
+        { id: 'pkg-' + Date.now() + '-4', name: 'VĨNH VIỄN', price: 199000, originalPrice: 300000, sellerPrice: 130000 },
+      ],
       stock: 'unlimited',
       status: 'active',
       description: '',
@@ -173,6 +189,12 @@ export const ProductsView: React.FC = () => {
       sellerPrice: product.sellerPrice || Math.round(product.price * 0.7),
       image: product.image || '',
       images: product.images || (product.image ? [product.image] : []),
+      packages: product.packages || [
+        { id: 'pkg-' + Date.now() + '-1', name: '1 NGÀY', price: Math.round(product.price * 0.3), originalPrice: Math.round(product.price * 0.5), sellerPrice: Math.round(product.price * 0.2) },
+        { id: 'pkg-' + Date.now() + '-2', name: '7 NGÀY', price: Math.round(product.price * 0.7), originalPrice: product.price, sellerPrice: Math.round(product.price * 0.5) },
+        { id: 'pkg-' + Date.now() + '-3', name: '30 NGÀY', price: product.price, originalPrice: product.originalPrice || product.price, sellerPrice: product.sellerPrice || Math.round(product.price * 0.7) },
+        { id: 'pkg-' + Date.now() + '-4', name: 'VĨNH VIỄN', price: Math.round(product.price * 2), originalPrice: Math.round(product.price * 3), sellerPrice: Math.round(product.price * 1.4) },
+      ],
       stock: product.stock,
       status: product.status,
       description: product.description,
@@ -602,7 +624,20 @@ export const ProductsView: React.FC = () => {
                   : 'text-[#8B84A8] hover:text-white'
               }`}
             >
-              Thông Tin & Giá
+              Thông Tin
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setDrawerTab('packages')}
+              className={`flex-1 py-2 rounded-xl text-center font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                drawerTab === 'packages'
+                  ? 'bg-gradient-to-r from-[#7C3AED] to-[#06B6D4] text-white shadow-sm'
+                  : 'text-[#8B84A8] hover:text-white'
+              }`}
+            >
+              <Key className="w-3.5 h-3.5 text-cyan-300" />
+              <span>Gói Key ({(formData.packages || []).length})</span>
             </button>
 
             <button
@@ -615,7 +650,7 @@ export const ProductsView: React.FC = () => {
               }`}
             >
               <ImageIcon className="w-3.5 h-3.5" />
-              <span>Hình Ảnh ({(formData.images || []).length})</span>
+              <span>Ảnh ({(formData.images || []).length})</span>
             </button>
 
             <button
@@ -876,7 +911,256 @@ export const ProductsView: React.FC = () => {
               </div>
             )}
 
-            {/* TAB 2: LOCAL COMPUTER IMAGE UPLOAD & GALLERY */}
+            {/* TAB 2: PACKAGES & KEY DURATIONS */}
+            {drawerTab === 'packages' && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-[#161626] to-[#0F0F1A] border border-[#7C3AED]/20 space-y-3 shadow-inner">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-xs text-[#F0EDFF] flex items-center gap-1.5">
+                        <Key className="w-4 h-4 text-cyan-400" />
+                        <span>Thêm Gói Dịch Vụ / Thời Hạn Key Mới</span>
+                      </h4>
+                      <p className="text-[11px] text-[#8B84A8] mt-0.5">
+                        Thiết lập các gói thời gian (1 Giờ, 1 Ngày, 7 Ngày, 1 Tháng, Vĩnh Viễn...) và giá bán riêng
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Quick suggestion pills */}
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-[#6B658E] font-semibold block">Gợi ý nhanh tên gói:</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {['1 GIỜ', '1 NGÀY', '3 NGÀY', '7 NGÀY', '15 NGÀY', '1 THÁNG', '3 THÁNG', '1 NĂM', 'VĨNH VIỄN'].map((suggestName) => (
+                        <button
+                          key={suggestName}
+                          type="button"
+                          onClick={() => setPkgNameInput(suggestName)}
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-black border transition-all cursor-pointer ${
+                            pkgNameInput === suggestName
+                              ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300'
+                              : 'bg-[#161626] border-white/10 text-[#8B84A8] hover:text-white hover:border-white/20'
+                          }`}
+                        >
+                          {suggestName}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Package Inputs */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div className="space-y-1">
+                      <label className="text-[10.5px] font-semibold text-[#8B84A8] uppercase">
+                        Tên Gói / Thời Hạn *
+                      </label>
+                      <input
+                        type="text"
+                        value={pkgNameInput}
+                        onChange={(e) => setPkgNameInput(e.target.value)}
+                        placeholder="VD: 1 NGÀY, 1 THÁNG..."
+                        className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10.5px] font-semibold text-[#8B84A8] uppercase">
+                        Giá Bán (VND) *
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1000"
+                        value={pkgPriceInput}
+                        onChange={(e) => setPkgPriceInput(Number(e.target.value))}
+                        className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10.5px] font-semibold text-[#8B84A8] uppercase">
+                        Giá Gốc / Gạch (VND)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1000"
+                        value={pkgOrigPriceInput}
+                        onChange={(e) => setPkgOrigPriceInput(Number(e.target.value))}
+                        className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10.5px] font-semibold text-[#8B84A8] uppercase">
+                        Giá Đại Lý / CTV (VND)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1000"
+                        value={pkgSellerPriceInput}
+                        onChange={(e) => setPkgSellerPriceInput(Number(e.target.value))}
+                        className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10.5px] font-semibold text-[#8B84A8] uppercase">
+                      Nội Dung Giao Key / Link Tải Riêng Cho Gói Này (Tùy chọn)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={pkgKeysInput}
+                      onChange={(e) => setPkgKeysInput(e.target.value)}
+                      placeholder="Nếu để trống sẽ tự động lấy nội dung giao ở Tab 'Giao Tự Động'..."
+                      className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl p-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                    />
+                  </div>
+
+                  <div className="flex gap-2 justify-end pt-1">
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="xs"
+                      onClick={() => {
+                        if (!pkgNameInput.trim()) {
+                          showToast('Vui lòng nhập tên gói', 'error');
+                          return;
+                        }
+                        if (pkgPriceInput <= 0) {
+                          showToast('Giá bán phải lớn hơn 0', 'error');
+                          return;
+                        }
+                        const newPkg: ProductPackage = {
+                          id: 'pkg-' + Date.now(),
+                          name: pkgNameInput.trim().toUpperCase(),
+                          price: pkgPriceInput,
+                          originalPrice: pkgOrigPriceInput > 0 ? pkgOrigPriceInput : undefined,
+                          sellerPrice: pkgSellerPriceInput > 0 ? pkgSellerPriceInput : undefined,
+                          keys: pkgKeysInput.trim() || undefined,
+                        };
+                        setFormData((prev) => ({
+                          ...prev,
+                          packages: [...(prev.packages || []), newPkg],
+                        }));
+                        showToast(`Đã thêm gói ${newPkg.name} thành công!`, 'success');
+                        setPkgKeysInput('');
+                      }}
+                      leftIcon={<Plus className="w-3.5 h-3.5" />}
+                    >
+                      Thêm Gói Này
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Preset Fast Template Buttons */}
+                <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-2xl bg-[#161626] border border-white/5">
+                  <div className="text-[11px] text-[#CBC7E0] font-semibold">
+                    ⚡ Nạp nhanh các gói mẫu chuẩn:
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="xs"
+                    onClick={() => {
+                      const basePrice = formData.price || 50000;
+                      const standardPackages: ProductPackage[] = [
+                        { id: 'pkg-' + Date.now() + '-1', name: '1 GIỜ', price: Math.round(basePrice * 0.2), originalPrice: Math.round(basePrice * 0.35), sellerPrice: Math.round(basePrice * 0.15) },
+                        { id: 'pkg-' + Date.now() + '-2', name: '1 NGÀY', price: Math.round(basePrice * 0.4), originalPrice: Math.round(basePrice * 0.6), sellerPrice: Math.round(basePrice * 0.3) },
+                        { id: 'pkg-' + Date.now() + '-3', name: '7 NGÀY', price: Math.round(basePrice * 0.8), originalPrice: basePrice, sellerPrice: Math.round(basePrice * 0.6) },
+                        { id: 'pkg-' + Date.now() + '-4', name: '1 THÁNG', price: basePrice, originalPrice: Math.round(basePrice * 1.4), sellerPrice: Math.round(basePrice * 0.7) },
+                        { id: 'pkg-' + Date.now() + '-5', name: 'VĨNH VIỄN', price: Math.round(basePrice * 2.5), originalPrice: Math.round(basePrice * 3.5), sellerPrice: Math.round(basePrice * 1.8) },
+                      ];
+                      setFormData((prev) => ({
+                        ...prev,
+                        packages: standardPackages,
+                      }));
+                      showToast('Đã nạp 5 gói thời hạn chuẩn (1 Giờ - 1 Ngày - 7 Ngày - 1 Tháng - Vĩnh Viễn)', 'success');
+                    }}
+                    className="font-bold border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
+                  >
+                    Nạp Bộ 5 Gói Chuẩn
+                  </Button>
+                </div>
+
+                {/* List of Configured Packages */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-[#F0EDFF]">
+                    <span>Danh Sách Gói Hiện Có ({(formData.packages || []).length})</span>
+                    {(formData.packages || []).length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData((prev) => ({ ...prev, packages: [] }))}
+                        className="text-[10px] text-red-400 hover:underline cursor-pointer"
+                      >
+                        Xóa tất cả
+                      </button>
+                    )}
+                  </div>
+
+                  {(formData.packages || []).length === 0 ? (
+                    <div className="p-6 rounded-2xl bg-[#161626] border border-dashed border-white/10 text-center text-xs text-[#8B84A8]">
+                      Chưa có gói thời hạn nào. Hãy bấm <strong>"Nạp Bộ 5 Gói Chuẩn"</strong> hoặc tự tạo gói ở trên!
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {(formData.packages || []).map((pkg, idx) => (
+                        <div
+                          key={pkg.id}
+                          className="p-3 rounded-xl bg-[#161626] border border-white/5 hover:border-white/10 flex items-center justify-between gap-3 text-xs"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-6 h-6 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 flex items-center justify-center font-black text-[10px]">
+                              {idx + 1}
+                            </div>
+                            <div>
+                              <div className="font-black text-[#F0EDFF] uppercase">{pkg.name}</div>
+                              {pkg.keys && (
+                                <div className="text-[10px] text-[#6B658E] font-mono line-clamp-1">
+                                  Key riêng: {pkg.keys}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <div className="font-black text-emerald-400">
+                                {pkg.price.toLocaleString('vi-VN')} VND
+                              </div>
+                              {pkg.sellerPrice && (
+                                <div className="text-[10px] text-cyan-300">
+                                  CTV: {pkg.sellerPrice.toLocaleString('vi-VN')}đ
+                                </div>
+                              )}
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  packages: (prev.packages || []).filter((p) => p.id !== pkg.id),
+                                }));
+                                showToast(`Đã xóa gói ${pkg.name}`, 'info');
+                              }}
+                              className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 cursor-pointer"
+                              title="Xóa gói"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: LOCAL COMPUTER IMAGE UPLOAD & GALLERY */}
             {drawerTab === 'images' && (
               <div className="space-y-4">
                 {/* Upload from Computer Drag & Drop Area */}
