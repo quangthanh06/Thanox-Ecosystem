@@ -120,6 +120,7 @@ interface StoreContextType {
   createTopupRequest: (amount: number, method: TopupRequest['method'], transferNote: string, proofImage?: string) => string;
 
   updateUser: (id: string, updates: Partial<User>) => void;
+  deleteUser: (id: string) => void;
   adjustUserBalance: (userId: string, amount: number, note: string) => void;
   toggleBanUser: (id: string) => void;
 
@@ -174,9 +175,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
 
   // Persistent States with Safe LocalStorage Parsing
-  const [products, setProducts] = useState<Product[]>(() =>
-    safeGetItem('thanox_products', INITIAL_PRODUCTS)
-  );
+  const [products, setProducts] = useState<Product[]>(() => {
+    const loaded = safeGetItem('thanox_products', INITIAL_PRODUCTS);
+    return loaded.map((p: Product) => {
+      if (!p.image) {
+        const match = INITIAL_PRODUCTS.find((init) => init.id === p.id || init.category === p.category);
+        return {
+          ...p,
+          image: match?.image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
+        };
+      }
+      return p;
+    });
+  });
 
   const [categories, setCategories] = useState<Category[]>(() =>
     safeGetItem('thanox_categories', INITIAL_CATEGORIES)
@@ -186,9 +197,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     safeGetItem('thanox_orders', INITIAL_ORDERS)
   );
 
-  const [users, setUsers] = useState<User[]>(() =>
-    safeGetItem('thanox_users', INITIAL_USERS)
-  );
+  const [users, setUsers] = useState<User[]>(() => {
+    const loaded = safeGetItem('thanox_users', INITIAL_USERS);
+    // Deduplicate: remove legacy admin_thanox and ensure exactly 1 super admin
+    const cleaned = loaded.filter((u: User) => u.username !== 'admin_thanox' && u.id !== 'u-1');
+    let hasAdmin = false;
+    return cleaned.map((u: User) => {
+      if (u.role === 'admin') {
+        if (!hasAdmin && u.username === 'admin') {
+          hasAdmin = true;
+          return u;
+        }
+        return { ...u, role: 'user' as const };
+      }
+      return u;
+    });
+  });
 
   const [topups, setTopups] = useState<TopupRequest[]>(() =>
     safeGetItem('thanox_topups', INITIAL_TOPUPS)
@@ -378,13 +402,30 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             if (d.users && Array.isArray(d.users)) {
               setUsers((prev) => {
                 const map = new Map();
-                d.users.forEach((u: User) => map.set(u.id, u));
-                prev.forEach((u) => map.set(u.id, u));
+                d.users.forEach((u: User) => {
+                  if (u.username !== 'admin_thanox' && u.id !== 'u-1') {
+                    map.set(u.id, u);
+                  }
+                });
+                prev.forEach((u) => {
+                  if (u.username !== 'admin_thanox' && u.id !== 'u-1') {
+                    map.set(u.id, u);
+                  }
+                });
                 return Array.from(map.values());
               });
             }
             if (d.products && Array.isArray(d.products) && d.products.length > 0) {
-              setProducts(d.products);
+              setProducts(d.products.map((p: Product) => {
+                if (!p.image) {
+                  const match = INITIAL_PRODUCTS.find((init) => init.id === p.id || init.category === p.category);
+                  return {
+                    ...p,
+                    image: match?.image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
+                  };
+                }
+                return p;
+              }));
             }
             if (d.orders && Array.isArray(d.orders)) {
               setOrders((prev) => {
@@ -1661,6 +1702,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     showToast('Đã cập nhật thông tin người dùng', 'success');
   };
 
+  const deleteUser = (id: string) => {
+    const target = users.find((u) => u.id === id);
+    if (!target) return;
+    if (target.role === 'admin' || target.username === 'admin') {
+      showToast('Không thể xóa tài khoản Quản trị viên Master (Super Admin)', 'error');
+      return;
+    }
+    setUsers((prev) => prev.filter((u) => u.id !== id));
+    showToast(`Đã xóa tài khoản ${target.username} thành công`, 'success');
+  };
+
   const adjustUserBalance = (userId: string, amount: number, note: string) => {
     const targetUser = users.find((u) => u.id === userId);
     if (!targetUser) return;
@@ -1841,19 +1893,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setOrders([]);
     setUsers([
       {
-        id: 'u-1',
-        username: 'admin_thanox',
+        id: 'user-admin',
+        username: 'admin',
         email: 'admin@thanox.vn',
+        password: 'Admin@123456',
         phone: '0916396901',
         role: 'admin',
-        balance: 0,
+        balance: 5000000,
         affiliateBalance: 0,
-        sellerStatus: 'none',
+        sellerStatus: 'active',
         totalOrders: 0,
         totalSpent: 0,
         status: 'active',
-        createdAt: new Date().toISOString().substring(0, 10),
+        createdAt: '2026-01-01',
         avatarText: 'AD',
+        refCode: 'ADMINVIP',
       },
     ]);
     setTopups([]);
@@ -1938,6 +1992,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         rejectTopup,
         createTopupRequest,
         updateUser,
+        deleteUser,
         adjustUserBalance,
         toggleBanUser,
         sendTicketMessage,

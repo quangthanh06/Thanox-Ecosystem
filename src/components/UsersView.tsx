@@ -28,12 +28,14 @@ import {
   AlertCircle,
   Sparkles,
   RefreshCw,
+  Trash2,
 } from 'lucide-react';
 
 export const UsersView: React.FC = () => {
   const {
     users,
     updateUser,
+    deleteUser,
     adjustUserBalance,
     toggleBanUser,
     updateSellerStatus,
@@ -62,6 +64,9 @@ export const UsersView: React.FC = () => {
 
   // Ban confirmation
   const [banTargetUser, setBanTargetUser] = useState<User | null>(null);
+
+  // Delete confirmation
+  const [deleteTargetUser, setDeleteTargetUser] = useState<User | null>(null);
 
   // Real calculations
   const totalUsers = users.length;
@@ -375,13 +380,24 @@ export const UsersView: React.FC = () => {
                               onClick={() => setBanTargetUser(user)}
                               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                                 user.status === 'active'
-                                  ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400'
+                                  ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400'
                                   : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400'
                               }`}
                               title={user.status === 'active' ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
                             >
                               {user.status === 'active' ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                             </button>
+
+                            {/* Delete User (Non-Admin only) */}
+                            {user.role !== 'admin' && user.username !== 'admin' && (
+                              <button
+                                onClick={() => setDeleteTargetUser(user)}
+                                className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors cursor-pointer"
+                                title="Xóa tài khoản"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -679,6 +695,28 @@ export const UsersView: React.FC = () => {
         }
         confirmLabel={banTargetUser?.status === 'active' ? 'Khóa ngay' : 'Mở khóa'}
         variant={banTargetUser?.status === 'active' ? 'danger' : 'primary'}
+      />
+
+      {/* Delete User Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={!!deleteTargetUser}
+        onClose={() => setDeleteTargetUser(null)}
+        onConfirm={() => {
+          if (deleteTargetUser) {
+            deleteUser(deleteTargetUser.id);
+            setDeleteTargetUser(null);
+          }
+        }}
+        title="Xóa Vĩnh Viễn Tài Khoản Người Dùng?"
+        message={
+          deleteTargetUser ? (
+            <div>
+              Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản <strong>{deleteTargetUser.username}</strong> ({deleteTargetUser.email})? Thao tác này không thể hoàn tác!
+            </div>
+          ) : null
+        }
+        confirmLabel="Xóa vĩnh viễn"
+        variant="danger"
       />
     </div>
   );

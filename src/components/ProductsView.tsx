@@ -389,8 +389,12 @@ export const ProductsView: React.FC = () => {
                     {/* Name & Badge */}
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7C3AED]/20 to-[#06B6D4]/20 border border-[#7C3AED]/30 flex items-center justify-center text-[#9D5CF6] shrink-0 font-bold">
-                          <Package className="w-4 h-4" />
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7C3AED]/20 to-[#06B6D4]/20 border border-white/10 flex items-center justify-center text-[#9D5CF6] shrink-0 overflow-hidden font-bold shadow-sm">
+                          {product.image ? (
+                            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <Package className="w-4 h-4" />
+                          )}
                         </div>
                         <div className="min-w-0">
                           <div className="font-semibold text-[#F0EDFF] flex items-center gap-2 truncate">
@@ -496,23 +500,43 @@ export const ProductsView: React.FC = () => {
         /* GRID VIEW */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredProducts.map((product) => (
-            <Card key={product.id} className="p-4 space-y-3.5 flex flex-col justify-between" variant="interactive">
+            <Card key={product.id} className="p-4 space-y-3 flex flex-col justify-between" variant="interactive">
               <div className="space-y-2.5">
-                <div className="flex items-start justify-between gap-2">
-                  <Badge variant={product.status === 'active' ? 'success' : 'neutral'} size="xs" dot>
-                    {product.status === 'active' ? 'Đang bán' : 'Đang ẩn'}
-                  </Badge>
-
-                  {product.featured && (
-                    <span className="text-[9.5px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30">
-                      HOT
-                    </span>
+                {/* Product Thumbnail Banner */}
+                <div
+                  onClick={() => openEditDrawer(product)}
+                  className="relative w-full aspect-[16/9] rounded-2xl bg-[#161626] border border-white/10 overflow-hidden cursor-pointer group-hover:border-[#7C3AED]/50 transition-colors shadow-inner"
+                >
+                  {product.image ? (
+                    <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[#6B658E]">
+                      <Package className="w-7 h-7 text-[#9D5CF6]/50" />
+                    </div>
                   )}
+                  <span className="absolute top-2 left-2 px-2 py-0.5 rounded-lg text-[9.5px] font-bold bg-black/80 backdrop-blur-md text-[#9D5CF6] border border-purple-500/30">
+                    {product.category}
+                  </span>
+                  <div className="absolute top-2 right-2 flex gap-1">
+                    <Badge variant={product.status === 'active' ? 'success' : 'neutral'} size="xs" dot>
+                      {product.status === 'active' ? 'Đang bán' : 'Đang ẩn'}
+                    </Badge>
+                    {product.featured && (
+                      <span className="text-[9.5px] px-1.5 py-0.2 rounded bg-amber-500/90 text-black font-extrabold shadow-md">
+                        HOT
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-sm text-[#F0EDFF] truncate">{product.name}</h3>
-                  <p className="text-[11px] text-[#6B658E] line-clamp-2 mt-1">
+                  <h3
+                    onClick={() => openEditDrawer(product)}
+                    className="font-semibold text-sm text-[#F0EDFF] hover:text-[#9D5CF6] transition-colors truncate cursor-pointer"
+                  >
+                    {product.name}
+                  </h3>
+                  <p className="text-[11px] text-[#6B658E] line-clamp-2 mt-0.5">
                     {product.description || 'Không có mô tả chi tiết'}
                   </p>
                 </div>
@@ -697,6 +721,43 @@ export const ProductsView: React.FC = () => {
                         placeholder="Hoặc dán link ảnh (https://...)"
                         className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl px-3 py-1.5 text-[11px] text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED]"
                       />
+
+                      {/* Preset Wallpapers */}
+                      <div className="pt-1.5 border-t border-white/5 space-y-1">
+                        <span className="text-[10px] text-[#6B658E] block font-semibold">
+                          Hoặc chọn nhanh ảnh mẫu có sẵn:
+                        </span>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                          {[
+                            { name: '⚡ Android Fix', url: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80' },
+                            { name: '🎯 Free Fire', url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=600&q=80' },
+                            { name: '🍎 iOS VIP', url: 'https://images.unsplash.com/photo-1512499617640-c74ae3a79d37?auto=format&fit=crop&w=600&q=80' },
+                            { name: '🔑 Key VIP', url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80' },
+                            { name: '🌐 Proxy IPv4', url: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=600&q=80' },
+                            { name: '🐉 Master Thanox', url: '/thanox-master-banner.jpg' },
+                          ].map((p, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  image: p.url,
+                                  images: [p.url, ...(prev.images || []).filter((im) => im !== p.url)],
+                                }));
+                                showToast(`Đã chọn ảnh mẫu ${p.name}`, 'info');
+                              }}
+                              className={`px-2 py-1 rounded-lg text-[10px] font-semibold text-left truncate border transition-all cursor-pointer ${
+                                formData.image === p.url
+                                  ? 'bg-[#7C3AED]/20 border-[#7C3AED] text-white'
+                                  : 'bg-[#0F0F1A] border-white/5 text-[#8B84A8] hover:text-white hover:border-white/20'
+                              }`}
+                            >
+                              {p.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

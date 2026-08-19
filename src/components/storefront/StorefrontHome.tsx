@@ -133,13 +133,12 @@ export const StorefrontHome: React.FC = () => {
 
               {/* Action Buttons Side-by-Side */}
               <div className="flex flex-wrap items-center gap-3.5 pt-2">
-                {/* Button 1: Cyan/Emerald Xem Sản Phẩm */}
                 <button
                   type="button"
                   onClick={() => navigateToStorefront('product-detail', currentSlide.id)}
                   className="px-6 sm:px-8 py-3.5 rounded-2xl bg-[#14B8A6] hover:bg-[#0D9488] text-black font-black uppercase text-xs sm:text-sm shadow-xl shadow-teal-500/30 flex items-center gap-2.5 transition-all transform hover:-translate-y-0.5 active:scale-95 cursor-pointer tracking-wider"
                 >
-                  <ShoppingBag className="w-4 h-4 fill-black text-black" />
+                  <ShoppingBag className="w-4 h-4 text-black stroke-[2.5]" />
                   <span>XEM SẢN PHẨM</span>
                 </button>
 
