@@ -503,6 +503,15 @@
         ]
       }
     },
-    "storeName": "THANOX STORE SHOP"
+    "storeName": "THANOX STORE SHOP",
+    "heroBanner": {
+      "backgroundImage": "/thanox-master-banner.jpg",
+      "brightness": 65,
+      "blur": 0,
+      "overlayOpacity": 45,
+      "glowEffect": true,
+      "hotlineZalo": "0916396901",
+      "telegramContact": "@quangthank"
+    }
   }
 }

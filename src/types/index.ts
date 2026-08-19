@@ -255,6 +255,16 @@ export interface StoreEffects {
   autoMusic: boolean;
 }
 
+export interface HeroBannerSettings {
+  backgroundImage: string;
+  brightness: number; // 10 - 100%
+  blur: number; // 0 - 10px
+  overlayOpacity: number; // 0 - 100%
+  glowEffect: boolean;
+  hotlineZalo: string;
+  telegramContact?: string;
+}
+
 export interface StoreSettings {
   storeName: string;
   storeDescription: string;
@@ -305,6 +315,9 @@ export interface StoreSettings {
   musicEnabled: boolean;
   musicTracks: MusicTrack[];
   effects: StoreEffects;
+
+  // Hero Banner Customizer
+  heroBanner?: HeroBannerSettings;
 }
 
 export type StorefrontPageId =

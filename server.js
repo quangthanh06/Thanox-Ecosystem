@@ -283,6 +283,15 @@ const getInitialDB = () => {
             { amount: 500000, receiveAmount: 400000, feePercent: 20.0, enabled: true }
           ]
         }
+      },
+      heroBanner: {
+        backgroundImage: '/thanox-master-banner.jpg',
+        brightness: 65,
+        blur: 0,
+        overlayOpacity: 45,
+        glowEffect: true,
+        hotlineZalo: '0916396901',
+        telegramContact: '@quangthank'
       }
     }
   };

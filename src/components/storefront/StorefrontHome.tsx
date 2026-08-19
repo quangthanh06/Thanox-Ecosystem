@@ -27,6 +27,7 @@ export const StorefrontHome: React.FC = () => {
   const {
     products,
     categories,
+    settings,
     navigateToStorefront,
     addToCart,
     createOrder,
@@ -37,6 +38,13 @@ export const StorefrontHome: React.FC = () => {
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
   const [localSearch, setLocalSearch] = useState<string>('');
   const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
+
+  // Dynamic Banner Customizer Settings from Admin Panel
+  const bannerBg = settings.heroBanner?.backgroundImage || '/thanox-master-banner.jpg';
+  const bannerBrightness = (settings.heroBanner?.brightness ?? 65) / 100;
+  const bannerBlur = settings.heroBanner?.blur ?? 0;
+  const bannerOverlayOpacity = (settings.heroBanner?.overlayOpacity ?? 45) / 100;
+  const bannerHotline = settings.heroBanner?.hotlineZalo || settings.zaloHotline || '0916396901';
 
   // Active public products (filter out hidden status)
   const activeProducts = products.filter((p) => p.status !== 'hidden');
@@ -76,19 +84,27 @@ export const StorefrontHome: React.FC = () => {
 
   return (
     <div className="space-y-10 sm:space-y-12">
-      {/* 1. UNIFIED CYBERPUNK HERO PRODUCT SLIDER WITH MASTER BANNER BACKGROUND */}
+      {/* 1. UNIFIED CYBERPUNK HERO PRODUCT SLIDER WITH CUSTOMIZABLE MASTER BANNER */}
       {currentSlide && (
         <section className="relative overflow-hidden rounded-3xl border border-[#7C3AED]/40 shadow-[0_0_50px_rgba(124,58,237,0.25)] p-6 sm:p-10 lg:p-12 min-h-[340px] sm:min-h-[400px] flex flex-col justify-between group">
           {/* Master Cyberpunk Backdrop Image & Atmospheric Lighting */}
           <div className="absolute inset-0 z-0 overflow-hidden">
             <img
-              src="/thanox-master-banner.jpg"
+              src={bannerBg}
               alt="Thanox Master Background"
-              className="w-full h-full object-cover object-center filter brightness-[0.32] contrast-125 scale-105 group-hover:scale-100 transition-transform duration-1000"
+              className="w-full h-full object-cover object-center contrast-125 scale-105 group-hover:scale-100 transition-transform duration-1000"
+              style={{
+                filter: `brightness(${bannerBrightness}) blur(${bannerBlur}px)`,
+              }}
             />
-            {/* Cinematic Gradient Overlays for Razor Sharp Text Contrast */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#070714]/90 via-[#0A0A1E]/80 to-[#070714]/70 backdrop-blur-[1px]" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#070714] via-transparent to-black/50" />
+            {/* Customizable Dynamic Gradient Overlays for Perfect Contrast */}
+            <div
+              className="absolute inset-0 bg-gradient-to-r from-[#070714] via-[#0A0A1E] to-[#070714]"
+              style={{
+                opacity: bannerOverlayOpacity,
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#070714] via-transparent to-black/30" />
             <div className="absolute top-0 right-0 w-96 h-96 bg-[#8B5CF6]/15 rounded-full blur-[100px] pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none" />
           </div>
@@ -183,13 +199,13 @@ export const StorefrontHome: React.FC = () => {
 
             {/* Middle Hotline Badge */}
             <a
-              href="https://zalo.me/0916396901"
+              href={`https://zalo.me/${bannerHotline.replace(/\D/g, '')}`}
               target="_blank"
               rel="noopener noreferrer"
               className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-400/40 text-blue-300 hover:text-white font-extrabold text-xs transition-all cursor-pointer"
             >
               <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping" />
-              <span>ZALO HỖ TRỢ: 0916396901</span>
+              <span>ZALO HỖ TRỢ: {bannerHotline}</span>
             </a>
 
             {/* Prev / Next Arrows */}

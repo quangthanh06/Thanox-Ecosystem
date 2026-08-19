@@ -39,7 +39,7 @@ import {
 export const SettingsView: React.FC = () => {
   const { settings, updateSettings, resetToDefaultData, resetToZeroData, showToast } = useStore();
 
-  const [activeTab, setActiveTab] = useState<'general' | 'payments' | 'security' | 'affiliate' | 'music' | 'data'>('payments');
+  const [activeTab, setActiveTab] = useState<'banner' | 'payments' | 'general' | 'security' | 'affiliate' | 'music' | 'data'>('banner');
   const [formData, setFormData] = useState<StoreSettings>({ ...settings });
 
   // Music form state
@@ -123,6 +123,19 @@ export const SettingsView: React.FC = () => {
       <div className="flex items-center gap-2 border-b border-white/5 pb-2 overflow-x-auto">
         <button
           type="button"
+          onClick={() => setActiveTab('banner')}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+            activeTab === 'banner'
+              ? 'bg-[#7C3AED]/20 text-white border border-[#7C3AED]/40 shadow-sm'
+              : 'text-[#8B84A8] hover:text-white bg-[#161626]'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-[#C084FC]" />
+          <span>🎨 Banner & Giao Diện</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveTab('payments')}
           className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'payments'
@@ -202,6 +215,417 @@ export const SettingsView: React.FC = () => {
 
       {/* TAB CONTENTS */}
       <form onSubmit={handleSave} className="space-y-5">
+        {/* 0. HERO BANNER & GIAO DIỆN CUSTOMIZATION TAB */}
+        {activeTab === 'banner' && (
+          <div className="space-y-6">
+            {/* Live Interactive Preview Card */}
+            <Card className="p-5 space-y-4 border-[#7C3AED]/30 bg-gradient-to-b from-[#121226] to-[#0A0A14]" variant="default">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-3">
+                <div>
+                  <h3 className="font-bold text-sm text-[#F0EDFF] flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-purple-400" />
+                    <span>Xem Trước Trực Tiếp Khung Hero Banner</span>
+                  </h3>
+                  <p className="text-xs text-[#8B84A8]">
+                    Xem ngay kết quả hiển thị thực tế trên trang chủ khi bạn kéo chỉnh các thông số
+                  </p>
+                </div>
+                <Badge variant="brand" size="sm">
+                  Live Preview
+                </Badge>
+              </div>
+
+              {/* Simulated Hero Banner Preview */}
+              <div className="relative overflow-hidden rounded-2xl border border-[#7C3AED]/40 p-6 min-h-[220px] flex flex-col justify-between shadow-2xl">
+                {/* Dynamic Background Image */}
+                <div className="absolute inset-0 z-0 overflow-hidden">
+                  <img
+                    src={formData.heroBanner?.backgroundImage || '/thanox-master-banner.jpg'}
+                    alt="Preview Background"
+                    className="w-full h-full object-cover object-center contrast-125 transition-all duration-300"
+                    style={{
+                      filter: `brightness(${(formData.heroBanner?.brightness ?? 65) / 100}) blur(${formData.heroBanner?.blur ?? 0}px)`,
+                    }}
+                  />
+                  {/* Dynamic Dark Gradient Overlay */}
+                  <div
+                    className="absolute inset-0 bg-gradient-to-r from-[#070714] via-[#0A0A1E] to-[#070714] transition-opacity duration-300"
+                    style={{
+                      opacity: (formData.heroBanner?.overlayOpacity ?? 45) / 100,
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#070714] via-transparent to-black/30" />
+                </div>
+
+                {/* Simulated Content */}
+                <div className="relative z-10 space-y-2 max-w-md">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-0.5 bg-cyan-400 rounded-full" />
+                    <span className="text-[10px] font-black uppercase text-cyan-400 tracking-wider">
+                      FILE BẢN QUYỀN
+                    </span>
+                  </div>
+                  <h2 className="text-lg sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#9D5CF6] via-[#C084FC] to-[#06B6D4] uppercase tracking-tight">
+                    CHỨNG CHỈ IOS THANOX VIP - KÝ APP TRỌN ĐỜI
+                  </h2>
+                  <div className="text-base font-black text-amber-400">
+                    199.000 <span className="text-xs">VND</span>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <span className="px-3 py-1 rounded-xl bg-teal-500 text-black font-black text-[10px] uppercase shadow-md">
+                      XEM SẢN PHẨM
+                    </span>
+                    <span className="px-3 py-1 rounded-xl bg-black/60 border border-white/20 text-white font-bold text-[10px] uppercase">
+                      HỖ TRỢ NGAY
+                    </span>
+                  </div>
+                </div>
+
+                <div className="relative z-10 flex items-center justify-between pt-3 mt-3 border-t border-white/10 text-[10px]">
+                  <span className="text-cyan-400 font-bold">● ● ● ●</span>
+                  <span className="text-blue-300 font-bold bg-blue-600/30 px-2 py-0.5 rounded-lg border border-blue-400/30">
+                    ZALO HỖ TRỢ: {formData.heroBanner?.hotlineZalo || formData.zaloHotline || '0916396901'}
+                  </span>
+                </div>
+              </div>
+            </Card>
+
+            {/* Controls Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {/* Left Column: Background Image Picker */}
+              <Card className="p-5 space-y-4" variant="default">
+                <CardHeader
+                  title="Hình Ảnh Nền Banner"
+                  subtitle="Tải ảnh từ máy tính hoặc dán đường dẫn ảnh URL"
+                />
+
+                <div className="space-y-4 text-xs">
+                  {/* File Upload from PC */}
+                  <div className="space-y-2 p-3.5 rounded-2xl bg-[#161626] border border-white/5">
+                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">
+                      Tải file ảnh từ máy tính (JPG, PNG, WEBP)
+                    </label>
+                    <input
+                      type="file"
+                      id="hero-bg-upload"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (!file.type.startsWith('image/')) {
+                          showToast('Vui lòng chọn file hình ảnh', 'error');
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          const base64 = ev.target?.result as string;
+                          setFormData((prev) => ({
+                            ...prev,
+                            heroBanner: {
+                              ...(prev.heroBanner || {
+                                brightness: 65,
+                                blur: 0,
+                                overlayOpacity: 45,
+                                glowEffect: true,
+                                hotlineZalo: '0916396901',
+                              }),
+                              backgroundImage: base64,
+                            },
+                          }));
+                          showToast('Đã tải ảnh nền Banner từ máy tính thành công!', 'success');
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => document.getElementById('hero-bg-upload')?.click()}
+                        leftIcon={<Upload className="w-3.5 h-3.5 text-cyan-400" />}
+                        className="font-bold border-white/10 hover:border-cyan-400"
+                      >
+                        Chọn ảnh từ máy tính
+                      </Button>
+                      {formData.heroBanner?.backgroundImage && formData.heroBanner.backgroundImage !== '/thanox-master-banner.jpg' && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              heroBanner: {
+                                ...(prev.heroBanner || {
+                                  brightness: 65,
+                                  blur: 0,
+                                  overlayOpacity: 45,
+                                  glowEffect: true,
+                                  hotlineZalo: '0916396901',
+                                }),
+                                backgroundImage: '/thanox-master-banner.jpg',
+                              },
+                            }))
+                          }
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          Khôi phục ảnh gốc
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Direct URL Input */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                      Hoặc dán Link URL ảnh trực tiếp
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.heroBanner?.backgroundImage || ''}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          heroBanner: {
+                            ...(prev.heroBanner || {
+                              brightness: 65,
+                              blur: 0,
+                              overlayOpacity: 45,
+                              glowEffect: true,
+                              hotlineZalo: '0916396901',
+                            }),
+                            backgroundImage: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder="https://images.unsplash.com/..."
+                      className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                    />
+                  </div>
+
+                  {/* Preset Background Choices */}
+                  <div className="space-y-1.5 pt-2 border-t border-white/5">
+                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">
+                      Ảnh mẫu chất lượng cao sẵn có:
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {[
+                        {
+                          name: '🐉 Master Cyber Dragon',
+                          url: '/thanox-master-banner.jpg',
+                        },
+                        {
+                          name: '👾 Cyber Battlestation',
+                          url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1600&q=80',
+                        },
+                        {
+                          name: '⚡ Purple Tech Core',
+                          url: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1600&q=80',
+                        },
+                      ].map((preset, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              heroBanner: {
+                                ...(prev.heroBanner || {
+                                  brightness: 65,
+                                  blur: 0,
+                                  overlayOpacity: 45,
+                                  glowEffect: true,
+                                  hotlineZalo: '0916396901',
+                                }),
+                                backgroundImage: preset.url,
+                              },
+                            }))
+                          }
+                          className={`p-2 rounded-xl text-left border text-[11px] font-semibold transition-all cursor-pointer truncate ${
+                            formData.heroBanner?.backgroundImage === preset.url
+                              ? 'bg-[#7C3AED]/20 border-[#7C3AED] text-white shadow-sm'
+                              : 'bg-[#161626] border-white/10 text-[#8B84A8] hover:text-white hover:bg-[#1E1E30]'
+                          }`}
+                        >
+                          {preset.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Right Column: Sliders for Brightness, Blur, Overlay & Hotline */}
+              <Card className="p-5 space-y-4" variant="default">
+                <CardHeader
+                  title="Hiệu Ứng Sáng Tối & Độ Mờ"
+                  subtitle="Tùy chỉnh thanh trượt để ảnh nền đạt độ sắc nét và tương phản ưng ý nhất"
+                />
+
+                <div className="space-y-4 text-xs">
+                  {/* Slider 1: Brightness */}
+                  <div className="space-y-2 p-3 rounded-2xl bg-[#161626] border border-white/5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-semibold text-[#F0EDFF] uppercase tracking-wider">
+                        ☀️ Độ Sáng Của Nền (Brightness)
+                      </label>
+                      <Badge variant="brand" size="xs">
+                        {formData.heroBanner?.brightness ?? 65}%
+                      </Badge>
+                    </div>
+                    <input
+                      type="range"
+                      min="10"
+                      max="100"
+                      step="5"
+                      value={formData.heroBanner?.brightness ?? 65}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          heroBanner: {
+                            ...(prev.heroBanner || {
+                              backgroundImage: '/thanox-master-banner.jpg',
+                              blur: 0,
+                              overlayOpacity: 45,
+                              glowEffect: true,
+                              hotlineZalo: '0916396901',
+                            }),
+                            brightness: Number(e.target.value),
+                          },
+                        }))
+                      }
+                      className="w-full accent-[#7C3AED] cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[10px] text-[#6B658E]">
+                      <span>10% (Tối mờ)</span>
+                      <span>65% (Mặc định sáng nét)</span>
+                      <span>100% (Sáng nét tối đa)</span>
+                    </div>
+                  </div>
+
+                  {/* Slider 2: Backdrop Blur */}
+                  <div className="space-y-2 p-3 rounded-2xl bg-[#161626] border border-white/5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-semibold text-[#F0EDFF] uppercase tracking-wider">
+                        🔍 Độ Mờ Kính (Backdrop Blur)
+                      </label>
+                      <Badge variant="brand" size="xs">
+                        {formData.heroBanner?.blur ?? 0} px
+                      </Badge>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="15"
+                      step="1"
+                      value={formData.heroBanner?.blur ?? 0}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          heroBanner: {
+                            ...(prev.heroBanner || {
+                              backgroundImage: '/thanox-master-banner.jpg',
+                              brightness: 65,
+                              overlayOpacity: 45,
+                              glowEffect: true,
+                              hotlineZalo: '0916396901',
+                            }),
+                            blur: Number(e.target.value),
+                          },
+                        }))
+                      }
+                      className="w-full accent-[#7C3AED] cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[10px] text-[#6B658E]">
+                      <span>0px (Nét tuyệt đối không mờ)</span>
+                      <span>3px (Mờ nhẹ)</span>
+                      <span>15px (Mờ cực đại)</span>
+                    </div>
+                  </div>
+
+                  {/* Slider 3: Dark Overlay Opacity */}
+                  <div className="space-y-2 p-3 rounded-2xl bg-[#161626] border border-white/5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-semibold text-[#F0EDFF] uppercase tracking-wider">
+                        🌑 Lớp Phủ Tối (Overlay Darkness)
+                      </label>
+                      <Badge variant="brand" size="xs">
+                        {formData.heroBanner?.overlayOpacity ?? 45}%
+                      </Badge>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="5"
+                      value={formData.heroBanner?.overlayOpacity ?? 45}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          heroBanner: {
+                            ...(prev.heroBanner || {
+                              backgroundImage: '/thanox-master-banner.jpg',
+                              brightness: 65,
+                              blur: 0,
+                              glowEffect: true,
+                              hotlineZalo: '0916396901',
+                            }),
+                            overlayOpacity: Number(e.target.value),
+                          },
+                        }))
+                      }
+                      className="w-full accent-[#7C3AED] cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[10px] text-[#6B658E]">
+                      <span>0% (Không che phủ)</span>
+                      <span>45% (Hòa hợp chữ & ảnh)</span>
+                      <span>100% (Phủ đen hoàn toàn)</span>
+                    </div>
+                  </div>
+
+                  {/* Hotline Zalo on Banner */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                      Hotline Zalo Hiển Thị Dưới Banner
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.heroBanner?.hotlineZalo ?? formData.zaloHotline ?? '0916396901'}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          heroBanner: {
+                            ...(prev.heroBanner || {
+                              backgroundImage: '/thanox-master-banner.jpg',
+                              brightness: 65,
+                              blur: 0,
+                              overlayOpacity: 45,
+                              glowEffect: true,
+                            }),
+                            hotlineZalo: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder="0916396901"
+                      className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                    />
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {/* Save Button */}
+            <div className="flex justify-end pt-2">
+              <Button type="submit" variant="primary" size="md" leftIcon={<Save className="w-4 h-4" />}>
+                💾 Lưu Cài Đặt Banner & Giao Diện
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* 1. PAYMENTS TAB (VietQR Focus) */}
         {activeTab === 'payments' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

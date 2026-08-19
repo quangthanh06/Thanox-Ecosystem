@@ -282,4 +282,13 @@ export const INITIAL_SETTINGS: StoreSettings = {
     maxAmount: 1000000,
     networkMatrix: DEFAULT_CARD_MATRIX,
   },
+  heroBanner: {
+    backgroundImage: '/thanox-master-banner.jpg',
+    brightness: 65,
+    blur: 0,
+    overlayOpacity: 45,
+    glowEffect: true,
+    hotlineZalo: '0916396901',
+    telegramContact: '@quangthank',
+  },
 };
