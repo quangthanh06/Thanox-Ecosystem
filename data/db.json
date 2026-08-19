@@ -225,8 +225,21 @@
     "affiliateHigherTierEnabled": false,
     "affiliateHigherTierThreshold": 300000,
     "affiliateHigherTierReward": 30000,
-    "musicEnabled": false,
-    "musicTracks": [],
+    "musicEnabled": true,
+    "musicTracks": [
+      {
+        "id": "track-1",
+        "title": "Cyberpunk Phonk VIP 2026",
+        "artist": "Thanox Gaming Audio",
+        "url": "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=cyberpunk-2099-10701.mp3"
+      },
+      {
+        "id": "track-2",
+        "title": "Future Neon Drift",
+        "artist": "Thanox Records",
+        "url": "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=electronic-future-beats-117997.mp3"
+      }
+    ],
     "effects": {
       "snow": false,
       "cherryBlossom": false,

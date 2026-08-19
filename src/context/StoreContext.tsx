@@ -410,6 +410,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 return Array.from(map.values());
               });
             }
+            if (d.settings && typeof d.settings === 'object') {
+              setSettings((prev) => ({
+                ...prev,
+                ...d.settings,
+              }));
+            }
           }
         }
       } catch {
@@ -1777,7 +1783,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Settings
   const updateSettings = (newSettings: Partial<StoreSettings>) => {
-    setSettings((prev) => ({ ...prev, ...newSettings }));
+    setSettings((prev) => {
+      const updated = { ...prev, ...newSettings };
+      try {
+        localStorage.setItem('thanox_settings', JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to save settings:', e);
+      }
+      fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings: updated }),
+      }).catch((err) => console.error('Settings sync error:', err));
+      return updated;
+    });
     showToast('Đã lưu cấu hình hệ thống thành công', 'success');
   };
 
