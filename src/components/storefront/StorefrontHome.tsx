@@ -77,22 +77,29 @@ export const StorefrontHome: React.FC = () => {
 
   return (
     <div className="space-y-10 sm:space-y-12">
-      {/* 0. MASTER CYBERPUNK MOTION BANNER (HERO BRANDING WITH ZALO: 0916396901) */}
-      <MasterMotionBanner />
-
-      {/* 1. HERO PRODUCT SLIDER (IMAGE 2 DESIGN & INTERACTION) */}
+      {/* 1. UNIFIED CYBERPUNK HERO PRODUCT SLIDER WITH MASTER BANNER BACKGROUND */}
       {currentSlide && (
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0A101D] via-[#0F0F1A] to-[#0A0A16] border border-cyan-500/20 shadow-[0_0_50px_rgba(6,182,212,0.15)] p-6 sm:p-10 lg:p-12 min-h-[300px] sm:min-h-[360px] flex flex-col justify-between">
-          {/* Cyberpunk ambient lighting */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#7C3AED]/20 rounded-full blur-[100px] pointer-events-none" />
+        <section className="relative overflow-hidden rounded-3xl border border-[#7C3AED]/40 shadow-[0_0_50px_rgba(124,58,237,0.25)] p-6 sm:p-10 lg:p-12 min-h-[340px] sm:min-h-[400px] flex flex-col justify-between group">
+          {/* Master Cyberpunk Backdrop Image & Atmospheric Lighting */}
+          <div className="absolute inset-0 z-0 overflow-hidden">
+            <img
+              src="/thanox-master-banner.jpg"
+              alt="Thanox Master Background"
+              className="w-full h-full object-cover object-center filter brightness-[0.45] contrast-125 scale-105 group-hover:scale-100 transition-transform duration-1000"
+            />
+            {/* Cinematic Gradient Overlays for Razor Sharp Text Contrast */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#070714]/95 via-[#0A0A1E]/85 to-[#070714]/75 backdrop-blur-[1.5px]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#070714] via-transparent to-black/40" />
+            <div className="absolute top-0 right-0 w-96 h-96 bg-[#8B5CF6]/15 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none" />
+          </div>
 
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
             {/* Left Content Column (7 cols) */}
             <div key={currentSlide.id} className="lg:col-span-7 space-y-4 sm:space-y-5 animate-in fade-in slide-in-from-left-4 duration-500">
-              {/* Category Indicator with Top Line (Image 2 style) */}
+              {/* Category Indicator with Top Line */}
               <div className="space-y-1.5">
-                <div className="w-8 h-1 bg-cyan-400 rounded-full" />
+                <div className="w-8 h-1 bg-cyan-400 rounded-full shadow-[0_0_10px_#06B6D4]" />
                 <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#06B6D4] font-display">
                   {currentSlide.category || 'FILE BẢN QUYỀN'}
                 </span>
@@ -104,12 +111,12 @@ export const StorefrontHome: React.FC = () => {
               </h1>
 
               {/* Golden / Orange Price with VND */}
-              <div className="font-display font-black text-2xl sm:text-3xl md:text-4xl text-[#FBBF24] tracking-tight flex items-baseline gap-1.5">
+              <div className="font-display font-black text-2xl sm:text-3xl md:text-4xl text-[#FBBF24] tracking-tight flex items-baseline gap-1.5 drop-shadow-md">
                 <span>{currentSlide.price.toLocaleString('vi-VN')}</span>
                 <span className="text-lg sm:text-2xl font-black text-amber-400">VND</span>
               </div>
 
-              {/* Action Buttons Side-by-Side (Image 2 style) */}
+              {/* Action Buttons Side-by-Side */}
               <div className="flex flex-wrap items-center gap-3.5 pt-2">
                 {/* Button 1: Cyan/Emerald Xem Sản Phẩm */}
                 <button
@@ -137,7 +144,7 @@ export const StorefrontHome: React.FC = () => {
             <div className="lg:col-span-5 hidden lg:flex justify-center items-center">
               <div
                 onClick={() => navigateToStorefront('product-detail', currentSlide.id)}
-                className="relative w-full max-w-sm aspect-[4/3] rounded-3xl bg-gradient-to-b from-white/10 to-white/5 border border-white/15 p-2 shadow-2xl backdrop-blur-md overflow-hidden group cursor-pointer hover:border-cyan-400/50 transition-all hover:scale-105"
+                className="relative w-full max-w-sm aspect-[4/3] rounded-3xl bg-gradient-to-b from-white/10 to-white/5 border border-white/15 p-2 shadow-2xl backdrop-blur-md overflow-hidden group/card cursor-pointer hover:border-cyan-400/50 transition-all hover:scale-105"
               >
                 {currentSlide.image ? (
                   <img
@@ -158,8 +165,8 @@ export const StorefrontHome: React.FC = () => {
             </div>
           </div>
 
-          {/* Carousel Slider Controls (Dots & Arrows) */}
-          <div className="relative z-10 flex items-center justify-between pt-6 mt-4 border-t border-white/5">
+          {/* Carousel Slider Controls (Dots, Hotline & Arrows) */}
+          <div className="relative z-10 flex flex-wrap items-center justify-between gap-4 pt-6 mt-6 border-t border-white/10">
             {/* Indicator Dots */}
             <div className="flex items-center gap-2">
               {activeProducts.slice(0, 8).map((_, idx) => (
@@ -175,6 +182,17 @@ export const StorefrontHome: React.FC = () => {
               ))}
             </div>
 
+            {/* Middle Hotline Badge */}
+            <a
+              href="https://zalo.me/0916396901"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-400/40 text-blue-300 hover:text-white font-extrabold text-xs transition-all cursor-pointer"
+            >
+              <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping" />
+              <span>ZALO HỖ TRỢ: 0916396901</span>
+            </a>
+
             {/* Prev / Next Arrows */}
             <div className="flex items-center gap-2">
               <button
@@ -182,7 +200,7 @@ export const StorefrontHome: React.FC = () => {
                 onClick={() =>
                   setCurrentSlideIndex((prev) => (prev - 1 + activeProducts.length) % activeProducts.length)
                 }
-                className="w-9 h-9 rounded-xl bg-[#161626] hover:bg-[#1E1E32] border border-white/10 flex items-center justify-center text-white transition-all cursor-pointer hover:border-cyan-400/50"
+                className="w-9 h-9 rounded-xl bg-[#161626]/80 hover:bg-[#1E1E32] border border-white/10 flex items-center justify-center text-white transition-all cursor-pointer hover:border-cyan-400/50"
                 title="Sản phẩm trước"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -192,7 +210,7 @@ export const StorefrontHome: React.FC = () => {
                 onClick={() =>
                   setCurrentSlideIndex((prev) => (prev + 1) % activeProducts.length)
                 }
-                className="w-9 h-9 rounded-xl bg-[#161626] hover:bg-[#1E1E32] border border-white/10 flex items-center justify-center text-white transition-all cursor-pointer hover:border-cyan-400/50"
+                className="w-9 h-9 rounded-xl bg-[#161626]/80 hover:bg-[#1E1E32] border border-white/10 flex items-center justify-center text-white transition-all cursor-pointer hover:border-cyan-400/50"
                 title="Sản phẩm tiếp theo"
               >
                 <ChevronRight className="w-4 h-4" />
