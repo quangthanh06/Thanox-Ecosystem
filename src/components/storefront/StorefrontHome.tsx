@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
+import { MasterMotionBanner } from './MasterMotionBanner';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import {
@@ -76,6 +77,9 @@ export const StorefrontHome: React.FC = () => {
 
   return (
     <div className="space-y-10 sm:space-y-12">
+      {/* 0. MASTER CYBERPUNK MOTION BANNER (HERO BRANDING WITH ZALO: 0916396901) */}
+      <MasterMotionBanner />
+
       {/* 1. HERO PRODUCT SLIDER (IMAGE 2 DESIGN & INTERACTION) */}
       {currentSlide && (
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0A101D] via-[#0F0F1A] to-[#0A0A16] border border-cyan-500/20 shadow-[0_0_50px_rgba(6,182,212,0.15)] p-6 sm:p-10 lg:p-12 min-h-[300px] sm:min-h-[360px] flex flex-col justify-between">
