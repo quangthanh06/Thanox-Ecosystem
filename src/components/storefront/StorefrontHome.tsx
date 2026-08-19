@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
-import { MasterMotionBanner } from './MasterMotionBanner';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import {
@@ -85,11 +84,11 @@ export const StorefrontHome: React.FC = () => {
             <img
               src="/thanox-master-banner.jpg"
               alt="Thanox Master Background"
-              className="w-full h-full object-cover object-center filter brightness-[0.45] contrast-125 scale-105 group-hover:scale-100 transition-transform duration-1000"
+              className="w-full h-full object-cover object-center filter brightness-[0.32] contrast-125 scale-105 group-hover:scale-100 transition-transform duration-1000"
             />
             {/* Cinematic Gradient Overlays for Razor Sharp Text Contrast */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#070714]/95 via-[#0A0A1E]/85 to-[#070714]/75 backdrop-blur-[1.5px]" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#070714] via-transparent to-black/40" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#070714]/90 via-[#0A0A1E]/80 to-[#070714]/70 backdrop-blur-[1px]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#070714] via-transparent to-black/50" />
             <div className="absolute top-0 right-0 w-96 h-96 bg-[#8B5CF6]/15 rounded-full blur-[100px] pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none" />
           </div>
