@@ -119,8 +119,15 @@ export const SettingsView: React.FC = () => {
         </Button>
       </div>
 
-      {/* Tabs Switcher */}
-      <div className="flex items-center gap-2 border-b border-white/5 pb-2 overflow-x-auto">
+      {/* Tabs Switcher with Mouse Wheel Scrolling */}
+      <div
+        onWheel={(e) => {
+          if (e.deltaY !== 0) {
+            e.currentTarget.scrollLeft += e.deltaY;
+          }
+        }}
+        className="flex items-center gap-2 border-b border-white/5 pb-2 overflow-x-auto scrollbar-none no-scrollbar cursor-grab active:cursor-grabbing"
+      >
         <button
           type="button"
           onClick={() => setActiveTab('banner')}

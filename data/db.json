@@ -198,12 +198,12 @@
     "bankAccount": "0326884292",
     "accountHolder": "TRAN QUANG THANH",
     "transferPrefix": "NAP",
-    "qrTemplate": "compact2",
+    "qrTemplate": "qr_only",
     "telegramBotToken": "",
     "telegramAdminId": "quangthank",
     "telegramLink": "@quangthank",
     "zaloHotline": "0916396901",
-    "maintenanceMode": true,
+    "maintenanceMode": false,
     "autoApprovalEnabled": true,
     "announcementEnabled": true,
     "announcementText": "⚡ Nạp ví tự động qua VietQR 24/7. Giao key tức thì trong 3 giây.",
@@ -276,7 +276,7 @@
           },
           {
             "amount": 20000,
-            "receiveAmount": 17000,
+            "receiveAmount": 17002,
             "feePercent": 15,
             "enabled": true
           },

@@ -146,8 +146,15 @@ export const StorefrontProducts: React.FC = () => {
         </div>
       </div>
 
-      {/* 1. HORIZONTAL TOUCH-FRIENDLY CATEGORY BAR (ALL DEVICES) */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none no-scrollbar -mx-2 px-2 sm:mx-0 sm:px-0">
+      {/* 1. HORIZONTAL TOUCH-FRIENDLY CATEGORY BAR WITH MOUSE WHEEL SCROLLING */}
+      <div
+        onWheel={(e) => {
+          if (e.deltaY !== 0) {
+            e.currentTarget.scrollLeft += e.deltaY;
+          }
+        }}
+        className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none no-scrollbar -mx-2 px-2 sm:mx-0 sm:px-0 cursor-grab active:cursor-grabbing"
+      >
         <button
           type="button"
           onClick={() => setSelectedCategory('all')}
@@ -268,11 +275,11 @@ export const StorefrontProducts: React.FC = () => {
                   <div className="pt-1 flex items-baseline justify-between">
                     <div>
                       <div className="font-display font-extrabold text-base sm:text-lg text-emerald-400">
-                        {effectivePrice.toLocaleString('vi-VN')} <span className="text-[11px]">đ</span>
+                        {effectivePrice.toLocaleString('vi-VN')} <span className="text-[11px] font-bold">VND</span>
                       </div>
                       {originalDisplayPrice && originalDisplayPrice > effectivePrice && (
                         <div className="text-[10.5px] text-[#6B658E] line-through">
-                          {originalDisplayPrice.toLocaleString('vi-VN')}đ
+                          {originalDisplayPrice.toLocaleString('vi-VN')} VND
                         </div>
                       )}
                     </div>

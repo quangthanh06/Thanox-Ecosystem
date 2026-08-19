@@ -290,15 +290,31 @@ export const StorefrontHome: React.FC = () => {
               return (
                 <div
                   key={product.id}
-                  className="bg-[#0F0F1A] border border-white/10 hover:border-[#7C3AED]/50 rounded-2xl p-5 flex flex-col justify-between transition-all group"
+                  className="bg-[#0F0F1A] border border-white/10 hover:border-[#7C3AED]/50 rounded-3xl p-4.5 flex flex-col justify-between transition-all group hover:bg-[#131326] shadow-lg shadow-black/40"
                 >
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-[#7C3AED]/15 text-[#9D5CF6] border border-[#7C3AED]/20">
+                    {/* Product Cover Thumbnail */}
+                    <div
+                      onClick={() => navigateToStorefront('product-detail', product.id)}
+                      className="relative w-full aspect-[16/10] rounded-2xl bg-[#161626] border border-white/10 overflow-hidden cursor-pointer group-hover:border-[#7C3AED]/50 transition-colors"
+                    >
+                      {product.image ? (
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-[#6B658E]">
+                          <Package className="w-8 h-8 text-[#9D5CF6]/60" />
+                        </div>
+                      )}
+                      {/* Badges on Image */}
+                      <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-black/80 backdrop-blur-md text-[#C084FC] border border-purple-500/30">
                         {product.category}
                       </span>
                       {discount && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-500/20 text-red-400 border border-red-500/30">
+                        <span className="absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-red-600/90 text-white shadow-md">
                           GIẢM {discount}%
                         </span>
                       )}
@@ -316,13 +332,13 @@ export const StorefrontHome: React.FC = () => {
                       </p>
                     </div>
 
-                    <div className="flex items-baseline gap-2 pt-2">
+                    <div className="flex items-baseline gap-2 pt-1">
                       <span className="font-display font-extrabold text-lg text-emerald-400">
-                        {product.price.toLocaleString('vi-VN')} <span className="text-xs">đ</span>
+                        {product.price.toLocaleString('vi-VN')} <span className="text-xs font-bold">VND</span>
                       </span>
                       {product.originalPrice && (
                         <span className="text-xs text-[#6B658E] line-through">
-                          {product.originalPrice.toLocaleString('vi-VN')}đ
+                          {product.originalPrice.toLocaleString('vi-VN')} VND
                         </span>
                       )}
                     </div>
@@ -377,11 +393,18 @@ export const StorefrontHome: React.FC = () => {
           </div>
         </div>
 
-        {/* Category Filter Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2">
+        {/* Category Filter Pills with Mouse Wheel Scrolling Support */}
+        <div
+          onWheel={(e) => {
+            if (e.deltaY !== 0) {
+              e.currentTarget.scrollLeft += e.deltaY;
+            }
+          }}
+          className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none no-scrollbar cursor-grab active:cursor-grabbing"
+        >
           <button
             onClick={() => setActiveCategoryFilter('all')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               activeCategoryFilter === 'all'
                 ? 'bg-[#7C3AED] text-white shadow-sm shadow-[#7C3AED]/30'
                 : 'bg-[#0F0F1A] text-[#8B84A8] hover:text-white border border-white/5'
@@ -393,13 +416,18 @@ export const StorefrontHome: React.FC = () => {
             <button
               key={c.id}
               onClick={() => setActiveCategoryFilter(c.name)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
                 activeCategoryFilter === c.name
                   ? 'bg-[#7C3AED] text-white shadow-sm shadow-[#7C3AED]/30'
                   : 'bg-[#0F0F1A] text-[#8B84A8] hover:text-white border border-white/5'
               }`}
             >
-              {c.icon} {c.name}
+              {c.image || (c.icon && (c.icon.startsWith('http') || c.icon.startsWith('data:image'))) ? (
+                <img src={c.image || c.icon} alt={c.name} className="w-3.5 h-3.5 rounded-full object-cover" />
+              ) : (
+                <span>{c.icon}</span>
+              )}
+              <span>{c.name}</span>
             </button>
           ))}
         </div>
@@ -414,12 +442,32 @@ export const StorefrontHome: React.FC = () => {
             {filteredProducts.map((prod) => (
               <div
                 key={prod.id}
-                className="bg-[#0F0F1A] border border-white/5 hover:border-[#7C3AED]/40 rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all group hover:bg-[#121222]"
+                className="bg-[#0F0F1A] border border-white/5 hover:border-[#7C3AED]/40 rounded-3xl p-4 sm:p-4.5 flex flex-col justify-between transition-all group hover:bg-[#121224] shadow-md shadow-black/20"
               >
                 <div className="space-y-2.5">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-[#8B84A8] font-medium">{prod.category}</span>
-                    <span className="text-emerald-400 font-bold">Đã bán: {prod.soldCount}</span>
+                  {/* Product Thumbnail Banner */}
+                  <div
+                    onClick={() => navigateToStorefront('product-detail', prod.id)}
+                    className="relative w-full aspect-[16/10] rounded-2xl bg-[#161626] border border-white/10 overflow-hidden cursor-pointer group-hover:border-[#7C3AED]/50 transition-colors"
+                  >
+                    {prod.image ? (
+                      <img
+                        src={prod.image}
+                        alt={prod.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-[#6B658E]">
+                        <Package className="w-7 h-7 text-[#9D5CF6]/50" />
+                      </div>
+                    )}
+                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9.5px] font-bold bg-black/80 backdrop-blur-md text-[#9D5CF6] border border-purple-500/30">
+                      {prod.category}
+                    </span>
+                    <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-black/80 text-emerald-400">
+                      Đã bán: {prod.soldCount}
+                    </span>
                   </div>
 
                   <h4
@@ -433,9 +481,9 @@ export const StorefrontHome: React.FC = () => {
                     {prod.description}
                   </p>
 
-                  <div className="pt-2">
+                  <div className="pt-1">
                     <div className="font-display font-extrabold text-base text-emerald-400">
-                      {prod.price.toLocaleString('vi-VN')} <span className="text-xs">đ</span>
+                      {prod.price.toLocaleString('vi-VN')} <span className="text-xs font-bold">VND</span>
                     </div>
                   </div>
                 </div>
