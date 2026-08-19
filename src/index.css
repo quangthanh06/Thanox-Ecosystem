@@ -92,6 +92,31 @@ html, body {
   }
 }
 
+@keyframes thanoxColorFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.thanox-animated-logo {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  background: linear-gradient(270deg, #FFFFFF 0%, #22D3EE 20%, #A855F7 40%, #EC4899 60%, #06B6D4 80%, #FFFFFF 100%);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: thanoxColorFlow 4s ease infinite;
+  filter: drop-shadow(0 0 12px rgba(168, 85, 247, 0.45));
+  display: inline-block;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

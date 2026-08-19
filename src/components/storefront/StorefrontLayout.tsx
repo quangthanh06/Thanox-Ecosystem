@@ -122,18 +122,18 @@ export const StorefrontLayout: React.FC = () => {
           <div className="flex items-center gap-6">
             <button
               onClick={() => navigateToStorefront('home')}
-              className="flex items-center gap-2.5 cursor-pointer text-left group"
+              className="flex items-center gap-2.5 cursor-pointer text-left group select-none"
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#06B6D4] p-0.5 shadow-md shadow-[#7C3AED]/20">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7C3AED] via-[#9D5CF6] to-[#06B6D4] p-0.5 shadow-lg shadow-[#7C3AED]/30 group-hover:shadow-[0_0_20px_rgba(124,58,237,0.6)] transition-all">
                 <div className="w-full h-full bg-[#0F0F1A] rounded-[10px] flex items-center justify-center text-[#9D5CF6] group-hover:text-white transition-colors">
-                  <Flame className="w-5 h-5 text-[#9D5CF6]" />
+                  <Flame className="w-5 h-5 text-[#9D5CF6] group-hover:text-cyan-400 transition-colors" />
                 </div>
               </div>
-              <div>
-                <span className="font-display font-black text-lg text-white tracking-wider">
-                  THANOX<span className="text-[#9D5CF6]">.VN</span>
+              <div className="flex flex-col">
+                <span className="thanox-animated-logo text-xl sm:text-[23px] font-black tracking-wider uppercase leading-tight">
+                  THANOX.VN
                 </span>
-                <span className="hidden sm:block text-[9px] uppercase tracking-widest text-[#8B84A8] font-bold">
+                <span className="hidden sm:block text-[9.5px] uppercase tracking-widest text-[#8B84A8] font-extrabold -mt-0.5">
                   Digital Gaming Hub
                 </span>
               </div>
@@ -569,11 +569,11 @@ export const StorefrontLayout: React.FC = () => {
             {/* Brand column */}
             <div className="space-y-4 md:col-span-1">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#7C3AED]/20 border border-[#7C3AED]/30 flex items-center justify-center text-[#9D5CF6]">
-                  <Flame className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#06B6D4] p-0.5 shadow-md shadow-[#7C3AED]/30 flex items-center justify-center">
+                  <Flame className="w-4 h-4 text-cyan-300" />
                 </div>
-                <span className="font-display font-black text-base text-white tracking-wider">
-                  THANOX DIGITAL
+                <span className="thanox-animated-logo text-base font-black tracking-wider uppercase">
+                  THANOX.VN
                 </span>
               </div>
               <p className="text-xs text-[#8B84A8] leading-relaxed">
