@@ -28,6 +28,10 @@ import {
   Plus,
   Disc,
   Volume2,
+  Upload,
+  FileAudio,
+  Check,
+  CheckCircle2,
 } from 'lucide-react';
 
 export const SettingsView: React.FC = () => {
@@ -41,6 +45,44 @@ export const SettingsView: React.FC = () => {
   const [newTrackArtist, setNewTrackArtist] = useState('');
   const [newTrackUrl, setNewTrackUrl] = useState('');
   const [previewAudioUrl, setPreviewAudioUrl] = useState<string | null>(null);
+  const [selectedAudioFileName, setSelectedAudioFileName] = useState<string | null>(null);
+  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
+
+  const handleAudioFileUpload = (file: File | null) => {
+    if (!file) return;
+
+    if (!file.type.startsWith('audio/') && !file.name.match(/\.(mp3|wav|ogg|m4a|aac)$/i)) {
+      showToast('Vui lòng chọn file âm thanh định dạng MP3, WAV hoặc OGG', 'error');
+      return;
+    }
+
+    setIsUploadingAudio(true);
+    const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+    setSelectedAudioFileName(file.name);
+
+    if (!newTrackTitle.trim()) {
+      setNewTrackTitle(fileNameWithoutExt);
+    }
+    if (!newTrackArtist.trim()) {
+      setNewTrackArtist('Thanox Audio');
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      if (dataUrl) {
+        setNewTrackUrl(dataUrl);
+        setPreviewAudioUrl(dataUrl);
+        setIsUploadingAudio(false);
+        showToast(`Đã tải file "${file.name}" thành công! Bấm nghe thử hoặc bấm Thêm vào danh sách nhạc.`, 'success');
+      }
+    };
+    reader.onerror = () => {
+      setIsUploadingAudio(false);
+      showToast('Lỗi khi đọc file âm thanh từ máy tính', 'error');
+    };
+    reader.readAsDataURL(file);
+  };
 
   // VietQR Admin Preview states
   const [previewAmount, setPreviewAmount] = useState<number>(200000);
@@ -801,7 +843,7 @@ export const SettingsView: React.FC = () => {
               </Card>
 
               {/* Add New Track Card */}
-              <Card className="p-5 space-y-4 border-[#7C3AED]/30" variant="default">
+              <Card className="p-5 space-y-4 border-[#7C3AED]/30 bg-[#0F0F1A]" variant="default">
                 <div className="flex items-center gap-2 border-b border-white/5 pb-3">
                   <Plus className="w-4 h-4 text-[#9D5CF6]" />
                   <h4 className="font-display font-bold text-xs uppercase tracking-wider text-[#F0EDFF]">
@@ -809,42 +851,106 @@ export const SettingsView: React.FC = () => {
                   </h4>
                 </div>
 
-                <div className="space-y-3 text-xs">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
-                      Tên Bài Hát *
+                <div className="space-y-3.5 text-xs">
+                  {/* Option 1: Upload MP3 File from Computer */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-cyan-400">
+                        <FileAudio className="w-3.5 h-3.5" />
+                        <span>1. Tải File MP3 Từ Máy Tính Lên</span>
+                      </span>
+                      <span className="text-[10px] text-amber-400">Khuyên dùng</span>
                     </label>
+
                     <input
-                      type="text"
-                      placeholder="VD: Cyberpunk Phonk VIP"
-                      value={newTrackTitle}
-                      onChange={(e) => setNewTrackTitle(e.target.value)}
-                      className="w-full bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                      type="file"
+                      id="audio-file-input"
+                      accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        handleAudioFileUpload(file);
+                      }}
                     />
+                    <label
+                      htmlFor="audio-file-input"
+                      className="border-2 border-dashed border-[#7C3AED]/40 hover:border-[#7C3AED] bg-[#161626]/80 hover:bg-[#161626] rounded-2xl p-4 text-center transition-all cursor-pointer block group"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-[#7C3AED]/20 border border-[#7C3AED]/30 mx-auto flex items-center justify-center text-[#9D5CF6] group-hover:scale-110 transition-transform mb-2">
+                        {isUploadingAudio ? (
+                          <div className="w-5 h-5 border-2 border-[#9D5CF6] border-t-transparent rounded-full animate-spin" />
+                        ) : selectedAudioFileName ? (
+                          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                        ) : (
+                          <Upload className="w-5 h-5" />
+                        )}
+                      </div>
+
+                      {selectedAudioFileName ? (
+                        <div className="space-y-0.5">
+                          <div className="font-bold text-xs text-emerald-400 flex items-center justify-center gap-1">
+                            <Check className="w-3.5 h-3.5" /> Đã chọn: {selectedAudioFileName}
+                          </div>
+                          <div className="text-[10.5px] text-[#8B84A8]">
+                            Bấm vào để đổi file khác nếu muốn
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-0.5">
+                          <div className="font-bold text-xs text-[#F0EDFF] group-hover:text-[#9D5CF6] transition-colors">
+                            📁 BẤM VÀO ĐÂY ĐỂ CHỌN FILE MP3 / WAV
+                          </div>
+                          <div className="text-[10.5px] text-[#8B84A8]">
+                            Kéo thả hoặc tải file âm thanh từ máy tính của bạn
+                          </div>
+                        </div>
+                      )}
+                    </label>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
-                      Nghệ Sĩ / Tác Giả
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="VD: Thanox Audio Team"
-                      value={newTrackArtist}
-                      onChange={(e) => setNewTrackArtist(e.target.value)}
-                      className="w-full bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
-                    />
+                  {/* Song Title & Artist */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                        Tên Bài Hát *
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="VD: Cyberpunk Phonk VIP"
+                        value={newTrackTitle}
+                        onChange={(e) => setNewTrackTitle(e.target.value)}
+                        className="w-full bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                        Nghệ Sĩ / Tác Giả
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="VD: Thanox Audio Team"
+                        value={newTrackArtist}
+                        onChange={(e) => setNewTrackArtist(e.target.value)}
+                        className="w-full bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                      />
+                    </div>
                   </div>
 
+                  {/* Option 2: Direct URL */}
                   <div className="space-y-1">
                     <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
-                      Link MP3 / Âm Thanh Trực Tiếp (URL) *
+                      2. Hoặc Dán Link URL MP3 Trực Tiếp (Tùy chọn)
                     </label>
                     <input
                       type="url"
-                      placeholder="https://.../music.mp3"
-                      value={newTrackUrl}
-                      onChange={(e) => setNewTrackUrl(e.target.value)}
+                      placeholder="https://.../music.mp3 (Nếu không tải file từ máy tính)"
+                      value={newTrackUrl.startsWith('data:') ? '' : newTrackUrl}
+                      onChange={(e) => {
+                        setNewTrackUrl(e.target.value);
+                        setSelectedAudioFileName(null);
+                        setPreviewAudioUrl(e.target.value);
+                      }}
                       className="w-full bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#06B6D4] font-mono focus:outline-none focus:border-[#7C3AED]"
                     />
                   </div>
@@ -853,11 +959,11 @@ export const SettingsView: React.FC = () => {
                     type="button"
                     variant="primary"
                     size="sm"
-                    className="w-full justify-center"
+                    className="w-full justify-center shadow-lg shadow-[#7C3AED]/25"
                     leftIcon={<Plus className="w-4 h-4" />}
                     onClick={() => {
                       if (!newTrackTitle.trim() || !newTrackUrl.trim()) {
-                        showToast('Vui lòng nhập đầy đủ tên bài hát và link URL audio', 'error');
+                        showToast('Vui lòng chọn file MP3 từ máy tính hoặc nhập link URL âm thanh', 'error');
                         return;
                       }
                       const newTrack = {
@@ -873,6 +979,7 @@ export const SettingsView: React.FC = () => {
                       setNewTrackTitle('');
                       setNewTrackArtist('');
                       setNewTrackUrl('');
+                      setSelectedAudioFileName(null);
                       showToast(`Đã thêm bài hát "${newTrack.title}" vào danh sách phát!`, 'success');
                     }}
                   >
