@@ -611,6 +611,96 @@ export const ProductsView: React.FC = () => {
             {/* TAB 1: BASIC INFO & PRICING */}
             {drawerTab === 'basic' && (
               <div className="space-y-4">
+                {/* Product Cover Image Upload (Direct from computer / URL) */}
+                <div className="p-3.5 rounded-2xl bg-[#161626]/80 border border-white/5 space-y-2">
+                  <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">
+                    Ảnh Bìa / Thumbnail Sản Phẩm
+                  </label>
+                  <div className="flex items-center gap-3.5">
+                    {/* Preview */}
+                    <div className="w-16 h-16 rounded-2xl bg-[#0F0F1A] border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0 relative shadow-inner">
+                      {formData.image ? (
+                        <>
+                          <img src={formData.image} alt="Preview" className="w-full h-full object-cover rounded-xl" />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormData({
+                                ...formData,
+                                image: '',
+                                images: (formData.images || []).filter((im) => im !== formData.image),
+                              })
+                            }
+                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center text-[10px] cursor-pointer"
+                            title="Gỡ ảnh"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </>
+                      ) : (
+                        <Package className="w-6 h-6 text-[#6B658E]" />
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="space-y-2 flex-1">
+                      <input
+                        type="file"
+                        id="quick-product-cover-upload"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (!file.type.startsWith('image/')) {
+                            showToast('Vui lòng chọn file hình ảnh (PNG, JPG, WEBP)', 'error');
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            const base64 = event.target?.result as string;
+                            setFormData((prev) => ({
+                              ...prev,
+                              image: base64,
+                              images: [base64, ...(prev.images || []).filter((im) => im !== base64)],
+                            }));
+                            showToast('Đã tải ảnh bìa sản phẩm thành công!', 'success');
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="xs"
+                          onClick={() => document.getElementById('quick-product-cover-upload')?.click()}
+                          leftIcon={<Upload className="w-3.5 h-3.5 text-cyan-400" />}
+                          className="font-bold border-white/10 hover:border-cyan-400"
+                        >
+                          Tải ảnh từ máy tính
+                        </Button>
+                      </div>
+
+                      <input
+                        type="text"
+                        value={formData.image || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData((prev) => ({
+                            ...prev,
+                            image: val,
+                            images: val ? [val, ...(prev.images || []).filter((im) => im !== val)] : prev.images,
+                          }));
+                        }}
+                        placeholder="Hoặc dán link ảnh (https://...)"
+                        className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl px-3 py-1.5 text-[11px] text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Product Name */}
                 <div className="space-y-1">
                   <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
