@@ -11,20 +11,21 @@ import {
   ChevronUp,
   Disc,
   Radio,
+  Sparkles,
 } from 'lucide-react';
 
 const DEFAULT_TRACKS = [
   {
     id: 'track-1',
-    title: 'Cyberpunk Phonk VIP 2026',
-    artist: 'Thanox Gaming Audio',
-    url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=cyberpunk-2099-10701.mp3',
+    title: 'Cyberpunk Electro Energy 2026',
+    artist: 'Thanox Audio Team',
+    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
   },
   {
     id: 'track-2',
-    title: 'Future Neon Drift',
-    artist: 'Thanox Records',
-    url: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=electronic-future-beats-117997.mp3',
+    title: 'Future Synthwave Neon Drift',
+    artist: 'Thanox VIP Gaming',
+    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
   },
 ];
 
@@ -41,18 +42,19 @@ export const MusicPlayer: React.FC = () => {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [volume, setVolume] = useState(0.4);
+  const [volume, setVolume] = useState(0.5);
+  const [needsGesture, setNeedsGesture] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const hasInteractedRef = useRef(false);
 
   // Clamp current track index
   const safeIndex = currentTrackIndex >= tracks.length ? 0 : currentTrackIndex;
   const currentTrack = tracks[safeIndex] || tracks[0];
 
-  // Update volume
+  // Update volume & mute
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = isMuted ? 0 : volume;
+      audioRef.current.muted = isMuted;
     }
   }, [volume, isMuted]);
 
@@ -64,7 +66,7 @@ export const MusicPlayer: React.FC = () => {
     }
   }, [safeIndex]);
 
-  // Robust Autoplay Handler across all mobile & desktop browsers
+  // Comprehensive Auto-Play & First Interaction Unlocker
   useEffect(() => {
     if (!isEnabled) {
       if (audioRef.current && isPlaying) {
@@ -74,64 +76,83 @@ export const MusicPlayer: React.FC = () => {
       return;
     }
 
-    const startPlayback = () => {
-      if (!audioRef.current) return;
-      audioRef.current
-        .play()
-        .then(() => {
-          setIsPlaying(true);
-          hasInteractedRef.current = true;
-        })
-        .catch(() => {
-          // Autoplay blocked without user gesture - will be triggered on first gesture below
-        });
-    };
+    const audio = audioRef.current;
+    if (!audio) return;
 
-    // 1. Try immediate autoplay on mount
-    startPlayback();
+    // 1. Try immediate unmuted playback
+    audio.muted = false;
+    audio.volume = volume;
+    audio
+      .play()
+      .then(() => {
+        setIsPlaying(true);
+        setNeedsGesture(false);
+      })
+      .catch(() => {
+        // Browser blocked unmuted autoplay.
+        // Try muted autoplay first so track loads & buffers
+        setNeedsGesture(true);
+        audio.muted = true;
+        audio
+          .play()
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch(() => {
+            setIsPlaying(false);
+          });
+      });
 
-    // 2. Attach global user-gesture listeners on first touch/click/scroll/keypress
-    const handleUserGesture = () => {
-      if (!hasInteractedRef.current && audioRef.current) {
+    // 2. Global unlock on any user tap / click / touch / scroll anywhere on page
+    const unlockAndPlay = () => {
+      if (audioRef.current) {
+        audioRef.current.muted = false;
+        audioRef.current.volume = volume;
         audioRef.current
           .play()
           .then(() => {
             setIsPlaying(true);
-            hasInteractedRef.current = true;
+            setNeedsGesture(false);
           })
           .catch(() => {});
       }
-      cleanupListeners();
+      cleanup();
     };
 
-    const events = ['click', 'touchstart', 'touchend', 'mousedown', 'keydown', 'scroll'];
-    const cleanupListeners = () => {
-      events.forEach((evt) => window.removeEventListener(evt, handleUserGesture));
+    const events = ['click', 'touchstart', 'touchend', 'pointerdown', 'mousedown', 'keydown', 'scroll'];
+    const cleanup = () => {
+      events.forEach((evt) => {
+        window.removeEventListener(evt, unlockAndPlay, true);
+        document.removeEventListener(evt, unlockAndPlay, true);
+      });
     };
 
-    events.forEach((evt) =>
-      window.addEventListener(evt, handleUserGesture, { once: true, passive: true })
-    );
+    events.forEach((evt) => {
+      window.addEventListener(evt, unlockAndPlay, { once: true, passive: true, capture: true });
+      document.addEventListener(evt, unlockAndPlay, { once: true, passive: true, capture: true });
+    });
 
     return () => {
-      cleanupListeners();
+      cleanup();
     };
   }, [isEnabled, currentTrack?.url]);
 
   const togglePlay = () => {
     if (!audioRef.current) return;
-    if (isPlaying) {
+    if (isPlaying && !audioRef.current.paused) {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
+      audioRef.current.muted = false;
+      audioRef.current.volume = volume;
       audioRef.current
         .play()
         .then(() => {
           setIsPlaying(true);
-          hasInteractedRef.current = true;
+          setNeedsGesture(false);
         })
         .catch((e) => {
-          console.warn('Audio play prevented:', e);
+          console.warn('Playback error:', e);
         });
     }
   };
@@ -149,14 +170,17 @@ export const MusicPlayer: React.FC = () => {
         src={currentTrack?.url}
         onEnded={nextTrack}
         onPause={() => setIsPlaying(false)}
-        onPlay={() => setIsPlaying(true)}
+        onPlay={() => {
+          setIsPlaying(true);
+          setNeedsGesture(false);
+        }}
         preload="auto"
         playsInline
       />
 
-      <div className="fixed bottom-4 left-4 z-40 select-none">
+      <div className="fixed bottom-4 left-4 z-50 select-none">
         {isExpanded ? (
-          <div className="bg-[#0F0F1A]/95 backdrop-blur-2xl border border-[#7C3AED]/40 shadow-[0_10px_35px_rgba(124,58,237,0.3)] rounded-3xl p-4 w-72 sm:w-80 space-y-3.5 transition-all duration-300 animate-in fade-in slide-in-from-bottom-3">
+          <div className="bg-[#0F0F1A]/95 backdrop-blur-2xl border border-[#7C3AED]/40 shadow-[0_10px_35px_rgba(124,58,237,0.35)] rounded-3xl p-4 w-72 sm:w-80 space-y-3.5 transition-all duration-300 animate-in fade-in slide-in-from-bottom-3">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
               <div className="flex items-center gap-2">
@@ -184,10 +208,10 @@ export const MusicPlayer: React.FC = () => {
             {/* Track Info */}
             <div className="space-y-0.5">
               <div className="font-display font-extrabold text-xs text-[#F0EDFF] truncate">
-                {currentTrack?.title || 'Cyberpunk Phonk VIP'}
+                {currentTrack?.title || 'Cyberpunk Electro'}
               </div>
               <div className="text-[10.5px] text-[#8B84A8] truncate">
-                {currentTrack?.artist || 'Thanox Audio'}
+                {currentTrack?.artist || 'Thanox VIP'}
               </div>
             </div>
 
@@ -264,18 +288,39 @@ export const MusicPlayer: React.FC = () => {
           </div>
         ) : (
           <button
-            onClick={() => setIsExpanded(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-[#0F0F1A]/95 backdrop-blur-xl border border-[#7C3AED]/40 shadow-[0_4px_25px_rgba(124,58,237,0.35)] hover:border-[#7C3AED] text-white text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer group"
+            onClick={() => {
+              if (needsGesture || !isPlaying) {
+                togglePlay();
+              } else {
+                setIsExpanded(true);
+              }
+            }}
+            className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-[#0F0F1A]/95 backdrop-blur-xl border ${
+              needsGesture
+                ? 'border-emerald-400/60 shadow-[0_0_25px_rgba(52,211,153,0.4)] animate-bounce'
+                : 'border-[#7C3AED]/40 shadow-[0_4px_25px_rgba(124,58,237,0.35)]'
+            } hover:border-[#7C3AED] text-white text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer group`}
           >
             <div
-              className={`w-6 h-6 rounded-xl bg-[#7C3AED]/20 border border-[#7C3AED]/40 flex items-center justify-center text-[#9D5CF6] group-hover:bg-[#7C3AED] group-hover:text-white transition-colors`}
+              className={`w-6 h-6 rounded-xl ${
+                needsGesture ? 'bg-emerald-500/20 text-emerald-300' : 'bg-[#7C3AED]/20 text-[#9D5CF6]'
+              } border border-white/10 flex items-center justify-center group-hover:bg-[#7C3AED] group-hover:text-white transition-colors`}
             >
               <Music className={`w-3.5 h-3.5 ${isPlaying ? 'animate-bounce' : ''}`} />
             </div>
-            <span className="text-[11px] font-semibold text-[#F0EDFF] max-w-[110px] sm:max-w-[140px] truncate">
-              {isPlaying ? currentTrack?.title : '🎵 Phát Nhạc Nền'}
-            </span>
-            <ChevronUp className="w-3 h-3 text-[#8B84A8]" />
+
+            <div className="flex flex-col text-left">
+              <span className="text-[11px] font-extrabold text-[#F0EDFF] max-w-[120px] sm:max-w-[150px] truncate">
+                {needsGesture ? '⚡ BẤM BẬT NHẠC SHOP' : currentTrack?.title || 'Phát Nhạc Nền'}
+              </span>
+              {needsGesture && (
+                <span className="text-[9px] text-emerald-400 font-normal">
+                  Chạm 1 lần để nghe
+                </span>
+              )}
+            </div>
+
+            <ChevronUp className="w-3.5 h-3.5 text-[#8B84A8]" />
           </button>
         )}
       </div>
