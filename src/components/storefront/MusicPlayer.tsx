@@ -11,7 +11,7 @@ import {
   ChevronUp,
   Disc,
   Radio,
-  Sparkles,
+  RotateCcw,
 } from 'lucide-react';
 
 const DEFAULT_TRACKS = [
@@ -90,7 +90,7 @@ export const MusicPlayer: React.FC = () => {
       })
       .catch(() => {
         // Browser blocked unmuted autoplay.
-        // Try muted autoplay first so track loads & buffers
+        // Try muted autoplay so track buffers
         setNeedsGesture(true);
         audio.muted = true;
         audio
@@ -157,8 +157,27 @@ export const MusicPlayer: React.FC = () => {
     }
   };
 
+  // If only 1 track, repeat it automatically. If multiple, advance to next track.
+  const handleTrackEnded = () => {
+    if (tracks.length <= 1) {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(() => {});
+      }
+    } else {
+      setCurrentTrackIndex((prev) => (prev + 1) % tracks.length);
+    }
+  };
+
   const nextTrack = () => {
-    setCurrentTrackIndex((prev) => (prev + 1) % tracks.length);
+    if (tracks.length <= 1) {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(() => {});
+      }
+    } else {
+      setCurrentTrackIndex((prev) => (prev + 1) % tracks.length);
+    }
   };
 
   if (!isEnabled) return null;
@@ -168,7 +187,7 @@ export const MusicPlayer: React.FC = () => {
       <audio
         ref={audioRef}
         src={currentTrack?.url}
-        onEnded={nextTrack}
+        onEnded={handleTrackEnded}
         onPause={() => setIsPlaying(false)}
         onPlay={() => {
           setIsPlaying(true);
@@ -176,6 +195,7 @@ export const MusicPlayer: React.FC = () => {
         }}
         preload="auto"
         playsInline
+        loop={tracks.length === 1}
       />
 
       <div className="fixed bottom-4 left-4 z-50 select-none">
@@ -191,8 +211,8 @@ export const MusicPlayer: React.FC = () => {
                   <span className="text-xs font-extrabold uppercase tracking-wider text-[#F0EDFF]">
                     Thanox Audio
                   </span>
-                  <span className="text-[9.5px] text-[#8B84A8] ml-1.5">
-                    ({safeIndex + 1}/{tracks.length})
+                  <span className="text-[9.5px] text-[#8B84A8] ml-1.5 font-bold">
+                    ({safeIndex + 1}/{tracks.length}) {tracks.length === 1 && '• Lặp 1 bài'}
                   </span>
                 </div>
               </div>
@@ -253,9 +273,9 @@ export const MusicPlayer: React.FC = () => {
                 <button
                   onClick={nextTrack}
                   className="p-2 rounded-2xl bg-white/5 hover:bg-white/10 text-[#CBC7E0] hover:text-white transition-colors cursor-pointer"
-                  title="Chuyển bài tiếp theo"
+                  title={tracks.length === 1 ? 'Lặp lại bài hát' : 'Chuyển bài tiếp theo'}
                 >
-                  <SkipForward className="w-3.5 h-3.5" />
+                  {tracks.length === 1 ? <RotateCcw className="w-3.5 h-3.5 text-cyan-400" /> : <SkipForward className="w-3.5 h-3.5" />}
                 </button>
               </div>
 

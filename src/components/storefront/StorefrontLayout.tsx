@@ -138,67 +138,67 @@ export const StorefrontLayout: React.FC = () => {
             </button>
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center gap-1 bg-[#161626]/80 border border-white/5 rounded-2xl p-1">
+            <nav className="hidden lg:flex items-center gap-1.5 bg-[#0F0F1A]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-lg shadow-black/40">
               <Link
                 to="/"
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-[12.5px] font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   storefrontPage === 'home'
-                    ? 'bg-[#7C3AED]/15 text-[#9D5CF6]'
-                    : 'text-[#8B84A8] hover:text-white'
+                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40 scale-105'
+                    : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
                 }`}
               >
-                Trang Chủ
+                <span>Trang Chủ</span>
               </Link>
               <Link
                 to="/products"
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-[12.5px] font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   storefrontPage === 'products'
-                    ? 'bg-[#7C3AED]/15 text-[#9D5CF6]'
-                    : 'text-[#8B84A8] hover:text-white'
+                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40 scale-105'
+                    : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
                 }`}
               >
-                Sản Phẩm
+                <span>Sản Phẩm</span>
               </Link>
               <Link
                 to="/account/wallet/deposit"
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3.5 py-2 rounded-xl text-[12.5px] font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   storefrontPage === 'account-wallet-deposit'
-                    ? 'bg-[#7C3AED]/15 text-[#9D5CF6]'
-                    : 'text-[#8B84A8] hover:text-white'
+                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40 scale-105'
+                    : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
                 }`}
               >
-                <Zap className="w-3.5 h-3.5 text-amber-400" />
-                <span>Nạp Tiền VietQR</span>
+                <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400/20" />
+                <span className="text-amber-300">Nạp Tiền VietQR</span>
               </Link>
               <Link
                 to="/account/orders"
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-[12.5px] font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   storefrontPage === 'account-orders'
-                    ? 'bg-[#7C3AED]/15 text-[#9D5CF6]'
-                    : 'text-[#8B84A8] hover:text-white'
+                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40 scale-105'
+                    : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
                 }`}
               >
-                Đơn Hàng & Key
+                <span>Đơn Hàng & Key</span>
               </Link>
               <Link
                 to="/affiliate"
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-[12.5px] font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   storefrontPage === 'affiliate'
-                    ? 'bg-[#7C3AED]/15 text-[#9D5CF6]'
-                    : 'text-[#8B84A8] hover:text-white'
+                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40 scale-105'
+                    : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
                 }`}
               >
-                Giới Thiệu
+                <span>Giới Thiệu</span>
               </Link>
               <Link
                 to="/support"
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-[12.5px] font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   storefrontPage === 'support'
-                    ? 'bg-[#7C3AED]/15 text-[#9D5CF6]'
-                    : 'text-[#8B84A8] hover:text-white'
+                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40 scale-105'
+                    : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
                 }`}
               >
-                Hỗ Trợ
+                <span>Hỗ Trợ</span>
               </Link>
             </nav>
           </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -10,6 +10,8 @@ import {
   ArrowRight,
   Search,
   ShoppingCart,
+  ShoppingBag,
+  Package,
   CheckCircle2,
   Star,
   Flame,
@@ -17,6 +19,8 @@ import {
   Download,
   Wallet,
   TrendingUp,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 export const StorefrontHome: React.FC = () => {
@@ -32,9 +36,21 @@ export const StorefrontHome: React.FC = () => {
 
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
   const [localSearch, setLocalSearch] = useState<string>('');
+  const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
 
   // Active public products (filter out hidden status)
   const activeProducts = products.filter((p) => p.status !== 'hidden');
+
+  // Auto-slide carousel every 4.5 seconds
+  useEffect(() => {
+    if (activeProducts.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentSlideIndex((prev) => (prev + 1) % activeProducts.length);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, [activeProducts.length]);
+
+  const currentSlide = activeProducts[currentSlideIndex] || activeProducts[0];
 
   const filteredProducts = activeProducts.filter((p) => {
     const matchesCategory = activeCategoryFilter === 'all' || p.category === activeCategoryFilter;
@@ -59,50 +75,127 @@ export const StorefrontHome: React.FC = () => {
   };
 
   return (
-    <div className="space-y-12">
-      {/* 1. HERO BANNER */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#120D26] via-[#0F0F1A] to-[#0A0A12] border border-white/10 p-6 sm:p-10 lg:p-14">
-        {/* Glow lights */}
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#7C3AED]/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-[#06B6D4]/15 rounded-full blur-3xl pointer-events-none" />
+    <div className="space-y-10 sm:space-y-12">
+      {/* 1. HERO PRODUCT SLIDER (IMAGE 2 DESIGN & INTERACTION) */}
+      {currentSlide && (
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0A101D] via-[#0F0F1A] to-[#0A0A16] border border-cyan-500/20 shadow-[0_0_50px_rgba(6,182,212,0.15)] p-6 sm:p-10 lg:p-12 min-h-[300px] sm:min-h-[360px] flex flex-col justify-between">
+          {/* Cyberpunk ambient lighting */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#7C3AED]/20 rounded-full blur-[100px] pointer-events-none" />
 
-        <div className="relative z-10 max-w-3xl space-y-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#7C3AED]/15 border border-[#7C3AED]/30 text-[#CBC7E0] text-xs font-semibold">
-            <Flame className="w-3.5 h-3.5 text-amber-400" />
-            <span>Hệ Thống Tối Ưu Game & Key Bản Quyền Số 1 VN</span>
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
+            {/* Left Content Column (7 cols) */}
+            <div key={currentSlide.id} className="lg:col-span-7 space-y-4 sm:space-y-5 animate-in fade-in slide-in-from-left-4 duration-500">
+              {/* Category Indicator with Top Line (Image 2 style) */}
+              <div className="space-y-1.5">
+                <div className="w-8 h-1 bg-cyan-400 rounded-full" />
+                <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#06B6D4] font-display">
+                  {currentSlide.category || 'FILE BẢN QUYỀN'}
+                </span>
+              </div>
+
+              {/* Huge Bold Title */}
+              <h1 className="font-display text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight uppercase leading-none drop-shadow-md line-clamp-2">
+                {currentSlide.name}
+              </h1>
+
+              {/* Golden / Orange Price */}
+              <div className="font-display font-black text-2xl sm:text-3xl md:text-4xl text-[#FBBF24] tracking-tight">
+                {currentSlide.price.toLocaleString('vi-VN')} <span className="text-lg sm:text-2xl font-bold">đ</span>
+              </div>
+
+              {/* Action Buttons Side-by-Side (Image 2 style) */}
+              <div className="flex flex-wrap items-center gap-3.5 pt-2">
+                {/* Button 1: Cyan/Emerald Xem Sản Phẩm */}
+                <button
+                  type="button"
+                  onClick={() => navigateToStorefront('product-detail', currentSlide.id)}
+                  className="px-6 sm:px-8 py-3.5 rounded-2xl bg-[#14B8A6] hover:bg-[#0D9488] text-black font-black uppercase text-xs sm:text-sm shadow-xl shadow-teal-500/30 flex items-center gap-2.5 transition-all transform hover:-translate-y-0.5 active:scale-95 cursor-pointer tracking-wider"
+                >
+                  <ShoppingBag className="w-4 h-4 fill-black text-black" />
+                  <span>XEM SẢN PHẨM</span>
+                </button>
+
+                {/* Button 2: Dark Glassmorphism Hỗ Trợ Ngay */}
+                <button
+                  type="button"
+                  onClick={() => navigateToStorefront('support')}
+                  className="px-6 sm:px-8 py-3.5 rounded-2xl bg-[#0F172A]/85 hover:bg-[#1E293B] border border-white/15 text-white font-extrabold uppercase text-xs sm:text-sm shadow-lg flex items-center gap-2.5 transition-all transform hover:-translate-y-0.5 active:scale-95 cursor-pointer tracking-wider"
+                >
+                  <Headphones className="w-4 h-4 text-cyan-300" />
+                  <span>HỖ TRỢ NGAY</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Right Showcase Image Card (5 cols) */}
+            <div className="lg:col-span-5 hidden lg:flex justify-center items-center">
+              <div
+                onClick={() => navigateToStorefront('product-detail', currentSlide.id)}
+                className="relative w-full max-w-sm aspect-[4/3] rounded-3xl bg-gradient-to-b from-white/10 to-white/5 border border-white/15 p-2 shadow-2xl backdrop-blur-md overflow-hidden group cursor-pointer hover:border-cyan-400/50 transition-all hover:scale-105"
+              >
+                {currentSlide.image ? (
+                  <img
+                    src={currentSlide.image}
+                    alt={currentSlide.name}
+                    className="w-full h-full object-cover rounded-2xl"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-[#121220] rounded-2xl p-6 text-center space-y-2">
+                    <Package className="w-16 h-16 text-[#06B6D4]" />
+                    <span className="text-xs font-bold text-[#CBC7E0]">{currentSlide.name}</span>
+                  </div>
+                )}
+                <div className="absolute top-4 right-4 px-3 py-1 rounded-xl bg-black/80 backdrop-blur-md text-[#06B6D4] text-xs font-black border border-cyan-500/30">
+                  {currentSlide.category}
+                </div>
+              </div>
+            </div>
           </div>
 
-          <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black text-[#F0EDFF] tracking-tight leading-[1.15]">
-            Nâng Tầm Kỹ Năng Game Với <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#9D5CF6] via-[#C084FC] to-[#06B6D4]">Thanox Digital</span>
-          </h1>
+          {/* Carousel Slider Controls (Dots & Arrows) */}
+          <div className="relative z-10 flex items-center justify-between pt-6 mt-4 border-t border-white/5">
+            {/* Indicator Dots */}
+            <div className="flex items-center gap-2">
+              {activeProducts.slice(0, 8).map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentSlideIndex(idx)}
+                  className={`h-2 rounded-full transition-all cursor-pointer ${
+                    currentSlideIndex === idx
+                      ? 'w-8 bg-cyan-400 shadow-md shadow-cyan-400/50'
+                      : 'w-2 bg-white/20 hover:bg-white/40'
+                  }`}
+                />
+              ))}
+            </div>
 
-          <p className="text-sm sm:text-base text-[#8B84A8] max-w-2xl leading-relaxed">
-            Chuyên cung cấp File Android, iOS, Menu VIP, Proxy đường truyền riêng và công cụ tối ưu hóa tốc độ cao. Giao key tự động 3 giây qua ví số dư.
-          </p>
-
-          <div className="flex flex-wrap items-center gap-3 pt-2">
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => navigateToStorefront('products')}
-              rightIcon={<ArrowRight className="w-4 h-4" />}
-              className="font-bold shadow-lg shadow-[#7C3AED]/25"
-            >
-              Xem Tất Cả Sản Phẩm
-            </Button>
-
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={() => navigateToStorefront('account-wallet-deposit')}
-              leftIcon={<Wallet className="w-4 h-4 text-emerald-400" />}
-              className="font-bold"
-            >
-              Nạp Tiền Ví VietQR
-            </Button>
+            {/* Prev / Next Arrows */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentSlideIndex((prev) => (prev - 1 + activeProducts.length) % activeProducts.length)
+                }
+                className="w-9 h-9 rounded-xl bg-[#161626] hover:bg-[#1E1E32] border border-white/10 flex items-center justify-center text-white transition-all cursor-pointer hover:border-cyan-400/50"
+                title="Sản phẩm trước"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentSlideIndex((prev) => (prev + 1) % activeProducts.length)
+                }
+                className="w-9 h-9 rounded-xl bg-[#161626] hover:bg-[#1E1E32] border border-white/10 flex items-center justify-center text-white transition-all cursor-pointer hover:border-cyan-400/50"
+                title="Sản phẩm tiếp theo"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* 2. TRUST HIGHLIGHTS */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
