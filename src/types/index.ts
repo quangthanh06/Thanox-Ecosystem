@@ -44,6 +44,7 @@ export interface Product {
   licenseKeys?: string;
   instructions?: string;
   featured: boolean;
+  isLocked?: boolean; // Khóa sản phẩm chống ghi đè khi nâng cấp hệ thống / reset
   image?: string;
   images?: string[];
   primaryImage?: string;

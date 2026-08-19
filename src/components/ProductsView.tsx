@@ -31,6 +31,9 @@ import {
   X,
   Check,
   Clock,
+  Lock,
+  Unlock,
+  ShieldCheck,
 } from 'lucide-react';
 
 export const ProductsView: React.FC = () => {
@@ -40,6 +43,7 @@ export const ProductsView: React.FC = () => {
     addProduct,
     updateProduct,
     deleteProduct,
+    toggleProductLock,
     showToast,
   } = useStore();
 
@@ -79,6 +83,7 @@ export const ProductsView: React.FC = () => {
     instructions?: string;
     downloadLinkOrKeys: string;
     featured: boolean;
+    isLocked: boolean;
   }>({
     name: '',
     category: categories[0]?.name || 'File Android',
@@ -96,6 +101,7 @@ export const ProductsView: React.FC = () => {
     instructions: '',
     downloadLinkOrKeys: '',
     featured: false,
+    isLocked: true,
   });
 
   // Delete Dialog State
@@ -174,6 +180,7 @@ export const ProductsView: React.FC = () => {
       instructions: '',
       downloadLinkOrKeys: '',
       featured: false,
+      isLocked: true,
     });
     setIsDrawerOpen(true);
   };
@@ -203,6 +210,7 @@ export const ProductsView: React.FC = () => {
       instructions: product.instructions || '',
       downloadLinkOrKeys: product.downloadLinkOrKeys || '',
       featured: product.featured,
+      isLocked: product.isLocked ?? true,
     });
     setIsDrawerOpen(true);
   };
@@ -244,9 +252,10 @@ export const ProductsView: React.FC = () => {
       instructions: product.instructions,
       downloadLinkOrKeys: product.downloadLinkOrKeys,
       featured: false,
+      isLocked: true,
     };
     addProduct(duplicatedData);
-    showToast(`Đã nhân bản "${product.name}"`, 'success');
+    showToast(`Đã nhân bản "${product.name}" (🔒 Đã khóa)`, 'success');
   };
 
   const toggleProductStatus = (product: Product) => {
@@ -426,6 +435,15 @@ export const ProductsView: React.FC = () => {
                                 HOT
                               </span>
                             )}
+                            {product.isLocked && (
+                              <span
+                                className="text-[9.5px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 flex items-center gap-1 shrink-0"
+                                title="Sản phẩm đã được KHÓA bảo vệ chống ghi đè khi nâng cấp"
+                              >
+                                <Lock className="w-2.5 h-2.5" />
+                                ĐÃ KHÓA
+                              </span>
+                            )}
                           </div>
                           <div className="text-[10.5px] text-[#6B658E] line-clamp-1 mt-0.5">
                             {product.description || 'Không có mô tả'}
@@ -487,6 +505,24 @@ export const ProductsView: React.FC = () => {
                     {/* Actions */}
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                        {/* 1-Click Lock Toggle */}
+                        <button
+                          type="button"
+                          onClick={() => toggleProductLock(product.id)}
+                          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                            product.isLocked
+                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30'
+                              : 'bg-[#161626] hover:bg-[#1E1E30] text-[#8B84A8] hover:text-white'
+                          }`}
+                          title={
+                            product.isLocked
+                              ? 'Sản phẩm đang KHÓA (Bấm để mở khóa)'
+                              : 'Bấm để KHÓA BẢO VỆ (chống bị thay đổi khi nâng cấp)'
+                          }
+                        >
+                          {product.isLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                        </button>
+
                         <button
                           onClick={() => openEditDrawer(product)}
                           className="p-1.5 rounded-lg bg-[#161626] hover:bg-[#1E1E30] text-[#8B84A8] hover:text-white transition-colors cursor-pointer"
@@ -548,6 +584,12 @@ export const ProductsView: React.FC = () => {
                         HOT
                       </span>
                     )}
+                    {product.isLocked && (
+                      <span className="text-[9.5px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 flex items-center gap-1 shadow-md">
+                        <Lock className="w-2.5 h-2.5" />
+                        KHÓA
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -576,6 +618,18 @@ export const ProductsView: React.FC = () => {
                   <Button variant="secondary" size="xs" onClick={() => openEditDrawer(product)} className="flex-1">
                     Chỉnh sửa
                   </Button>
+                  <button
+                    type="button"
+                    onClick={() => toggleProductLock(product.id)}
+                    className={`p-2 rounded-xl transition-colors ${
+                      product.isLocked
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        : 'bg-[#161626] text-[#8B84A8] hover:text-white'
+                    }`}
+                    title={product.isLocked ? "Mở khóa sản phẩm" : "Khóa bảo vệ sản phẩm"}
+                  >
+                    {product.isLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                  </button>
                   <button
                     onClick={() => handleDuplicate(product)}
                     className="p-2 rounded-xl bg-[#161626] text-[#8B84A8] hover:text-white"
@@ -670,6 +724,38 @@ export const ProductsView: React.FC = () => {
             {/* TAB 1: BASIC INFO & PRICING */}
             {drawerTab === 'basic' && (
               <div className="space-y-4">
+                {/* 🔒 LOCK PRODUCT SWITCH (CHỐNG GHI ĐÈ KHI NÂNG CẤP) */}
+                <div className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+                  formData.isLocked
+                    ? 'bg-amber-500/10 border-amber-500/40 shadow-sm'
+                    : 'bg-[#161626]/80 border-white/5'
+                }`}>
+                  <div className="space-y-0.5 min-w-0">
+                    <div className="text-xs font-bold text-[#F0EDFF] flex items-center gap-1.5">
+                      <Lock className={`w-3.5 h-3.5 ${formData.isLocked ? 'text-amber-400' : 'text-[#8B84A8]'}`} />
+                      <span>Khóa Bảo Vệ Sản Phẩm (Chống Ghi Đè)</span>
+                      {formData.isLocked && (
+                        <span className="px-1.5 py-0.2 rounded text-[9.5px] font-extrabold bg-amber-500 text-black">
+                          ĐÃ KHÓA
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-[#8B84A8] leading-relaxed">
+                      Khi bật, toàn bộ thông tin (tên, giá, gói key, link tải, ảnh) được bảo vệ vĩnh viễn và không bị hệ thống ghi đè khi nâng cấp.
+                    </div>
+                  </div>
+
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={formData.isLocked}
+                      onChange={(e) => setFormData({ ...formData, isLocked: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-10 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+                  </label>
+                </div>
+
                 {/* Product Cover Image Upload (Direct from computer / URL) */}
                 <div className="p-3.5 rounded-2xl bg-[#161626]/80 border border-white/5 space-y-2">
                   <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">

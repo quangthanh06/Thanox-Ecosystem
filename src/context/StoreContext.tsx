@@ -107,6 +107,7 @@ interface StoreContextType {
   addProduct: (product: Omit<Product, 'id' | 'soldCount' | 'updatedAt'>) => void;
   updateProduct: (id: string, updates: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
+  toggleProductLock: (id: string) => void;
 
   addCategory: (category: Omit<Category, 'id' | 'count'>) => void;
   updateCategory: (id: string, updates: Partial<Category>) => void;
@@ -414,14 +415,25 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               });
             }
             if (d.products && Array.isArray(d.products) && d.products.length > 0) {
-              setProducts(d.products.map((p: Product) => {
-                const match = INITIAL_PRODUCTS.find((init) => init.id === p.id || init.category === p.category);
-                return {
-                  ...p,
-                  image: p.image || match?.image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
-                  packages: (p.packages && p.packages.length > 0) ? p.packages : (match?.packages || []),
-                };
-              }));
+              setProducts((prev) => {
+                const map = new Map<string, Product>();
+                d.products.forEach((p: Product) => {
+                  const match = INITIAL_PRODUCTS.find((init) => init.id === p.id);
+                  map.set(p.id, {
+                    ...p,
+                    image: p.image || match?.image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
+                    plans: (p.plans && p.plans.length > 0) ? p.plans : (p.packages && p.packages.length > 0 ? p.packages : (match?.plans || [])),
+                    packages: (p.plans && p.plans.length > 0) ? p.plans : (p.packages && p.packages.length > 0 ? p.packages : (match?.packages || [])),
+                  });
+                });
+                // Locked products always override with local locked state
+                prev.forEach((local) => {
+                  if (local.isLocked) {
+                    map.set(local.id, local);
+                  }
+                });
+                return Array.from(map.values());
+              });
             }
             if (d.orders && Array.isArray(d.orders)) {
               setOrders((prev) => {
@@ -987,6 +999,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return true;
   };
 
+  // Products Server & Local Auto-Sync
+  const syncProductsToServer = (updatedProducts: Product[]) => {
+    try {
+      localStorage.setItem('thanox_products', JSON.stringify(updatedProducts));
+    } catch (e) {
+      console.error('Failed to save products to localStorage:', e);
+    }
+    fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ products: updatedProducts }),
+    }).catch((err) => console.error('Products sync error:', err));
+  };
+
   // Products CRUD
   const addProduct = (prodData: Omit<Product, 'id' | 'soldCount' | 'updatedAt'>) => {
     const sanitizedPrice = Math.max(0, prodData.price || 0);
@@ -1000,40 +1026,71 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       originalPrice: sanitizedOriginalPrice,
       id: 'prod-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
       soldCount: 0,
+      sold: 0,
+      isLocked: prodData.isLocked ?? true, // Mặc định khóa để bảo vệ sản phẩm do Admin tạo/chỉnh
       updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
     };
-    setProducts((prev) => [newProduct, ...prev]);
+    const updated = [newProduct, ...products];
+    setProducts(updated);
+    syncProductsToServer(updated);
 
     // update category count
     setCategories((prev) =>
       prev.map((c) => (c.name === prodData.category ? { ...c, count: c.count + 1 } : c))
     );
 
-    showToast(`Đã thêm sản phẩm "${newProduct.name}" thành công!`, 'success');
+    showToast(`Đã thêm sản phẩm "${newProduct.name}" thành công! (🔒 Đã khóa bảo vệ)`, 'success');
   };
 
   const updateProduct = (id: string, updates: Partial<Product>) => {
-    setProducts((prev) =>
-      prev.map((p) => {
-        if (p.id === id) {
-          const updated = {
-            ...p,
-            ...updates,
-            name: updates.name !== undefined ? updates.name.trim() : p.name,
-            price: updates.price !== undefined ? Math.max(0, updates.price) : p.price,
-            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-          };
-          return updated;
-        }
-        return p;
-      })
-    );
-    showToast('Đã cập nhật thông tin sản phẩm!', 'success');
+    const updatedList = products.map((p) => {
+      if (p.id === id) {
+        const updated = {
+          ...p,
+          ...updates,
+          name: updates.name !== undefined ? updates.name.trim() : p.name,
+          price: updates.price !== undefined ? Math.max(0, updates.price) : p.price,
+          isLocked: updates.isLocked !== undefined ? updates.isLocked : true, // Tự động khóa bảo vệ khi Admin chỉnh sửa
+          updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        };
+        return updated;
+      }
+      return p;
+    });
+    setProducts(updatedList);
+    syncProductsToServer(updatedList);
+    showToast('Đã lưu thông tin sản phẩm và đồng bộ cơ sở dữ liệu! 🔒 (Đã khóa bảo vệ)', 'success');
+  };
+
+  const toggleProductLock = (id: string) => {
+    let nowLocked = false;
+    let targetName = '';
+    const updatedList = products.map((p) => {
+      if (p.id === id) {
+        nowLocked = !p.isLocked;
+        targetName = p.name;
+        return {
+          ...p,
+          isLocked: nowLocked,
+          updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        };
+      }
+      return p;
+    });
+    setProducts(updatedList);
+    syncProductsToServer(updatedList);
+    if (nowLocked) {
+      showToast(`🔒 Đã KHÓA "${targetName}"! Sản phẩm này sẽ không bị thay đổi khi hệ thống nâng cấp.`, 'success');
+    } else {
+      showToast(`🔓 Đã MỞ KHÓA "${targetName}".`, 'info');
+    }
   };
 
   const deleteProduct = (id: string) => {
     const prod = products.find((p) => p.id === id);
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    const updatedList = products.filter((p) => p.id !== id);
+    setProducts(updatedList);
+    syncProductsToServer(updatedList);
     if (prod) {
       setCategories((prev) =>
         prev.map((c) => (c.name === prod.category ? { ...c, count: Math.max(0, c.count - 1) } : c))
@@ -1908,46 +1965,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCardRecharges([]);
     setTransactions(INITIAL_TRANSACTIONS);
     setAffiliates(INITIAL_AFFILIATES);
-    setAffiliateRewards([]);
+    setAffiliateRewards(INITIAL_AFFILIATE_REWARDS);
     setTickets(INITIAL_TICKETS);
     setSettings(INITIAL_SETTINGS);
-    setCart([]);
     setNotifications([]);
-    setCurrentUserId(null);
-    localStorage.clear();
-    showToast('Đã khôi phục dữ liệu sạch theo mặc định!', 'success');
+    showToast('Đã đặt lại dữ liệu mẫu (đã bảo vệ các sản phẩm đang KHÓA)!', 'success');
   };
 
   const resetToZeroData = () => {
     setProducts([]);
-    setCategories([
-      { id: 'cat-1', name: 'File Android', slug: 'file-android', icon: '📱', count: 0, status: 'active' },
-      { id: 'cat-2', name: 'File iOS', slug: 'file-ios', icon: '🍎', count: 0, status: 'active' },
-      { id: 'cat-3', name: 'Menu FF', slug: 'menu-ff', icon: '🎮', count: 0, status: 'active' },
-      { id: 'cat-4', name: 'Proxy FF', slug: 'proxy-ff', icon: '🌐', count: 0, status: 'active' },
-      { id: 'cat-5', name: 'Tài khoản', slug: 'tai-khoan', icon: '👤', count: 0, status: 'active' },
-      { id: 'cat-6', name: 'Tools', slug: 'tools', icon: '🔧', count: 0, status: 'active' },
-    ]);
+    setCategories([]);
     setOrders([]);
-    setUsers([
-      {
-        id: 'user-admin',
-        username: 'admin',
-        email: 'admin@thanox.vn',
-        password: 'Admin@123456',
-        phone: '0916396901',
-        role: 'admin',
-        balance: 5000000,
-        affiliateBalance: 0,
-        sellerStatus: 'active',
-        totalOrders: 0,
-        totalSpent: 0,
-        status: 'active',
-        createdAt: '2026-01-01',
-        avatarText: 'AD',
-        refCode: 'ADMINVIP',
-      },
-    ]);
+    setUsers([INITIAL_USERS[0]]);
     setTopups([]);
     setCardRecharges([]);
     setTransactions([]);
@@ -1955,10 +1984,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setAffiliateRewards([]);
     setTickets([]);
     setNotifications([]);
-    setCart([]);
-    setCurrentUserId(null);
-    localStorage.clear();
-    showToast('Đã xóa trắng toàn bộ dữ liệu. Tất cả số liệu hệ thống đã về 0!', 'info');
+    showToast('Đã xóa trắng toàn bộ dữ liệu mẫu!', 'warning');
   };
 
   return (
@@ -1968,12 +1994,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setAppMode,
         currentPage,
         setCurrentPage,
-        storefrontPage,
-        setStorefrontPage,
         selectedProductSlugOrId,
-        setSelectedProductSlugOrId,
-        selectedCategorySlug,
-        setSelectedCategorySlug,
         selectedOrderId,
         setSelectedOrderId,
         navigateToStorefront,
@@ -2021,6 +2042,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addProduct,
         updateProduct,
         deleteProduct,
+        toggleProductLock,
         addCategory,
         updateCategory,
         deleteCategory,

@@ -108,7 +108,8 @@
           "keys": "Key Vĩnh Viễn: TX-AND-LIFETIME-VIP"
         }
       ],
-      "sold": 42
+      "sold": 42,
+      "isLocked": true
     },
     {
       "id": "prod-2",
@@ -167,7 +168,8 @@
           "keys": "Link Tải VIP Extreme: https://drive.google.com/file/d/magisk-extreme-vip"
         }
       ],
-      "sold": 35
+      "sold": 35,
+      "isLocked": true
     },
     {
       "id": "prod-3",
@@ -242,7 +244,8 @@
           "keys": "Cert P12 VIP Trọn Đời: https://drive.google.com/cert-lifetime"
         }
       ],
-      "sold": 18
+      "sold": 18,
+      "isLocked": true
     },
     {
       "id": "prod-4",
@@ -333,7 +336,8 @@
           "keys": "Key 1 Tháng: FF-30D-MIGUL-VIP"
         }
       ],
-      "sold": 56
+      "sold": 56,
+      "isLocked": true
     },
     {
       "id": "prod-5",
@@ -424,7 +428,8 @@
           "keys": "Key Vĩnh Viễn: THAN-OX-PERMANENT-KEY"
         }
       ],
-      "sold": 88
+      "sold": 88,
+      "isLocked": true
     },
     {
       "id": "prod-6",
@@ -499,7 +504,8 @@
           "keys": "Proxy 90D: 103.149.28.115:8080:thanox:90d"
         }
       ],
-      "sold": 22
+      "sold": 22,
+      "isLocked": true
     }
   ],
   "categories": [
@@ -572,7 +578,7 @@
     "bankEnabled": true,
     "bankName": "MBBank (Quân Đội)",
     "bankCode": "MB",
-    "bankAccount": "0326884292",
+    "bankAccount": "0326***292",
     "accountHolder": "TRAN QUANG THANH",
     "transferPrefix": "NAP",
     "qrTemplate": "qr_only",
@@ -889,6 +895,7 @@
       "glowEffect": true,
       "hotlineZalo": "0916396901",
       "telegramContact": "@quangthank"
-    }
+    },
+    "storeDescription": "Uy Tín Kiến Tạo – Chất Lượng Dẫn Đầu"
   }
 }
