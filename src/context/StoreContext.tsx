@@ -365,6 +365,65 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [resetTokens]);
 
+  // Live Sync with Server Backend for real-time multi-device updates (Customer <-> Admin)
+  useEffect(() => {
+    let isMounted = true;
+    const syncWithServer = async () => {
+      try {
+        const res = await fetch('/api/sync');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data && isMounted) {
+            const d = json.data;
+            if (d.users && Array.isArray(d.users)) {
+              setUsers((prev) => {
+                const map = new Map();
+                d.users.forEach((u: User) => map.set(u.id, u));
+                prev.forEach((u) => map.set(u.id, u));
+                return Array.from(map.values());
+              });
+            }
+            if (d.products && Array.isArray(d.products) && d.products.length > 0) {
+              setProducts(d.products);
+            }
+            if (d.orders && Array.isArray(d.orders)) {
+              setOrders((prev) => {
+                const map = new Map();
+                d.orders.forEach((o: Order) => map.set(o.id, o));
+                prev.forEach((o) => map.set(o.id, o));
+                return Array.from(map.values());
+              });
+            }
+            if (d.topups && Array.isArray(d.topups)) {
+              setTopups((prev) => {
+                const map = new Map();
+                d.topups.forEach((t: TopupRequest) => map.set(t.id, t));
+                prev.forEach((t) => map.set(t.id, t));
+                return Array.from(map.values());
+              });
+            }
+            if (d.cardRecharges && Array.isArray(d.cardRecharges)) {
+              setCardRecharges((prev) => {
+                const map = new Map();
+                d.cardRecharges.forEach((c: CardRechargeRequest) => map.set(c.id, c));
+                prev.forEach((c) => map.set(c.id, c));
+                return Array.from(map.values());
+              });
+            }
+          }
+        }
+      } catch {
+        // Fallback silently to local state
+      }
+    };
+    syncWithServer();
+    const interval = setInterval(syncWithServer, 5000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
   // Track referral query param (?ref=CODE) from URL
   useEffect(() => {
     try {
@@ -1419,6 +1478,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setUsers((prev) => [newUser, ...prev]);
     setCurrentUserId(newUser.id);
+
+    // Sync new user to Server DB so Admin sees the user in real-time
+    try {
+      fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: cleanUsername,
+          email: cleanEmail,
+          password,
+          refCode: refCode || undefined,
+        }),
+      }).catch(() => {});
+    } catch {
+      // Offline fallback
+    }
 
     setNotifications((prev) => [
       {

@@ -89,22 +89,9 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="account/wallet"
-              element={
-                <ProtectedRoute>
-                  <StorefrontDepositQR />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="account/wallet/deposit"
-              element={
-                <ProtectedRoute>
-                  <StorefrontDepositQR />
-                </ProtectedRoute>
-              }
-            />
+            {/* Wallet & Deposit Pages - Open for all visitors */}
+            <Route path="account/wallet" element={<StorefrontDepositQR />} />
+            <Route path="account/wallet/deposit" element={<StorefrontDepositQR />} />
             <Route
               path="account/transactions"
               element={

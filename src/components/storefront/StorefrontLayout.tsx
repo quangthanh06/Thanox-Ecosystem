@@ -137,9 +137,9 @@ export const StorefrontLayout: React.FC = () => {
             </button>
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden md:flex items-center gap-1">
-              <button
-                onClick={() => navigateToStorefront('home')}
+            <nav className="hidden lg:flex items-center gap-1 bg-[#161626]/80 border border-white/5 rounded-2xl p-1">
+              <Link
+                to="/"
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                   storefrontPage === 'home'
                     ? 'bg-[#7C3AED]/15 text-[#9D5CF6]'
@@ -147,9 +147,9 @@ export const StorefrontLayout: React.FC = () => {
                 }`}
               >
                 Trang Chủ
-              </button>
-              <button
-                onClick={() => navigateToStorefront('products')}
+              </Link>
+              <Link
+                to="/products"
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                   storefrontPage === 'products'
                     ? 'bg-[#7C3AED]/15 text-[#9D5CF6]'
@@ -157,9 +157,9 @@ export const StorefrontLayout: React.FC = () => {
                 }`}
               >
                 Sản Phẩm
-              </button>
-              <button
-                onClick={() => navigateToStorefront('account-wallet-deposit')}
+              </Link>
+              <Link
+                to="/account/wallet/deposit"
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
                   storefrontPage === 'account-wallet-deposit'
                     ? 'bg-[#7C3AED]/15 text-[#9D5CF6]'
@@ -168,9 +168,9 @@ export const StorefrontLayout: React.FC = () => {
               >
                 <Zap className="w-3.5 h-3.5 text-amber-400" />
                 <span>Nạp Tiền VietQR</span>
-              </button>
-              <button
-                onClick={() => navigateToStorefront('account-orders')}
+              </Link>
+              <Link
+                to="/account/orders"
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                   storefrontPage === 'account-orders'
                     ? 'bg-[#7C3AED]/15 text-[#9D5CF6]'
@@ -178,9 +178,9 @@ export const StorefrontLayout: React.FC = () => {
                 }`}
               >
                 Đơn Hàng & Key
-              </button>
-              <button
-                onClick={() => navigateToStorefront('affiliate')}
+              </Link>
+              <Link
+                to="/affiliate"
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                   storefrontPage === 'affiliate'
                     ? 'bg-[#7C3AED]/15 text-[#9D5CF6]'
@@ -188,9 +188,9 @@ export const StorefrontLayout: React.FC = () => {
                 }`}
               >
                 Affiliate
-              </button>
-              <button
-                onClick={() => navigateToStorefront('support')}
+              </Link>
+              <Link
+                to="/support"
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                   storefrontPage === 'support'
                     ? 'bg-[#7C3AED]/15 text-[#9D5CF6]'
@@ -198,7 +198,7 @@ export const StorefrontLayout: React.FC = () => {
                 }`}
               >
                 Hỗ Trợ
-              </button>
+              </Link>
             </nav>
           </div>
 
@@ -213,13 +213,13 @@ export const StorefrontLayout: React.FC = () => {
                     {currentUser.balance.toLocaleString('vi-VN')} <span className="text-[10px]">đ</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => navigateToStorefront('account-wallet-deposit')}
+                <Link
+                  to="/account/wallet/deposit"
                   className="px-2.5 py-1 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
                 >
                   <Zap className="w-3 h-3 text-amber-300" />
                   <span>Nạp</span>
-                </button>
+                </Link>
               </div>
             ) : null}
 
@@ -378,15 +378,13 @@ export const StorefrontLayout: React.FC = () => {
                     {currentUser.balance.toLocaleString('vi-VN')}đ
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    navigateToStorefront('account-wallet-deposit');
-                    setMobileMenuOpen(false);
-                  }}
+                <Link
+                  to="/account/wallet/deposit"
+                  onClick={() => setMobileMenuOpen(false)}
                   className="px-3 py-1.5 rounded-lg bg-[#7C3AED] text-white text-xs font-bold cursor-pointer"
                 >
                   + Nạp Tiền
-                </button>
+                </Link>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-2 mb-3">
@@ -407,73 +405,59 @@ export const StorefrontLayout: React.FC = () => {
               </div>
             )}
 
-            <button
-              onClick={() => {
-                navigateToStorefront('home');
-                setMobileMenuOpen(false);
-              }}
-              className="w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
+            <Link
+              to="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
             >
               Trang Chủ
-            </button>
-            <button
-              onClick={() => {
-                navigateToStorefront('products');
-                setMobileMenuOpen(false);
-              }}
-              className="w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
+            </Link>
+            <Link
+              to="/products"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
             >
               Tất Cả Sản Phẩm
-            </button>
-            <button
-              onClick={() => {
-                navigateToStorefront('account-wallet-deposit');
-                setMobileMenuOpen(false);
-              }}
-              className="w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-amber-300 hover:bg-white/5"
+            </Link>
+            <Link
+              to="/account/wallet/deposit"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-amber-300 hover:bg-white/5"
             >
               Nạp tiền VietQR 24/7
-            </button>
+            </Link>
             {isAuthenticated && (
               <>
-                <button
-                  onClick={() => {
-                    navigateToStorefront('account-orders');
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
+                <Link
+                  to="/account/orders"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
                 >
                   Đơn Hàng & License Key
-                </button>
-                <button
-                  onClick={() => {
-                    navigateToStorefront('account');
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
+                </Link>
+                <Link
+                  to="/account"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
                 >
                   Hồ Sơ & Cài Đặt
-                </button>
+                </Link>
               </>
             )}
-            <button
-              onClick={() => {
-                navigateToStorefront('affiliate');
-                setMobileMenuOpen(false);
-              }}
-              className="w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
+            <Link
+              to="/affiliate"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
             >
               Tiếp Thị Affiliate
-            </button>
-            <button
-              onClick={() => {
-                navigateToStorefront('support');
-                setMobileMenuOpen(false);
-              }}
-              className="w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
+            </Link>
+            <Link
+              to="/support"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
             >
               Hỗ Trợ Kỹ Thuật
-            </button>
+            </Link>
 
             {isAuthenticated && (
               <button
