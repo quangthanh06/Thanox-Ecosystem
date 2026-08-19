@@ -679,12 +679,37 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCart([]);
   };
 
-  // Helper to determine item effective price based on Seller status
-  const getItemEffectivePrice = (product: Product, user: User) => {
-    if (user.sellerStatus === 'approved' && product.sellerPrice && product.sellerPrice > 0) {
-      return product.sellerPrice;
+  // Price Engine: ADMIN CONFIG -> USER ROLE (Seller=Member default) -> SALE OVERRIDE -> FINAL PRICE
+  const getItemEffectivePrice = (
+    product: Product,
+    user?: User | null,
+    selectedPlan?: ProductPackage
+  ) => {
+    // 1. If a specific plan duration is selected, use that plan's price directly
+    if (selectedPlan && selectedPlan.price > 0) {
+      return selectedPlan.price;
     }
-    return product.price;
+
+    // 2. Base & Member price (default)
+    const basePrice = product.basePrice ?? product.price ?? 0;
+    const memberPrice = product.memberPrice ?? basePrice;
+
+    // 3. Seller vs Member: Seller is default = memberPrice unless Admin configured distinct sellerPrice
+    const isSeller =
+      user?.role === 'seller' ||
+      user?.sellerStatus === 'approved' ||
+      user?.sellerStatus === 'active';
+    const rolePrice =
+      isSeller && product.sellerPrice !== undefined && product.sellerPrice > 0
+        ? product.sellerPrice
+        : memberPrice;
+
+    // 4. Sale price priority: if Admin enabled saleActive and salePrice is set
+    if (product.saleActive && product.salePrice && product.salePrice > 0 && product.salePrice < rolePrice) {
+      return product.salePrice;
+    }
+
+    return rolePrice;
   };
 
   // Real Affiliate Reward Processing with Daily Cap
@@ -850,12 +875,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const isSeller = buyer.sellerStatus === 'approved';
 
     const total = cart.reduce((sum, item) => {
-      const price = getItemEffectivePrice(item.product, buyer);
+      const price = getItemEffectivePrice(item.product, buyer, item.selectedPackage);
       return sum + price * item.quantity;
     }, 0);
 
     if (paymentMethod === 'wallet' && buyer.balance < total) {
-      showToast(`Số dư ví không đủ! Cần thêm ${(total - buyer.balance).toLocaleString('vi-VN')}đ`, 'error');
+      showToast(`Số dư ví không đủ! Cần thêm ${(total - buyer.balance).toLocaleString('vi-VN')} VNĐ`, 'error');
       return false;
     }
 
@@ -882,7 +907,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Process each cart item into real order
     cart.forEach((item, index) => {
       const itemCode = '#TX-' + Math.floor(10000 + Math.random() * 90000);
-      const unitPrice = getItemEffectivePrice(item.product, buyer);
+      const unitPrice = getItemEffectivePrice(item.product, buyer, item.selectedPackage);
       const itemTotal = unitPrice * item.quantity;
 
       const newOrder: Order = {
@@ -1087,11 +1112,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const buyer = currentUser;
     const isSeller = buyer.sellerStatus === 'approved';
-    const unitPrice = selectedPackage
-      ? isSeller && selectedPackage.sellerPrice
-        ? selectedPackage.sellerPrice
-        : selectedPackage.price
-      : getItemEffectivePrice(product, buyer);
+    const unitPrice = getItemEffectivePrice(product, buyer, selectedPackage);
     const total = unitPrice * quantity;
 
     if (paymentMethod === 'wallet' && buyer.balance < total) {

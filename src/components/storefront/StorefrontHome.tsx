@@ -331,34 +331,53 @@ export const StorefrontHome: React.FC = () => {
                       </p>
                     </div>
 
-                    <div className="flex items-baseline gap-2 pt-1">
-                      <span className="font-display font-extrabold text-lg text-emerald-400">
-                        {product.price.toLocaleString('vi-VN')} <span className="text-xs font-bold">VND</span>
-                      </span>
-                      {product.originalPrice && (
-                        <span className="text-xs text-[#6B658E] line-through">
-                          {product.originalPrice.toLocaleString('vi-VN')} VND
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                    {(() => {
+                      const basePrice = product.basePrice ?? product.price ?? 0;
+                      const memberPrice = product.memberPrice ?? basePrice;
+                      const isSeller = currentUser?.role === 'seller' || currentUser?.sellerStatus === 'active' || currentUser?.sellerStatus === 'approved';
+                      const rolePrice = isSeller && product.sellerPrice !== undefined && product.sellerPrice > 0 ? product.sellerPrice : memberPrice;
+                      const isSale = Boolean(product.saleActive && product.salePrice && product.salePrice > 0 && product.salePrice < rolePrice);
+                      const displayPrice = isSale && product.salePrice ? product.salePrice : rolePrice;
+                      const displayOriginalPrice = isSale ? rolePrice : (product.originalPrice && product.originalPrice > displayPrice ? product.originalPrice : undefined);
 
-                  <div className="grid grid-cols-2 gap-2 pt-4 mt-4 border-t border-white/5">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => addToCart(product)}
-                      leftIcon={<ShoppingCart className="w-3.5 h-3.5" />}
-                    >
-                      Thêm Giỏ
-                    </Button>
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() => handleQuickBuy(product.id, product.price)}
-                    >
-                      Mua Ngay
-                    </Button>
+                      return (
+                        <>
+                          <div className="flex items-baseline gap-2 pt-1">
+                            <span className="font-display font-extrabold text-lg text-emerald-400">
+                              {displayPrice.toLocaleString('vi-VN')} <span className="text-xs font-bold">VNĐ</span>
+                            </span>
+                            {displayOriginalPrice && (
+                              <span className="text-xs text-[#6B658E] line-through">
+                                {displayOriginalPrice.toLocaleString('vi-VN')} VNĐ
+                              </span>
+                            )}
+                            {isSale && (
+                              <span className="px-1.5 py-0.2 rounded text-[9.5px] font-extrabold bg-red-600/90 text-white">
+                                SALE
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 pt-4 mt-4 border-t border-white/5">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => addToCart(product)}
+                              leftIcon={<ShoppingCart className="w-3.5 h-3.5" />}
+                            >
+                              Thêm Giỏ
+                            </Button>
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => handleQuickBuy(product.id, displayPrice)}
+                            >
+                              Mua Ngay
+                            </Button>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               );
@@ -480,30 +499,54 @@ export const StorefrontHome: React.FC = () => {
                     {prod.description}
                   </p>
 
-                  <div className="pt-1">
-                    <div className="font-display font-extrabold text-base text-emerald-400">
-                      {prod.price.toLocaleString('vi-VN')} <span className="text-xs font-bold">VND</span>
-                    </div>
-                  </div>
-                </div>
+                  {(() => {
+                    const basePrice = prod.basePrice ?? prod.price ?? 0;
+                    const memberPrice = prod.memberPrice ?? basePrice;
+                    const isSeller = currentUser?.role === 'seller' || currentUser?.sellerStatus === 'active' || currentUser?.sellerStatus === 'approved';
+                    const rolePrice = isSeller && prod.sellerPrice !== undefined && prod.sellerPrice > 0 ? prod.sellerPrice : memberPrice;
+                    const isSale = Boolean(prod.saleActive && prod.salePrice && prod.salePrice > 0 && prod.salePrice < rolePrice);
+                    const displayPrice = isSale && prod.salePrice ? prod.salePrice : rolePrice;
+                    const displayOriginalPrice = isSale ? rolePrice : (prod.originalPrice && prod.originalPrice > displayPrice ? prod.originalPrice : undefined);
 
-                <div className="grid grid-cols-2 gap-2 pt-4 mt-3 border-t border-white/5">
-                  <Button
-                    variant="secondary"
-                    size="xs"
-                    onClick={() => addToCart(prod)}
-                    className="justify-center"
-                  >
-                    + Giỏ Hàng
-                  </Button>
-                  <Button
-                    variant="primary"
-                    size="xs"
-                    onClick={() => handleQuickBuy(prod.id, prod.price)}
-                    className="justify-center font-bold"
-                  >
-                    Mua Ngay
-                  </Button>
+                    return (
+                      <>
+                        <div className="pt-1 flex items-baseline gap-2">
+                          <div className="font-display font-extrabold text-base text-emerald-400">
+                            {displayPrice.toLocaleString('vi-VN')} <span className="text-xs font-bold">VNĐ</span>
+                          </div>
+                          {displayOriginalPrice && (
+                            <span className="text-[11px] text-[#6B658E] line-through">
+                              {displayOriginalPrice.toLocaleString('vi-VN')} VNĐ
+                            </span>
+                          )}
+                          {isSale && (
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-red-600/90 text-white">
+                              SALE
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 pt-4 mt-3 border-t border-white/5">
+                          <Button
+                            variant="secondary"
+                            size="xs"
+                            onClick={() => addToCart(prod)}
+                            className="justify-center"
+                          >
+                            + Giỏ Hàng
+                          </Button>
+                          <Button
+                            variant="primary"
+                            size="xs"
+                            onClick={() => handleQuickBuy(prod.id, displayPrice)}
+                            className="justify-center font-bold"
+                          >
+                            Mua Ngay
+                          </Button>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             ))}

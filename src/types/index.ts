@@ -13,37 +13,43 @@ export type PageId =
 
 export type ProductStatus = 'active' | 'hidden' | 'out_of_stock';
 
-export interface ProductPackage {
+export interface ProductPlan {
   id: string;
-  name: string; // e.g. '1 GIỜ', '1 NGÀY', '7 NGÀY', '1 THÁNG', 'VĨNH VIỄN'
+  name: string; // e.g. '1 THÁNG', '3 THÁNG', '1 NĂM', 'VĨNH VIỄN'
   price: number;
-  originalPrice?: number;
-  sellerPrice?: number;
   keys?: string;
   downloadUrl?: string;
 }
+
+export type ProductPackage = ProductPlan;
 
 export interface Product {
   id: string;
   name: string;
   category: string;
-  price: number;
+  basePrice?: number;
+  price: number; // Base Price / Giá gốc
+  memberPrice?: number; // Member price (default = price)
+  sellerPrice?: number; // Seller price (default = memberPrice, configurable by Admin)
+  salePrice?: number; // Sale price (when saleActive is true)
+  saleActive?: boolean; // Whether product is currently on sale
   originalPrice?: number;
-  sellerPrice?: number;
   soldCount: number;
+  sold?: number;
   stock: number | 'unlimited';
   status: ProductStatus;
   description: string;
   downloadLinkOrKeys: string;
-  downloadUrl?: string; // Link tải file riêng biệt (Google Drive/OneDrive/Direct link)
-  licenseKeys?: string; // Key bản quyền hoặc thông tin giao dịch tự động
-  instructions?: string; // Hướng dẫn cài đặt & lưu ý kỹ thuật
+  downloadUrl?: string;
+  licenseKeys?: string;
+  instructions?: string;
   featured: boolean;
   image?: string;
   images?: string[];
   primaryImage?: string;
   updatedAt?: string;
-  packages?: ProductPackage[]; // Gói dịch vụ / thời hạn key (1 Giờ, 1 Ngày, 7 Ngày, 1 Tháng, Vĩnh Viễn...)
+  plans?: ProductPlan[]; // Danh sách gói thời hạn
+  packages?: ProductPlan[]; // Alias for backward compatibility
 }
 
 export interface Category {

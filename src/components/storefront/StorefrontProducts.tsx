@@ -206,11 +206,15 @@ export const StorefrontProducts: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
           {filteredProducts.map((product) => {
-            const isSeller = currentUser?.sellerStatus === 'active' && !!product.sellerPrice;
-            const effectivePrice = isSeller ? product.sellerPrice! : product.price;
-            const originalDisplayPrice = isSeller ? product.price : product.originalPrice;
+            const basePrice = product.basePrice ?? product.price ?? 0;
+            const memberPrice = product.memberPrice ?? basePrice;
+            const isSeller = currentUser?.role === 'seller' || currentUser?.sellerStatus === 'active' || currentUser?.sellerStatus === 'approved';
+            const rolePrice = isSeller && product.sellerPrice !== undefined && product.sellerPrice > 0 ? product.sellerPrice : memberPrice;
+            const isSale = Boolean(product.saleActive && product.salePrice && product.salePrice > 0 && product.salePrice < rolePrice);
+            const effectivePrice = isSale && product.salePrice ? product.salePrice : rolePrice;
+            const originalDisplayPrice = isSale ? rolePrice : (product.originalPrice && product.originalPrice > effectivePrice ? product.originalPrice : undefined);
 
-            const discount = originalDisplayPrice
+            const discount = originalDisplayPrice && originalDisplayPrice > effectivePrice
               ? Math.round(((originalDisplayPrice - effectivePrice) / originalDisplayPrice) * 100)
               : null;
 

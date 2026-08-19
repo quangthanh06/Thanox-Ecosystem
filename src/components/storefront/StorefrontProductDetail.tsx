@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useStore } from '../../context/StoreContext';
-import { Product, ProductPackage } from '../../types';
+import { Product, ProductPlan } from '../../types';
 import {
   ShoppingCart,
   Zap,
@@ -58,10 +58,10 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
 interface ProductGalleryProps {
   product: Product;
   isSeller: boolean;
-  discount: number | null;
+  discountPercent?: number;
 }
 
-const ProductGallery: React.FC<ProductGalleryProps> = ({ product, isSeller, discount }) => {
+const ProductGallery: React.FC<ProductGalleryProps> = ({ product, isSeller, discountPercent }) => {
   // ======================================
   // THAY ẢNH SẢN PHẨM TẠI ĐÂY (PRODUCT_IMAGE_SLOT)
   // ======================================
@@ -84,9 +84,9 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ product, isSeller, disc
               <span className="px-2.5 py-0.5 rounded-[8px] text-[10.5px] font-bold bg-cyan-500/20 text-[#22D3EE] border border-cyan-500/40 backdrop-blur-md shadow-md">
                 Giá Đại Lý / CTV
               </span>
-            ) : discount ? (
+            ) : discountPercent ? (
               <span className="px-2.5 py-0.5 rounded-[8px] text-[10.5px] font-bold bg-red-600/90 text-[#F8FAFC] shadow-md backdrop-blur-md">
-                GIẢM {discount}%
+                GIẢM {discountPercent}%
               </span>
             ) : null}
           </div>
@@ -130,55 +130,62 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ product, isSeller, disc
 // ============================================================================
 interface ProductInfoProps {
   product: Product;
-  isSeller: boolean;
-  productPackages: ProductPackage[];
-  selectedPackage: ProductPackage;
-  onSelectPackage: (id: string) => void;
+  productPlans: ProductPlan[];
+  selectedPlan: ProductPlan | null;
+  onSelectPlan: (plan: ProductPlan | null) => void;
   quantity: number;
   onQuantityChange: (qty: number) => void;
-  effectivePrice: number;
+  productBasePrice: number;
+  productCurrentPrice: number;
+  productOriginalPrice?: number;
+  isProductSale: boolean;
+  productDiscountPercent?: number;
+  effectiveUnitPrice: number;
   onBuyNow: () => void;
   onAddToCart: () => void;
 }
 
 const ProductInfo: React.FC<ProductInfoProps> = ({
   product,
-  isSeller,
-  productPackages,
-  selectedPackage,
-  onSelectPackage,
+  productPlans,
+  selectedPlan,
+  onSelectPlan,
   quantity,
   onQuantityChange,
-  effectivePrice,
+  productCurrentPrice,
+  productOriginalPrice,
+  isProductSale,
+  productDiscountPercent,
+  effectiveUnitPrice,
   onBuyNow,
   onAddToCart,
 }) => {
   return (
     <div className="space-y-4 w-full">
-      {/* Category Badge & Product Title */}
-      <div className="space-y-1.5">
-        <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-[8px] bg-cyan-500/10 border border-cyan-500/30 text-[#22D3EE] text-[10.5px] font-bold uppercase tracking-wider">
-          {product.category}
-        </div>
-        <h1
-          className="font-bold text-[#F8FAFC] leading-[1.2] break-words"
-          style={{
-            fontSize: 'clamp(21px, 2.1vw, 28px)',
-            overflowWrap: 'anywhere',
-          }}
-        >
-          {product.name}
-        </h1>
+      {/* 1. CATEGORY */}
+      <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-[8px] bg-cyan-500/10 border border-cyan-500/30 text-[#22D3EE] text-[10.5px] font-bold uppercase tracking-wider">
+        {product.category}
       </div>
 
-      {/* Sales Stats Card */}
+      {/* 2. PRODUCT TITLE */}
+      <h1
+        className="font-bold text-[#F8FAFC] leading-[1.2] break-words"
+        style={{
+          fontSize: 'clamp(21px, 2.1vw, 28px)',
+          overflowWrap: 'anywhere',
+        }}
+      >
+        {product.name}
+      </h1>
+
+      {/* 3. SOLD / STOCK (Thống kê ngang) */}
       <div className="grid grid-cols-2 gap-3 p-3 rounded-[14px] bg-[#0D1020] border border-slate-800/80 text-[11px] leading-[1.4]">
         <div>
           <span className="text-[11px] font-medium text-[#94A3B8] tracking-[0.15px] uppercase block">
             ĐÃ BÁN
           </span>
           <span className="text-[13px] font-bold text-[#10E6A1] mt-0.5 block leading-[1.35]">
-            {product.soldCount}
+            {product.sold ?? product.soldCount ?? 0}
           </span>
         </div>
         <div>
@@ -191,88 +198,100 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
         </div>
       </div>
 
-      {/* Current Price Block */}
-      <div className="space-y-0.5">
-        <span className="text-[11px] font-medium text-[#94A3B8] tracking-[0.15px] uppercase block">
-          GIÁ HIỆN TẠI
-        </span>
-        <div className="text-2xl sm:text-3xl font-bold text-[#22D3EE] tracking-tight leading-[1.2]">
-          {effectivePrice.toLocaleString('vi-VN')} <span className="text-sm font-bold text-[#22D3EE]">VNĐ</span>
-        </div>
-      </div>
-
-      {/* Service Plans / Packages Selector */}
-      <div className="space-y-2">
+      {/* 4. GIÁ SẢN PHẨM & GIÁ SALE (Nằm ở khu vực thông tin sản phẩm) */}
+      <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold text-[#F8FAFC] uppercase tracking-[0.15px] flex items-center gap-1.5">
-            <Key className="w-3.5 h-3.5 text-[#22D3EE]" />
-            <span>CHỌN GÓI DỊCH VỤ</span>
+          <span className="text-[11px] font-medium text-[#94A3B8] tracking-[0.15px] uppercase block">
+            GIÁ HIỆN TẠI
           </span>
-          <span className="text-[11px] font-medium text-[#64748B]">
-            {productPackages.length} gói thời hạn
-          </span>
+          {isProductSale && productDiscountPercent && (
+            <span className="px-2 py-0.5 rounded-[6px] text-[10px] font-extrabold bg-red-600/90 text-white tracking-wider">
+              SALE -{productDiscountPercent}%
+            </span>
+          )}
         </div>
 
-        <div className="space-y-1.5">
-          {productPackages.map((pkg) => {
-            const pkgPrice = isSeller && pkg.sellerPrice ? pkg.sellerPrice : pkg.price;
-            const isSelected = selectedPackage.id === pkg.id;
+        <div className="flex items-baseline gap-3">
+          <div className="text-[28px] sm:text-[32px] font-extrabold text-[#22D3EE] tracking-tight leading-[1.1]">
+            {productCurrentPrice.toLocaleString('vi-VN')} <span className="text-sm font-bold text-[#22D3EE]">VNĐ</span>
+          </div>
 
-            return (
-              <button
-                key={pkg.id}
-                type="button"
-                onClick={() => onSelectPackage(pkg.id)}
-                className={`w-full min-h-[48px] px-3.5 py-2.5 rounded-[12px] flex items-center justify-between text-left transition-all duration-200 cursor-pointer border focus-visible:outline-2 focus-visible:outline-[#22D3EE]/50 focus-visible:outline-offset-2 ${
-                  isSelected
-                    ? 'bg-[#22D3EE]/[0.06] border-[#10E6A1] shadow-[0_0_15px_rgba(16,230,161,0.18)]'
-                    : 'bg-[#0D1020] border-slate-800/80 hover:border-slate-700 hover:bg-[#11152A]'
-                }`}
-              >
-                {/* Left: Radio + Package Name */}
-                <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                  <div
-                    className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors duration-200 ${
-                      isSelected ? 'border-[#10E6A1] bg-[#10E6A1]' : 'border-slate-600 bg-transparent'
-                    }`}
-                  >
-                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
-                  </div>
-                  <span
-                    className={`text-[13px] font-bold uppercase truncate leading-[1.35] ${
-                      isSelected ? 'text-[#F8FAFC]' : 'text-[#CBD5E1]'
-                    }`}
-                  >
-                    {pkg.name}
-                  </span>
-                </div>
-
-                {/* Right: Package Price */}
-                <div className="text-right shrink-0">
-                  <span
-                    className={`text-[13px] font-bold leading-[1.35] ${
-                      isSelected ? 'text-[#10E6A1]' : 'text-[#22D3EE]'
-                    }`}
-                  >
-                    {pkgPrice.toLocaleString('vi-VN')} <span className="text-[10.5px]">VNĐ</span>
-                  </span>
-                  {pkg.originalPrice && pkg.originalPrice > pkgPrice && (
-                    <div className="text-[10px] text-[#64748B] line-through leading-[1.2]">
-                      {pkg.originalPrice.toLocaleString('vi-VN')} VNĐ
-                    </div>
-                  )}
-                </div>
-              </button>
-            );
-          })}
+          {isProductSale && productOriginalPrice && (
+            <div className="text-[12px] font-medium text-[#64748B] line-through leading-[1.2]">
+              {productOriginalPrice.toLocaleString('vi-VN')} VNĐ
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Quantity & Unit Price Card */}
+      {/* 5. CHỌN GÓI DỊCH VỤ (Các gói thời hạn với giá riêng cố định của từng gói) */}
+      {productPlans.length > 0 && (
+        <div className="space-y-2 pt-1">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-[#F8FAFC] uppercase tracking-[0.15px] flex items-center gap-1.5">
+              <Key className="w-3.5 h-3.5 text-[#22D3EE]" />
+              <span>CHỌN GÓI DỊCH VỤ</span>
+            </span>
+            <span className="text-[11px] font-medium text-[#64748B]">
+              {productPlans.length} gói thời hạn
+            </span>
+          </div>
+
+          <div className="space-y-1.5">
+            {productPlans.map((plan) => {
+              const isSelected = selectedPlan?.id === plan.id;
+
+              return (
+                <button
+                  key={plan.id}
+                  type="button"
+                  onClick={() => onSelectPlan(plan)}
+                  className={`w-full min-h-[48px] px-3.5 py-2.5 rounded-[12px] flex items-center justify-between text-left transition-all duration-200 cursor-pointer border focus-visible:outline-2 focus-visible:outline-[#22D3EE]/50 focus-visible:outline-offset-2 ${
+                    isSelected
+                      ? 'bg-[#22D3EE]/[0.06] border-[#10E6A1] shadow-[0_0_15px_rgba(16,230,161,0.18)]'
+                      : 'bg-[#0D1020] border-slate-800/80 hover:border-slate-700 hover:bg-[#11152A]'
+                  }`}
+                >
+                  {/* Left: Radio + Plan Name */}
+                  <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                    <div
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors duration-200 ${
+                        isSelected ? 'border-[#10E6A1] bg-[#10E6A1]' : 'border-slate-600 bg-transparent'
+                      }`}
+                    >
+                      {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
+                    </div>
+                    <span
+                      className={`text-[13px] font-bold uppercase truncate leading-[1.35] ${
+                        isSelected ? 'text-[#F8FAFC]' : 'text-[#CBD5E1]'
+                      }`}
+                    >
+                      {plan.name}
+                    </span>
+                  </div>
+
+                  {/* Right: Plan Price */}
+                  <div className="text-right shrink-0">
+                    <span
+                      className={`text-[13px] font-bold leading-[1.35] ${
+                        isSelected ? 'text-[#10E6A1]' : 'text-[#22D3EE]'
+                      }`}
+                    >
+                      {plan.price.toLocaleString('vi-VN')} <span className="text-[10.5px]">VNĐ</span>
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 6. QUANTITY (Khối số lượng) */}
       <div className="p-3 rounded-[14px] bg-[#0D1020] border border-slate-800/80 flex items-center justify-between text-[11px] leading-[1.4]">
         <div className="space-y-0.5">
           <div className="text-[#94A3B8]">
-            Đơn giá: <strong className="text-[#F8FAFC] font-bold">{effectivePrice.toLocaleString('vi-VN')} VNĐ</strong>
+            Đơn giá: <strong className="text-[#F8FAFC] font-bold">{effectiveUnitPrice.toLocaleString('vi-VN')} VNĐ</strong>
           </div>
           <div className="text-[#94A3B8]">
             Số lượng: <strong className="text-[#22D3EE] font-bold">x{quantity}</strong>
@@ -301,7 +320,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
         </div>
       </div>
 
-      {/* Action Buttons */}
+      {/* 7. MUA NGAY & 8. THÊM VÀO GIỎ */}
       <div className="space-y-2 pt-0.5">
         {/* MUA NGAY button (Height ~50-52px, bold emerald green, subtle glow) */}
         <button
@@ -310,7 +329,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
           className="w-full h-[50px] sm:h-[52px] rounded-[13px] bg-[#10E6A1] hover:bg-[#05C989] text-black font-extrabold uppercase text-[14px] sm:text-[15px] shadow-[0_4px_20px_rgba(16,230,161,0.25)] flex items-center justify-center gap-2 transition-all duration-200 transform hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer tracking-wide focus-visible:outline-2 focus-visible:outline-[#10E6A1]/60 focus-visible:outline-offset-2"
         >
           <ShoppingCart className="w-4.5 h-4.5 text-black stroke-[2.5]" />
-          <span>MUA NGAY ({(effectivePrice * quantity).toLocaleString('vi-VN')} VNĐ)</span>
+          <span>MUA NGAY ({(effectiveUnitPrice * quantity).toLocaleString('vi-VN')} VNĐ)</span>
         </button>
 
         {/* THÊM VÀO GIỎ button */}
@@ -324,7 +343,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
         </button>
       </div>
 
-      {/* Trust Features Row */}
+      {/* 9. TRUST FEATURES */}
       <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80 text-[11px] leading-[1.4] text-[#94A3B8]">
         <div className="flex items-center gap-1.5 truncate">
           <CheckCircle2 className="w-3.5 h-3.5 text-[#10E6A1] shrink-0" />
@@ -442,42 +461,49 @@ export const StorefrontProductDetail: React.FC = () => {
     );
   }
 
-  const isSeller = currentUser?.sellerStatus === 'active' && !!product.sellerPrice;
+  // ==========================================================================
+  // PRICING ENGINE RESOLUTION (Single Source of Truth)
+  // Logic: ADMIN CONFIG -> USER ROLE (Seller=Member by default) -> SALE OVERRIDE
+  // ==========================================================================
+  const isSeller =
+    currentUser?.role === 'seller' ||
+    currentUser?.sellerStatus === 'active' ||
+    currentUser?.sellerStatus === 'approved';
 
-  // Fallback packages if not defined
-  const productPackages: ProductPackage[] =
-    product.packages && product.packages.length > 0
+  const basePrice = product.basePrice ?? product.price ?? 30000;
+  const memberPrice = product.memberPrice ?? basePrice;
+  const sellerPrice = product.sellerPrice !== undefined && product.sellerPrice > 0 ? product.sellerPrice : memberPrice;
+  const rolePrice = isSeller ? sellerPrice : memberPrice;
+
+  const isProductSale = Boolean(
+    product.saleActive && product.salePrice && product.salePrice > 0 && product.salePrice < rolePrice
+  );
+  const productCurrentPrice = isProductSale && product.salePrice ? product.salePrice : rolePrice;
+  const productOriginalPrice = isProductSale ? rolePrice : (product.originalPrice && product.originalPrice > productCurrentPrice ? product.originalPrice : undefined);
+  const productDiscountPercent = productOriginalPrice && productOriginalPrice > productCurrentPrice
+    ? Math.round(((productOriginalPrice - productCurrentPrice) / productOriginalPrice) * 100)
+    : undefined;
+
+  // Service Plans list
+  const productPlans: ProductPlan[] =
+    product.plans && product.plans.length > 0
+      ? product.plans
+      : product.packages && product.packages.length > 0
       ? product.packages
-      : [
-          {
-            id: 'pkg-default',
-            name: 'GÓI MẶC ĐỊNH',
-            price: product.price,
-            originalPrice: product.originalPrice,
-            sellerPrice: product.sellerPrice,
-            keys: product.downloadLinkOrKeys,
-          },
-        ];
+      : [];
 
-  const [selectedPkgId, setSelectedPkgId] = useState<string>(productPackages[0]?.id || 'pkg-default');
-  const selectedPackage =
-    productPackages.find((pkg) => pkg.id === selectedPkgId) || productPackages[0];
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(
+    productPlans.length > 0 ? productPlans[0].id : null
+  );
 
-  const effectivePrice =
-    isSeller && selectedPackage?.sellerPrice
-      ? selectedPackage.sellerPrice
-      : (selectedPackage?.price ?? product.price);
-  const originalDisplayPrice = isSeller
-    ? selectedPackage?.price
-    : selectedPackage?.originalPrice || product.originalPrice;
+  const selectedPlan = productPlans.find((p) => p.id === selectedPlanId) || null;
 
-  const discount =
-    originalDisplayPrice && originalDisplayPrice > effectivePrice
-      ? Math.round(((originalDisplayPrice - effectivePrice) / originalDisplayPrice) * 100)
-      : null;
+  // Effective unit price calculation:
+  // If plan is chosen, use plan's price. Otherwise use productCurrentPrice (product sale price or role price)
+  const effectiveUnitPrice = selectedPlan ? selectedPlan.price : productCurrentPrice;
 
   const handleBuyNow = () => {
-    const total = effectivePrice * quantity;
+    const total = effectiveUnitPrice * quantity;
     if (currentUser.balance < total) {
       showToast(
         `Số dư ví không đủ (${currentUser.balance.toLocaleString('vi-VN')} VNĐ). Chuyển sang nạp tiền...`,
@@ -486,14 +512,17 @@ export const StorefrontProductDetail: React.FC = () => {
       navigateToStorefront('account-wallet-deposit');
       return;
     }
-    const success = createOrder(product.id, quantity, 'wallet', selectedPackage);
+    const success = createOrder(product.id, quantity, 'wallet', selectedPlan || undefined);
     if (success) {
       navigateToStorefront('account-orders');
     }
   };
 
   return (
-    <div className="w-full max-w-[1180px] mx-auto px-3 sm:px-4 md:px-6 py-4 space-y-5 font-sans">
+    <div
+      className="w-full mx-auto px-3 sm:px-4 md:px-6 py-4 space-y-5 font-sans"
+      style={{ width: 'min(1180px, calc(100% - 32px))', margin: '0 auto' }}
+    >
       {/* 1. Header / Breadcrumb */}
       <Breadcrumb
         productName={product.name}
@@ -501,23 +530,37 @@ export const StorefrontProductDetail: React.FC = () => {
         onNavigateProducts={() => navigateToStorefront('products')}
       />
 
-      {/* 2. Main 2-Column Product Detail Layout */}
-      <div className="product-detail-layout grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-4 sm:gap-6 items-start bg-[#0D1020] border border-slate-800/80 rounded-[18px] p-4 sm:p-6 lg:p-7 shadow-2xl shadow-black/50">
-        {/* Left Column: Product Gallery / Locked Image Slot */}
-        <ProductGallery product={product} isSeller={isSeller} discount={discount} />
-
-        {/* Right Column: Product Information & Action Controls */}
-        <ProductInfo
+      {/* 2. Main 2-Column Product Detail Layout (Desktop: minmax(0,1fr) minmax(0,1fr) starting at exact same Y, natural height) */}
+      <div
+        className="product-main grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-[#0D1020] border border-slate-800/80 rounded-[18px] p-4 sm:p-6 lg:p-7 shadow-2xl shadow-black/50"
+        style={{
+          display: 'grid',
+          alignItems: 'start',
+        }}
+      >
+        {/* CỘT TRÁI: PRODUCT IMAGE + DELIVERY STATUS */}
+        <ProductGallery
           product={product}
           isSeller={isSeller}
-          productPackages={productPackages}
-          selectedPackage={selectedPackage}
-          onSelectPackage={setSelectedPkgId}
+          discountPercent={productDiscountPercent}
+        />
+
+        {/* CỘT PHẢI: CATEGORY -> TITLE -> SOLD/STOCK -> PRICE -> PLANS -> QUANTITY -> BUY -> CART -> TRUST */}
+        <ProductInfo
+          product={product}
+          productPlans={productPlans}
+          selectedPlan={selectedPlan}
+          onSelectPlan={(plan) => setSelectedPlanId(plan ? plan.id : null)}
           quantity={quantity}
           onQuantityChange={setQuantity}
-          effectivePrice={effectivePrice}
+          productBasePrice={basePrice}
+          productCurrentPrice={productCurrentPrice}
+          productOriginalPrice={productOriginalPrice}
+          isProductSale={isProductSale}
+          productDiscountPercent={productDiscountPercent}
+          effectiveUnitPrice={effectiveUnitPrice}
           onBuyNow={handleBuyNow}
-          onAddToCart={() => addToCart(product, quantity, selectedPackage)}
+          onAddToCart={() => addToCart(product, quantity, selectedPlan || undefined)}
         />
       </div>
 
