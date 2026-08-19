@@ -1,0 +1,607 @@
+import React, { useState } from 'react';
+import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { useStore } from '../../context/StoreContext';
+import { Button } from '../ui/Button';
+import { Badge } from '../ui/Badge';
+import { Toast } from '../Toast';
+import {
+  Flame,
+  ShoppingCart,
+  Wallet,
+  Zap,
+  User,
+  Shield,
+  Send,
+  MessageCircle,
+  Menu,
+  X,
+  ArrowRight,
+  ExternalLink,
+  ChevronDown,
+  Layers,
+  Sparkles,
+  Search,
+  LogIn,
+  UserPlus,
+  LogOut,
+} from 'lucide-react';
+
+import { StorefrontHome } from './StorefrontHome';
+import { StorefrontProducts } from './StorefrontProducts';
+import { StorefrontProductDetail } from './StorefrontProductDetail';
+import { StorefrontCart } from './StorefrontCart';
+import { StorefrontDepositQR } from './StorefrontDepositQR';
+import { StorefrontAccount } from './StorefrontAccount';
+import { StorefrontOrders } from './StorefrontOrders';
+import { StorefrontTransactions } from './StorefrontTransactions';
+import { StorefrontSupport } from './StorefrontSupport';
+import { StorefrontAffiliate } from './StorefrontAffiliate';
+
+export const StorefrontLayout: React.FC = () => {
+  const {
+    storefrontPage,
+    navigateToStorefront,
+    navigateToAdmin,
+    currentUser,
+    isAuthenticated,
+    logout,
+    cart,
+    settings,
+  } = useStore();
+
+  const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+
+  const cartItemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const handleLogout = () => {
+    logout();
+    setAccountDropdownOpen(false);
+    setMobileMenuOpen(false);
+    navigate('/');
+  };
+
+  const renderContent = () => {
+    switch (storefrontPage) {
+      case 'home':
+        return <StorefrontHome />;
+      case 'products':
+        return <StorefrontProducts />;
+      case 'product-detail':
+        return <StorefrontProductDetail />;
+      case 'cart':
+        return <StorefrontCart />;
+      case 'account-wallet-deposit':
+        return <StorefrontDepositQR />;
+      case 'account':
+        return <StorefrontAccount />;
+      case 'account-orders':
+        return <StorefrontOrders />;
+      case 'account-transactions':
+        return <StorefrontTransactions />;
+      case 'support':
+      case 'account-support':
+        return <StorefrontSupport />;
+      case 'affiliate':
+        return <StorefrontAffiliate />;
+      case 'categories':
+        return <StorefrontProducts />;
+      case 'checkout':
+        return <StorefrontCart />;
+      default:
+        return <StorefrontHome />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0A0A12] text-[#F0EDFF] flex flex-col font-sans selection:bg-[#7C3AED]/30">
+      {/* 1. TOP ANNOUNCEMENT BAR */}
+      {(settings.announcementBar?.enabled ?? settings.announcementEnabled) && (
+        <div className="bg-gradient-to-r from-[#7C3AED] via-[#6D28D9] to-[#06B6D4] text-white text-[11px] sm:text-xs font-semibold py-1.5 px-4 text-center flex items-center justify-center gap-2 shadow-sm">
+          <Sparkles className="w-3.5 h-3.5 flex-shrink-0 animate-pulse" />
+          <span>{settings.announcementBar?.text || settings.announcementText || 'Khuyến mãi nạp tiền tự động qua VietQR — Giao key tức thì 24/7!'}</span>
+          {settings.announcementBar?.linkText && (
+            <button
+              onClick={() => navigateToStorefront('account-wallet-deposit')}
+              className="underline font-bold hover:text-amber-200 transition-colors cursor-pointer ml-1"
+            >
+              {settings.announcementBar.linkText}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* 2. MAIN STOREFRONT NAVBAR */}
+      <header className="sticky top-0 z-40 bg-[#0F0F1A]/90 backdrop-blur-md border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+          {/* Logo */}
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => navigateToStorefront('home')}
+              className="flex items-center gap-2.5 cursor-pointer text-left group"
+            >
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#06B6D4] p-0.5 shadow-md shadow-[#7C3AED]/20">
+                <div className="w-full h-full bg-[#0F0F1A] rounded-[10px] flex items-center justify-center text-[#9D5CF6] group-hover:text-white transition-colors">
+                  <Flame className="w-5 h-5 text-[#9D5CF6]" />
+                </div>
+              </div>
+              <div>
+                <span className="font-display font-black text-lg text-white tracking-wider">
+                  THANOX<span className="text-[#9D5CF6]">.VN</span>
+                </span>
+                <span className="hidden sm:block text-[9px] uppercase tracking-widest text-[#8B84A8] font-bold">
+                  Digital Gaming Hub
+                </span>
+              </div>
+            </button>
+
+            {/* Desktop Navigation Links */}
+            <nav className="hidden md:flex items-center gap-1">
+              <button
+                onClick={() => navigateToStorefront('home')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  storefrontPage === 'home'
+                    ? 'bg-[#7C3AED]/15 text-[#9D5CF6]'
+                    : 'text-[#8B84A8] hover:text-white'
+                }`}
+              >
+                Trang Chủ
+              </button>
+              <button
+                onClick={() => navigateToStorefront('products')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  storefrontPage === 'products'
+                    ? 'bg-[#7C3AED]/15 text-[#9D5CF6]'
+                    : 'text-[#8B84A8] hover:text-white'
+                }`}
+              >
+                Sản Phẩm
+              </button>
+              <button
+                onClick={() => navigateToStorefront('account-wallet-deposit')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  storefrontPage === 'account-wallet-deposit'
+                    ? 'bg-[#7C3AED]/15 text-[#9D5CF6]'
+                    : 'text-[#8B84A8] hover:text-white'
+                }`}
+              >
+                <Zap className="w-3.5 h-3.5 text-amber-400" />
+                <span>Nạp Tiền VietQR</span>
+              </button>
+              <button
+                onClick={() => navigateToStorefront('account-orders')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  storefrontPage === 'account-orders'
+                    ? 'bg-[#7C3AED]/15 text-[#9D5CF6]'
+                    : 'text-[#8B84A8] hover:text-white'
+                }`}
+              >
+                Đơn Hàng & Key
+              </button>
+              <button
+                onClick={() => navigateToStorefront('affiliate')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  storefrontPage === 'affiliate'
+                    ? 'bg-[#7C3AED]/15 text-[#9D5CF6]'
+                    : 'text-[#8B84A8] hover:text-white'
+                }`}
+              >
+                Affiliate
+              </button>
+              <button
+                onClick={() => navigateToStorefront('support')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  storefrontPage === 'support'
+                    ? 'bg-[#7C3AED]/15 text-[#9D5CF6]'
+                    : 'text-[#8B84A8] hover:text-white'
+                }`}
+              >
+                Hỗ Trợ
+              </button>
+            </nav>
+          </div>
+
+          {/* Right Action Bar */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Customer Wallet Pill (When authenticated) */}
+            {isAuthenticated ? (
+              <div className="hidden sm:flex items-center bg-[#161626] border border-white/10 rounded-xl p-1 pl-3 gap-2">
+                <div className="text-left">
+                  <div className="text-[9.5px] uppercase font-bold text-[#8B84A8]">Số dư ví</div>
+                  <div className="font-display font-extrabold text-xs text-emerald-400">
+                    {currentUser.balance.toLocaleString('vi-VN')} <span className="text-[10px]">đ</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => navigateToStorefront('account-wallet-deposit')}
+                  className="px-2.5 py-1 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
+                >
+                  <Zap className="w-3 h-3 text-amber-300" />
+                  <span>Nạp</span>
+                </button>
+              </div>
+            ) : null}
+
+            {/* Cart Button */}
+            <button
+              onClick={() => navigateToStorefront('cart')}
+              className="relative p-2.5 rounded-xl bg-[#161626] border border-white/10 hover:border-white/20 text-[#CBC7E0] hover:text-white transition-all cursor-pointer"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              {cartItemsCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#7C3AED] text-white text-[10px] font-extrabold flex items-center justify-center shadow-md">
+                  {cartItemsCount}
+                </span>
+              )}
+            </button>
+
+            {/* Account area / Auth Buttons */}
+            {isAuthenticated ? (
+              <div className="relative">
+                <button
+                  onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
+                  className="flex items-center gap-2 p-1.5 pr-2.5 rounded-xl bg-[#161626] border border-white/10 hover:border-white/20 transition-all cursor-pointer"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-[#7C3AED]/20 border border-[#7C3AED]/40 flex items-center justify-center text-[#9D5CF6] font-bold text-xs">
+                    {(currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase()}
+                  </div>
+                  <span className="hidden md:block text-xs font-bold text-[#F0EDFF] max-w-[90px] truncate">
+                    {currentUser.name || currentUser.username}
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 text-[#8B84A8]" />
+                </button>
+
+                {accountDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-[#0F0F1A] border border-white/10 rounded-2xl p-2 shadow-2xl z-50 space-y-1 text-xs">
+                    <div className="px-3 py-2 border-b border-white/5">
+                      <div className="font-bold text-[#F0EDFF]">{currentUser.name || currentUser.username}</div>
+                      <div className="text-[11px] text-[#8B84A8] truncate">{currentUser.email}</div>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        navigateToStorefront('account');
+                        setAccountDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl text-[#CBC7E0] hover:bg-white/5 hover:text-white transition-colors cursor-pointer flex items-center gap-2"
+                    >
+                      <User className="w-3.5 h-3.5 text-[#8B84A8]" />
+                      <span>Tổng quan tài khoản</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigateToStorefront('account-orders');
+                        setAccountDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl text-[#CBC7E0] hover:bg-white/5 hover:text-white transition-colors cursor-pointer flex items-center gap-2"
+                    >
+                      <Layers className="w-3.5 h-3.5 text-[#8B84A8]" />
+                      <span>Đơn hàng & License Key</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigateToStorefront('account-wallet-deposit');
+                        setAccountDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl text-[#CBC7E0] hover:bg-white/5 hover:text-white transition-colors cursor-pointer flex items-center gap-2"
+                    >
+                      <Wallet className="w-3.5 h-3.5 text-[#8B84A8]" />
+                      <span>Nạp tiền</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigateToStorefront('account-transactions');
+                        setAccountDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl text-[#CBC7E0] hover:bg-white/5 hover:text-white transition-colors cursor-pointer flex items-center gap-2"
+                    >
+                      <Zap className="w-3.5 h-3.5 text-[#8B84A8]" />
+                      <span>Lịch sử biến động ví</span>
+                    </button>
+
+                    <div className="border-t border-white/5 pt-1 mt-1 space-y-1">
+                      {currentUser.role === 'admin' && (
+                        <button
+                          onClick={() => {
+                            navigateToAdmin();
+                            setAccountDropdownOpen(false);
+                          }}
+                          className="w-full text-left px-3 py-2 rounded-xl text-[#9D5CF6] hover:bg-[#7C3AED]/15 transition-colors cursor-pointer font-bold flex items-center justify-between"
+                        >
+                          <span>Quản Trị Admin Panel</span>
+                          <Shield className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-3 py-2 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer font-semibold flex items-center gap-2"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>Đăng xuất</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/login"
+                  className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-[#F0EDFF] transition-colors flex items-center gap-1.5"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Đăng Nhập</span>
+                </Link>
+                <Link
+                  to="/register"
+                  className="px-3 py-1.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-xs font-bold text-white transition-colors flex items-center gap-1.5 shadow-sm shadow-[#7C3AED]/20"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Đăng Ký</span>
+                </Link>
+              </div>
+            )}
+
+            {/* Desktop Switch to Admin Button */}
+            <Button
+              variant="secondary"
+              size="xs"
+              onClick={() => navigateToAdmin()}
+              leftIcon={<Shield className="w-3.5 h-3.5 text-[#9D5CF6]" />}
+              className="hidden lg:flex font-bold border-[#7C3AED]/30 hover:border-[#7C3AED]"
+            >
+              Vào Admin
+            </Button>
+
+            {/* Mobile Menu Toggle */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-xl bg-[#161626] border border-white/10 text-white cursor-pointer"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-[#0F0F1A] border-b border-white/10 px-4 py-4 space-y-2">
+            {isAuthenticated ? (
+              <div className="p-3 bg-[#161626] rounded-xl flex items-center justify-between mb-3">
+                <div>
+                  <div className="text-[10px] text-[#8B84A8]">Số dư ví của {currentUser.username}:</div>
+                  <div className="font-display font-bold text-sm text-emerald-400">
+                    {currentUser.balance.toLocaleString('vi-VN')}đ
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    navigateToStorefront('account-wallet-deposit');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-[#7C3AED] text-white text-xs font-bold cursor-pointer"
+                >
+                  + Nạp Tiền
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="py-2.5 px-3 rounded-xl bg-[#161626] border border-white/10 text-center text-xs font-bold text-[#F0EDFF]"
+                >
+                  Đăng Nhập
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="py-2.5 px-3 rounded-xl bg-[#7C3AED] text-center text-xs font-bold text-white shadow-sm"
+                >
+                  Đăng Ký
+                </Link>
+              </div>
+            )}
+
+            <button
+              onClick={() => {
+                navigateToStorefront('home');
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
+            >
+              Trang Chủ
+            </button>
+            <button
+              onClick={() => {
+                navigateToStorefront('products');
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
+            >
+              Tất Cả Sản Phẩm
+            </button>
+            <button
+              onClick={() => {
+                navigateToStorefront('account-wallet-deposit');
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-amber-300 hover:bg-white/5"
+            >
+              Nạp tiền VietQR 24/7
+            </button>
+            {isAuthenticated && (
+              <>
+                <button
+                  onClick={() => {
+                    navigateToStorefront('account-orders');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
+                >
+                  Đơn Hàng & License Key
+                </button>
+                <button
+                  onClick={() => {
+                    navigateToStorefront('account');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
+                >
+                  Hồ Sơ & Cài Đặt
+                </button>
+              </>
+            )}
+            <button
+              onClick={() => {
+                navigateToStorefront('affiliate');
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
+            >
+              Tiếp Thị Affiliate
+            </button>
+            <button
+              onClick={() => {
+                navigateToStorefront('support');
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
+            >
+              Hỗ Trợ Kỹ Thuật
+            </button>
+
+            {isAuthenticated && (
+              <button
+                onClick={handleLogout}
+                className="w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-500/10"
+              >
+                Đăng Xuất
+              </button>
+            )}
+
+            {isAuthenticated && currentUser.role === 'admin' && (
+              <div className="pt-2 border-t border-white/5">
+                <button
+                  onClick={() => {
+                    navigateToAdmin();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left py-2 px-3 rounded-xl text-xs font-bold text-[#9D5CF6] bg-[#7C3AED]/10 hover:bg-[#7C3AED]/20"
+                >
+                  ⚡ Chuyển Sang Admin Panel
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </header>
+
+      {/* 3. MAIN STOREFRONT CONTENT */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <Outlet />
+      </main>
+
+      {/* Global Toast in Storefront */}
+      <Toast />
+
+      {/* 4. STOREFRONT FOOTER */}
+      <footer className="bg-[#0A0A10] border-t border-white/10 mt-16 pt-12 pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Brand column */}
+            <div className="space-y-4 md:col-span-1">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-[#7C3AED]/20 border border-[#7C3AED]/30 flex items-center justify-center text-[#9D5CF6]">
+                  <Flame className="w-4 h-4" />
+                </div>
+                <span className="font-display font-black text-base text-white tracking-wider">
+                  THANOX DIGITAL
+                </span>
+              </div>
+              <p className="text-xs text-[#8B84A8] leading-relaxed">
+                Nền tảng cung cấp công cụ tối ưu hóa hiệu năng, file mod an toàn và key bản quyền uy tín hàng đầu Việt Nam.
+              </p>
+            </div>
+
+            {/* Quick Links */}
+            <div className="space-y-3">
+              <div className="text-xs font-bold text-[#F0EDFF] uppercase tracking-wider">Khám Phá</div>
+              <ul className="space-y-2 text-xs text-[#8B84A8]">
+                <li>
+                  <button onClick={() => navigateToStorefront('products')} className="hover:text-white transition-colors cursor-pointer">
+                    Danh mục sản phẩm
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => navigateToStorefront('account-wallet-deposit')} className="hover:text-white transition-colors cursor-pointer">
+                    Nạp tiền tự động
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => navigateToStorefront('account-orders')} className="hover:text-white transition-colors cursor-pointer">
+                    Lấy mã License Key
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => navigateToStorefront('affiliate')} className="hover:text-white transition-colors cursor-pointer">
+                    Kiếm tiền cùng Thanox
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Policies */}
+            <div className="space-y-3">
+              <div className="text-xs font-bold text-[#F0EDFF] uppercase tracking-wider">Chính Sách & Bảo Mật</div>
+              <ul className="space-y-2 text-xs text-[#8B84A8]">
+                <li>Chính sách bảo hành 100%</li>
+                <li>Điều khoản sử dụng dịch vụ</li>
+                <li>Cam kết an toàn bảo mật tài khoản</li>
+                <li>Hỗ trợ kích hoạt & bảo hành key</li>
+              </ul>
+            </div>
+
+            {/* Contact & Support Channels */}
+            <div className="space-y-3">
+              <div className="text-xs font-bold text-[#F0EDFF] uppercase tracking-wider">Kênh Hỗ Trợ Trực Tuyến</div>
+              <div className="space-y-2 text-xs text-[#8B84A8]">
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4 text-emerald-400" />
+                  <span>Zalo: <strong className="text-[#CBC7E0]">{settings.zaloHotline || '0916396901'}</strong></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Send className="w-4 h-4 text-[#06B6D4]" />
+                  <span>Telegram: <strong className="text-[#CBC7E0]">{settings.telegramLink || '@quangthank'}</strong></span>
+                </div>
+              </div>
+              <div className="pt-2">
+                <Button
+                  variant="secondary"
+                  size="xs"
+                  onClick={() => navigateToStorefront('support')}
+                  className="w-full justify-center"
+                >
+                  Gửi Yêu Cầu Hỗ Trợ (Ticket)
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom copyright & payment badges */}
+          <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#6B658E]">
+            <div>© 2026 Thanox Digital Ecosystem. All rights reserved.</div>
+            <div className="flex items-center gap-3">
+              <span className="text-[11px]">Thanh toán bảo mật:</span>
+              <span className="px-2 py-0.5 rounded bg-white/5 text-[#CBC7E0] text-[10px] font-bold">VietQR</span>
+              <span className="px-2 py-0.5 rounded bg-white/5 text-[#CBC7E0] text-[10px] font-bold">Thẻ Cào</span>
+              <span className="px-2 py-0.5 rounded bg-white/5 text-[#CBC7E0] text-[10px] font-bold">Napas247</span>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
