@@ -349,23 +349,31 @@ export const OrdersView: React.FC = () => {
               </div>
             </div>
 
-            {/* Delivered Key or Content */}
+            {/* Delivered Key or Account Content */}
             <div className="p-4 rounded-2xl bg-[#161626]/50 border border-white/5 space-y-2.5">
               <div className="flex items-center justify-between">
                 <h4 className="font-semibold text-[#F0EDFF] text-xs flex items-center gap-1.5">
-                  <Key className="w-3.5 h-3.5 text-amber-400" /> Nội Dung Đã Bàn Giao
+                  {(selectedOrder.category || '').toLowerCase().includes('tài khoản') || (selectedOrder.category || '').toLowerCase().includes('acc') ? (
+                    <span className="text-cyan-400 font-bold flex items-center gap-1.5">
+                      🔐 Tài Khoản & Mật Khẩu Bàn Giao
+                    </span>
+                  ) : (
+                    <span className="text-amber-400 font-bold flex items-center gap-1.5">
+                      <Key className="w-3.5 h-3.5" /> Mã Key Bản Quyền / Link Bàn Giao
+                    </span>
+                  )}
                 </h4>
                 {selectedOrder.deliveredContent && (
                   <button
                     onClick={() => copyToClipboard(selectedOrder.deliveredContent || '', 'nội dung bàn giao')}
                     className="text-[11px] text-[#9D5CF6] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
                   >
-                    <Copy className="w-3 h-3" /> Sao chép
+                    <Copy className="w-3 h-3" /> Sao chép tất cả
                   </button>
                 )}
               </div>
 
-              <div className="p-3 rounded-xl bg-[#0F0F1A] border border-white/5 text-xs text-[#F0EDFF] font-mono whitespace-pre-wrap break-all">
+              <div className="p-3 rounded-xl bg-[#0F0F1A] border border-white/5 text-xs text-cyan-300 font-mono whitespace-pre-wrap break-all leading-relaxed">
                 {selectedOrder.deliveredContent || 'Chưa có nội dung giao tự động'}
               </div>
             </div>

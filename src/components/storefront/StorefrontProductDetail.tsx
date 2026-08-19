@@ -118,7 +118,7 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ product, isSeller, disc
             className="w-1.5 h-1.5 rounded-full bg-[#10E6A1] shadow-[0_0_8px_rgba(16,230,161,0.55)] animate-pulse"
             style={{ animation: 'statusPulse 2s ease-in-out infinite' }}
           />
-          Sẵn sàng giao Key tự động (24/7)
+          Sẵn sàng giao tự động (24/7)
         </span>
       </div>
     </div>
@@ -126,7 +126,7 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ product, isSeller, disc
 };
 
 // ============================================================================
-// 3. SUBCOMPONENT: PRODUCT INFO & ACTION CONTROLS (MOBILE-FIRST CARDS)
+// 3. SUBCOMPONENT: PRODUCT INFO & CHECKOUT CONTROLS
 // ============================================================================
 interface ProductInfoProps {
   product: Product;
@@ -159,12 +159,21 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
   onBuyNow,
   onAddToCart,
 }) => {
+  const isAcc = isAccountProduct(product);
+
   return (
     <div className="product-info space-y-2.5 sm:space-y-4 w-full">
-      {/* 1. TITLE & CATEGORY CARD (Separate modern card on mobile) */}
+      {/* 1. TITLE & CATEGORY CARD */}
       <div className="p-3.5 sm:p-4 rounded-[16px] bg-[#0D1020] border border-slate-800/80 space-y-1 w-full shadow-lg shadow-black/30">
-        <div className="text-[10px] sm:text-[11px] font-bold text-[#22D3EE] uppercase tracking-wider">
-          {product.category}
+        <div className="flex items-center justify-between">
+          <div className="text-[10px] sm:text-[11px] font-bold text-[#22D3EE] uppercase tracking-wider">
+            {product.category}
+          </div>
+          {isAcc && (
+            <span className="px-2 py-0.5 rounded-full text-[9.5px] font-black bg-cyan-500/15 border border-cyan-500/30 text-cyan-300">
+              🎮 TÀI KHOẢN GAME
+            </span>
+          )}
         </div>
         <h1
           className="product-title font-bold text-[#F8FAFC] leading-snug break-words"
@@ -190,10 +199,10 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
 
         <div className="p-3 sm:p-3.5 rounded-[14px] sm:rounded-[16px] bg-[#0D1020] border border-slate-800/80 min-h-[68px] sm:min-h-[76px] flex flex-col justify-center shadow-md shadow-black/20">
           <span className="text-[10.5px] sm:text-[11px] font-medium text-[#94A3B8] tracking-[0.15px] uppercase block">
-            CÒN LẠI
+            CÒN LẠI TRONG KHO
           </span>
           <span className="text-base sm:text-lg font-black text-[#F8FAFC] mt-0.5 block leading-none">
-            {product.stock === 'unlimited' ? '∞ Không giới hạn' : product.stock}
+            {product.stock === 'unlimited' ? '∞ Không giới hạn' : `${product.stock} ${isAcc ? 'Nick' : 'Key'}`}
           </span>
         </div>
       </div>
@@ -202,7 +211,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
       <div className="p-3.5 sm:p-4 rounded-[16px] bg-[#0D1020] border border-slate-800/80 space-y-1 w-full shadow-lg shadow-black/30">
         <div className="flex items-center justify-between">
           <span className="text-[10.5px] sm:text-[11px] font-medium text-[#94A3B8] tracking-[0.15px] uppercase block">
-            GIÁ HIỆN TẠI
+            GIÁ BÁN NIÊM YẾT
           </span>
           {isProductSale && productDiscountPercent && (
             <span className="px-2 py-0.5 rounded-[6px] text-[10px] font-extrabold bg-red-600/90 text-white tracking-wider">
@@ -226,68 +235,86 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
 
       {/* 4. SERVICE PLANS & CHECKOUT CONTROLS CARD */}
       <div className="p-3.5 sm:p-5 rounded-[16px] bg-[#0D1020] border border-slate-800/80 space-y-3 w-full shadow-xl shadow-black/40">
-        {/* Service Plans Header */}
-        {productPlans.length > 0 && (
-          <div className="space-y-2.5">
+        {/* If Account: Show Auto Account Delivery Specs */}
+        {isAcc ? (
+          <div className="p-3 sm:p-3.5 rounded-[12px] bg-[#080A14] border border-cyan-500/30 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[11.5px] sm:text-xs font-bold text-[#F8FAFC] uppercase tracking-[0.15px] flex items-center gap-1.5">
-                <Key className="w-3.5 h-3.5 text-[#22D3EE]" />
-                <span>CHỌN GÓI DỊCH VỤ</span>
+              <span className="text-[11.5px] sm:text-xs font-bold text-cyan-300 uppercase tracking-wide flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                <span>BÀN GIAO TÀI KHOẢN TỰ ĐỘNG</span>
               </span>
-              <span className="text-[11px] font-medium text-[#64748B]">
-                {productPlans.length} gói thời hạn
+              <span className="text-[10.5px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                100% Cấp Nick Ngay
               </span>
             </div>
-
-            {/* Plans List */}
-            <div className="space-y-2.5">
-              {productPlans.map((plan) => {
-                const isSelected = selectedPlan?.id === plan.id;
-
-                return (
-                  <button
-                    key={plan.id}
-                    type="button"
-                    onClick={() => onSelectPlan(plan)}
-                    className={`service-plan w-full min-h-[56px] sm:min-h-[58px] px-3.5 sm:px-4 py-3 rounded-[14px] flex items-center justify-between text-left transition-all duration-200 cursor-pointer border focus-visible:outline-2 focus-visible:outline-[#22D3EE]/50 focus-visible:outline-offset-2 ${
-                      isSelected
-                        ? 'border-2 border-[#10E6A1] bg-[#10E6A1]/[0.08] shadow-[0_0_15px_rgba(16,230,161,0.2)]'
-                        : 'bg-[#080A14] border-slate-800/80 hover:border-slate-700 hover:bg-[#11152A]'
-                    }`}
-                  >
-                    {/* Left: Plan Name */}
-                    <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                      <div
-                        className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors duration-200 ${
-                          isSelected ? 'border-[#10E6A1] bg-[#10E6A1]' : 'border-slate-600 bg-transparent'
-                        }`}
-                      >
-                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
-                      </div>
-                      <span
-                        className={`plan-name text-[13.5px] sm:text-[14px] font-bold uppercase truncate leading-[1.35] ${
-                          isSelected ? 'text-[#F8FAFC]' : 'text-[#CBD5E1]'
-                        }`}
-                      >
-                        {plan.name}
-                      </span>
-                    </div>
-
-                    {/* Right: Plan Price */}
-                    <div className="text-right shrink-0">
-                      <span
-                        className={`plan-price text-[14.5px] sm:text-[15px] font-black leading-[1.35] ${
-                          isSelected ? 'text-[#10E6A1]' : 'text-[#22D3EE]'
-                        }`}
-                      >
-                        {plan.price.toLocaleString('vi-VN')} <span className="text-[11px] font-bold">VNĐ</span>
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+            <p className="text-[11px] text-[#94A3B8] leading-relaxed">
+              Sau khi thanh toán thành công, hệ thống sẽ cấp ngay <strong>Tài khoản | Mật khẩu | Mã 2FA</strong> trong mục Đơn Hàng kèm nút Sao chép 1 chạm.
+            </p>
           </div>
+        ) : (
+          /* If Key/File: Show Service Packages */
+          productPlans.length > 0 && (
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11.5px] sm:text-xs font-bold text-[#F8FAFC] uppercase tracking-[0.15px] flex items-center gap-1.5">
+                  <Key className="w-3.5 h-3.5 text-[#22D3EE]" />
+                  <span>CHỌN GÓI DỊCH VỤ</span>
+                </span>
+                <span className="text-[11px] font-medium text-[#64748B]">
+                  {productPlans.length} gói thời hạn
+                </span>
+              </div>
+
+              {/* Plans List */}
+              <div className="space-y-2.5">
+                {productPlans.map((plan) => {
+                  const isSelected = selectedPlan?.id === plan.id;
+
+                  return (
+                    <button
+                      key={plan.id}
+                      type="button"
+                      onClick={() => onSelectPlan(plan)}
+                      className={`service-plan w-full min-h-[56px] sm:min-h-[58px] px-3.5 sm:px-4 py-3 rounded-[14px] flex items-center justify-between text-left transition-all duration-200 cursor-pointer border focus-visible:outline-2 focus-visible:outline-[#22D3EE]/50 focus-visible:outline-offset-2 ${
+                        isSelected
+                          ? 'border-2 border-[#10E6A1] bg-[#10E6A1]/[0.08] shadow-[0_0_15px_rgba(16,230,161,0.2)]'
+                          : 'bg-[#080A14] border-slate-800/80 hover:border-slate-700 hover:bg-[#11152A]'
+                      }`}
+                    >
+                      {/* Left: Plan Name */}
+                      <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                        <div
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors duration-200 ${
+                            isSelected ? 'border-[#10E6A1] bg-[#10E6A1]' : 'border-slate-600 bg-transparent'
+                          }`}
+                        >
+                          {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
+                        </div>
+                        <span
+                          className={`plan-name text-[13.5px] sm:text-[14px] font-bold uppercase truncate leading-[1.35] ${
+                            isSelected ? 'text-[#F8FAFC]' : 'text-[#CBD5E1]'
+                          }`}
+                        >
+                          {plan.name}
+                        </span>
+                      </div>
+
+                      {/* Right: Plan Price */}
+                      <div className="text-right shrink-0">
+                        <span
+                          className={`plan-price text-[14.5px] sm:text-[15px] font-black leading-[1.35] ${
+                            isSelected ? 'text-[#10E6A1]' : 'text-[#22D3EE]'
+                          }`}
+                        >
+                          {plan.price.toLocaleString('vi-VN')} <span className="text-[11px] font-bold">VNĐ</span>
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )
         )}
 
         {/* Quantity & Unit Price Card */}
@@ -332,7 +359,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
             className="buy-button w-full min-h-[52px] sm:min-h-[54px] py-3.5 rounded-[14px] bg-[#10E6A1] hover:bg-[#05C989] text-black font-black uppercase text-[15px] shadow-[0_4px_20px_rgba(16,230,161,0.25)] flex items-center justify-center gap-2 transition-all duration-200 transform hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer tracking-wide focus-visible:outline-2 focus-visible:outline-[#10E6A1]/60 focus-visible:outline-offset-2"
           >
             <ShoppingCart className="w-5 h-5 text-black stroke-[2.5]" />
-            <span>MUA NGAY ({(effectiveUnitPrice * quantity).toLocaleString('vi-VN')} VNĐ)</span>
+            <span>{isAcc ? 'MUA TÀI KHOẢN NGAY' : 'MUA NGAY'} ({(effectiveUnitPrice * quantity).toLocaleString('vi-VN')} VNĐ)</span>
           </button>
 
           {/* THÊM VÀO GIỎ Button */}
@@ -350,11 +377,11 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
         <div className="trust-features grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80 text-[11px] leading-[1.4] text-[#94A3B8]">
           <div className="flex items-center gap-1.5 truncate">
             <CheckCircle2 className="w-3.5 h-3.5 text-[#10E6A1] shrink-0" />
-            <span className="truncate">Giao key sau 3s</span>
+            <span className="truncate">{isAcc ? 'Giao Nick sau 3s' : 'Giao key sau 3s'}</span>
           </div>
           <div className="flex items-center gap-1.5 truncate">
             <ShieldCheck className="w-3.5 h-3.5 text-[#22D3EE] shrink-0" />
-            <span className="truncate">Bảo hành 100%</span>
+            <span className="truncate">{isAcc ? 'Bảo hành 1 đổi 1' : 'Bảo hành 100%'}</span>
           </div>
         </div>
       </div>
@@ -369,63 +396,81 @@ interface ProductDescriptionProps {
   product: Product;
 }
 
-const ProductDescription: React.FC<ProductDescriptionProps> = ({ product }) => (
-  <section
-    aria-label="Mô tả sản phẩm"
-    className="bg-[#0D1020] border border-slate-800/80 rounded-[16px] sm:rounded-[18px] p-4 sm:p-7 space-y-4 shadow-xl shadow-black/40 w-full"
-  >
-    <div className="flex items-center gap-2 border-b border-slate-800/80 pb-3">
-      <h2 className="font-bold text-sm sm:text-base text-[#22D3EE] uppercase tracking-wider flex items-center gap-2">
-        <Sparkles className="w-4 h-4 text-[#22D3EE]" />
-        <span>MÔ TẢ SẢN PHẨM</span>
-      </h2>
-    </div>
+const ProductDescription: React.FC<ProductDescriptionProps> = ({ product }) => {
+  const isAcc = isAccountProduct(product);
 
-    <div className="space-y-4 text-xs sm:text-[13px] text-[#CBD5E1] leading-relaxed">
-      {product.description && (
-        <div className="p-3.5 rounded-[12px] bg-[#11152A] border border-slate-800/80 text-xs sm:text-[13px] text-[#F8FAFC] flex items-start gap-2.5 leading-relaxed">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#22D3EE] mt-1.5 shrink-0" />
-          <p className="font-medium">{product.description}</p>
-        </div>
-      )}
+  return (
+    <section
+      aria-label="Mô tả sản phẩm"
+      className="bg-[#0D1020] border border-slate-800/80 rounded-[16px] sm:rounded-[18px] p-4 sm:p-7 space-y-4 shadow-xl shadow-black/40 w-full"
+    >
+      <div className="flex items-center gap-2 border-b border-slate-800/80 pb-3">
+        <h2 className="font-bold text-sm sm:text-base text-[#22D3EE] uppercase tracking-wider flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-[#22D3EE]" />
+          <span>MÔ TẢ SẢN PHẨM</span>
+        </h2>
+      </div>
 
-      {/* 3 Value Pillars */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-0.5">
-        <div className="p-3.5 rounded-[12px] bg-[#11152A] border border-slate-800/80 space-y-1.5">
-          <h4 className="font-bold text-xs text-[#F8FAFC] flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-[#22D3EE]" />
-            <span>Tính Năng & Tương Thích</span>
-          </h4>
-          <ul className="space-y-1 text-[11px] text-[#94A3B8] leading-[1.4]">
-            <li>● Tương thích 100% phiên bản mới nhất 2026</li>
-            <li>● Thuật toán mã hóa chống ban, chống quét an toàn</li>
-            <li>● Tối ưu hóa FPS mượt mà, không giật lag</li>
-          </ul>
-        </div>
+      <div className="space-y-4 text-xs sm:text-[13px] text-[#CBD5E1] leading-relaxed">
+        {product.description && (
+          <div className="p-3.5 rounded-[12px] bg-[#11152A] border border-slate-800/80 text-xs sm:text-[13px] text-[#F8FAFC] flex items-start gap-2.5 leading-relaxed">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#22D3EE] mt-1.5 shrink-0" />
+            <p className="font-medium">{product.description}</p>
+          </div>
+        )}
 
-        <div className="p-3.5 rounded-[12px] bg-[#11152A] border border-slate-800/80 space-y-1.5">
-          <h4 className="font-bold text-xs text-[#F8FAFC] flex items-center gap-1.5">
-            <Key className="w-3.5 h-3.5 text-[#10E6A1]" />
-            <span>Giao Nhận Tự Động</span>
-          </h4>
-          <p className="text-[11px] text-[#94A3B8] leading-[1.4]">
-            Hệ thống cấp mã Key kích hoạt và link tải trực tiếp ngay sau khi bấm thanh toán, xem trong mục Đơn Hàng 24/7.
-          </p>
-        </div>
+        {/* 3 Value Pillars */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-0.5">
+          <div className="p-3.5 rounded-[12px] bg-[#11152A] border border-slate-800/80 space-y-1.5">
+            <h4 className="font-bold text-xs text-[#F8FAFC] flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-[#22D3EE]" />
+              <span>{isAcc ? 'Thông Tin & Trạng Thái Nick' : 'Tính Năng & Tương Thích'}</span>
+            </h4>
+            <ul className="space-y-1 text-[11px] text-[#94A3B8] leading-[1.4]">
+              {isAcc ? (
+                <>
+                  <li>● Tài khoản chuẩn thông tin, đăng nhập an toàn</li>
+                  <li>● Không bị khóa, rank và skin nguyên vẹn</li>
+                  <li>● Có hỗ trợ đổi mật khẩu sau khi nhận</li>
+                </>
+              ) : (
+                <>
+                  <li>● Tương thích 100% phiên bản mới nhất 2026</li>
+                  <li>● Thuật toán mã hóa chống ban, chống quét an toàn</li>
+                  <li>● Tối ưu hóa FPS mượt mà, không giật lag</li>
+                </>
+              )}
+            </ul>
+          </div>
 
-        <div className="p-3.5 rounded-[12px] bg-[#11152A] border border-slate-800/80 space-y-1.5">
-          <h4 className="font-bold text-xs text-[#F8FAFC] flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#8B5CF6]" />
-            <span>Chính Sách Bảo Hành</span>
-          </h4>
-          <p className="text-[11px] text-[#94A3B8] leading-[1.4]">
-            Hỗ trợ kỹ thuật 24/7 qua Ticket và LiveChat. Cam kết 1 đổi 1 hoặc hoàn tiền ví 100% nếu có lỗi phát sinh.
-          </p>
+          <div className="p-3.5 rounded-[12px] bg-[#11152A] border border-slate-800/80 space-y-1.5">
+            <h4 className="font-bold text-xs text-[#F8FAFC] flex items-center gap-1.5">
+              {isAcc ? <ShieldCheck className="w-3.5 h-3.5 text-[#10E6A1]" /> : <Key className="w-3.5 h-3.5 text-[#10E6A1]" />}
+              <span>Giao Nhận Tự Động</span>
+            </h4>
+            <p className="text-[11px] text-[#94A3B8] leading-[1.4]">
+              {isAcc
+                ? 'Hệ thống tự động cấp Tài Khoản & Mật Khẩu kèm mã 2FA ngay sau khi thanh toán thành công 24/7.'
+                : 'Hệ thống cấp mã Key kích hoạt và link tải trực tiếp ngay sau khi bấm thanh toán, xem trong mục Đơn Hàng 24/7.'}
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-[12px] bg-[#11152A] border border-slate-800/80 space-y-1.5">
+            <h4 className="font-bold text-xs text-[#F8FAFC] flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#8B5CF6]" />
+              <span>Chính Sách Bảo Hành</span>
+            </h4>
+            <p className="text-[11px] text-[#94A3B8] leading-[1.4]">
+              {isAcc
+                ? 'Bảo hành 1 đổi 1 ngay lập tức nếu có lỗi sai thông tin đăng nhập. Đội ngũ hỗ trợ 24/7 qua Ticket.'
+                : 'Hỗ trợ kỹ thuật 24/7 qua Ticket và LiveChat. Cam kết 1 đổi 1 hoặc hoàn tiền ví 100% nếu có lỗi phát sinh.'}
+            </p>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 // ============================================================================
 // 5. MAIN CONTAINER: STOREFRONT PRODUCT DETAIL

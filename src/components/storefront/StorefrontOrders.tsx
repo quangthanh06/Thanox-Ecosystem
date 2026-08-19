@@ -134,17 +134,149 @@ export const StorefrontOrders: React.FC = () => {
                 </div>
               </div>
 
-              {/* Order Delivery Content (Download Link & License Key) */}
+              {/* Order Delivery Content (Download Link & License Key / Account Credentials) */}
               {(() => {
                 const prod = products.find((p) => p.id === order.productId);
-                const rawContent = order.key || order.deliveredContent || prod?.downloadLinkOrKeys || '';
+                const rawContent = order.deliveredContent || order.key || prod?.downloadLinkOrKeys || '';
                 
-                // Extract URL if exists
-                const urlMatch = (prod?.downloadUrl || rawContent).match(/https?:\/\/[^\s]+/);
-                const downloadLink = prod?.downloadUrl || (urlMatch ? urlMatch[0] : null);
+                const isAcc =
+                  (order.category || prod?.category || '').toLowerCase().includes('tài khoản') ||
+                  (order.category || prod?.category || '').toLowerCase().includes('acc') ||
+                  (order.category || prod?.category || '').toLowerCase().includes('nick') ||
+                  prod?.productType === 'account' ||
+                  rawContent.includes('TÀI KHOẢN:') ||
+                  rawContent.includes('Tài khoản:') ||
+                  rawContent.includes('|');
+
+                // If Account, parse username, password, 2FA
+                let accUser = '';
+                let accPass = '';
+                let acc2FA = '';
+
+                if (isAcc) {
+                  if (rawContent.includes('|')) {
+                    const firstLine = rawContent.split('\n')[0].trim();
+                    const parts = firstLine.split('|');
+                    accUser = parts[0]?.trim() || '';
+                    accPass = parts[1]?.trim() || '';
+                    acc2FA = parts[2]?.trim() || '';
+                  } else {
+                    const uMatch = rawContent.match(/(?:Tài khoản|TÀI KHOẢN):\s*([^\n|]+)/i);
+                    const pMatch = rawContent.match(/(?:Mật khẩu|MẬT KHẨU):\s*([^\n|]+)/i);
+                    const fMatch = rawContent.match(/(?:2FA|Mã 2FA|Ghi chú):\s*([^\n|]+)/i);
+                    if (uMatch) accUser = uMatch[1].trim();
+                    if (pMatch) accPass = pMatch[1].trim();
+                    if (fMatch) acc2FA = fMatch[1].trim();
+                  }
+                }
+
+                // Extract URL if exists (non-account)
+                const urlMatch = !isAcc ? (prod?.downloadUrl || rawContent).match(/https?:\/\/[^\s]+/) : null;
+                const downloadLink = !isAcc ? (prod?.downloadUrl || (urlMatch ? urlMatch[0] : null)) : null;
                 
                 // Extract clean key
-                const cleanKey = prod?.licenseKeys || rawContent.replace(/https?:\/\/[^\s]+/g, '').trim() || rawContent;
+                const cleanKey = !isAcc ? (prod?.licenseKeys || rawContent.replace(/https?:\/\/[^\s]+/g, '').trim() || rawContent) : '';
+
+                if (isAcc) {
+                  return (
+                    <div className="space-y-3 pt-2">
+                      {/* Account Delivery Card */}
+                      <div className="p-4 rounded-2xl bg-[#0F0F1A] border border-cyan-500/30 space-y-3 shadow-inner">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] uppercase font-bold text-cyan-300 flex items-center gap-1.5">
+                            <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                            Thông Tin Tài Khoản & Mật Khẩu Bàn Giao
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyKey(rawContent)}
+                            className="text-xs font-bold text-cyan-300 hover:text-white flex items-center gap-1 transition-colors cursor-pointer bg-cyan-500/10 hover:bg-cyan-500/20 px-2.5 py-1 rounded-lg border border-cyan-500/20"
+                          >
+                            {copiedKey === rawContent ? (
+                              <span className="text-emerald-400 flex items-center gap-1">
+                                <Check className="w-3.5 h-3.5" /> Đã sao chép tất cả!
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1">
+                                <Copy className="w-3.5 h-3.5" /> Sao chép tất cả
+                              </span>
+                            )}
+                          </button>
+                        </div>
+
+                        {accUser || accPass ? (
+                          <div className="space-y-2">
+                            {/* Username Row */}
+                            {accUser && (
+                              <div className="p-2.5 rounded-xl bg-[#161626] border border-white/5 flex items-center justify-between gap-2">
+                                <div className="text-xs font-mono">
+                                  <span className="text-[#8B84A8] text-[10.5px] block font-sans">TÀI KHOẢN / EMAIL:</span>
+                                  <span className="text-cyan-300 font-bold text-sm select-all">{accUser}</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyKey(accUser)}
+                                  className="text-[11px] font-bold text-[#CBC7E0] hover:text-white px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 flex items-center gap-1 cursor-pointer shrink-0"
+                                >
+                                  {copiedKey === accUser ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                                  <span>{copiedKey === accUser ? 'Đã chép' : 'Sao chép TK'}</span>
+                                </button>
+                              </div>
+                            )}
+
+                            {/* Password Row */}
+                            {accPass && (
+                              <div className="p-2.5 rounded-xl bg-[#161626] border border-white/5 flex items-center justify-between gap-2">
+                                <div className="text-xs font-mono">
+                                  <span className="text-[#8B84A8] text-[10.5px] block font-sans">MẬT KHẨU:</span>
+                                  <span className="text-emerald-400 font-bold text-sm select-all">{accPass}</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyKey(accPass)}
+                                  className="text-[11px] font-bold text-[#CBC7E0] hover:text-white px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 flex items-center gap-1 cursor-pointer shrink-0"
+                                >
+                                  {copiedKey === accPass ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                                  <span>{copiedKey === accPass ? 'Đã chép' : 'Sao chép MK'}</span>
+                                </button>
+                              </div>
+                            )}
+
+                            {/* 2FA Row */}
+                            {acc2FA && (
+                              <div className="p-2.5 rounded-xl bg-[#161626] border border-white/5 flex items-center justify-between gap-2">
+                                <div className="text-xs font-mono">
+                                  <span className="text-[#8B84A8] text-[10.5px] block font-sans">2FA / GHI CHÚ:</span>
+                                  <span className="text-purple-300 font-bold text-xs select-all">{acc2FA}</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyKey(acc2FA)}
+                                  className="text-[11px] font-bold text-[#CBC7E0] hover:text-white px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 flex items-center gap-1 cursor-pointer shrink-0"
+                                >
+                                  {copiedKey === acc2FA ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                                  <span>{copiedKey === acc2FA ? 'Đã chép' : 'Sao chép 2FA'}</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="font-mono text-xs font-bold text-cyan-300 bg-[#0A0A10] p-3 rounded-xl border border-white/5 select-all whitespace-pre-wrap break-all leading-relaxed">
+                            {rawContent}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Instructions if available */}
+                      {prod?.instructions && (
+                        <div className="p-3 rounded-xl bg-purple-950/20 border border-purple-500/20 text-[11px] text-[#CBC7E0] space-y-1">
+                          <div className="font-bold text-[#9D5CF6]">📖 Hướng dẫn đăng nhập & đổi mật khẩu:</div>
+                          <div className="whitespace-pre-wrap">{prod.instructions}</div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
 
                 return (
                   <div className="space-y-3 pt-2">

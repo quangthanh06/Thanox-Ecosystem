@@ -51,6 +51,11 @@ export interface Product {
   updatedAt?: string;
   plans?: ProductPlan[]; // Danh sách gói thời hạn
   packages?: ProductPlan[]; // Alias for backward compatibility
+  productType?: 'key' | 'account' | 'file';
+  accountUsername?: string;
+  accountPassword?: string;
+  account2FA?: string;
+  accountsList?: string; // Danh sách tài khoản: tk|mk hoặc tk|mk|2fa (mỗi dòng 1 nick)
 }
 
 export interface Category {

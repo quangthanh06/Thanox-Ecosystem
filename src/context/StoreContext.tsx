@@ -922,6 +922,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const unitPrice = getItemEffectivePrice(item.product, buyer, item.selectedPackage);
       const itemTotal = unitPrice * item.quantity;
 
+      const isAcc =
+        item.product.category.toLowerCase().includes('tài khoản') ||
+        item.product.category.toLowerCase().includes('acc') ||
+        item.product.category.toLowerCase().includes('nick') ||
+        item.product.productType === 'account';
+
+      let deliveredText = item.product.downloadLinkOrKeys || 'Hệ thống đã giao sản phẩm thành công.';
+      let deliveredKey = item.product.downloadLinkOrKeys?.split('\n')[0] || 'KEY-AUTO-' + Math.floor(100000 + Math.random() * 900000);
+
+      if (isAcc) {
+        if (item.product.accountUsername || item.product.accountPassword) {
+          deliveredText = `🎮 TÀI KHOẢN: ${item.product.accountUsername || ''}\n🔑 MẬT KHẨU: ${item.product.accountPassword || ''}${item.product.account2FA ? `\n🛡️ 2FA / GHI CHÚ: ${item.product.account2FA}` : ''}`;
+          deliveredKey = `TK: ${item.product.accountUsername} | MK: ${item.product.accountPassword}`;
+        }
+      }
+
       const newOrder: Order = {
         id: 'ord-' + Date.now() + '-' + index,
         orderCode: itemCode,
@@ -939,8 +955,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         paymentMethod,
         status: 'completed',
         createdAt: nowStr,
-        deliveredContent: item.product.downloadLinkOrKeys || 'Hệ thống đã gửi mã kích hoạt đến email của bạn.',
-        key: item.product.downloadLinkOrKeys?.split('\n')[0] || 'KEY-AUTO-' + Math.floor(100000 + Math.random() * 900000),
+        deliveredContent: deliveredText,
+        key: deliveredKey,
         isSellerOrder: isSeller,
       };
 
@@ -1196,11 +1212,58 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       );
     }
 
-    const deliveredText =
-      selectedPackage?.keys ||
-      selectedPackage?.downloadUrl ||
-      product.downloadLinkOrKeys ||
-      'Hệ thống đã gửi link kích hoạt đến email của bạn.';
+    const isAccProduct =
+      product.category.toLowerCase().includes('tài khoản') ||
+      product.category.toLowerCase().includes('acc') ||
+      product.category.toLowerCase().includes('nick') ||
+      product.productType === 'account';
+
+    let deliveredText = '';
+    let deliveredKey = '';
+
+    if (isAccProduct) {
+      if (product.accountsList && product.accountsList.trim()) {
+        const lines = product.accountsList.split('\n').map((l) => l.trim()).filter(Boolean);
+        const firstAcc = lines[0] || '';
+        const remainingAccounts = lines.slice(1).join('\n');
+
+        // Update product remaining stock and accountsList
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === productId
+              ? {
+                  ...p,
+                  accountsList: remainingAccounts,
+                  stock: lines.length - 1,
+                  soldCount: (p.soldCount || 0) + quantity,
+                }
+              : p
+          )
+        );
+
+        if (firstAcc.includes('|')) {
+          const parts = firstAcc.split('|');
+          deliveredText = `🎮 TÀI KHOẢN: ${parts[0] || ''}\n🔑 MẬT KHẨU: ${parts[1] || ''}${parts[2] ? `\n🛡️ 2FA / GHI CHÚ: ${parts[2]}` : ''}`;
+          deliveredKey = `TK: ${parts[0]} | MK: ${parts[1]}`;
+        } else {
+          deliveredText = firstAcc;
+          deliveredKey = firstAcc;
+        }
+      } else if (product.accountUsername || product.accountPassword) {
+        deliveredText = `🎮 TÀI KHOẢN: ${product.accountUsername || ''}\n🔑 MẬT KHẨU: ${product.accountPassword || ''}${product.account2FA ? `\n🛡️ 2FA / GHI CHÚ: ${product.account2FA}` : ''}`;
+        deliveredKey = `TK: ${product.accountUsername} | MK: ${product.accountPassword}`;
+      } else {
+        deliveredText = product.downloadLinkOrKeys || 'Hệ thống đã ghi nhận đơn hàng tài khoản của bạn.';
+        deliveredKey = product.downloadLinkOrKeys || 'ACC-DELIVERED';
+      }
+    } else {
+      deliveredText =
+        selectedPackage?.keys ||
+        selectedPackage?.downloadUrl ||
+        product.downloadLinkOrKeys ||
+        'Hệ thống đã gửi link kích hoạt đến email của bạn.';
+      deliveredKey = deliveredText.split('\n')[0] || 'KEY-TX-' + Math.floor(100000 + Math.random() * 900000);
+    }
 
     const newOrder: Order = {
       id: 'ord-' + Date.now(),
@@ -1220,15 +1283,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       status: 'completed',
       createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
       deliveredContent: deliveredText,
-      key: deliveredText.split('\n')[0] || 'KEY-TX-' + Math.floor(100000 + Math.random() * 900000),
+      key: deliveredKey,
       packageName: selectedPackage?.name,
       isSellerOrder: isSeller,
     };
 
-    // Increment sold count
-    setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, soldCount: (p.soldCount || 0) + quantity } : p))
-    );
+    // Increment sold count (if not already incremented in accountsList handling)
+    if (!isAccProduct || !product.accountsList) {
+      setProducts((prev) =>
+        prev.map((p) => (p.id === productId ? { ...p, soldCount: (p.soldCount || 0) + quantity } : p))
+      );
+    }
 
     setOrders((prev) => [newOrder, ...prev]);
 
