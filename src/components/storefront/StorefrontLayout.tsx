@@ -24,6 +24,8 @@ import {
   LogIn,
   UserPlus,
   LogOut,
+  ShoppingBag,
+  Package,
 } from 'lucide-react';
 
 import { StorefrontHome } from './StorefrontHome';
@@ -487,9 +489,72 @@ export const StorefrontLayout: React.FC = () => {
       </header>
 
       {/* 3. MAIN STOREFRONT CONTENT */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-2 sm:px-6 lg:px-8 py-2 sm:py-6 pb-24 md:pb-8">
         <Outlet />
       </main>
+
+      {/* Fixed Mobile Bottom Navigation Bar (App-like navigation on smartphones) */}
+      <nav
+        aria-label="Mobile Navigation"
+        className="block md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0D1020]/95 backdrop-blur-2xl border-t border-slate-800/90 h-[68px] px-1 shadow-[0_-10px_25px_rgba(0,0,0,0.5)]"
+      >
+        <div className="grid grid-cols-5 h-full items-center">
+          {/* 1. Shop */}
+          <button
+            type="button"
+            onClick={() => navigateToStorefront('products')}
+            className="flex flex-col items-center justify-center gap-1 text-[#8B84A8] hover:text-[#22D3EE] active:text-[#22D3EE] transition-colors cursor-pointer py-1"
+          >
+            <Package className="w-5 h-5" />
+            <span className="text-[10.5px] font-bold">Shop</span>
+          </button>
+
+          {/* 2. Nạp */}
+          <button
+            type="button"
+            onClick={() => navigateToStorefront('account-wallet-deposit')}
+            className="flex flex-col items-center justify-center gap-1 text-[#8B84A8] hover:text-[#22D3EE] active:text-[#22D3EE] transition-colors cursor-pointer py-1"
+          >
+            <Wallet className="w-5 h-5" />
+            <span className="text-[10.5px] font-bold">Nạp</span>
+          </button>
+
+          {/* 3. Đơn */}
+          <button
+            type="button"
+            onClick={() => navigateToStorefront('account-orders')}
+            className="flex flex-col items-center justify-center gap-1 text-[#8B84A8] hover:text-[#22D3EE] active:text-[#22D3EE] transition-colors cursor-pointer py-1 relative"
+          >
+            <ShoppingBag className="w-5 h-5" />
+            <span className="text-[10.5px] font-bold">Đơn</span>
+            {cartItemsCount > 0 && (
+              <span className="absolute top-1 right-2 w-4 h-4 rounded-full bg-[#7C3AED] text-white text-[9px] font-black flex items-center justify-center">
+                {cartItemsCount}
+              </span>
+            )}
+          </button>
+
+          {/* 4. Hỗ trợ */}
+          <button
+            type="button"
+            onClick={() => navigateToStorefront('support')}
+            className="flex flex-col items-center justify-center gap-1 text-[#8B84A8] hover:text-[#22D3EE] active:text-[#22D3EE] transition-colors cursor-pointer py-1"
+          >
+            <MessageCircle className="w-5 h-5" />
+            <span className="text-[10.5px] font-bold">Hỗ trợ</span>
+          </button>
+
+          {/* 5. Tài khoản */}
+          <button
+            type="button"
+            onClick={() => navigateToStorefront('account')}
+            className="flex flex-col items-center justify-center gap-1 text-[#8B84A8] hover:text-[#22D3EE] active:text-[#22D3EE] transition-colors cursor-pointer py-1"
+          >
+            <User className="w-5 h-5" />
+            <span className="text-[10.5px] font-bold">Tài khoản</span>
+          </button>
+        </div>
+      </nav>
 
       {/* Floating Music Player for Customer */}
       <MusicPlayer />
