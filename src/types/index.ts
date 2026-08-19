@@ -31,8 +31,9 @@ export interface Product {
   price: number; // Base Price / Giá gốc
   memberPrice?: number; // Member price (default = price)
   sellerPrice?: number; // Seller price (default = memberPrice, configurable by Admin)
-  salePrice?: number; // Sale price (when saleActive is true)
-  saleActive?: boolean; // Whether product is currently on sale
+  isSale?: boolean; // Admin bật/tắt giảm giá SALE
+  salePrice?: number; // Giá sale khi bật isSale
+  saleActive?: boolean; // Alias for isSale
   originalPrice?: number;
   soldCount: number;
   sold?: number;
@@ -56,6 +57,9 @@ export interface Product {
   accountPassword?: string;
   account2FA?: string;
   accountsList?: string; // Danh sách tài khoản: tk|mk hoặc tk|mk|2fa (mỗi dòng 1 nick)
+  attachedFileName?: string; // Tên tệp đính kèm tải lên (VD: Thanox_v5.4.1.apk, menu.zip...)
+  attachedFileSize?: string; // Kích thước tệp (VD: 45.2 MB)
+  attachedFileData?: string; // Data base64 / URL của tệp để tải trực tiếp
 }
 
 export interface Category {

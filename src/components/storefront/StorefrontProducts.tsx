@@ -217,11 +217,11 @@ export const StorefrontProducts: React.FC = () => {
             const memberPrice = product.memberPrice ?? basePrice;
             const isSeller = currentUser?.role === 'seller' || currentUser?.sellerStatus === 'active' || currentUser?.sellerStatus === 'approved';
             const rolePrice = isSeller && product.sellerPrice !== undefined && product.sellerPrice > 0 ? product.sellerPrice : memberPrice;
-            const isSale = Boolean(product.saleActive && product.salePrice && product.salePrice > 0 && product.salePrice < rolePrice);
+            const isSale = Boolean((product.isSale ?? product.saleActive) && product.salePrice && product.salePrice > 0 && product.salePrice < rolePrice);
             const effectivePrice = isSale && product.salePrice ? product.salePrice : rolePrice;
-            const originalDisplayPrice = isSale ? rolePrice : (product.originalPrice && product.originalPrice > effectivePrice ? product.originalPrice : undefined);
+            const originalDisplayPrice = isSale ? rolePrice : undefined;
 
-            const discount = originalDisplayPrice && originalDisplayPrice > effectivePrice
+            const discount = isSale && originalDisplayPrice && originalDisplayPrice > effectivePrice
               ? Math.round(((originalDisplayPrice - effectivePrice) / originalDisplayPrice) * 100)
               : null;
 

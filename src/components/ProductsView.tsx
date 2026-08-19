@@ -34,6 +34,11 @@ import {
   Lock,
   Unlock,
   ShieldCheck,
+  FileUp,
+  FileText,
+  Percent,
+  Paperclip,
+  File as FileIcon,
 } from 'lucide-react';
 
 export const ProductsView: React.FC = () => {
@@ -56,7 +61,7 @@ export const ProductsView: React.FC = () => {
   // Form Drawer State
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [drawerTab, setDrawerTab] = useState<'basic' | 'packages' | 'images' | 'delivery'>('basic');
+  const [drawerTab, setDrawerTab] = useState<'basic' | 'pricing' | 'files' | 'packages' | 'images' | 'delivery'>('basic');
 
   // Package Form State
   const [pkgNameInput, setPkgNameInput] = useState('1 NGÀY');
@@ -81,7 +86,8 @@ export const ProductsView: React.FC = () => {
     name: string;
     category: string;
     price: number;
-    originalPrice: number;
+    isSale: boolean;
+    salePrice?: number;
     sellerPrice?: number;
     image?: string;
     images?: string[];
@@ -99,12 +105,16 @@ export const ProductsView: React.FC = () => {
     accountPassword?: string;
     account2FA?: string;
     accountsList?: string;
+    attachedFileName?: string;
+    attachedFileSize?: string;
+    attachedFileData?: string;
   }>({
     name: '',
     category: categories[0]?.name || 'File Android',
-    price: 50000,
-    originalPrice: 70000,
-    sellerPrice: 35000,
+    price: 0,
+    isSale: false,
+    salePrice: 0,
+    sellerPrice: 0,
     image: '',
     images: [],
     packages: [],
@@ -121,10 +131,45 @@ export const ProductsView: React.FC = () => {
     accountPassword: '',
     account2FA: '',
     accountsList: '',
+    attachedFileName: '',
+    attachedFileSize: '',
+    attachedFileData: '',
   });
 
   // Delete Dialog State
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  // File Upload Handlers (ALL File types: APK, ZIP, RAR, EXE, TXT, PDF, IPA...)
+  const handleAnyFileUpload = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const file = files[0];
+
+    const sizeInMB = file.size / (1024 * 1024);
+    const formattedSize = sizeInMB >= 1 ? `${sizeInMB.toFixed(1)} MB` : `${Math.round(file.size / 1024)} KB`;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      setFormData((prev) => ({
+        ...prev,
+        attachedFileName: file.name,
+        attachedFileSize: formattedSize,
+        attachedFileData: result,
+      }));
+      showToast(`Đã đính kèm tệp "${file.name}" (${formattedSize}) thành công!`, 'success');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeAttachedFile = () => {
+    setFormData((prev) => ({
+      ...prev,
+      attachedFileName: '',
+      attachedFileSize: '',
+      attachedFileData: '',
+    }));
+    showToast('Đã gỡ tệp đính kèm', 'info');
+  };
 
   const handleImageFilesUpload = (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -144,7 +189,7 @@ export const ProductsView: React.FC = () => {
             return {
               ...prev,
               images: newImages,
-              image: prev.image || result, // If no primary image set, set this one as primary
+              image: prev.image || result,
             };
           });
           showToast('Đã tải ảnh lên thành công!', 'success');
@@ -170,6 +215,7 @@ export const ProductsView: React.FC = () => {
     setFormData((prev) => ({
       ...prev,
       image: imgUrl,
+      images: [imgUrl, ...(prev.images || []).filter((im) => im !== imgUrl)],
     }));
     showToast('Đã đặt làm ảnh đại diện chính!', 'success');
   };
@@ -180,17 +226,13 @@ export const ProductsView: React.FC = () => {
     setFormData({
       name: '',
       category: categories[0]?.name || 'File Android',
-      price: 50000,
-      originalPrice: 70000,
-      sellerPrice: 35000,
+      price: 0,
+      isSale: false,
+      salePrice: 0,
+      sellerPrice: 0,
       image: '',
       images: [],
-      packages: [
-        { id: 'pkg-' + Date.now() + '-1', name: '1 NGÀY', price: 25000, originalPrice: 40000, sellerPrice: 15000 },
-        { id: 'pkg-' + Date.now() + '-2', name: '7 NGÀY', price: 60000, originalPrice: 90000, sellerPrice: 35000 },
-        { id: 'pkg-' + Date.now() + '-3', name: '30 NGÀY', price: 99000, originalPrice: 150000, sellerPrice: 60000 },
-        { id: 'pkg-' + Date.now() + '-4', name: 'VĨNH VIỄN', price: 199000, originalPrice: 300000, sellerPrice: 130000 },
-      ],
+      packages: [],
       stock: 'unlimited',
       status: 'active',
       description: '',
@@ -204,6 +246,9 @@ export const ProductsView: React.FC = () => {
       accountPassword: '',
       account2FA: '',
       accountsList: '',
+      attachedFileName: '',
+      attachedFileSize: '',
+      attachedFileData: '',
     });
     setIsDrawerOpen(true);
   };
@@ -239,20 +284,23 @@ export const ProductsView: React.FC = () => {
       }
     }
 
+    const regularPrice = product.price ?? product.basePrice ?? 0;
+    const hasSale = Boolean(
+      product.isSale ??
+      product.saleActive ??
+      (product.salePrice && product.salePrice > 0 && product.salePrice < regularPrice)
+    );
+
     setFormData({
       name: product.name,
       category: product.category,
-      price: product.price,
-      originalPrice: product.originalPrice || product.price,
-      sellerPrice: product.sellerPrice || Math.round(product.price * 0.7),
+      price: regularPrice,
+      isSale: hasSale,
+      salePrice: product.salePrice ?? 0,
+      sellerPrice: product.sellerPrice ?? regularPrice,
       image: product.image || '',
       images: product.images || (product.image ? [product.image] : []),
-      packages: isAccountCategory(product.category) ? [] : (product.packages || [
-        { id: 'pkg-' + Date.now() + '-1', name: '1 NGÀY', price: Math.round(product.price * 0.3), originalPrice: Math.round(product.price * 0.5), sellerPrice: Math.round(product.price * 0.2) },
-        { id: 'pkg-' + Date.now() + '-2', name: '7 NGÀY', price: Math.round(product.price * 0.7), originalPrice: product.price, sellerPrice: Math.round(product.price * 0.5) },
-        { id: 'pkg-' + Date.now() + '-3', name: '30 NGÀY', price: product.price, originalPrice: product.originalPrice || product.price, sellerPrice: product.sellerPrice || Math.round(product.price * 0.7) },
-        { id: 'pkg-' + Date.now() + '-4', name: 'VĨNH VIỄN', price: Math.round(product.price * 2), originalPrice: Math.round(product.price * 3), sellerPrice: Math.round(product.price * 1.4) },
-      ]),
+      packages: isAccountCategory(product.category) ? [] : (product.packages || []),
       stock: product.stock,
       status: product.status,
       description: product.description,
@@ -266,6 +314,9 @@ export const ProductsView: React.FC = () => {
       accountPassword: defaultAccPass,
       account2FA: defaultAcc2FA,
       accountsList: defaultAccList,
+      attachedFileName: product.attachedFileName || '',
+      attachedFileSize: product.attachedFileSize || '',
+      attachedFileData: product.attachedFileData || '',
     });
     setIsDrawerOpen(true);
   };
@@ -294,20 +345,30 @@ export const ProductsView: React.FC = () => {
       finalDelivery = formData.licenseKeys || formData.downloadUrl || formData.downloadLinkOrKeys;
     }
 
-    const payload = {
+    const finalSalePrice = formData.isSale && formData.salePrice && formData.salePrice > 0 ? formData.salePrice : undefined;
+    const finalSellerPrice = formData.sellerPrice && formData.sellerPrice > 0 ? formData.sellerPrice : formData.price;
+
+    const payload: Partial<Product> = {
       ...formData,
+      isSale: formData.isSale,
+      saleActive: formData.isSale,
+      salePrice: finalSalePrice,
+      sellerPrice: finalSellerPrice,
       packages: isAcc ? [] : formData.packages,
       licenseKeys: finalLicenseKeys,
       downloadLinkOrKeys: finalDelivery,
       downloadUrl: isAcc ? '' : formData.downloadUrl,
-      productType: isAcc ? ('account' as const) : ('key' as const),
+      attachedFileName: formData.attachedFileName,
+      attachedFileSize: formData.attachedFileSize,
+      attachedFileData: formData.attachedFileData,
+      productType: isAcc ? ('account' as const) : formData.attachedFileData ? ('file' as const) : ('key' as const),
     };
 
     if (editingProduct) {
       updateProduct(editingProduct.id, payload);
       showToast(`Đã cập nhật sản phẩm "${formData.name}"!`, 'success');
     } else {
-      addProduct(payload);
+      addProduct(payload as any);
       showToast(`Đã thêm mới sản phẩm "${formData.name}"!`, 'success');
     }
     setIsDrawerOpen(false);
@@ -318,7 +379,8 @@ export const ProductsView: React.FC = () => {
       name: `${product.name} (Bản sao)`,
       category: product.category,
       price: product.price,
-      originalPrice: product.originalPrice,
+      isSale: product.isSale ?? product.saleActive ?? false,
+      salePrice: product.salePrice,
       sellerPrice: product.sellerPrice,
       image: product.image,
       images: product.images,
@@ -335,6 +397,9 @@ export const ProductsView: React.FC = () => {
       accountPassword: product.accountPassword,
       account2FA: product.account2FA,
       accountsList: product.accountsList,
+      attachedFileName: product.attachedFileName,
+      attachedFileSize: product.attachedFileSize,
+      attachedFileData: product.attachedFileData,
     };
     addProduct(duplicatedData);
     showToast(`Đã nhân bản "${product.name}" (🔒 Đã khóa)`, 'success');
@@ -749,24 +814,51 @@ export const ProductsView: React.FC = () => {
         }
       >
         <div className="space-y-4 text-xs">
-          {/* Drawer Tab Switcher */}
-          <div className="flex items-center gap-1 bg-[#161626] p-1 rounded-2xl border border-white/10">
+          {/* Drawer Tab Switcher (Thanh ngang đa năng) */}
+          <div className="flex items-center gap-1 bg-[#161626] p-1 rounded-2xl border border-white/10 overflow-x-auto scrollbar-none">
             <button
               type="button"
               onClick={() => setDrawerTab('basic')}
-              className={`flex-1 py-2 rounded-xl text-center font-bold text-xs transition-all cursor-pointer ${
+              className={`flex-1 py-2 px-2.5 rounded-xl text-center font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer flex items-center justify-center gap-1 ${
                 drawerTab === 'basic'
                   ? 'bg-[#7C3AED] text-white shadow-sm'
                   : 'text-[#8B84A8] hover:text-white'
               }`}
             >
-              {isAccountCategory(formData.category) ? 'Thông Tin Acc' : 'Thông Tin'}
+              <FileText className="w-3.5 h-3.5" />
+              <span>1. Thông Tin</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setDrawerTab('pricing')}
+              className={`flex-1 py-2 px-2.5 rounded-xl text-center font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                drawerTab === 'pricing'
+                  ? 'bg-[#7C3AED] text-white shadow-sm'
+                  : 'text-[#8B84A8] hover:text-white'
+              }`}
+            >
+              <DollarSign className="w-3.5 h-3.5" />
+              <span>2. Giá & Sale & CTV</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setDrawerTab('files')}
+              className={`flex-1 py-2 px-2.5 rounded-xl text-center font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                drawerTab === 'files'
+                  ? 'bg-[#7C3AED] text-white shadow-sm'
+                  : 'text-[#8B84A8] hover:text-white'
+              }`}
+            >
+              <Paperclip className="w-3.5 h-3.5" />
+              <span>3. Tệp Đính Kèm {formData.attachedFileName ? '✓' : ''}</span>
             </button>
 
             <button
               type="button"
               onClick={() => setDrawerTab('packages')}
-              className={`flex-1 py-2 rounded-xl text-center font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 px-2.5 rounded-xl text-center font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer flex items-center justify-center gap-1 ${
                 drawerTab === 'packages'
                   ? 'bg-gradient-to-r from-[#7C3AED] to-[#06B6D4] text-white shadow-sm'
                   : 'text-[#8B84A8] hover:text-white'
@@ -775,12 +867,12 @@ export const ProductsView: React.FC = () => {
               {isAccountCategory(formData.category) ? (
                 <>
                   <ShieldCheck className="w-3.5 h-3.5 text-cyan-300" />
-                  <span>Kho Acc (TK|MK)</span>
+                  <span>4. Kho Acc</span>
                 </>
               ) : (
                 <>
                   <Key className="w-3.5 h-3.5 text-cyan-300" />
-                  <span>Gói Key ({(formData.packages || []).length})</span>
+                  <span>4. Gói Key ({(formData.packages || []).length})</span>
                 </>
               )}
             </button>
@@ -788,31 +880,34 @@ export const ProductsView: React.FC = () => {
             <button
               type="button"
               onClick={() => setDrawerTab('images')}
-              className={`flex-1 py-2 rounded-xl text-center font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 px-2.5 rounded-xl text-center font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer flex items-center justify-center gap-1 ${
                 drawerTab === 'images'
                   ? 'bg-[#7C3AED] text-white shadow-sm'
                   : 'text-[#8B84A8] hover:text-white'
               }`}
             >
               <ImageIcon className="w-3.5 h-3.5" />
-              <span>Ảnh ({(formData.images || []).length})</span>
+              <span>5. Ảnh ({(formData.images || []).length})</span>
             </button>
 
             <button
               type="button"
               onClick={() => setDrawerTab('delivery')}
-              className={`flex-1 py-2 rounded-xl text-center font-bold text-xs transition-all cursor-pointer ${
+              className={`flex-1 py-2 px-2.5 rounded-xl text-center font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer flex items-center justify-center gap-1 ${
                 drawerTab === 'delivery'
                   ? 'bg-[#7C3AED] text-white shadow-sm'
                   : 'text-[#8B84A8] hover:text-white'
               }`}
             >
-              Giao Tự Động
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>6. Giao Hàng</span>
             </button>
           </div>
 
           <form onSubmit={handleSave} className="space-y-4">
-            {/* TAB 1: BASIC INFO & PRICING */}
+            {/* ========================================================================= */}
+            {/* TAB 1: BASIC PRODUCT INFORMATION */}
+            {/* ========================================================================= */}
             {drawerTab === 'basic' && (
               <div className="space-y-4">
                 {/* 🔒 LOCK PRODUCT SWITCH (CHỐNG GHI ĐÈ KHI NÂNG CẤP) */}
@@ -847,133 +942,6 @@ export const ProductsView: React.FC = () => {
                   </label>
                 </div>
 
-                {/* Product Cover Image Upload (Direct from computer / URL) */}
-                <div className="p-3.5 rounded-2xl bg-[#161626]/80 border border-white/5 space-y-2">
-                  <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">
-                    Ảnh Bìa / Thumbnail Sản Phẩm
-                  </label>
-                  <div className="flex items-center gap-3.5">
-                    {/* Preview */}
-                    <div className="w-16 h-16 rounded-2xl bg-[#0F0F1A] border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0 relative shadow-inner">
-                      {formData.image ? (
-                        <>
-                          <img src={formData.image} alt="Preview" className="w-full h-full object-cover rounded-xl" />
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setFormData({
-                                ...formData,
-                                image: '',
-                                images: (formData.images || []).filter((im) => im !== formData.image),
-                              })
-                            }
-                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center text-[10px] cursor-pointer"
-                            title="Gỡ ảnh"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </>
-                      ) : (
-                        <Package className="w-6 h-6 text-[#6B658E]" />
-                      )}
-                    </div>
-
-                    {/* Actions */}
-                    <div className="space-y-2 flex-1">
-                      <input
-                        type="file"
-                        id="quick-product-cover-upload"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          if (!file.type.startsWith('image/')) {
-                            showToast('Vui lòng chọn file hình ảnh (PNG, JPG, WEBP)', 'error');
-                            return;
-                          }
-                          const reader = new FileReader();
-                          reader.onload = (event) => {
-                            const base64 = event.target?.result as string;
-                            setFormData((prev) => ({
-                              ...prev,
-                              image: base64,
-                              images: [base64, ...(prev.images || []).filter((im) => im !== base64)],
-                            }));
-                            showToast('Đã tải ảnh bìa sản phẩm thành công!', 'success');
-                          };
-                          reader.readAsDataURL(file);
-                        }}
-                      />
-
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="xs"
-                          onClick={() => document.getElementById('quick-product-cover-upload')?.click()}
-                          leftIcon={<Upload className="w-3.5 h-3.5 text-cyan-400" />}
-                          className="font-bold border-white/10 hover:border-cyan-400"
-                        >
-                          Tải ảnh từ máy tính
-                        </Button>
-                      </div>
-
-                      <input
-                        type="text"
-                        value={formData.image || ''}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setFormData((prev) => ({
-                            ...prev,
-                            image: val,
-                            images: val ? [val, ...(prev.images || []).filter((im) => im !== val)] : prev.images,
-                          }));
-                        }}
-                        placeholder="Hoặc dán link ảnh (https://...)"
-                        className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl px-3 py-1.5 text-[11px] text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED]"
-                      />
-
-                      {/* Preset Wallpapers */}
-                      <div className="pt-1.5 border-t border-white/5 space-y-1">
-                        <span className="text-[10px] text-[#6B658E] block font-semibold">
-                          Hoặc chọn nhanh ảnh mẫu có sẵn:
-                        </span>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                          {[
-                            { name: '⚡ Android Fix', url: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80' },
-                            { name: '🎯 Free Fire', url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=600&q=80' },
-                            { name: '🍎 iOS VIP', url: 'https://images.unsplash.com/photo-1512499617640-c74ae3a79d37?auto=format&fit=crop&w=600&q=80' },
-                            { name: '🔑 Key VIP', url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80' },
-                            { name: '🌐 Proxy IPv4', url: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=600&q=80' },
-                            { name: '🐉 Master Thanox', url: '/thanox-master-banner.jpg' },
-                          ].map((p, idx) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  image: p.url,
-                                  images: [p.url, ...(prev.images || []).filter((im) => im !== p.url)],
-                                }));
-                                showToast(`Đã chọn ảnh mẫu ${p.name}`, 'info');
-                              }}
-                              className={`px-2 py-1 rounded-lg text-[10px] font-semibold text-left truncate border transition-all cursor-pointer ${
-                                formData.image === p.url
-                                  ? 'bg-[#7C3AED]/20 border-[#7C3AED] text-white'
-                                  : 'bg-[#0F0F1A] border-white/5 text-[#8B84A8] hover:text-white hover:border-white/20'
-                              }`}
-                            >
-                              {p.name}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Product Name */}
                 <div className="space-y-1">
                   <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
@@ -984,7 +952,7 @@ export const ProductsView: React.FC = () => {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="VD: Thanox Pro V2.5 Android File"
+                    placeholder="VD: Thanox Pro V2.5 Android File hoặc Acc Free Fire VIP"
                     className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
                   />
                 </div>
@@ -993,7 +961,7 @@ export const ProductsView: React.FC = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
-                      Danh Mục
+                      Danh Mục Sản Phẩm
                     </label>
                     <select
                       value={formData.category}
@@ -1010,7 +978,7 @@ export const ProductsView: React.FC = () => {
 
                   <div className="space-y-1">
                     <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
-                      Trạng Thái
+                      Trạng Thái Hiển Thị
                     </label>
                     <select
                       value={formData.status}
@@ -1024,50 +992,48 @@ export const ProductsView: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Price, Original Price, and Seller Price (CTV) */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
-                      Giá Khách Lẻ (VNĐ) *
-                    </label>
+                {/* Stock Quantity */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                    Số Lượng Tồn Kho
+                  </label>
+                  <div className="flex items-center gap-3">
                     <input
-                      type="number"
-                      required
-                      min={0}
-                      step={1000}
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-                      className="w-full bg-[#161626] border border-white/10 rounded-xl px-3 py-2.5 text-xs text-emerald-400 font-bold focus:outline-none focus:border-[#7C3AED]"
+                      type="text"
+                      value={formData.stock}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData({
+                          ...formData,
+                          stock: val === 'unlimited' || val === '' ? 'unlimited' : (Number(val) || 0),
+                        });
+                      }}
+                      placeholder="unlimited hoặc số lượng"
+                      className="flex-1 bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
                     />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="xs"
+                      onClick={() => setFormData({ ...formData, stock: 'unlimited' })}
+                    >
+                      Không Giới Hạn
+                    </Button>
                   </div>
+                </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
-                      Giá Gốc Gạch Đi (VNĐ)
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      step={1000}
-                      value={formData.originalPrice}
-                      onChange={(e) => setFormData({ ...formData, originalPrice: Number(e.target.value) })}
-                      className="w-full bg-[#161626] border border-white/10 rounded-xl px-3 py-2.5 text-xs text-[#8B84A8] focus:outline-none focus:border-[#7C3AED]"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
-                      Giá Đại Lý / CTV (VNĐ)
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      step={1000}
-                      value={formData.sellerPrice ?? Math.round(formData.price * 0.7)}
-                      onChange={(e) => setFormData({ ...formData, sellerPrice: Number(e.target.value) })}
-                      className="w-full bg-[#161626] border border-white/10 rounded-xl px-3 py-2.5 text-xs text-cyan-400 font-bold focus:outline-none focus:border-[#7C3AED]"
-                    />
-                  </div>
+                {/* Description */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                    Mô Tả Tổng Quan Sản Phẩm
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Mô tả các tính năng ưu việt, tương thích thiết bị, cam kết bảo hành..."
+                    className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED]"
+                  />
                 </div>
 
                 {/* Featured Checkbox */}
@@ -1079,16 +1045,275 @@ export const ProductsView: React.FC = () => {
                     className="rounded bg-[#0F0F1A] border-white/10 text-[#7C3AED] focus:ring-0 w-4 h-4 cursor-pointer"
                   />
                   <div>
-                    <div className="font-semibold text-[#F0EDFF]">Ghim sản phẩm nổi bật (Featured)</div>
+                    <div className="font-semibold text-[#F0EDFF]">Ghim sản phẩm nổi bật (Featured / HOT)</div>
                     <div className="text-[10.5px] text-[#6B658E]">
-                      Hiển thị nhãn HOT và ưu tiên vị trí đầu tiên ngoài trang khách
+                      Hiển thị nhãn HOT và ưu tiên xếp đầu tiên trên trang chủ
                     </div>
                   </div>
                 </label>
               </div>
             )}
 
-            {/* TAB 2: ACCOUNTS STORAGE (FOR ACC GAME / ACC FF) OR PACKAGES (FOR KEYS / FILES) */}
+            {/* ========================================================================= */}
+            {/* TAB 2: PRICING & SALE DISCOUNT & SELLER/CTV PRICING */}
+            {/* ========================================================================= */}
+            {drawerTab === 'pricing' && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-[#161626] to-[#0F0F1A] border border-white/10 space-y-4">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                    <div>
+                      <h4 className="font-bold text-xs text-[#F0EDFF] flex items-center gap-1.5">
+                        <DollarSign className="w-4 h-4 text-emerald-400" />
+                        <span>Cấu Hình Giá Bán Ra & Giảm Giá SALE & CTV</span>
+                      </h4>
+                      <p className="text-[11px] text-[#8B84A8] mt-0.5">
+                        Kiểm soát 100% minh bạch: Giá bán lẻ, Bật/tắt giảm giá SALE, và Giá đại lý CTV.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 1. Regular Selling Price */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">
+                      1. Giá Bán Ra Tiêu Chuẩn (VNĐ) *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        required
+                        min={0}
+                        step={1000}
+                        value={formData.price || ''}
+                        onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) || 0 })}
+                        placeholder="VD: 50000"
+                        className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-emerald-400 font-black focus:outline-none focus:border-emerald-500"
+                      />
+                      <span className="absolute right-3.5 top-2.5 text-xs text-[#8B84A8] font-bold">VNĐ</span>
+                    </div>
+                    <p className="text-[10.5px] text-[#6B658E]">
+                      Giá bán thực tế cho khách vãng lai/thành viên khi không có chương trình khuyến mãi.
+                    </p>
+                  </div>
+
+                  {/* 2. SALE Discount Toggle & Sale Price */}
+                  <div className={`p-4 rounded-2xl border transition-all space-y-3 ${
+                    formData.isSale ? 'bg-red-950/20 border-red-500/40 shadow-inner' : 'bg-[#0F0F1A] border-white/5'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <div className="text-xs font-bold text-[#F0EDFF] flex items-center gap-1.5">
+                          <Percent className={`w-3.5 h-3.5 ${formData.isSale ? 'text-red-400' : 'text-[#8B84A8]'}`} />
+                          <span>Chương Trình Khuyến Mãi / Giảm Giá SALE</span>
+                          {formData.isSale && (
+                            <span className="px-1.5 py-0.2 rounded text-[9.5px] font-extrabold bg-red-600 text-white">
+                              ĐANG BẬT SALE
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10.5px] text-[#8B84A8]">
+                          {formData.isSale
+                            ? 'Ngoài web sẽ hiển thị Giá Sale (nổi bật), gạch ngang Giá Bán Ra cũ kèm nhãn [SALE].'
+                            : 'Hiện đang tắt. Ngoài web chỉ hiện DUY NHẤT 1 GIÁ BÁN RA (không gạch giá, không nhãn sale).'}
+                        </p>
+                      </div>
+
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={formData.isSale}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setFormData({
+                              ...formData,
+                              isSale: checked,
+                              salePrice: checked ? (formData.salePrice && formData.salePrice > 0 ? formData.salePrice : Math.round(formData.price * 0.8)) : 0,
+                            });
+                          }}
+                          className="sr-only peer"
+                        />
+                        <div className="w-10 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+                      </label>
+                    </div>
+
+                    {/* Sale Price Input when active */}
+                    {formData.isSale && (
+                      <div className="pt-2 border-t border-white/5 space-y-2">
+                        <label className="text-[10.5px] font-semibold text-red-300 uppercase block">
+                          Giá Khuyến Mãi / Flash SALE (VNĐ) *
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            min={0}
+                            step={1000}
+                            value={formData.salePrice || ''}
+                            onChange={(e) => setFormData({ ...formData, salePrice: Number(e.target.value) || 0 })}
+                            placeholder="VD: 39000"
+                            className="w-full bg-[#161626] border border-red-500/40 rounded-xl px-3.5 py-2.5 text-sm text-red-400 font-black focus:outline-none focus:border-red-500"
+                          />
+                          <span className="absolute right-3.5 top-2.5 text-xs text-red-300 font-bold">VNĐ</span>
+                        </div>
+
+                        {/* Live Discount Calculation Preview */}
+                        {formData.price > 0 && formData.salePrice && formData.salePrice > 0 && formData.salePrice < formData.price && (
+                          <div className="p-2.5 rounded-xl bg-red-950/40 border border-red-500/20 flex items-center justify-between text-xs">
+                            <span className="text-[#CBC7E0]">Mức giảm giá tự động:</span>
+                            <span className="font-extrabold text-red-400">
+                              Giảm {Math.round(((formData.price - formData.salePrice) / formData.price) * 100)}% (Tiết kiệm {(formData.price - formData.salePrice).toLocaleString('vi-VN')}đ)
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 3. Seller / CTV Pricing */}
+                  <div className="p-4 rounded-2xl bg-[#0F0F1A] border border-cyan-500/20 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-semibold text-cyan-300 uppercase tracking-wider block">
+                        3. Giá Bán Dành Cho Đại Lý / Cộng Tác Viên (CTV)
+                      </label>
+                      <Badge variant="cyan" size="sm">Đại Lý / CTV</Badge>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min={0}
+                        step={1000}
+                        value={formData.sellerPrice || ''}
+                        onChange={(e) => setFormData({ ...formData, sellerPrice: Number(e.target.value) || 0 })}
+                        placeholder="Để trống hoặc điền 0 nếu không giảm"
+                        className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-cyan-300 font-bold focus:outline-none focus:border-cyan-400"
+                      />
+                      <span className="absolute right-3.5 top-2.5 text-xs text-[#8B84A8] font-bold">VNĐ</span>
+                    </div>
+                    <p className="text-[10.5px] text-[#8B84A8] leading-relaxed">
+                      💡 <em>Nếu để trống hoặc điền 0, CTV sẽ mua theo đúng giá bán ra bình thường (không giảm gì cả).</em>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* TAB 3: FILE ATTACHMENTS (FOR ALL FILE TYPES: APK, ZIP, RAR, EXE, TXT...) */}
+            {/* ========================================================================= */}
+            {drawerTab === 'files' && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-[#161626] to-[#0F0F1A] border border-cyan-500/30 space-y-4">
+                  <div>
+                    <h4 className="font-bold text-xs text-[#F0EDFF] flex items-center gap-1.5">
+                      <FileUp className="w-4 h-4 text-cyan-400" />
+                      <span>Đính Kèm Tệp Cài Đặt (Hỗ Trợ TẤT CẢ Loại Tệp: APK, ZIP, RAR, EXE, TXT...)</span>
+                    </h4>
+                    <p className="text-[11px] text-[#8B84A8] mt-0.5">
+                      Cho phép bạn tải tệp trực tiếp từ máy tính lên hệ thống hoặc cung cấp link tải Google Drive/OneDrive.
+                    </p>
+                  </div>
+
+                  {/* 1. Direct Computer File Uploader */}
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">
+                      1. Tải Tệp Trực Tiếp Từ Máy Tính (ALL Loại Tệp)
+                    </label>
+
+                    <input
+                      type="file"
+                      id="product-any-file-upload"
+                      accept="*/*"
+                      className="hidden"
+                      onChange={(e) => handleAnyFileUpload(e.target.files)}
+                    />
+
+                    {formData.attachedFileName ? (
+                      <div className="p-4 rounded-2xl bg-[#0F0F1A] border border-emerald-500/40 space-y-3 shadow-inner">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                              <FileIcon className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <div className="font-mono font-bold text-xs text-emerald-300 select-all">
+                                {formData.attachedFileName}
+                              </div>
+                              <div className="text-[10px] text-[#8B84A8]">
+                                Dung lượng: {formData.attachedFileSize || 'Sẵn sàng tải xuống'} • Đã sẵn sàng bàn giao
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {formData.attachedFileData && (
+                              <a
+                                href={formData.attachedFileData}
+                                download={formData.attachedFileName}
+                                className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-[11px] flex items-center gap-1 border border-emerald-500/30 cursor-pointer"
+                              >
+                                <Download className="w-3.5 h-3.5" /> Tải thử
+                              </a>
+                            )}
+                            <button
+                              type="button"
+                              onClick={removeAttachedFile}
+                              className="p-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 cursor-pointer"
+                              title="Gỡ tệp"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => document.getElementById('product-any-file-upload')?.click()}
+                        className="border-2 border-dashed border-cyan-500/30 hover:border-cyan-400 bg-[#0F0F1A] rounded-2xl p-6 text-center transition-colors cursor-pointer space-y-2"
+                      >
+                        <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-500/30 mx-auto flex items-center justify-center text-cyan-400">
+                          <Upload className="w-6 h-6" />
+                        </div>
+                        <div className="font-bold text-xs text-[#F0EDFF]">
+                          Bấm vào đây để chọn tệp từ máy tính (APK, ZIP, RAR, EXE, TXT, PDF, IPA...)
+                        </div>
+                        <div className="text-[11px] text-[#8B84A8]">
+                          Hỗ trợ mọi định dạng tệp tin. Khách hàng sẽ có nút 1-click tải trực tiếp trong đơn hàng.
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 2. External Download URL */}
+                  <div className="space-y-1.5 pt-2 border-t border-white/5">
+                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-cyan-300">
+                        <Download className="w-3.5 h-3.5" />
+                        <span>2. Hoặc Nhập Link Tải Ngoài (Google Drive / OneDrive / MediaFire)</span>
+                      </span>
+                      {formData.downloadUrl && (
+                        <a
+                          href={formData.downloadUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[10px] text-cyan-400 hover:underline"
+                        >
+                          Mở link thử &rarr;
+                        </a>
+                      )}
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.downloadUrl || ''}
+                      onChange={(e) => setFormData({ ...formData, downloadUrl: e.target.value })}
+                      placeholder="https://drive.google.com/file/d/.../view?usp=sharing"
+                      className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-cyan-300 font-mono focus:outline-none focus:border-cyan-400"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* TAB 4: ACCOUNTS STORAGE (FOR ACC GAME / ACC FF) OR PACKAGES (FOR KEYS) */}
+            {/* ========================================================================= */}
             {drawerTab === 'packages' && (
               <div className="space-y-4">
                 {isAccountCategory(formData.category) ? (
@@ -1351,7 +1576,7 @@ export const ProductsView: React.FC = () => {
                           rows={2}
                           value={pkgKeysInput}
                           onChange={(e) => setPkgKeysInput(e.target.value)}
-                          placeholder="Nếu để trống sẽ tự động lấy nội dung giao ở Tab 'Giao Tự Động'..."
+                          placeholder="Nếu để trống sẽ tự động lấy nội dung giao ở Tab 'Giao Hàng'..."
                           className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl p-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
                         />
                       </div>
@@ -1499,7 +1724,9 @@ export const ProductsView: React.FC = () => {
               </div>
             )}
 
-            {/* TAB 3: LOCAL COMPUTER IMAGE UPLOAD & GALLERY */}
+            {/* ========================================================================= */}
+            {/* TAB 5: LOCAL COMPUTER IMAGE UPLOAD & GALLERY */}
+            {/* ========================================================================= */}
             {drawerTab === 'images' && (
               <div className="space-y-4">
                 {/* Upload from Computer Drag & Drop Area */}
@@ -1623,7 +1850,9 @@ export const ProductsView: React.FC = () => {
               </div>
             )}
 
-            {/* TAB 4: AUTO DELIVERY & FILE DOWNLOAD & INSTRUCTIONS */}
+            {/* ========================================================================= */}
+            {/* TAB 6: AUTO DELIVERY PREVIEW & INSTRUCTIONS */}
+            {/* ========================================================================= */}
             {drawerTab === 'delivery' && (
               <div className="space-y-4">
                 {isAccountCategory(formData.category) ? (
@@ -1675,41 +1904,43 @@ export const ProductsView: React.FC = () => {
                 ) : (
                   /* ================= AUTO DELIVERY FOR REGULAR FILES & KEYS ================= */
                   <div className="space-y-4">
-                    {/* 1. Direct Download Link */}
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider flex items-center justify-between">
-                        <span className="flex items-center gap-1.5 text-cyan-400">
-                          <Download className="w-3.5 h-3.5" />
-                          <span>1. Link Tải File Cài Đặt (Google Drive / OneDrive / Direct Link)</span>
-                        </span>
-                        {formData.downloadUrl && (
-                          <a
-                            href={formData.downloadUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-[10px] text-[#9D5CF6] hover:underline"
-                          >
-                            Mở link thử &rarr;
-                          </a>
-                        )}
-                      </label>
-                      <input
-                        type="url"
-                        value={formData.downloadUrl || ''}
-                        onChange={(e) => setFormData({ ...formData, downloadUrl: e.target.value })}
-                        placeholder="https://drive.google.com/file/d/.../view?usp=sharing"
-                        className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-cyan-300 placeholder-[#6B658E] font-mono focus:outline-none focus:border-[#7C3AED]"
-                      />
-                      <span className="text-[10px] text-[#6B658E]">
-                        Link này sẽ hiển thị thành nút &ldquo;📥 Tải File Cài Đặt&rdquo; trong chi tiết đơn hàng của khách.
-                      </span>
+                    {/* 1. Attached File / Direct Link Delivery Preview */}
+                    <div className="p-4 rounded-2xl bg-[#0F0F1A] border border-cyan-500/30 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-bold text-xs text-cyan-300 flex items-center gap-1.5">
+                          <Download className="w-4 h-4 text-cyan-400" />
+                          <span>Tệp Cài Đặt Khách Hàng Sẽ Nhận</span>
+                        </h4>
+                        <Badge variant="cyan" size="sm">Download 1-Click</Badge>
+                      </div>
+
+                      {formData.attachedFileName ? (
+                        <div className="p-3 rounded-xl bg-[#161626] border border-emerald-500/30 flex items-center justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <FileIcon className="w-5 h-5 text-emerald-400" />
+                            <div>
+                              <div className="font-bold text-xs text-emerald-300 font-mono">{formData.attachedFileName}</div>
+                              <div className="text-[10.5px] text-[#8B84A8]">{formData.attachedFileSize || 'File tải trực tiếp'}</div>
+                            </div>
+                          </div>
+                          <span className="text-[10.5px] text-emerald-400 font-bold">✓ Tệp đính kèm</span>
+                        </div>
+                      ) : formData.downloadUrl ? (
+                        <div className="p-3 rounded-xl bg-[#161626] border border-cyan-500/30 font-mono text-xs text-cyan-300 truncate">
+                          🔗 Link tải: {formData.downloadUrl}
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-[#8B84A8]">
+                          Chưa có tệp đính kèm hoặc link tải. Hãy bổ sung ở Tab <strong>"3. Tệp Đính Kèm"</strong>.
+                        </p>
+                      )}
                     </div>
 
                     {/* 2. License Key / Auto Delivery Content */}
                     <div className="space-y-1">
                       <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider flex items-center gap-1.5 text-amber-300">
                         <Key className="w-3.5 h-3.5" />
-                        <span>2. Mã License Key / Khóa Kích Hoạt Tự Động</span>
+                        <span>Mã License Key / Khóa Kích Hoạt Tự Động (Tùy chọn)</span>
                       </label>
                       <textarea
                         rows={3}
@@ -1733,7 +1964,7 @@ export const ProductsView: React.FC = () => {
                     <div className="space-y-1">
                       <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider flex items-center gap-1.5 text-emerald-400">
                         <Sparkles className="w-3.5 h-3.5" />
-                        <span>3. Hướng Dẫn Cài Đặt & Lưu Ý Kỹ Thuật (Tùy chọn)</span>
+                        <span>Hướng Dẫn Cài Đặt & Kích Hoạt (Tùy chọn)</span>
                       </label>
                       <textarea
                         rows={3}
@@ -1745,20 +1976,6 @@ export const ProductsView: React.FC = () => {
                     </div>
                   </div>
                 )}
-
-                {/* 4. Description */}
-                <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
-                    4. Mô Tả Tổng Quan Sản Phẩm
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Mô tả các tính năng ưu việt, tương thích thiết bị..."
-                    className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED]"
-                  />
-                </div>
               </div>
             )}
           </form>

@@ -25,15 +25,16 @@ export const StorefrontCart: React.FC = () => {
 
   const [paymentMethod, setPaymentMethod] = useState<'wallet' | 'bank'>('wallet');
 
-  const getItemEffectivePrice = (product: typeof cart[0]['product']) => {
-    if (currentUser?.sellerStatus === 'active' && product.sellerPrice) {
-      return product.sellerPrice;
-    }
-    return product.price;
+  const getItemEffectivePrice = (product: typeof cart[0]['product'], selectedPlan?: any) => {
+    if (selectedPlan && selectedPlan.price > 0) return selectedPlan.price;
+    const isSeller = currentUser?.role === 'seller' || currentUser?.sellerStatus === 'active' || currentUser?.sellerStatus === 'approved';
+    const rolePrice = isSeller && product.sellerPrice && product.sellerPrice > 0 ? product.sellerPrice : (product.price || 0);
+    const isSale = Boolean((product.isSale ?? product.saleActive) && product.salePrice && product.salePrice > 0 && product.salePrice < rolePrice);
+    return isSale && product.salePrice ? product.salePrice : rolePrice;
   };
 
   const totalAmount = cart.reduce(
-    (sum, item) => sum + getItemEffectivePrice(item.product) * item.quantity,
+    (sum, item) => sum + getItemEffectivePrice(item.product, item.selectedPackage) * item.quantity,
     0
   );
   const isBalanceSufficient = currentUser.balance >= totalAmount;

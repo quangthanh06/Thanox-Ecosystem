@@ -716,8 +716,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         ? product.sellerPrice
         : memberPrice;
 
-    // 4. Sale price priority: if Admin enabled saleActive and salePrice is set
-    if (product.saleActive && product.salePrice && product.salePrice > 0 && product.salePrice < rolePrice) {
+    // 4. Sale price priority: if Admin enabled isSale / saleActive and salePrice is set
+    const isSale = Boolean((product.isSale ?? product.saleActive) && product.salePrice && product.salePrice > 0 && product.salePrice < rolePrice);
+    if (isSale && product.salePrice) {
       return product.salePrice;
     }
 

@@ -280,6 +280,34 @@ export const StorefrontOrders: React.FC = () => {
 
                 return (
                   <div className="space-y-3 pt-2">
+                    {/* Direct Attached File Download (If Admin uploaded file directly) */}
+                    {prod?.attachedFileName && prod?.attachedFileData && (
+                      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-[#161626] to-[#06B6D4]/20 border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                            <Download className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <div className="font-display font-bold text-xs text-[#F0EDFF]">
+                              Tệp Đính Kèm: <span className="text-emerald-300 font-mono">{prod.attachedFileName}</span>
+                            </div>
+                            <div className="text-[10.5px] text-[#8B84A8]">
+                              Dung lượng: {prod.attachedFileSize || 'Sẵn sàng tải xuống'} • Bàn giao trực tiếp
+                            </div>
+                          </div>
+                        </div>
+
+                        <a
+                          href={prod.attachedFileData}
+                          download={prod.attachedFileName}
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-teal-500 hover:to-emerald-500 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/25 transition-transform active:scale-95 text-center shrink-0 cursor-pointer"
+                        >
+                          <Download className="w-4 h-4" />
+                          <span>📥 Tải Tệp Về Máy Ngay</span>
+                        </a>
+                      </div>
+                    )}
+
                     {/* Direct Download Button */}
                     {downloadLink && (
                       <div className="p-3.5 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-[#161626] to-[#7C3AED]/20 border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">

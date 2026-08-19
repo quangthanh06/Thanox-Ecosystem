@@ -522,11 +522,11 @@ export const StorefrontProductDetail: React.FC = () => {
   const rolePrice = isSeller ? sellerPrice : memberPrice;
 
   const isProductSale = Boolean(
-    product.saleActive && product.salePrice && product.salePrice > 0 && product.salePrice < rolePrice
+    (product.isSale ?? product.saleActive) && product.salePrice && product.salePrice > 0 && product.salePrice < rolePrice
   );
   const productCurrentPrice = isProductSale && product.salePrice ? product.salePrice : rolePrice;
-  const productOriginalPrice = isProductSale ? rolePrice : (product.originalPrice && product.originalPrice > productCurrentPrice ? product.originalPrice : undefined);
-  const productDiscountPercent = productOriginalPrice && productOriginalPrice > productCurrentPrice
+  const productOriginalPrice = isProductSale ? rolePrice : undefined;
+  const productDiscountPercent = isProductSale && productOriginalPrice && productOriginalPrice > productCurrentPrice
     ? Math.round(((productOriginalPrice - productCurrentPrice) / productOriginalPrice) * 100)
     : undefined;
 

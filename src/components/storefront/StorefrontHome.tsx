@@ -516,9 +516,9 @@ export const StorefrontHome: React.FC = () => {
                     const memberPrice = prod.memberPrice ?? basePrice;
                     const isSeller = currentUser?.role === 'seller' || currentUser?.sellerStatus === 'active' || currentUser?.sellerStatus === 'approved';
                     const rolePrice = isSeller && prod.sellerPrice !== undefined && prod.sellerPrice > 0 ? prod.sellerPrice : memberPrice;
-                    const isSale = Boolean(prod.saleActive && prod.salePrice && prod.salePrice > 0 && prod.salePrice < rolePrice);
+                    const isSale = Boolean((prod.isSale ?? prod.saleActive) && prod.salePrice && prod.salePrice > 0 && prod.salePrice < rolePrice);
                     const displayPrice = isSale && prod.salePrice ? prod.salePrice : rolePrice;
-                    const displayOriginalPrice = isSale ? rolePrice : (prod.originalPrice && prod.originalPrice > displayPrice ? prod.originalPrice : undefined);
+                    const displayOriginalPrice = isSale ? rolePrice : undefined;
 
                     return (
                       <>
@@ -569,38 +569,56 @@ export const StorefrontHome: React.FC = () => {
       {/* 6. STEP-BY-STEP PROCESS */}
       <section className="bg-[#0F0F1A] border border-white/10 rounded-3xl p-6 sm:p-10 space-y-6">
         <div className="text-center max-w-xl mx-auto space-y-1.5">
-          <h3 className="font-display text-xl sm:text-2xl font-bold text-[#F0EDFF]">
+          <h3
+            style={themeTypo.fontStyle}
+            className={`text-xl sm:text-2xl ${themeTypo.headingClass}`}
+          >
             Quy Trình Mua Hàng & Nhận Key 3 Bước
           </h3>
           <p className="text-xs text-[#8B84A8]">Hệ thống vận hành tự động 100% không cần chờ đợi thủ công</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-          <div className="p-5 rounded-2xl bg-[#161626] border border-white/5 text-center space-y-3 relative">
-            <div className="w-12 h-12 rounded-2xl bg-[#7C3AED]/20 border border-[#7C3AED]/40 flex items-center justify-center text-[#9D5CF6] font-display font-black text-lg mx-auto">
+          <div className="p-5 rounded-2xl bg-[#161626] border border-white/5 text-center space-y-3 relative group hover:border-[#7C3AED]/50 transition-all shadow-lg">
+            <div className="w-12 h-12 rounded-2xl bg-[#7C3AED]/20 border border-[#7C3AED]/40 flex items-center justify-center text-[#9D5CF6] font-display font-black text-lg mx-auto shadow-md">
               1
             </div>
-            <h4 className="font-display font-bold text-sm text-[#F0EDFF]">Nạp Tiền Ví VietQR</h4>
+            <h4
+              style={themeTypo.fontStyle}
+              className={`text-sm ${themeTypo.headingClass}`}
+            >
+              1. Nạp Tiền Ví VietQR
+            </h4>
             <p className="text-xs text-[#8B84A8] leading-relaxed">
               Quét mã VietQR tự động. Tiền vào ví chỉ sau 1-3 phút.
             </p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#161626] border border-white/5 text-center space-y-3 relative">
-            <div className="w-12 h-12 rounded-2xl bg-[#06B6D4]/20 border border-[#06B6D4]/40 flex items-center justify-center text-[#06B6D4] font-display font-black text-lg mx-auto">
+          <div className="p-5 rounded-2xl bg-[#161626] border border-white/5 text-center space-y-3 relative group hover:border-[#06B6D4]/50 transition-all shadow-lg">
+            <div className="w-12 h-12 rounded-2xl bg-[#06B6D4]/20 border border-[#06B6D4]/40 flex items-center justify-center text-[#06B6D4] font-display font-black text-lg mx-auto shadow-md">
               2
             </div>
-            <h4 className="font-display font-bold text-sm text-[#F0EDFF]">Chọn Sản Phẩm & Mua</h4>
+            <h4
+              style={themeTypo.fontStyle}
+              className={`text-sm ${themeTypo.headingClass}`}
+            >
+              2. Chọn Sản Phẩm & Mua
+            </h4>
             <p className="text-xs text-[#8B84A8] leading-relaxed">
               Nhấn Mua Ngay để thanh toán tức thì bằng số dư ví tài khoản.
             </p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#161626] border border-white/5 text-center space-y-3 relative">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-display font-black text-lg mx-auto">
+          <div className="p-5 rounded-2xl bg-[#161626] border border-white/5 text-center space-y-3 relative group hover:border-emerald-500/50 transition-all shadow-lg">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-display font-black text-lg mx-auto shadow-md">
               3
             </div>
-            <h4 className="font-display font-bold text-sm text-[#F0EDFF]">Nhận Key & Tải File</h4>
+            <h4
+              style={themeTypo.fontStyle}
+              className={`text-sm ${themeTypo.headingClass}`}
+            >
+              3. Nhận Key & Tải File
+            </h4>
             <p className="text-xs text-[#8B84A8] leading-relaxed">
               Mã kích hoạt hoặc link tải hiển thị ngay trong mục Đơn Hàng.
             </p>
