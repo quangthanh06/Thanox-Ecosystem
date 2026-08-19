@@ -39,6 +39,7 @@ import { StorefrontTransactions } from './StorefrontTransactions';
 import { StorefrontSupport } from './StorefrontSupport';
 import { StorefrontAffiliate } from './StorefrontAffiliate';
 import { MusicPlayer } from './MusicPlayer';
+import { getThemeTypography } from '../../utils/themeStyles';
 
 export const StorefrontLayout: React.FC = () => {
   const {
@@ -51,6 +52,8 @@ export const StorefrontLayout: React.FC = () => {
     cart,
     settings,
   } = useStore();
+
+  const themeTypo = getThemeTypography(settings);
 
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -130,7 +133,10 @@ export const StorefrontLayout: React.FC = () => {
                 </div>
               </div>
               <div className="flex flex-col">
-                <span className="thanox-animated-logo text-xl sm:text-[23px] font-black tracking-wider uppercase leading-tight">
+                <span
+                  className={`${themeTypo.logoClass} text-xl sm:text-[23px] tracking-wider uppercase leading-tight`}
+                  style={themeTypo.fontStyle}
+                >
                   THANOX.VN
                 </span>
                 <span className="hidden sm:block text-[9.5px] uppercase tracking-widest text-[#8B84A8] font-extrabold -mt-0.5">
@@ -148,6 +154,7 @@ export const StorefrontLayout: React.FC = () => {
                     ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40'
                     : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
                 }`}
+                style={themeTypo.fontStyle}
               >
                 <span>Trang Chủ</span>
               </Link>
@@ -158,6 +165,7 @@ export const StorefrontLayout: React.FC = () => {
                     ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40'
                     : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
                 }`}
+                style={themeTypo.fontStyle}
               >
                 <span>Sản Phẩm</span>
               </Link>
@@ -168,6 +176,7 @@ export const StorefrontLayout: React.FC = () => {
                     ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40'
                     : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
                 }`}
+                style={themeTypo.fontStyle}
               >
                 <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400/20" />
                 <span className="text-amber-300">Nạp Tiền VietQR</span>
@@ -179,6 +188,7 @@ export const StorefrontLayout: React.FC = () => {
                     ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40'
                     : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
                 }`}
+                style={themeTypo.fontStyle}
               >
                 <span>Đơn Hàng & Key</span>
               </Link>
@@ -189,6 +199,7 @@ export const StorefrontLayout: React.FC = () => {
                     ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40'
                     : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
                 }`}
+                style={themeTypo.fontStyle}
               >
                 <span>Giới Thiệu</span>
               </Link>
@@ -199,6 +210,7 @@ export const StorefrontLayout: React.FC = () => {
                     ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40'
                     : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
                 }`}
+                style={themeTypo.fontStyle}
               >
                 <span>Hỗ Trợ</span>
               </Link>
@@ -229,11 +241,14 @@ export const StorefrontLayout: React.FC = () => {
             {/* Cart Button */}
             <button
               onClick={() => navigateToStorefront('cart')}
-              className="relative p-2.5 rounded-xl bg-[#161626] border border-white/10 hover:border-white/20 text-[#CBC7E0] hover:text-white transition-all cursor-pointer"
+              className="relative p-2.5 sm:px-3 sm:py-2 rounded-xl bg-[#161626] border border-white/10 hover:border-[#7C3AED]/50 text-[#CBC7E0] hover:text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-md group"
+              style={themeTypo.fontStyle}
+              title="Giỏ hàng"
             >
-              <ShoppingCart className="w-4 h-4" />
+              <ShoppingCart className={`w-4 h-4 transition-transform group-hover:scale-110 ${themeTypo.isFlowEnabled ? 'text-[#22D3EE]' : 'text-white'}`} />
+              <span className={`hidden md:inline-block text-xs ${themeTypo.navClass}`}>Giỏ Hàng</span>
               {cartItemsCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#7C3AED] text-white text-[10px] font-extrabold flex items-center justify-center shadow-md">
+                <span className="w-4 h-4 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white text-[10px] font-black flex items-center justify-center shadow-lg animate-pulse">
                   {cartItemsCount}
                 </span>
               )}
@@ -360,12 +375,17 @@ export const StorefrontLayout: React.FC = () => {
               </Button>
             )}
 
-            {/* Mobile Menu Toggle */}
+            {/* Mobile Menu Toggle (Ba gạch) */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-xl bg-[#161626] border border-white/10 text-white cursor-pointer"
+              className="md:hidden p-2.5 rounded-xl bg-[#161626] border border-white/10 hover:border-[#7C3AED]/50 text-white cursor-pointer active:scale-95 transition-all shadow-md"
+              aria-label="Menu"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className={`w-5 h-5 ${themeTypo.isFlowEnabled ? 'text-[#22D3EE]' : 'text-white'}`} />
+              )}
             </button>
           </div>
         </div>
@@ -436,24 +456,17 @@ export const StorefrontLayout: React.FC = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   className="block w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
                 >
-                  Đơn Hàng & License Key
+                  Đơn hàng & License Key
                 </Link>
                 <Link
-                  to="/account"
+                  to="/affiliate"
                   onClick={() => setMobileMenuOpen(false)}
                   className="block w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
                 >
-                  Hồ Sơ & Cài Đặt
+                  Giới thiệu nhận hoa hồng
                 </Link>
               </>
             )}
-            <Link
-              to="/affiliate"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
-            >
-              Giới Thiệu & Kiếm Tiền
-            </Link>
             <Link
               to="/support"
               onClick={() => setMobileMenuOpen(false)}
@@ -493,7 +506,7 @@ export const StorefrontLayout: React.FC = () => {
         <Outlet />
       </main>
 
-      {/* Fixed Mobile Bottom Navigation Bar (App-like navigation on smartphones) */}
+      {/* Fixed Mobile Bottom Navigation Bar (App-like chunky navigation on smartphones) */}
       <nav
         aria-label="Mobile Navigation"
         className="block md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0D1020]/95 backdrop-blur-2xl border-t border-slate-800/90 h-[68px] px-1 shadow-[0_-10px_25px_rgba(0,0,0,0.5)]"
@@ -503,32 +516,83 @@ export const StorefrontLayout: React.FC = () => {
           <button
             type="button"
             onClick={() => navigateToStorefront('products')}
-            className="flex flex-col items-center justify-center gap-1 text-[#8B84A8] hover:text-[#22D3EE] active:text-[#22D3EE] transition-colors cursor-pointer py-1"
+            className="flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 group active:scale-95"
+            style={themeTypo.fontStyle}
           >
-            <Package className="w-5 h-5" />
-            <span className="text-[10.5px] font-bold">Shop</span>
+            <Package
+              className={`w-5 h-5 transition-transform group-hover:scale-110 ${
+                storefrontPage === 'products'
+                  ? themeTypo.isFlowEnabled
+                    ? 'text-[#22D3EE]'
+                    : 'text-white'
+                  : 'text-[#8B84A8]'
+              }`}
+            />
+            <span
+              className={`text-[11px] ${
+                storefrontPage === 'products'
+                  ? themeTypo.navClass
+                  : 'text-[#8B84A8] font-bold'
+              }`}
+            >
+              Shop
+            </span>
           </button>
 
           {/* 2. Nạp */}
           <button
             type="button"
             onClick={() => navigateToStorefront('account-wallet-deposit')}
-            className="flex flex-col items-center justify-center gap-1 text-[#8B84A8] hover:text-[#22D3EE] active:text-[#22D3EE] transition-colors cursor-pointer py-1"
+            className="flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 group active:scale-95"
+            style={themeTypo.fontStyle}
           >
-            <Wallet className="w-5 h-5" />
-            <span className="text-[10.5px] font-bold">Nạp</span>
+            <Wallet
+              className={`w-5 h-5 transition-transform group-hover:scale-110 ${
+                storefrontPage === 'account-wallet-deposit'
+                  ? themeTypo.isFlowEnabled
+                    ? 'text-[#22D3EE]'
+                    : 'text-white'
+                  : 'text-[#8B84A8]'
+              }`}
+            />
+            <span
+              className={`text-[11px] ${
+                storefrontPage === 'account-wallet-deposit'
+                  ? themeTypo.navClass
+                  : 'text-[#8B84A8] font-bold'
+              }`}
+            >
+              Nạp
+            </span>
           </button>
 
           {/* 3. Đơn */}
           <button
             type="button"
             onClick={() => navigateToStorefront('account-orders')}
-            className="flex flex-col items-center justify-center gap-1 text-[#8B84A8] hover:text-[#22D3EE] active:text-[#22D3EE] transition-colors cursor-pointer py-1 relative"
+            className="flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 relative group active:scale-95"
+            style={themeTypo.fontStyle}
           >
-            <ShoppingBag className="w-5 h-5" />
-            <span className="text-[10.5px] font-bold">Đơn</span>
+            <ShoppingBag
+              className={`w-5 h-5 transition-transform group-hover:scale-110 ${
+                storefrontPage === 'account-orders'
+                  ? themeTypo.isFlowEnabled
+                    ? 'text-[#22D3EE]'
+                    : 'text-white'
+                  : 'text-[#8B84A8]'
+              }`}
+            />
+            <span
+              className={`text-[11px] ${
+                storefrontPage === 'account-orders'
+                  ? themeTypo.navClass
+                  : 'text-[#8B84A8] font-bold'
+              }`}
+            >
+              Đơn
+            </span>
             {cartItemsCount > 0 && (
-              <span className="absolute top-1 right-2 w-4 h-4 rounded-full bg-[#7C3AED] text-white text-[9px] font-black flex items-center justify-center">
+              <span className="absolute top-1 right-2 w-4 h-4 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white text-[9px] font-black flex items-center justify-center shadow-lg">
                 {cartItemsCount}
               </span>
             )}
@@ -538,20 +602,54 @@ export const StorefrontLayout: React.FC = () => {
           <button
             type="button"
             onClick={() => navigateToStorefront('support')}
-            className="flex flex-col items-center justify-center gap-1 text-[#8B84A8] hover:text-[#22D3EE] active:text-[#22D3EE] transition-colors cursor-pointer py-1"
+            className="flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 group active:scale-95"
+            style={themeTypo.fontStyle}
           >
-            <MessageCircle className="w-5 h-5" />
-            <span className="text-[10.5px] font-bold">Hỗ trợ</span>
+            <MessageCircle
+              className={`w-5 h-5 transition-transform group-hover:scale-110 ${
+                storefrontPage === 'support'
+                  ? themeTypo.isFlowEnabled
+                    ? 'text-[#22D3EE]'
+                    : 'text-white'
+                  : 'text-[#8B84A8]'
+              }`}
+            />
+            <span
+              className={`text-[11px] ${
+                storefrontPage === 'support'
+                  ? themeTypo.navClass
+                  : 'text-[#8B84A8] font-bold'
+              }`}
+            >
+              Hỗ trợ
+            </span>
           </button>
 
           {/* 5. Tài khoản */}
           <button
             type="button"
             onClick={() => navigateToStorefront('account')}
-            className="flex flex-col items-center justify-center gap-1 text-[#8B84A8] hover:text-[#22D3EE] active:text-[#22D3EE] transition-colors cursor-pointer py-1"
+            className="flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 group active:scale-95"
+            style={themeTypo.fontStyle}
           >
-            <User className="w-5 h-5" />
-            <span className="text-[10.5px] font-bold">Tài khoản</span>
+            <User
+              className={`w-5 h-5 transition-transform group-hover:scale-110 ${
+                storefrontPage === 'account'
+                  ? themeTypo.isFlowEnabled
+                    ? 'text-[#22D3EE]'
+                    : 'text-white'
+                  : 'text-[#8B84A8]'
+              }`}
+            />
+            <span
+              className={`text-[11px] ${
+                storefrontPage === 'account'
+                  ? themeTypo.navClass
+                  : 'text-[#8B84A8] font-bold'
+              }`}
+            >
+              Tài khoản
+            </span>
           </button>
         </div>
       </nav>

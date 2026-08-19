@@ -104,9 +104,61 @@ html, body {
   }
 }
 
+:root {
+  --thanox-font-family: 'Space Grotesk', system-ui, sans-serif;
+  --thanox-title-weight: 900;
+}
+
+.thanox-title-font {
+  font-family: var(--thanox-font-family);
+  font-weight: var(--thanox-title-weight);
+}
+
+.thanox-flow-rainbow {
+  background: linear-gradient(270deg, #FFFFFF 0%, #22D3EE 20%, #A855F7 40%, #EC4899 60%, #06B6D4 80%, #FFFFFF 100%);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: thanoxColorFlow 4s ease infinite;
+}
+
+.thanox-flow-white {
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  background: none !important;
+}
+
+.thanox-flow-cyan {
+  background: linear-gradient(270deg, #FFFFFF 0%, #22D3EE 30%, #06B6D4 70%, #FFFFFF 100%);
+  background-size: 250% 250%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: thanoxColorFlow 4s ease infinite;
+}
+
+.thanox-flow-purple {
+  background: linear-gradient(270deg, #FFFFFF 0%, #A855F7 30%, #C084FC 70%, #FFFFFF 100%);
+  background-size: 250% 250%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: thanoxColorFlow 4s ease infinite;
+}
+
+.thanox-flow-flame {
+  background: linear-gradient(270deg, #FFFFFF 0%, #F43F5E 30%, #FB923C 70%, #FFFFFF 100%);
+  background-size: 250% 250%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: thanoxColorFlow 4s ease infinite;
+}
+
+.thanox-glow {
+  filter: drop-shadow(0 0 12px rgba(168, 85, 247, 0.45));
+}
+
 .thanox-animated-logo {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
-  font-weight: 900;
+  font-family: var(--thanox-font-family);
+  font-weight: var(--thanox-title-weight);
   letter-spacing: 0.04em;
   background: linear-gradient(270deg, #FFFFFF 0%, #22D3EE 20%, #A855F7 40%, #EC4899 60%, #06B6D4 80%, #FFFFFF 100%);
   background-size: 300% 300%;

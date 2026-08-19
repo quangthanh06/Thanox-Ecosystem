@@ -367,4 +367,14 @@ export const INITIAL_SETTINGS: StoreSettings = {
     hotlineZalo: '0916396901',
     telegramContact: '@quangthank',
   },
+  typography: {
+    fontFamily: 'Space Grotesk',
+    titleWeight: 'black',
+    enableColorFlow: true,
+    colorMode: 'rainbow_flow',
+    enableTextGlow: true,
+    enableChunkyTitles: true,
+    applyToNavAndButtons: true,
+    applyToSectionHeadings: true,
+  },
 };

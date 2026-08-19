@@ -22,6 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import { getThemeTypography } from '../../utils/themeStyles';
 
 export const StorefrontHome: React.FC = () => {
   const {
@@ -34,6 +35,8 @@ export const StorefrontHome: React.FC = () => {
     currentUser,
     showToast,
   } = useStore();
+
+  const themeTypo = getThemeTypography(settings);
 
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
   const [localSearch, setLocalSearch] = useState<string>('');
@@ -228,7 +231,10 @@ export const StorefrontHome: React.FC = () => {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-display text-lg sm:text-xl font-bold text-[#F0EDFF] flex items-center gap-2">
+            <h2
+              className={`${themeTypo.headingClass} text-lg sm:text-xl flex items-center gap-2 uppercase tracking-wide`}
+              style={themeTypo.fontStyle}
+            >
               <span>Danh Mục Sản Phẩm</span>
             </h2>
             <p className="text-xs text-[#8B84A8]">Khám phá các danh mục công cụ game phổ biến</p>
@@ -266,7 +272,10 @@ export const StorefrontHome: React.FC = () => {
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display text-lg sm:text-xl font-bold text-[#F0EDFF] flex items-center gap-2">
+              <h2
+                className={`${themeTypo.headingClass} text-lg sm:text-xl flex items-center gap-2 uppercase tracking-wide`}
+                style={themeTypo.fontStyle}
+              >
                 <Flame className="w-5 h-5 text-amber-400 animate-pulse" />
                 <span>Sản Phẩm Nổi Bật & Bán Chạy</span>
               </h2>
@@ -390,8 +399,11 @@ export const StorefrontHome: React.FC = () => {
       <section className="space-y-6 pt-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="font-display text-lg sm:text-xl font-bold text-[#F0EDFF]">
-              Tất Cả Sản Phẩm
+            <h2
+              className={`${themeTypo.headingClass} text-lg sm:text-xl uppercase tracking-wide`}
+              style={themeTypo.fontStyle}
+            >
+              Tất Cả Sản Phẩm & Key Bản Quyền
             </h2>
             <p className="text-xs text-[#8B84A8]">
               Hiển thị {filteredProducts.length} sản phẩm sẵn sàng kích hoạt

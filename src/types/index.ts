@@ -274,6 +274,17 @@ export interface StoreEffects {
   autoMusic: boolean;
 }
 
+export interface TypographySettings {
+  fontFamily: 'Space Grotesk' | 'Plus Jakarta Sans' | 'Inter' | 'Manrope' | 'Outfit' | 'Orbitron';
+  titleWeight: 'bold' | 'extrabold' | 'black';
+  enableColorFlow: boolean;
+  colorMode: 'rainbow_flow' | 'pure_white' | 'cyber_cyan' | 'neon_purple' | 'flame_fire';
+  enableTextGlow: boolean;
+  enableChunkyTitles: boolean;
+  applyToNavAndButtons: boolean;
+  applyToSectionHeadings: boolean;
+}
+
 export interface HeroBannerSettings {
   backgroundImage: string;
   brightness: number; // 10 - 100%
@@ -291,6 +302,7 @@ export interface StoreSettings {
   telegramLink: string;
   botUsername?: string;
   facebookFanpage: string;
+  typography?: TypographySettings;
   
   // Banking / VietQR Config
   bankEnabled: boolean;

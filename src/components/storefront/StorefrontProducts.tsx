@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   ChevronDown,
 } from 'lucide-react';
+import { getThemeTypography } from '../../utils/themeStyles';
 
 export const StorefrontProducts: React.FC = () => {
   const {
@@ -24,8 +25,11 @@ export const StorefrontProducts: React.FC = () => {
     addToCart,
     createOrder,
     currentUser,
+    settings,
     showToast,
   } = useStore();
+
+  const themeTypo = getThemeTypography(settings);
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -83,7 +87,10 @@ export const StorefrontProducts: React.FC = () => {
         </div>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <h1 className="font-display text-xl sm:text-3xl font-extrabold text-[#F0EDFF] tracking-tight">
+            <h1
+              className={`${themeTypo.headingClass} text-xl sm:text-3xl tracking-tight uppercase`}
+              style={themeTypo.fontStyle}
+            >
               Kho Sản Phẩm & Key Bản Quyền
             </h1>
             <p className="text-[11px] sm:text-xs text-[#8B84A8] mt-0.5">
