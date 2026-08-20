@@ -100,7 +100,7 @@ export const StorefrontLayout: React.FC = () => {
 
       {/* 1. TOP ANNOUNCEMENT BAR */}
       {(settings.announcementBar?.enabled ?? settings.announcementEnabled) && (
-        <div className="bg-gradient-to-r from-[#7C3AED] via-[#6D28D9] to-[#06B6D4] text-white text-[11px] sm:text-xs font-semibold py-1.5 px-4 text-center flex items-center justify-center gap-2 shadow-sm">
+        <div className="bg-[#161626]/80 backdrop-blur-md border-b border-white/5 text-[#E2E8F0] text-[11px] sm:text-xs font-semibold py-2 px-4 text-center flex items-center justify-center gap-2 shadow-sm">
           <Sparkles className="w-3.5 h-3.5 flex-shrink-0 animate-pulse" />
           <span>{settings.announcementBar?.text || settings.announcementText || 'Khuyến mãi nạp tiền tự động qua VietQR — Giao key tức thì 24/7!'}</span>
           {settings.announcementBar?.linkText && (

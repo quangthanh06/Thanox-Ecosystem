@@ -237,7 +237,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         if (error) throw error;
         
-        if (data && data.length > 0) {
+        if (data) {
           const mappedProducts: Product[] = data.map((p) => ({
             id: p.id,
             name: p.name,
@@ -271,7 +271,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
           if (error) throw error;
           
-          if (data && data.length > 0) {
+          if (data) {
             const mappedUsers: User[] = data.map((u) => ({
               id: u.id,
               username: u.username,

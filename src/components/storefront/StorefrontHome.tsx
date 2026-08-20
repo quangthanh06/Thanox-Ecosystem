@@ -166,13 +166,13 @@ export const StorefrontHome: React.FC = () => {
             <div className="lg:col-span-5 hidden lg:flex justify-center items-center">
               <div
                 onClick={() => navigateToStorefront('product-detail', currentSlide.id)}
-                className="relative w-full max-w-sm aspect-[4/3] rounded-3xl bg-gradient-to-b from-white/10 to-white/5 border border-white/15 p-2 shadow-2xl backdrop-blur-md overflow-hidden group/card cursor-pointer hover:border-cyan-400/50 transition-all hover:scale-105"
+                className="relative w-full max-w-xl aspect-auto rounded-3xl bg-gradient-to-b from-white/10 to-white/5 border border-white/15 p-2 shadow-2xl backdrop-blur-md overflow-hidden group/card cursor-pointer hover:border-cyan-400/50 transition-all hover:scale-105"
               >
                 {currentSlide.image ? (
                   <img
                     src={currentSlide.image}
                     alt={currentSlide.name}
-                    className="w-full h-full object-cover rounded-2xl"
+                    className="w-full h-full object-contain rounded-2xl"
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center bg-[#121220] rounded-2xl p-6 text-center space-y-2">
