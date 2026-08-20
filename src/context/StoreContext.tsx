@@ -285,6 +285,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               joinDate: new Date(u.created_at).toISOString().replace('T', ' ').substring(0, 16),
             }));
             
+            
+            // T? d?ng kh�i ph?c t�i kho?n admin n?u database tr?ng (gi�p user kh�ng b? kh�a ngo�i)
+            const hasAdmin = mappedUsers.some(u => u.role === 'admin');
+            if (!hasAdmin) {
+              const defaultAdmin = INITIAL_USERS.find(u => u.role === 'admin');
+              if (defaultAdmin) {
+                mappedUsers.push(defaultAdmin);
+                // �?y l?i l�n Cloud ng?m
+                supabase.from('users').upsert({
+                  id: defaultAdmin.id,
+                  username: defaultAdmin.username,
+                  email: defaultAdmin.email,
+                  password: defaultAdmin.password,
+                  role: 'admin',
+                  balance: 0,
+                  status: 'active'
+                }).then();
+              }
+            }
+            
             setUsers(mappedUsers);
           }
         } catch (err) {
