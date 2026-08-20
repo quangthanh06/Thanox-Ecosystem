@@ -96,8 +96,8 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ product, isSeller, disc
             <img
               src={productImage}
               alt={product.name}
-              className="product-main-image w-full h-full object-cover block transition-transform duration-500 hover:scale-[1.03]"
-              style={{ aspectRatio: '16 / 10', objectFit: 'cover' }}
+              className="product-main-image w-full h-full object-contain block transition-transform duration-500 hover:scale-[1.03]"
+              style={{ aspectRatio: '16 / 10', objectFit: 'contain' }}
             />
           ) : (
             <div className="flex flex-col items-center justify-center p-6 text-center select-none">
