@@ -169,7 +169,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   // Cart State with LocalStorage
-  const [cart, setCart] = useState<CartItem[]>(() => safeGetItem('thanox_cart', []));
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    const loaded = safeGetItem<CartItem[]>('thanox_cart', []);
+    return Array.isArray(loaded) ? loaded : [];
+  });
 
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -236,9 +239,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return Array.isArray(loaded) ? loaded : [];
   });
 
-  const [resetTokens, setResetTokens] = useState<{ email: string; otp: string; expiresAt: number }[]>(() =>
-    safeGetItem('thanox_reset_tokens', [])
-  );
+  const [resetTokens, setResetTokens] = useState<{ email: string; otp: string; expiresAt: number }[]>(() => {
+    const loaded = safeGetItem('thanox_reset_tokens', []);
+    return Array.isArray(loaded) ? loaded : [];
+  });
 
   // Active referral code tracked in current session
   const [activeReferralCode, setActiveReferralCode] = useState<string | null>(() => {
@@ -249,17 +253,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   });
 
-  const [tickets, setTickets] = useState<SupportTicket[]>(() =>
-    safeGetItem('thanox_tickets', INITIAL_TICKETS)
-  );
+  const [tickets, setTickets] = useState<SupportTicket[]>(() => {
+    const loaded = safeGetItem<SupportTicket[]>('thanox_tickets', INITIAL_TICKETS);
+    return Array.isArray(loaded) ? loaded : INITIAL_TICKETS;
+  });
 
-  const [settings, setSettings] = useState<StoreSettings>(() =>
-    safeGetItem('thanox_settings', INITIAL_SETTINGS)
-  );
+  const [settings, setSettings] = useState<StoreSettings>(() => {
+    const loaded = safeGetItem<StoreSettings>('thanox_settings', INITIAL_SETTINGS);
+    return loaded && typeof loaded === 'object' && !Array.isArray(loaded) ? loaded : INITIAL_SETTINGS;
+  });
 
-  const [notifications, setNotifications] = useState<AppNotification[]>(() =>
-    safeGetItem('thanox_notifications', [])
-  );
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+    const loaded = safeGetItem<AppNotification[]>('thanox_notifications', []);
+    return Array.isArray(loaded) ? loaded : [];
+  });
 
   // Current active user authentication state (null if not logged in)
   const [currentUserId, setCurrentUserId] = useState<string | null>(() =>
