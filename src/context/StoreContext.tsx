@@ -90,8 +90,8 @@ interface StoreContextType {
   login: (identifier: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; message?: string }>;
   register: (username: string, email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
-  requestPasswordReset: (email: string) => { success: boolean; message?: string; otp?: string };
-  resetPassword: (email: string, otpOrToken: string, newPassword: string) => { success: boolean; message?: string };
+  requestPasswordReset: (email: string) => Promise<{ success: boolean; message?: string; otp?: string }>;
+  resetPassword: (email: string, otpOrToken: string, newPassword: string) => Promise<{ success: boolean; message?: string }>;
   adminResetPassword: (userId: string, newPass: string) => { success: boolean; message: string };
   updateUserProfile: (updates: Partial<User>) => void;
 
@@ -265,7 +265,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const fetchSupabaseUsers = async () => {
         try {
           const { data, error } = await supabase
-            .from('users')
+            .from('profiles')
             .select('*')
             .order('created_at', { ascending: false });
 
@@ -276,7 +276,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               id: u.id,
               username: u.username,
               email: u.email,
-              password: u.password,
+              password: '***',
               role: u.role as 'admin' | 'user',
               balance: Number(u.balance) || 0,
               totalSpent: Number(u.total_spent) || 0,
@@ -304,7 +304,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               };
               mappedUsers.push(newAdmin);
               
-              supabase.from('users').upsert({
+              supabase.from('profiles').upsert({
                 id: newAdminId,
                 username: newAdmin.username,
                 email: newAdmin.email,
@@ -414,10 +414,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return Array.isArray(loaded) ? loaded : [];
   });
 
-  // Current active user authentication state (null if not logged in)
-  const [currentUserId, setCurrentUserId] = useState<string | null>(() =>
-    safeGetItem('thanox_current_user_id', null)
-  );
+  // Current active user authentication state
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) setCurrentUserId(session.user.id);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setCurrentUserId(session.user.id);
+        fetchSupabaseUsers(); // Re-fetch to ensure the new user's profile is in the list
+      } else {
+        setCurrentUserId(null);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   const fallbackUser: User = {
     id: 'guest',
@@ -1917,10 +1930,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             role: 'admin',
             status: 'active'
           };
-          supabase.from('users').upsert({...data, balance: 0}).then();
+          supabase.from('profiles').upsert({...data, balance: 0}).then();
         } else {
           const res = await supabase
-            .from('users')
+            .from('profiles')
             .select('*')
             .or(`username.ilike.${cleanId},email.ilike.${cleanId}`)
             .eq('password', password)
@@ -1963,20 +1976,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     try {
       // Check username duplicate
-      const { data: dupUser } = await supabase.from('users').select('id').eq('username', cleanUsername);
+      const { data: dupUser } = await supabase.from('profiles').select('id').eq('username', cleanUsername);
       if (dupUser && dupUser.length > 0) {
         return { success: false, message: 'Tên đăng nhập này đã được sử dụng. Vui lòng chọn tên khác.' };
       }
       
       // Check email duplicate
-      const { data: dupEmail } = await supabase.from('users').select('id').eq('email', cleanEmail);
+      const { data: dupEmail } = await supabase.from('profiles').select('id').eq('email', cleanEmail);
       if (dupEmail && dupEmail.length > 0) {
         return { success: false, message: 'Địa chỉ email này đã được liên kết với một tài khoản khác.' };
       }
       
       const newId = crypto.randomUUID ? crypto.randomUUID() : 'user-' + Date.now();
 
-      const { error } = await supabase.from('users').insert({
+      const { error } = await supabase.from('profiles').insert({
         id: newId,
         username: cleanUsername,
         email: cleanEmail,
@@ -2138,7 +2151,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (updates.status !== undefined) dbUpdates.status = updates.status;
 
       if (Object.keys(dbUpdates).length > 0) {
-        const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
+        const { error } = await supabase.from('profiles').update(dbUpdates).eq('id', id);
         if (error) throw error;
       }
       showToast('Đã cập nhật thông tin người dùng trên Cloud', 'success');
@@ -2158,7 +2171,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setUsers((prev) => prev.filter((u) => u.id !== id));
     
     try {
-      const { error } = await supabase.from('users').delete().eq('id', id);
+      const { error } = await supabase.from('profiles').delete().eq('id', id);
       if (error) throw error;
       showToast(`Đã xóa tài khoản ${target.username} trên Cloud thành công`, 'success');
     } catch (e) {
@@ -2190,7 +2203,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     syncTransactionToSupabase(newTx);
 
     try {
-      const { error } = await supabase.from('users').update({ balance: newBalance }).eq('id', userId);
+      const { error } = await supabase.from('profiles').update({ balance: newBalance }).eq('id', userId);
       if (error) throw error;
       showToast(
         `Đã ${amount >= 0 ? 'cộng' : 'trừ'} ${Math.abs(amount).toLocaleString('vi-VN')}đ vào ví của ${targetUser.username} trên Cloud`,
@@ -2209,7 +2222,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status: newStatus } : u)));
     
     try {
-      const { error } = await supabase.from('users').update({ status: newStatus }).eq('id', id);
+      const { error } = await supabase.from('profiles').update({ status: newStatus }).eq('id', id);
       if (error) throw error;
       showToast(`Đã ${newStatus === 'banned' ? 'khóa' : 'mở khóa'} tài khoản ${user.username} trên Cloud`, newStatus === 'banned' ? 'error' : 'success');
     } catch (e) {

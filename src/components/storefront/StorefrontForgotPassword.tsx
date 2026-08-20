@@ -44,7 +44,7 @@ export const StorefrontForgotPassword: React.FC = () => {
 
     setIsLoading(true);
     setTimeout(() => {
-      const res = requestPasswordReset(cleanEmail);
+      const res = await requestPasswordReset(cleanEmail);
       setIsLoading(false);
       if (res.success) {
         setStep('reset');
@@ -55,7 +55,7 @@ export const StorefrontForgotPassword: React.FC = () => {
     }, 400);
   };
 
-  const handleResetSubmit = (e: React.FormEvent) => {
+  const handleResetSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
