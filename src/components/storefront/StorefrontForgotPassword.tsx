@@ -43,50 +43,53 @@ export const StorefrontForgotPassword: React.FC = () => {
     }
 
     setIsLoading(true);
-    setTimeout(async () => {
+    try {
       const res = await requestPasswordReset(cleanEmail);
       setIsLoading(false);
       if (res.success) {
         setStep('reset');
-        setSuccessMessage(`Mã xác thực 6 số đã được tạo cho email ${cleanEmail}. Vui lòng nhập mã và mật khẩu mới bên dưới.`);
+        setSuccessMessage('Đã gửi liên kết đặt lại mật khẩu vào email của bạn. Vui lòng kiểm tra hộp thư.');
       } else {
-        setErrorMessage(res.message || 'Không tìm thấy tài khoản với email này');
+        setErrorMessage(res.message || 'Có lỗi xảy ra');
       }
-    }, 400);
+    } catch (err) {
+      setIsLoading(false);
+      setErrorMessage('Lỗi hệ thống');
+    }
   };
 
   const handleResetSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
-    if (!resetCode || resetCode.length < 6) {
-      setErrorMessage('Vui l�ng nh?p m� x�c th?c g?m 6 ch? s?');
+    if (!resetCode || resetCode.trim().length < 6) {
+      setErrorMessage('Vui lòng nhập mã xác thực OTP 6 số');
       return;
     }
 
     if (!newPassword || newPassword.length < 6) {
-      setErrorMessage('M?t kh?u m?i ph?i c� �t nh?t 6 k� t?');
+      setErrorMessage('Mật khẩu mới phải có ít nhất 6 ký tự');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setErrorMessage('M?t kh?u x�c nh?n kh�ng kh?p');
+      setErrorMessage('Mật khẩu xác nhận không khớp');
       return;
     }
 
     setIsLoading(true);
     try {
-      const res = await resetPassword(email.trim().toLowerCase(), resetCode.trim(), newPassword);
+      const res = await requestPasswordReset(cleanEmail);
       setIsLoading(false);
       if (res.success) {
-        showToast('�?t l?i m?t kh?u th�nh c�ng! H�y dang nh?p v?i m?t kh?u m?i.', 'success');
-        navigate('/login', { replace: true });
+        setStep('reset');
+        setSuccessMessage('Đã gửi liên kết đặt lại mật khẩu vào email của bạn. Vui lòng kiểm tra hộp thư.');
       } else {
-        setErrorMessage(res.message || 'M� x�c th?c kh�ng ch�nh x�c ho?c d� h?t h?n');
+        setErrorMessage(res.message || 'Có lỗi xảy ra');
       }
     } catch (err) {
       setIsLoading(false);
-      setErrorMessage('L?i h? th?ng');
+      setErrorMessage('Lỗi hệ thống');
     }
   };
 

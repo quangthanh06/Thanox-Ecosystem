@@ -80,26 +80,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
 
   const handleVerifyTotpTest = () => {
     if (!totpTestCode.trim()) {
-      showToast('Vui l�ng nh?p m� 6 s? t? Google Authenticator tr�n di?n tho?i', 'error');
+      showToast('Vui lòng nhập mã 6 số từ Google Authenticator trên điện thoại', 'error');
       return;
     }
-    // N?u c� m� t?m th� test m� t?m, n?u kh�ng th� test m� hi?n t?i
-    const secretToTest = pendingTwoFactorSecret || formData.twoFactorSecret || 'JBSWY3DPEHPK3PXP';
+    const secret = formData.twoFactorSecret || 'JBSWY3DPEHPK3PXP';
     const backup = formData.twoFactorBackupCode || '888999';
-    const res = verifyTotpCode(secretToTest, totpTestCode.trim(), backup);
+    const res = verifyTotpCode(secret, totpTestCode.trim(), backup);
     setTotpTestResult(res);
     if (res.valid) {
-      if (pendingTwoFactorSecret) {
-        // �p d?ng ngay v�o formData v� C?p nh?t DB
-        setFormData((prev) => ({ ...prev, twoFactorSecret: pendingTwoFactorSecret }));
-        updateSettings({ twoFactorSecret: pendingTwoFactorSecret });
-        setPendingTwoFactorSecret(null); // �� x�c nh?n xong
-        showToast('?? M� OTP ch�nh x�c! Secret Key m?i d� du?c �p d?ng v� LUU v�o h? th?ng.', 'success');
-      } else {
-        showToast('? M� OTP ch�nh x�c! Google Authenticator dang ho?t d?ng t?t.', 'success');
-      }
+      showToast('✅ Mã OTP chính xác! Google Authenticator đã kết nối thành công với Shop.', 'success');
     } else {
-      showToast(res.reason || 'M� OTP kh�ng d�ng ho?c d� h?t h?n', 'error');
+      showToast(res.reason || 'Mã OTP không đúng hoặc đã hết hạn', 'error');
     }
   };
 
@@ -109,11 +100,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
     for (let i = 0; i < 16; i++) {
       newSec += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    // LUU �: Luu v�o state t?m, chua luu v�o formData
-    setPendingTwoFactorSecret(newSec);
+    setFormData({ ...formData, twoFactorSecret: newSec });
     setTotpTestResult(null);
     setTotpTestCode('');
-    showToast(`�� t?o Secret Key m?i: ${newSec}. H�y qu�t m� QR v� x�c nh?n ngay b�n du?i d? �p d?ng!`, 'info');
+    showToast(`Đã tạo Secret Key mới: ${newSec}. Hãy quét lại mã QR trên điện thoại!`, 'info');
   };
 
   const copySecretToClipboard = (text: string) => {

@@ -90,8 +90,8 @@ interface StoreContextType {
   login: (identifier: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; message?: string }>;
   register: (username: string, email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
-  requestPasswordReset: (email: string) => Promise<{ success: boolean; message?: string; otp?: string }>;
-  resetPassword: (email: string, otpOrToken: string, newPassword: string) => Promise<{ success: boolean; message?: string }>;
+  requestPasswordReset: (email: string) => { success: boolean; message?: string; otp?: string };
+  resetPassword: (email: string, otpOrToken: string, newPassword: string) => { success: boolean; message?: string };
   adminResetPassword: (userId: string, newPass: string) => { success: boolean; message: string };
   updateUserProfile: (updates: Partial<User>) => void;
 
@@ -189,43 +189,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return INITIAL_PRODUCTS;
   });
 
-  
-  // --- SUPABASE BACKGROUND SYNC HELPERS ---
-  const syncOrderToSupabase = (o: Order) => {
-    supabase.from('orders').upsert({
-      id: o.id, order_code: o.orderCode, user_id: o.userId, user_name: o.userName, user_email: o.userEmail,
-      product_id: o.productId, product_name: o.productName, category: o.category, quantity: o.quantity,
-      unit_price: o.unitPrice, total_price: o.totalPrice, payment_method: o.paymentMethod, status: o.status,
-      delivered_content: o.deliveredContent, key: o.key, is_seller_order: o.isSellerOrder,
-      created_at: new Date(o.createdAt.replace(' ', 'T') + ':00.000Z').toISOString()
-    }).then(res => { if(res.error) console.error('L?i sync Order:', res.error); });
-  };
-  
-  const syncTopupToSupabase = (t: TopupRequest) => {
-    supabase.from('topups').upsert({
-      id: t.id, request_code: t.requestCode, user_id: t.userId, user_name: t.userName,
-      amount: t.amount, method: t.method, transfer_note: t.transferNote, proof_image: t.proofImage, status: t.status,
-      created_at: new Date(t.createdAt.replace(' ', 'T') + ':00.000Z').toISOString()
-    }).then(res => { if(res.error) console.error('L?i sync Topup:', res.error); });
-  };
-
-  const syncCardRechargeToSupabase = (c: CardRechargeRequest) => {
-    supabase.from('card_recharges').upsert({
-      id: c.id, request_code: c.requestCode, user_id: c.userId, user_name: c.userName, network: c.network,
-      declared_amount: c.declaredAmount, serial: c.serial, pin: c.pin, status: c.status,
-      created_at: new Date(c.createdAt.replace(' ', 'T') + ':00.000Z').toISOString()
-    }).then(res => { if(res.error) console.error('L?i sync Card:', res.error); });
-  };
-
-  const syncTransactionToSupabase = (tx: Transaction) => {
-    supabase.from('transactions').upsert({
-      id: tx.id, tx_code: tx.txCode, type: tx.type, user_id: tx.userId, user_name: tx.userName,
-      description: tx.description, amount: tx.amount, balance_after: tx.balanceAfter, status: tx.status,
-      created_at: new Date(tx.createdAt.replace(' ', 'T') + ':00.000Z').toISOString()
-    }).then(res => { if(res.error) console.error('L?i sync Transaction:', res.error); });
-  };
-  // ----------------------------------------
-
   // Supabase Data Sync: Products
   useEffect(() => {
     const fetchSupabaseProducts = async () => {
@@ -237,7 +200,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         if (error) throw error;
         
-        if (data) {
+        if (data && data.length > 0) {
           const mappedProducts: Product[] = data.map((p) => ({
             id: p.id,
             name: p.name,
@@ -265,18 +228,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const fetchSupabaseUsers = async () => {
         try {
           const { data, error } = await supabase
-            .from('profiles')
+            .from('users')
             .select('*')
             .order('created_at', { ascending: false });
 
           if (error) throw error;
           
-          if (data) {
+          if (data && data.length > 0) {
             const mappedUsers: User[] = data.map((u) => ({
               id: u.id,
               username: u.username,
               email: u.email,
-              password: '***',
+              password: u.password,
               role: u.role as 'admin' | 'user',
               balance: Number(u.balance) || 0,
               totalSpent: Number(u.total_spent) || 0,
@@ -285,35 +248,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               joinDate: new Date(u.created_at).toISOString().replace('T', ' ').substring(0, 16),
             }));
             
-            
-            // T? d?ng kh�i ph?c t�i kho?n admin n?u database tr?ng (gi�p user kh�ng b? kh�a ngo�i)
-            const hasAdmin = mappedUsers.some(u => u.role === 'admin');
-            if (!hasAdmin) {
-              const newAdminId = '00000000-0000-0000-0000-000000000001';
-              const newAdmin = {
-                id: newAdminId,
-                username: 'admin',
-                email: 'admin@thanox.vn',
-                password: 'adminthanox.vn',
-                role: 'admin',
-                balance: 0,
-                totalSpent: 0,
-                status: 'active',
-                createdAt: new Date().toISOString(),
-                joinDate: new Date().toISOString().substring(0, 16),
-              };
-              mappedUsers.push(newAdmin);
-              
-              supabase.from('profiles').upsert({
-                id: newAdminId,
-                username: newAdmin.username,
-                email: newAdmin.email,
-                password: newAdmin.password,
-                role: 'admin',
-                balance: 0,
-                status: 'active'
-              }).then();
-            }
             setUsers(mappedUsers);
           }
         } catch (err) {
@@ -323,15 +257,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       fetchSupabaseProducts();
       fetchSupabaseUsers();
-        
-        // Fetch Settings from Supabase
-        supabase.from('settings').select('*').eq('id', 1).single().then(({data}) => {
-          if (data && data.data) {
-            setSettings(prev => ({...prev, ...data.data}));
-            localStorage.setItem('thanox_settings', JSON.stringify(data.data));
-          }
-        });
-      }, []);
+    }, []);
 
   const [categories, setCategories] = useState<Category[]>(() => {
     const loaded = safeGetItem<Category[]>('thanox_categories', INITIAL_CATEGORIES);
@@ -1068,7 +994,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       status: 'completed',
     };
     setTransactions((prev) => [newTx, ...prev]);
-    syncTransactionToSupabase(newTx);
 
     // 5. Send Notification
     setNotifications((prev) => [
@@ -1173,7 +1098,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
 
       createdOrders.push(newOrder);
-      syncOrderToSupabase(newOrder);
 
       // Increment product real sold count
       setProducts((prev) =>
@@ -1199,7 +1123,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       status: 'completed',
     };
     setTransactions((prev) => [newTx, ...prev]);
-    syncTransactionToSupabase(newTx);
 
     // Process Affiliate Reward if applicable
     if (createdOrders.length > 0) {
@@ -1562,7 +1485,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     setOrders((prev) => [newOrder, ...prev]);
-    syncOrderToSupabase(newOrder);
 
     // Financial Transaction log
     const newTx: Transaction = {
@@ -1578,7 +1500,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       status: 'completed',
     };
     setTransactions((prev) => [newTx, ...prev]);
-    syncTransactionToSupabase(newTx);
 
     // Process Affiliate Reward if eligible
     processAffiliateRewardForOrder(newOrder.id, newOrderCode, total, buyer);
@@ -1601,49 +1522,51 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Topup review actions with double-action prevention
-  const approveTopup = async (id: string) => {
+  const approveTopup = (id: string) => {
     const topup = topups.find((t) => t.id === id);
     if (!topup || topup.status !== 'pending') {
-      showToast('Y�u c?u n?p n�y d� du?c x? l� tru?c d�', 'warning');
+      showToast('Yêu cầu nạp này đã được xử lý trước đó', 'warning');
       return;
     }
 
-    try {
-      const { data, error } = await supabase.rpc('admin_approve_topup', { p_topup_id: id });
-      if (error) throw error;
-      
-      if (data && data.status === 'error') {
-        showToast('L?i t? Server: ' + data.reason, 'error');
-        return;
-      }
+    const targetUser = users.find((u) => u.id === topup.userId);
+    const newBalance = (targetUser ? targetUser.balance : 0) + topup.amount;
 
-      const targetUser = users.find((u) => u.id === topup.userId);
-      const newBalance = (targetUser ? targetUser.balance : 0) + topup.amount;
+    setUsers((prev) =>
+      prev.map((u) => (u.id === topup.userId ? { ...u, balance: newBalance } : u))
+    );
 
-      setUsers((prev) => prev.map((u) => (u.id === topup.userId ? { ...u, balance: newBalance } : u)));
-      
-      setTopups((prev) => prev.map((t) => t.id === id ? {
-        ...t, status: 'approved', processedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-      } : t));
+    setTopups((prev) =>
+      prev.map((t) =>
+        t.id === id
+          ? {
+              ...t,
+              status: 'approved',
+              processedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+            }
+          : t
+      )
+    );
 
-      setTransactions((prev) => [{
-        id: 'tx-temp-' + Date.now(),
-        txCode: '#GD-' + Math.floor(10000 + Math.random() * 90000),
-        type: 'deposit',
-        userId: topup.userId,
-        userName: topup.userName,
-        description: `Admin duy?t n?p ti?n qua ${topup.method} (${topup.transferNote})`,
-        amount: topup.amount,
-        balanceAfter: newBalance,
-        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-        status: 'completed',
-      }, ...prev]);
+    // Add deposit transaction
+    const newTx: Transaction = {
+      id: 'tx-' + Date.now(),
+      txCode: '#GD-' + Math.floor(10000 + Math.random() * 90000),
+      type: 'deposit',
+      userId: topup.userId,
+      userName: topup.userName,
+      description: `Nạp tiền qua ${topup.method} (${topup.transferNote})`,
+      amount: topup.amount,
+      balanceAfter: newBalance,
+      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      status: 'completed',
+    };
+    setTransactions((prev) => [newTx, ...prev]);
 
-      showToast(`�� duy?t n?p ti?n an to�n qua Server!`, 'success');
-    } catch (e) {
-      console.error(e);
-      showToast('L?i k?t n?i Server RPC', 'error');
-    }
+    showToast(
+      `Đã duyệt nạp tiền ${topup.amount.toLocaleString('vi-VN')}đ cho ${topup.userName}!`,
+      'success'
+    );
   };
 
   const rejectTopup = (id: string, reason: string) => {
@@ -1690,7 +1613,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     setTopups((prev) => [newTopup, ...prev]);
-    syncTopupToSupabase(newTopup);
     setNotifications((prev) => [
       {
         id: 'notif-' + Date.now(),
@@ -1737,7 +1659,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           status: 'completed',
         };
         setTransactions((prev) => [autoTx, ...prev]);
-    syncTransactionToSupabase(autoTx);
 
         showToast(
           `🎉 Nạp tiền thành công! Đã cộng +${amount.toLocaleString('vi-VN')}đ vào ví của bạn (Xử lý trong 8s)!`,
@@ -1785,7 +1706,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     setCardRecharges((prev) => [newCard, ...prev]);
-    syncCardRechargeToSupabase(newCard);
 
     setNotifications((prev) => [
       {
@@ -1833,7 +1753,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       status: 'completed',
     };
     setTransactions((prev) => [newTx, ...prev]);
-    syncTransactionToSupabase(newTx);
 
     showToast(`Đã duyệt thẻ cào ${card.code} và cộng ${card.receivedAmount.toLocaleString('vi-VN')}đ vào ví khách hàng ${card.userName}!`, 'success');
   };
@@ -1914,7 +1833,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Auth Operations
   const login = async (identifier: string, password: string, _rememberMe = true): Promise<{ success: boolean; message?: string }> => {
     const cleanId = identifier.trim().toLowerCase();
-    if (!cleanId) return { success: false, message: 'Vui l�ng nh?p t�n dang nh?p ho?c email' };
+    if (!cleanId) return { success: false, message: 'Vui lòng nhập tên đăng nhập hoặc email' };
     try {
       let targetEmail = cleanId;
       if (!cleanId.includes('@')) {
@@ -1922,7 +1841,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (profile && profile.email) {
           targetEmail = profile.email;
         } else {
-          return { success: false, message: 'Sai t�i kho?n ho?c m?t kh?u.' };
+          return { success: false, message: 'Sai tài khoản hoặc mật khẩu.' };
         }
       }
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -1930,13 +1849,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         password: password,
       });
       if (authError || !authData.user) {
-        return { success: false, message: 'Sai t�i kho?n ho?c m?t kh?u.' };
+        return { success: false, message: 'Sai tài khoản hoặc mật khẩu.' };
       }
 
-      // 1. Force state synchronously before navigation
       setCurrentUserId(authData.user.id);
       
-      // 2. �?i load profile tru?c khi redirect d? ProtectRoute kh�ng d� v? trang ch?
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', authData.user.id).single();
       if (profile) {
         const mappedUser: User = {
@@ -1960,20 +1877,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       return { success: true };
     } catch (err) {
-      return { success: false, message: 'L?i m�y ch?, vui l�ng th? l?i.' };
+      return { success: false, message: 'Lỗi máy chủ, vui lòng thử lại.' };
     }
   };
 
   const register = async (username: string, email: string, password: string): Promise<{ success: boolean; message?: string }> => {
     const cleanUsername = username.trim();
     const cleanEmail = email.trim().toLowerCase();
-    if (!cleanUsername || cleanUsername.length < 3) return { success: false, message: 'T�n dang nh?p ph?i c� �t nh?t 3 k� t?.' };
-    if (!/^[a-zA-Z0-9_]+$/.test(cleanUsername)) return { success: false, message: 'T�n dang nh?p ch? bao g?m ch? c�i, s? v� d?u g?ch du?i (_).' };
-    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) return { success: false, message: '�?a ch? email kh�ng h?p l?.' };
-    if (!password || password.length < 6) return { success: false, message: 'M?t kh?u ph?i c� �t nh?t 6 k� t?.' };
+    if (!cleanUsername || cleanUsername.length < 3) return { success: false, message: 'Tên đăng nhập phải có ít nhất 3 ký tự.' };
+    if (!/^[a-zA-Z0-9_]+$/.test(cleanUsername)) return { success: false, message: 'Tên đăng nhập chỉ bao gồm chữ cái, số và dấu gạch dưới (_).' };
+    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) return { success: false, message: 'Địa chỉ email không hợp lệ.' };
+    if (!password || password.length < 6) return { success: false, message: 'Mật khẩu phải có ít nhất 6 ký tự.' };
     try {
       const { data: existingUser } = await supabase.from('profiles').select('username').eq('username', cleanUsername).single();
-      if (existingUser) return { success: false, message: 'T�n dang nh?p d� du?c s? d?ng.' };
+      if (existingUser) return { success: false, message: 'Tên đăng nhập đã được sử dụng.' };
       
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: cleanEmail,
@@ -1981,14 +1898,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         options: { data: { username: cleanUsername } }
       });
       if (authError) {
-        let msg = '�ang k� kh�ng th�nh c�ng.';
-        if (authError.message.includes('already registered')) msg = 'Email n�y d� du?c s? d?ng.';
+        let msg = 'Đăng ký không thành công.';
+        if (authError.message.includes('already registered')) msg = 'Email này đã được sử dụng.';
         return { success: false, message: msg };
       }
-      showToast('�ang k� t�i kho?n th�nh c�ng!', 'success');
+      showToast('Đăng ký tài khoản thành công!', 'success');
       return { success: true };
     } catch (err) {
-      return { success: false, message: '�� x?y ra l?i k?t n?i. Vui l�ng th? l?i sau.' };
+      return { success: false, message: 'Đã xảy ra lỗi kết nối. Vui lòng thử lại sau.' };
     }
   };
 
@@ -1996,76 +1913,30 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     await supabase.auth.signOut();
     setCurrentUserId(null);
     setCurrentUser(null);
-    showToast('�� dang xu?t kh?i h? th?ng', 'info');
+    showToast('Đã đăng xuất khỏi hệ thống', 'info');
   };
 
   // Forgot Password: Email normalization & OTP generation
-  const requestPasswordReset = (email: string): { success: boolean; message?: string; otp?: string } => {
-    const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail || !cleanEmail.includes('@')) {
-      return { success: false, message: 'Vui lòng nhập địa chỉ email hợp lệ.' };
+  const requestPasswordReset = async (email: string): Promise<{ success: boolean; message?: string; otp?: string }> => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) return { success: false, message: 'Lỗi khi gửi email xác thực.' };
+      return { success: true, message: 'Đã gửi email khôi phục mật khẩu.' };
+    } catch (err) {
+      return { success: false, message: 'Lỗi máy chủ.' };
     }
-
-    const targetUser = users.find((u) => u.email.trim().toLowerCase() === cleanEmail);
-    if (!targetUser) {
-      return {
-        success: false,
-        message: 'Không tìm thấy tài khoản nào khớp với email này. Vui lòng kiểm tra lại hoặc liên hệ Admin qua Zalo/Telegram để được hỗ trợ.',
-      };
-    }
-
-    // Generate 6-digit OTP code with 15-minute expiration
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 15 * 60 * 1000;
-
-    setResetTokens((prev) => [
-      { email: cleanEmail, otp, expiresAt },
-      ...prev.filter((t) => t.email !== cleanEmail),
-    ]);
-
-    showToast(`Mã xác thực OTP của bạn là: ${otp} (Có hiệu lực trong 15 phút)`, 'success');
-    return { success: true, otp };
   };
 
-  const resetPassword = (
-    email: string,
-    otpOrToken: string,
-    newPassword: string
-  ): { success: boolean; message?: string } => {
-    const cleanEmail = email.trim().toLowerCase();
-    const cleanOtp = otpOrToken.trim();
-
-    if (!newPassword || newPassword.length < 6) {
-      return { success: false, message: 'Mật khẩu mới phải có ít nhất 6 ký tự.' };
+  const resetPassword = async (email: string, otpOrToken: string, newPassword: string): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const { error } = await supabase.auth.verifyOtp({ email, token: otpOrToken, type: 'recovery' });
+      if (error) return { success: false, message: 'Mã xác thực không hợp lệ.' };
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+      if (updateError) return { success: false, message: 'Không thể cập nhật mật khẩu.' };
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: 'Lỗi máy chủ.' };
     }
-
-    const tokenRecord = resetTokens.find((t) => t.email === cleanEmail);
-    if (!tokenRecord) {
-      return { success: false, message: 'Không tìm thấy yêu cầu đặt lại mật khẩu cho email này.' };
-    }
-
-    if (Date.now() > tokenRecord.expiresAt) {
-      return { success: false, message: 'Mã xác thực đã hết hạn. Vui lòng yêu cầu mã mới.' };
-    }
-
-    if (tokenRecord.otp !== cleanOtp && cleanOtp !== '889922') {
-      return { success: false, message: 'Mã xác thực OTP không chính xác.' };
-    }
-
-    // Update user password in storage
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.email.trim().toLowerCase() === cleanEmail
-          ? { ...u, password: newPassword }
-          : u
-      )
-    );
-
-    // Invalidate used reset token
-    setResetTokens((prev) => prev.filter((t) => t.email !== cleanEmail));
-
-    showToast('Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay bây giờ.', 'success');
-    return { success: true };
   };
 
   // Admin Direct Password Reset for Customer Assistance
@@ -2104,7 +1975,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (updates.status !== undefined) dbUpdates.status = updates.status;
 
       if (Object.keys(dbUpdates).length > 0) {
-        const { error } = await supabase.from('profiles').update(dbUpdates).eq('id', id);
+        const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
         if (error) throw error;
       }
       showToast('Đã cập nhật thông tin người dùng trên Cloud', 'success');
@@ -2124,7 +1995,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setUsers((prev) => prev.filter((u) => u.id !== id));
     
     try {
-      const { error } = await supabase.from('profiles').delete().eq('id', id);
+      const { error } = await supabase.from('users').delete().eq('id', id);
       if (error) throw error;
       showToast(`Đã xóa tài khoản ${target.username} trên Cloud thành công`, 'success');
     } catch (e) {
@@ -2153,10 +2024,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       status: 'completed',
     };
     setTransactions((prev) => [newTx, ...prev]);
-    syncTransactionToSupabase(newTx);
 
     try {
-      const { error } = await supabase.from('profiles').update({ balance: newBalance }).eq('id', userId);
+      const { error } = await supabase.from('users').update({ balance: newBalance }).eq('id', userId);
       if (error) throw error;
       showToast(
         `Đã ${amount >= 0 ? 'cộng' : 'trừ'} ${Math.abs(amount).toLocaleString('vi-VN')}đ vào ví của ${targetUser.username} trên Cloud`,
@@ -2175,7 +2045,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status: newStatus } : u)));
     
     try {
-      const { error } = await supabase.from('profiles').update({ status: newStatus }).eq('id', id);
+      const { error } = await supabase.from('users').update({ status: newStatus }).eq('id', id);
       if (error) throw error;
       showToast(`Đã ${newStatus === 'banned' ? 'khóa' : 'mở khóa'} tài khoản ${user.username} trên Cloud`, newStatus === 'banned' ? 'error' : 'success');
     } catch (e) {
@@ -2274,15 +2144,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setSettings((prev) => {
       const updated = { ...prev, ...newSettings };
       try {
-          localStorage.setItem('thanox_settings', JSON.stringify(updated));
-        } catch (e) {
-          console.error('Failed to save settings to local (Quota exceeded):', e);
-        }
-        
-        // Supabase upsert is outside the try-catch so it always runs
-        supabase.from('settings').upsert({ id: 1, data: updated }).then(res => { 
-          if (res.error) console.error('Settings Sync Error', res.error); 
-        });
+        localStorage.setItem('thanox_settings', JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to save settings:', e);
+      }
       fetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

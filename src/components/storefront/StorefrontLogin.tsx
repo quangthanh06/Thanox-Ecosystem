@@ -85,7 +85,7 @@ export const StorefrontLogin: React.FC = () => {
     }
 
     const secret = settings.twoFactorSecret || 'JBSWY3DPEHPK3PXP';
-    const backup = settings.twoFactorBackupCode; // X�a c?ng 888999 theo y�u c?u b?o m?t
+    const backup = settings.twoFactorBackupCode || '888999';
     const verifyRes = verifyTotpCode(secret, totpCode.trim(), backup);
 
     if (!verifyRes.valid) {
