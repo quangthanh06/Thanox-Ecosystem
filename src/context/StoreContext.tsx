@@ -2308,11 +2308,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setSettings((prev) => {
       const updated = { ...prev, ...newSettings };
       try {
-        localStorage.setItem('thanox_settings', JSON.stringify(updated));
-        supabase.from('settings').upsert({ id: 1, data: updated }).then(res => { if (res.error) console.error('Settings Sync Error', res.error); });
-      } catch (e) {
-        console.error('Failed to save settings:', e);
-      }
+          localStorage.setItem('thanox_settings', JSON.stringify(updated));
+        } catch (e) {
+          console.error('Failed to save settings to local (Quota exceeded):', e);
+        }
+        
+        // Supabase upsert is outside the try-catch so it always runs
+        supabase.from('settings').upsert({ id: 1, data: updated }).then(res => { 
+          if (res.error) console.error('Settings Sync Error', res.error); 
+        });
       fetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
