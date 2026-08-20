@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import {
   PageId,
   StorefrontPageId,
@@ -19,6 +20,7 @@ import {
   CardRechargeRequest,
   CardNetwork,
   SellerStatus,
+  ProductStatus,
 } from '../types';
 import {
   INITIAL_CATEGORIES,
@@ -186,6 +188,45 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     return INITIAL_PRODUCTS;
   });
+
+  // Supabase Data Sync: Products
+  useEffect(() => {
+    const fetchSupabaseProducts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          const mappedProducts: Product[] = data.map((p) => ({
+            id: p.id,
+            name: p.name,
+            category: p.category,
+            price: p.price,
+            sellerPrice: p.seller_price,
+            basePrice: p.original_price,
+            stock: p.stock === 'unlimited' ? 'unlimited' : Number(p.stock) || 0,
+            status: p.status as ProductStatus,
+            description: p.description || '',
+            image: p.image_url || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
+            // ONLY LOAD FOR ADMIN! We will fix this in RLS later.
+            downloadLinkOrKeys: p.hidden_keys_or_links || '',
+            soldCount: 0,
+            featured: true,
+          }));
+          
+          setProducts(mappedProducts);
+        }
+      } catch (err) {
+        console.error('Lỗi tải sản phẩm từ Supabase:', err);
+      }
+    };
+    
+    fetchSupabaseProducts();
+  }, []);
 
   const [categories, setCategories] = useState<Category[]>(() => {
     const loaded = safeGetItem<Category[]>('thanox_categories', INITIAL_CATEGORIES);
