@@ -184,18 +184,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return INITIAL_PRODUCTS;
   });
 
-  const [categories, setCategories] = useState<Category[]>(() =>
-    safeGetItem('thanox_categories', INITIAL_CATEGORIES)
-  );
+  const [categories, setCategories] = useState<Category[]>(() => {
+    const loaded = safeGetItem<Category[]>('thanox_categories', INITIAL_CATEGORIES);
+    return Array.isArray(loaded) && loaded.length > 0 ? loaded : INITIAL_CATEGORIES;
+  });
 
-  const [orders, setOrders] = useState<Order[]>(() =>
-    safeGetItem('thanox_orders', INITIAL_ORDERS)
-  );
+  const [orders, setOrders] = useState<Order[]>(() => {
+    const loaded = safeGetItem<Order[]>('thanox_orders', INITIAL_ORDERS);
+    return Array.isArray(loaded) ? loaded : INITIAL_ORDERS;
+  });
 
   const [users, setUsers] = useState<User[]>(() => {
-    const loaded = safeGetItem('thanox_users', INITIAL_USERS);
-    // Deduplicate: remove legacy admin_thanox and ensure exactly 1 super admin
-    const cleaned = loaded.filter((u: User) => u.username !== 'admin_thanox' && u.id !== 'u-1');
+    const loaded = safeGetItem<User[]>('thanox_users', INITIAL_USERS);
+    const validArray = Array.isArray(loaded) && loaded.length > 0 ? loaded : INITIAL_USERS;
+    const cleaned = validArray.filter((u: User) => u && u.username !== 'admin_thanox' && u.id !== 'u-1');
     let hasAdmin = false;
     return cleaned.map((u: User) => {
       if (u.role === 'admin') {
@@ -209,25 +211,30 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   });
 
-  const [topups, setTopups] = useState<TopupRequest[]>(() =>
-    safeGetItem('thanox_topups', INITIAL_TOPUPS)
-  );
+  const [topups, setTopups] = useState<TopupRequest[]>(() => {
+    const loaded = safeGetItem<TopupRequest[]>('thanox_topups', INITIAL_TOPUPS);
+    return Array.isArray(loaded) ? loaded : INITIAL_TOPUPS;
+  });
 
-  const [cardRecharges, setCardRecharges] = useState<CardRechargeRequest[]>(() =>
-    safeGetItem('thanox_card_recharges', [])
-  );
+  const [cardRecharges, setCardRecharges] = useState<CardRechargeRequest[]>(() => {
+    const loaded = safeGetItem<CardRechargeRequest[]>('thanox_card_recharges', []);
+    return Array.isArray(loaded) ? loaded : [];
+  });
 
-  const [transactions, setTransactions] = useState<Transaction[]>(() =>
-    safeGetItem('thanox_transactions', INITIAL_TRANSACTIONS)
-  );
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    const loaded = safeGetItem<Transaction[]>('thanox_transactions', INITIAL_TRANSACTIONS);
+    return Array.isArray(loaded) ? loaded : INITIAL_TRANSACTIONS;
+  });
 
-  const [affiliates, setAffiliates] = useState<AffiliateItem[]>(() =>
-    safeGetItem('thanox_affiliates', INITIAL_AFFILIATES)
-  );
+  const [affiliates, setAffiliates] = useState<AffiliateItem[]>(() => {
+    const loaded = safeGetItem<AffiliateItem[]>('thanox_affiliates', INITIAL_AFFILIATES);
+    return Array.isArray(loaded) ? loaded : INITIAL_AFFILIATES;
+  });
 
-  const [affiliateRewards, setAffiliateRewards] = useState<AffiliateReward[]>(() =>
-    safeGetItem('thanox_affiliate_rewards', [])
-  );
+  const [affiliateRewards, setAffiliateRewards] = useState<AffiliateReward[]>(() => {
+    const loaded = safeGetItem<AffiliateReward[]>('thanox_affiliate_rewards', []);
+    return Array.isArray(loaded) ? loaded : [];
+  });
 
   const [resetTokens, setResetTokens] = useState<{ email: string; otp: string; expiresAt: number }[]>(() =>
     safeGetItem('thanox_reset_tokens', [])
