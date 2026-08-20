@@ -8,11 +8,11 @@ export const StorefrontMaintenanceScreen: React.FC = () => {
   const { settings, navigateToStorefront, navigateToAdmin } = useStore();
   const themeTypo = getThemeTypography(settings);
 
-  const adminZalo = settings.adminZalo || settings.zaloHotline || '0916396901';
-  const adminHotline = settings.adminHotline || settings.zaloHotline || '0916396901';
-  const adminTelegram = settings.adminTelegram || settings.telegramAdminId || 'quangthank';
+  const adminZalo = settings?.adminZalo || settings?.zaloHotline || '0916396901';
+  const adminHotline = settings?.adminHotline || settings?.zaloHotline || '0916396901';
+  const adminTelegram = settings?.adminTelegram || settings?.telegramAdminId || 'quangthank';
   const maintenanceMessage =
-    settings.maintenanceMessage ||
+    settings?.maintenanceMessage ||
     'Hệ thống đang được bảo trì định kỳ & nâng cấp máy chủ để phục vụ quý khách tốt nhất. Mọi nhu cầu mua sản phẩm hoặc kích hoạt key gấp, vui lòng bấm liên hệ trực tiếp Zalo Admin!';
 
   return (
@@ -79,13 +79,13 @@ export const StorefrontMaintenanceScreen: React.FC = () => {
             </a>
 
             <a
-              href={`https://t.me/${adminTelegram.replace('@', '')}`}
+              href={`https://t.me/${(adminTelegram || 'quangthank').replace('@', '')}`}
               target="_blank"
               rel="noreferrer"
               className="p-3 rounded-xl bg-[#1F1F35] border border-white/5 hover:border-cyan-500/30 flex items-center justify-center gap-2 text-xs font-bold text-cyan-300 transition-colors"
             >
               <Send className="w-4 h-4 text-cyan-400" />
-              <span>Telegram: @{adminTelegram.replace('@', '')}</span>
+              <span>Telegram: @{(adminTelegram || 'quangthank').replace('@', '')}</span>
             </a>
           </div>
         </div>
