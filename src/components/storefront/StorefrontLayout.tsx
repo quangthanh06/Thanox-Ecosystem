@@ -27,6 +27,7 @@ import {
   ShoppingBag,
   Package,
   Wrench,
+  UserCheck,
 } from 'lucide-react';
 
 import { StorefrontHome } from './StorefrontHome';
