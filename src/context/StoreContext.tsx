@@ -1551,52 +1551,49 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Topup review actions with double-action prevention
-  const approveTopup = (id: string) => {
+  const approveTopup = async (id: string) => {
     const topup = topups.find((t) => t.id === id);
     if (!topup || topup.status !== 'pending') {
-      showToast('Yêu cầu nạp này đã được xử lý trước đó', 'warning');
+      showToast('Y�u c?u n?p n�y d� du?c x? l� tru?c d�', 'warning');
       return;
     }
 
-    const targetUser = users.find((u) => u.id === topup.userId);
-    const newBalance = (targetUser ? targetUser.balance : 0) + topup.amount;
+    try {
+      const { data, error } = await supabase.rpc('admin_approve_topup', { p_topup_id: id });
+      if (error) throw error;
+      
+      if (data && data.status === 'error') {
+        showToast('L?i t? Server: ' + data.reason, 'error');
+        return;
+      }
 
-    setUsers((prev) =>
-      prev.map((u) => (u.id === topup.userId ? { ...u, balance: newBalance } : u))
-    );
+      const targetUser = users.find((u) => u.id === topup.userId);
+      const newBalance = (targetUser ? targetUser.balance : 0) + topup.amount;
 
-    setTopups((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? {
-              ...t,
-              status: 'approved',
-              processedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-            }
-          : t
-      )
-    );
+      setUsers((prev) => prev.map((u) => (u.id === topup.userId ? { ...u, balance: newBalance } : u)));
+      
+      setTopups((prev) => prev.map((t) => t.id === id ? {
+        ...t, status: 'approved', processedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      } : t));
 
-    // Add deposit transaction
-    const newTx: Transaction = {
-      id: 'tx-' + Date.now(),
-      txCode: '#GD-' + Math.floor(10000 + Math.random() * 90000),
-      type: 'deposit',
-      userId: topup.userId,
-      userName: topup.userName,
-      description: `Nạp tiền qua ${topup.method} (${topup.transferNote})`,
-      amount: topup.amount,
-      balanceAfter: newBalance,
-      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-      status: 'completed',
-    };
-    setTransactions((prev) => [newTx, ...prev]);
-    syncTransactionToSupabase(newTx);
+      setTransactions((prev) => [{
+        id: 'tx-temp-' + Date.now(),
+        txCode: '#GD-' + Math.floor(10000 + Math.random() * 90000),
+        type: 'deposit',
+        userId: topup.userId,
+        userName: topup.userName,
+        description: `Admin duy?t n?p ti?n qua ${topup.method} (${topup.transferNote})`,
+        amount: topup.amount,
+        balanceAfter: newBalance,
+        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        status: 'completed',
+      }, ...prev]);
 
-    showToast(
-      `Đã duyệt nạp tiền ${topup.amount.toLocaleString('vi-VN')}đ cho ${topup.userName}!`,
-      'success'
-    );
+      showToast(`�� duy?t n?p ti?n an to�n qua Server!`, 'success');
+    } catch (e) {
+      console.error(e);
+      showToast('L?i k?t n?i Server RPC', 'error');
+    }
   };
 
   const rejectTopup = (id: string, reason: string) => {
