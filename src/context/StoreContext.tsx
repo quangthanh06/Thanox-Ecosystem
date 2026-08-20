@@ -350,7 +350,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setCurrentUserId(session.user.id);
-        fetchSupabaseUsers(); // Re-fetch to ensure the new user's profile is in the list
+        // fetchSupabaseUsers(); // Removed to prevent TDZ error
       } else {
         setCurrentUserId(null);
       }
