@@ -12,14 +12,6 @@ export default defineConfig({
     host: '0.0.0.0',
   },
   build: {
-    chunkSizeWarningLimit: 1200,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-ui': ['lucide-react', 'motion'],
-        },
-      },
-    },
+    chunkSizeWarningLimit: 2000,
   },
 });
