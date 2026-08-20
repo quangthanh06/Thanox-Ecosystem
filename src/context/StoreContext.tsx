@@ -189,6 +189,43 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return INITIAL_PRODUCTS;
   });
 
+  
+  // --- SUPABASE BACKGROUND SYNC HELPERS ---
+  const syncOrderToSupabase = (o: Order) => {
+    supabase.from('orders').upsert({
+      id: o.id, order_code: o.orderCode, user_id: o.userId, user_name: o.userName, user_email: o.userEmail,
+      product_id: o.productId, product_name: o.productName, category: o.category, quantity: o.quantity,
+      unit_price: o.unitPrice, total_price: o.totalPrice, payment_method: o.paymentMethod, status: o.status,
+      delivered_content: o.deliveredContent, key: o.key, is_seller_order: o.isSellerOrder,
+      created_at: new Date(o.createdAt.replace(' ', 'T') + ':00.000Z').toISOString()
+    }).then(res => { if(res.error) console.error('L?i sync Order:', res.error); });
+  };
+  
+  const syncTopupToSupabase = (t: TopupRequest) => {
+    supabase.from('topups').upsert({
+      id: t.id, request_code: t.requestCode, user_id: t.userId, user_name: t.userName,
+      amount: t.amount, method: t.method, transfer_note: t.transferNote, proof_image: t.proofImage, status: t.status,
+      created_at: new Date(t.createdAt.replace(' ', 'T') + ':00.000Z').toISOString()
+    }).then(res => { if(res.error) console.error('L?i sync Topup:', res.error); });
+  };
+
+  const syncCardRechargeToSupabase = (c: CardRechargeRequest) => {
+    supabase.from('card_recharges').upsert({
+      id: c.id, request_code: c.requestCode, user_id: c.userId, user_name: c.userName, network: c.network,
+      declared_amount: c.declaredAmount, serial: c.serial, pin: c.pin, status: c.status,
+      created_at: new Date(c.createdAt.replace(' ', 'T') + ':00.000Z').toISOString()
+    }).then(res => { if(res.error) console.error('L?i sync Card:', res.error); });
+  };
+
+  const syncTransactionToSupabase = (tx: Transaction) => {
+    supabase.from('transactions').upsert({
+      id: tx.id, tx_code: tx.txCode, type: tx.type, user_id: tx.userId, user_name: tx.userName,
+      description: tx.description, amount: tx.amount, balance_after: tx.balanceAfter, status: tx.status,
+      created_at: new Date(tx.createdAt.replace(' ', 'T') + ':00.000Z').toISOString()
+    }).then(res => { if(res.error) console.error('L?i sync Transaction:', res.error); });
+  };
+  // ----------------------------------------
+
   // Supabase Data Sync: Products
   useEffect(() => {
     const fetchSupabaseProducts = async () => {
@@ -981,6 +1018,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       status: 'completed',
     };
     setTransactions((prev) => [newTx, ...prev]);
+    syncTransactionToSupabase(newTx);
 
     // 5. Send Notification
     setNotifications((prev) => [
@@ -1085,6 +1123,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
 
       createdOrders.push(newOrder);
+      syncOrderToSupabase(newOrder);
 
       // Increment product real sold count
       setProducts((prev) =>
@@ -1110,6 +1149,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       status: 'completed',
     };
     setTransactions((prev) => [newTx, ...prev]);
+    syncTransactionToSupabase(newTx);
 
     // Process Affiliate Reward if applicable
     if (createdOrders.length > 0) {
@@ -1472,6 +1512,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     setOrders((prev) => [newOrder, ...prev]);
+    syncOrderToSupabase(newOrder);
 
     // Financial Transaction log
     const newTx: Transaction = {
@@ -1487,6 +1528,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       status: 'completed',
     };
     setTransactions((prev) => [newTx, ...prev]);
+    syncTransactionToSupabase(newTx);
 
     // Process Affiliate Reward if eligible
     processAffiliateRewardForOrder(newOrder.id, newOrderCode, total, buyer);
@@ -1549,6 +1591,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       status: 'completed',
     };
     setTransactions((prev) => [newTx, ...prev]);
+    syncTransactionToSupabase(newTx);
 
     showToast(
       `Đã duyệt nạp tiền ${topup.amount.toLocaleString('vi-VN')}đ cho ${topup.userName}!`,
@@ -1600,6 +1643,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     setTopups((prev) => [newTopup, ...prev]);
+    syncTopupToSupabase(newTopup);
     setNotifications((prev) => [
       {
         id: 'notif-' + Date.now(),
@@ -1646,6 +1690,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           status: 'completed',
         };
         setTransactions((prev) => [autoTx, ...prev]);
+    syncTransactionToSupabase(autoTx);
 
         showToast(
           `🎉 Nạp tiền thành công! Đã cộng +${amount.toLocaleString('vi-VN')}đ vào ví của bạn (Xử lý trong 8s)!`,
@@ -1693,6 +1738,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     setCardRecharges((prev) => [newCard, ...prev]);
+    syncCardRechargeToSupabase(newCard);
 
     setNotifications((prev) => [
       {
@@ -1740,6 +1786,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       status: 'completed',
     };
     setTransactions((prev) => [newTx, ...prev]);
+    syncTransactionToSupabase(newTx);
 
     showToast(`Đã duyệt thẻ cào ${card.code} và cộng ${card.receivedAmount.toLocaleString('vi-VN')}đ vào ví khách hàng ${card.userName}!`, 'success');
   };
@@ -2090,6 +2137,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       status: 'completed',
     };
     setTransactions((prev) => [newTx, ...prev]);
+    syncTransactionToSupabase(newTx);
 
     try {
       const { error } = await supabase.from('users').update({ balance: newBalance }).eq('id', userId);
