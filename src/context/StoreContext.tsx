@@ -323,7 +323,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       fetchSupabaseProducts();
       fetchSupabaseUsers();
-    }, []);
+        
+        // Fetch Settings from Supabase
+        supabase.from('settings').select('*').eq('id', 1).single().then(({data}) => {
+          if (data && data.data) {
+            setSettings(prev => ({...prev, ...data.data}));
+            localStorage.setItem('thanox_settings', JSON.stringify(data.data));
+          }
+        });
+      }, []);
 
   const [categories, setCategories] = useState<Category[]>(() => {
     const loaded = safeGetItem<Category[]>('thanox_categories', INITIAL_CATEGORIES);
