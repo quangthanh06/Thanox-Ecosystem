@@ -26,11 +26,23 @@ export const getThemeTypography = (settings?: Partial<StoreSettings>) => {
   }
 
   const weightClass =
-    typo.titleWeight === 'bold'
+    typo.titleWeight === 'normal'
+      ? 'font-normal'
+      : typo.titleWeight === 'medium'
+      ? 'font-medium'
+      : typo.titleWeight === 'semibold'
+      ? 'font-semibold'
+      : typo.titleWeight === 'bold'
       ? 'font-bold'
       : typo.titleWeight === 'extrabold'
       ? 'font-extrabold'
       : 'font-black';
+
+  let sizeScaleClass = '';
+  if (typo.fontSizeScale === 'small') sizeScaleClass = 'text-[0.9em]';
+  else if (typo.fontSizeScale === 'large') sizeScaleClass = 'text-[1.1em]';
+  else if (typo.fontSizeScale === 'xlarge') sizeScaleClass = 'text-[1.25em]';
+  else if (typo.fontSizeScale === 'xxlarge') sizeScaleClass = 'text-[1.4em]';
 
   const glowClass = typo.enableTextGlow !== false && isFlowEnabled ? 'thanox-glow' : '';
 
@@ -42,12 +54,13 @@ export const getThemeTypography = (settings?: Partial<StoreSettings>) => {
     isFlowEnabled,
     colorClass,
     weightClass,
+    sizeScaleClass,
     glowClass,
     fontStyle,
     fontFamily: typo.fontFamily || 'Space Grotesk',
     // Combined ready-to-use classes
-    logoClass: `thanox-title-font ${weightClass} ${colorClass} ${glowClass}`,
-    headingClass: `thanox-title-font ${weightClass} ${typo.applyToSectionHeadings !== false ? colorClass : 'text-white'} ${glowClass}`,
-    navClass: `thanox-title-font ${weightClass} ${typo.applyToNavAndButtons !== false ? colorClass : 'text-white'} ${glowClass}`,
+    logoClass: `thanox-title-font ${weightClass} ${sizeScaleClass} ${colorClass} ${glowClass}`,
+    headingClass: `thanox-title-font ${weightClass} ${sizeScaleClass} ${typo.applyToSectionHeadings !== false ? colorClass : 'text-white'} ${glowClass}`,
+    navClass: `thanox-title-font ${weightClass} ${sizeScaleClass} ${typo.applyToNavAndButtons !== false ? colorClass : 'text-white'} ${glowClass}`,
   };
 };

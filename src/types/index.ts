@@ -289,8 +289,20 @@ export interface StoreEffects {
 }
 
 export interface TypographySettings {
-  fontFamily: 'Space Grotesk' | 'Plus Jakarta Sans' | 'Inter' | 'Manrope' | 'Outfit' | 'Orbitron';
-  titleWeight: 'bold' | 'extrabold' | 'black';
+  fontFamily:
+    | 'Space Grotesk'
+    | 'Plus Jakarta Sans'
+    | 'Inter'
+    | 'Manrope'
+    | 'Outfit'
+    | 'Orbitron'
+    | 'Be Vietnam Pro'
+    | 'Montserrat'
+    | 'Roboto'
+    | 'Times New Roman'
+    | 'Arial';
+  titleWeight: 'normal' | 'medium' | 'semibold' | 'bold' | 'extrabold' | 'black';
+  fontSizeScale?: 'small' | 'normal' | 'large' | 'xlarge' | 'xxlarge';
   enableColorFlow: boolean;
   colorMode: 'rainbow_flow' | 'pure_white' | 'cyber_cyan' | 'neon_purple' | 'flame_fire';
   enableTextGlow: boolean;

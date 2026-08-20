@@ -1021,14 +1021,67 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                     <option value="Manrope">Manrope (Bo Tròn Mềm Mại)</option>
                     <option value="Syne">Syne (Artistic & Độc Đáo)</option>
                     <option value="Rajdhani">Rajdhani (Góc Cạnh Cyber Gaming)</option>
+                    <option value="Roboto">Roboto (Google Chữ Cổ Điển)</option>
+                    <option value="Times New Roman">Times New Roman (Chữ Báo Chí Truyền Thống)</option>
+                    <option value="Arial">Arial (Chữ Cơ Bản, Dễ Nhìn)</option>
                   </select>
+                </div>
+
+                {/* Font Size Scale */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-[#CBC7E0]">Độ To Chữ Của Tiêu Đề & Nút (Font Size):</label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {[
+                      { id: 'small', label: 'Nhỏ' },
+                      { id: 'normal', label: 'Vừa' },
+                      { id: 'large', label: 'To 1' },
+                      { id: 'xlarge', label: 'To 2' },
+                      { id: 'xxlarge', label: 'Rất To' },
+                    ].map((sz) => {
+                      const isSelected = (formData.typography?.fontSizeScale || 'normal') === sz.id;
+                      return (
+                        <button
+                          key={sz.id}
+                          type="button"
+                          onClick={() =>
+                            setFormData({
+                              ...formData,
+                              typography: {
+                                ...(formData.typography || {
+                                  fontFamily: 'Space Grotesk',
+                                  titleWeight: 'black',
+                                  enableColorFlow: true,
+                                  colorMode: 'rainbow_flow',
+                                  enableTextGlow: true,
+                                  enableChunkyTitles: true,
+                                  applyToNavAndButtons: true,
+                                  applyToSectionHeadings: true,
+                                }),
+                                fontSizeScale: sz.id as any,
+                              },
+                            })
+                          }
+                          className={`py-2 rounded-xl text-center text-xs font-bold transition-all border ${
+                            isSelected
+                              ? 'bg-[#7C3AED]/20 border-[#7C3AED] text-[#9D5CF6] shadow-[0_0_15px_rgba(124,58,237,0.3)]'
+                              : 'bg-[#161626] border-white/5 text-[#8B84A8] hover:border-white/20 hover:text-white'
+                          }`}
+                        >
+                          {sz.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Title Weight / Boldness */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-[#CBC7E0]">Độ Béo Phồng Của Tiêu Đề & Logo:</label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {[
+                      { id: 'normal', label: 'Normal 400 (Mảnh)' },
+                      { id: 'medium', label: 'Medium 500' },
+                      { id: 'semibold', label: 'SemiBold 600' },
                       { id: 'bold', label: 'Bold 700' },
                       { id: 'extrabold', label: 'ExtraBold 800' },
                       { id: 'black', label: 'Black 900 (Béo Phồng)' },
