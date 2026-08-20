@@ -43,9 +43,6 @@ export const StorefrontAIAssistant: React.FC = () => {
   const shopName = settings.storeName || 'THANOX STORE';
   const adminZalo = settings.adminZalo || settings.zaloHotline || '0916396901';
 
-  // Do not render in Admin mode
-  if (appMode === 'admin') return null;
-
   // Initial greeting
   useEffect(() => {
     if (chatMessages.length === 0) {
@@ -408,6 +405,8 @@ export const StorefrontAIAssistant: React.FC = () => {
     settings.aiBotSize === 'small' ? 'w-9 h-9 sm:w-10 sm:h-10' :
     settings.aiBotSize === 'large' ? 'w-14 h-14 sm:w-16 sm:h-16' : 
     'w-11 h-11 sm:w-12 sm:h-12';
+
+  if (appMode === 'admin') return null;
 
   return (
     <>
