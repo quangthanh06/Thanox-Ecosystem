@@ -1,6 +1,7 @@
 name = "thanox-ecosystem"
+main = "worker.js"
 compatibility_date = "2024-04-01"
-pages_build_output_dir = "dist"
 
-[site]
-bucket = "./dist"
+[assets]
+directory = "./dist"
+binding = "ASSETS"
