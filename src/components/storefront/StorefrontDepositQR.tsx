@@ -136,6 +136,11 @@ export const StorefrontDepositQR: React.FC = () => {
     return () => clearTimeout(timer);
   }, [customAmountText, isTyping, minDeposit, maxDeposit]);
 
+const isAmountEntered = activeAmount > 0;
+  const isBelowMin = isAmountEntered && activeAmount < minDeposit;
+  const isAboveMax = isAmountEntered && activeAmount > maxDeposit;
+  const isValidAmount = isAmountEntered && !isBelowMin && !isAboveMax;
+
   // Real-time Bank Reconciliation Polling (Checks every 3.5s)
   useEffect(() => {
     if (!transactionCode || !isValidAmount) return;
@@ -181,11 +186,7 @@ export const StorefrontDepositQR: React.FC = () => {
   };
 
   // Validation logic
-  const isAmountEntered = activeAmount > 0;
-  const isBelowMin = isAmountEntered && activeAmount < minDeposit;
-  const isAboveMax = isAmountEntered && activeAmount > maxDeposit;
-  const isValidAmount = isAmountEntered && !isBelowMin && !isAboveMax;
-
+  
   // Safe extraction helpers to prevent object as child errors
   const safeAccountNumber = typeof settings.bankAccount === 'string' ? settings.bankAccount : (settings.bankAccount as any)?.accountNumber || '0326884292';
   const safeBankName = typeof settings.bankName === 'string' ? settings.bankName : (settings.bankAccount as any)?.bankName || 'MBBank Quân Đội';
@@ -241,7 +242,7 @@ export const StorefrontDepositQR: React.FC = () => {
     }
     setIsSubmitting(true);
     setTimeout(() => {
-      const code = createTopupRequest(activeAmount, paymentMethod, transactionCode);
+      const code = createTopupRequest(activeAmount, 'Bank Transfer', transactionCode);
       setIsSubmitting(false);
       showToast(`Đã tạo yêu cầu nạp tiền ${activeAmount.toLocaleString('vi-VN')}đ thành công!`, 'success');
     }, 400);
