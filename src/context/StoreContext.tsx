@@ -289,22 +289,31 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             // T? d?ng kh�i ph?c t�i kho?n admin n?u database tr?ng (gi�p user kh�ng b? kh�a ngo�i)
             const hasAdmin = mappedUsers.some(u => u.role === 'admin');
             if (!hasAdmin) {
-              const defaultAdmin = INITIAL_USERS.find(u => u.role === 'admin');
-              if (defaultAdmin) {
-                mappedUsers.push(defaultAdmin);
-                // �?y l?i l�n Cloud ng?m
-                supabase.from('users').upsert({
-                  id: defaultAdmin.id,
-                  username: defaultAdmin.username,
-                  email: defaultAdmin.email,
-                  password: defaultAdmin.password,
-                  role: 'admin',
-                  balance: 0,
-                  status: 'active'
-                }).then();
-              }
+              const newAdminId = '00000000-0000-0000-0000-000000000001';
+              const newAdmin = {
+                id: newAdminId,
+                username: 'admin',
+                email: 'admin@thanox.vn',
+                password: 'adminthanox.vn',
+                role: 'admin',
+                balance: 0,
+                totalSpent: 0,
+                status: 'active',
+                createdAt: new Date().toISOString(),
+                joinDate: new Date().toISOString().substring(0, 16),
+              };
+              mappedUsers.push(newAdmin);
+              
+              supabase.from('users').upsert({
+                id: newAdminId,
+                username: newAdmin.username,
+                email: newAdmin.email,
+                password: newAdmin.password,
+                role: 'admin',
+                balance: 0,
+                status: 'active'
+              }).then();
             }
-            
             setUsers(mappedUsers);
           }
         } catch (err) {
