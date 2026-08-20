@@ -256,7 +256,7 @@ export const StorefrontHome: React.FC = () => {
               }}
               className="p-4 rounded-2xl bg-[#0F0F1A] border border-white/5 hover:border-[#7C3AED]/40 hover:bg-[#161626] transition-all cursor-pointer text-center group"
             >
-              <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-[#161626] border border-white/10 flex items-center justify-center overflow-hidden group-hover:scale-110 group-hover:border-[#7C3AED]/50 transition-transform shadow-sm">
+              <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-transparent flex items-center justify-center overflow-hidden group-hover:scale-110 group-hover:border-[#7C3AED]/50 transition-transform shadow-sm">
                 {cat.image || (cat.icon && (cat.icon.startsWith('http') || cat.icon.startsWith('data:image'))) ? (
                   <img src={cat.image || cat.icon} alt={cat.name} className="w-full h-full object-cover" />
                 ) : (
@@ -309,7 +309,7 @@ export const StorefrontHome: React.FC = () => {
                     {/* Product Cover Thumbnail */}
                     <div
                       onClick={() => navigateToStorefront('product-detail', product.id)}
-                      className="relative w-full aspect-[16/10] rounded-2xl bg-[#161626] border border-white/10 overflow-hidden cursor-pointer group-hover:border-[#7C3AED]/50 transition-colors"
+                      className="relative w-full aspect-video rounded-2xl bg-transparent overflow-hidden cursor-pointer group-hover:border-[#7C3AED]/50 transition-colors"
                     >
                       {product.image ? (
                         <img
@@ -479,7 +479,7 @@ export const StorefrontHome: React.FC = () => {
                   {/* Product Thumbnail Banner */}
                   <div
                     onClick={() => navigateToStorefront('product-detail', prod.id)}
-                    className="relative w-full aspect-[16/10] rounded-2xl bg-[#161626] border border-white/10 overflow-hidden cursor-pointer group-hover:border-[#7C3AED]/50 transition-colors"
+                    className="relative w-full aspect-video rounded-2xl bg-transparent overflow-hidden cursor-pointer group-hover:border-[#7C3AED]/50 transition-colors"
                   >
                     {prod.image ? (
                       <img

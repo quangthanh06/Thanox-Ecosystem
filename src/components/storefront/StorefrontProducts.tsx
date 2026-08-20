@@ -232,7 +232,7 @@ export const StorefrontProducts: React.FC = () => {
                   {/* Thumbnail Cover with Badge */}
                   <div
                     onClick={() => navigateToStorefront('product-detail', product.id)}
-                    className="relative aspect-video sm:aspect-square rounded-2xl bg-[#161626] border border-white/5 overflow-hidden flex items-center justify-center cursor-pointer group-hover:border-[#7C3AED]/30 transition-colors"
+                    className="relative aspect-video rounded-2xl bg-transparent overflow-hidden flex items-center justify-center cursor-pointer group-hover:border-[#7C3AED]/30 transition-colors"
                   >
                     {product.image ? (
                       <img

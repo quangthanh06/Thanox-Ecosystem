@@ -73,7 +73,7 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ product, isSeller, disc
       <div className="rounded-[16px] sm:rounded-[18px] bg-[#0D1020] border border-slate-800/80 p-1.5 sm:p-2.5 relative overflow-hidden shadow-xl shadow-black/40 w-full">
         <div
           className="product-image-container w-full rounded-[12px] sm:rounded-[14px] bg-[#080A14] relative overflow-hidden flex items-center justify-center"
-          style={{ aspectRatio: '16 / 10' }}
+          style={{ aspectRatio: '16 / 9' }}
         >
           {/* Badges Overlay on Image */}
           <div className="absolute top-2.5 left-2.5 z-10 flex flex-wrap gap-1.5 pointer-events-none">
@@ -97,7 +97,7 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ product, isSeller, disc
               src={productImage}
               alt={product.name}
               className="product-main-image w-full h-full object-contain block transition-transform duration-500 hover:scale-[1.03]"
-              style={{ aspectRatio: '16 / 10', objectFit: 'contain' }}
+              style={{ aspectRatio: '16 / 9', objectFit: 'contain' }}
             />
           ) : (
             <div className="flex flex-col items-center justify-center p-6 text-center select-none">
