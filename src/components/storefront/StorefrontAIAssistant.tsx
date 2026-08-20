@@ -322,23 +322,124 @@ export const StorefrontAIAssistant: React.FC = () => {
     }, 400);
   };
 
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(() => {
+    try {
+      const saved = localStorage.getItem('thanox_ai_bot_pos');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+          return {
+            x: Math.max(10, Math.min(parsed.x, window.innerWidth - 60)),
+            y: Math.max(10, Math.min(parsed.y, window.innerHeight - 80)),
+          };
+        }
+      }
+    } catch {}
+    return null;
+  });
+
+  const dragRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number; moved: boolean } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+
+    const el = e.currentTarget.getBoundingClientRect();
+    const currentX = position ? position.x : el.left;
+    const currentY = position ? position.y : el.top;
+
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      initialX: currentX,
+      initialY: currentY,
+      moved: false,
+    };
+
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {}
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current) return;
+
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+
+    if (Math.hypot(dx, dy) > 5) {
+      dragRef.current.moved = true;
+      setIsDragging(true);
+      setIsBubbleDismissed(true);
+
+      const newX = Math.max(10, Math.min(window.innerWidth - 55, dragRef.current.initialX + dx));
+      const newY = Math.max(10, Math.min(window.innerHeight - 65, dragRef.current.initialY + dy));
+
+      setPosition({ x: newX, y: newY });
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current) return;
+
+    const moved = dragRef.current.moved;
+    dragRef.current = null;
+
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {}
+
+    if (moved) {
+      if (position) {
+        localStorage.setItem('thanox_ai_bot_pos', JSON.stringify(position));
+      }
+      setTimeout(() => setIsDragging(false), 50);
+    } else {
+      setIsDragging(false);
+      setIsOpen((prev) => !prev);
+      setIsBubbleDismissed(true);
+    }
+  };
+
   return (
     <>
-      {/* 1. FLOATING MASCOT TRIGGER BUTTON (Bottom Right - Lifted on mobile to avoid bottom navigation bar) */}
-      <div className="fixed bottom-24 sm:bottom-6 right-4 sm:right-6 z-[999999] flex flex-col items-end pointer-events-auto select-none">
-        {/* Animated Speech Bubble */}
-        {!isOpen && !isBubbleDismissed && (
+      {/* 1. FLOATING DRAGGABLE MASCOT TRIGGER BUTTON (Drag anywhere on PC / Mobile & Compact Sleek Size) */}
+      <div
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        style={
+          position
+            ? {
+                position: 'fixed',
+                left: `${position.x}px`,
+                top: `${position.y}px`,
+                touchAction: 'none',
+              }
+            : {
+                position: 'fixed',
+                touchAction: 'none',
+              }
+        }
+        className={`${
+          position ? '' : 'bottom-24 sm:bottom-6 right-4 sm:right-6'
+        } z-[999999] flex flex-col items-end pointer-events-auto select-none cursor-grab active:cursor-grabbing transition-transform`}
+      >
+        {/* Compact Animated Speech Bubble */}
+        {!isOpen && !isBubbleDismissed && !isDragging && (
           <div
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               setIsOpen(true);
               setIsBubbleDismissed(true);
             }}
-            className="relative mb-2 animate-bounce flex items-center gap-2 bg-gradient-to-r from-[#161626] via-[#1E1B4B] to-[#0E1726] border-2 border-cyan-400/60 text-white text-xs font-extrabold py-2 px-4 rounded-2xl shadow-2xl shadow-cyan-500/30 backdrop-blur-xl cursor-pointer hover:scale-105 transition-all"
+            className="relative mb-1.5 animate-bounce flex items-center gap-1.5 bg-gradient-to-r from-[#161626]/95 via-[#1E1B4B]/95 to-[#0E1726]/95 border border-cyan-400/50 text-white text-[11px] font-extrabold py-1.5 px-3 rounded-2xl shadow-xl shadow-cyan-500/20 backdrop-blur-xl cursor-pointer hover:scale-105 transition-all"
           >
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
-            <span className="text-cyan-300 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]">
-              <Sparkles className="w-4 h-4 text-amber-300 animate-spin" />
-              <span>💬 THANOX AI - Tư vấn & Báo giá!</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
+            <span className="text-cyan-300 flex items-center gap-1 drop-shadow-[0_0_6px_rgba(6,182,212,0.8)]">
+              <Sparkles className="w-3 h-3 text-amber-300 animate-spin" />
+              <span>💬 THANOX AI - Tư vấn!</span>
             </span>
             <button
               type="button"
@@ -346,57 +447,57 @@ export const StorefrontAIAssistant: React.FC = () => {
                 e.stopPropagation();
                 setIsBubbleDismissed(true);
               }}
-              className="text-[#8B84A8] hover:text-white ml-2 p-0.5 rounded-lg hover:bg-white/10 cursor-pointer"
-              title="Đóng thông báo"
+              className="text-[#8B84A8] hover:text-white ml-1 p-0.5 rounded-md hover:bg-white/10 cursor-pointer"
+              title="Đóng"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-3 h-3" />
             </button>
             {/* Tooltip Arrow */}
-            <div className="absolute -bottom-2 right-7 w-3.5 h-3.5 bg-[#161626] border-b-2 border-r-2 border-cyan-400/60 transform rotate-45" />
+            <div className="absolute -bottom-1.5 right-5 w-2.5 h-2.5 bg-[#161626] border-b border-r border-cyan-400/50 transform rotate-45" />
           </div>
         )}
 
-        {/* 3D Cyber Mascot Avatar Button */}
+        {/* 3D Cyber Mascot Avatar Button (Sleek Compact 44px) */}
         <button
           type="button"
-          onClick={() => {
-            setIsOpen(!isOpen);
-            setIsBubbleDismissed(true);
-          }}
-          className={`relative group p-1 rounded-full transition-all duration-300 cursor-pointer shadow-2xl ${
+          className={`relative group p-0.5 rounded-full transition-all duration-300 cursor-pointer shadow-xl ${
             isOpen
-              ? 'bg-gradient-to-r from-red-500 to-pink-600 scale-105 ring-4 ring-pink-500/40 shadow-red-500/30'
-              : 'bg-gradient-to-r from-[#7C3AED] via-[#06B6D4] to-[#3B82F6] hover:scale-110 ring-4 ring-cyan-400/50 hover:ring-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.6)]'
+              ? 'bg-gradient-to-r from-red-500 to-pink-600 scale-105 ring-2 ring-pink-500/40 shadow-red-500/30'
+              : 'bg-gradient-to-r from-[#7C3AED] via-[#06B6D4] to-[#3B82F6] hover:scale-110 ring-2 ring-cyan-400/50 hover:ring-cyan-300 shadow-[0_0_18px_rgba(6,182,212,0.5)]'
           }`}
-          title="Trợ lý ảo AI THANOX Bot (Nhấp để mở tư vấn)"
+          title="Kéo để di chuyển • Nhấp để mở AI tư vấn"
         >
           {isOpen ? (
-            <div className="w-14 h-14 flex items-center justify-center text-white bg-[#0F0F1A] rounded-full">
-              <X className="w-8 h-8" />
+            <div className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center text-white bg-[#0F0F1A] rounded-full">
+              <X className="w-6 h-6" />
             </div>
           ) : (
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0F0F1A] via-[#161626] to-[#0A0A14] border-2 border-cyan-400 flex items-center justify-center relative overflow-hidden">
-              {/* Glowing Laser Scan Ring */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-[#7C3AED]/40 via-cyan-400/20 to-[#06B6D4]/40 animate-pulse" />
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-[#0F0F1A] via-[#161626] to-[#0A0A14] border border-cyan-400/80 flex items-center justify-center relative overflow-hidden">
+              {/* Glowing Laser Pulse */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-[#7C3AED]/30 via-cyan-400/20 to-[#06B6D4]/30 animate-pulse" />
 
-              {/* High-tech Robot Mascot Icon */}
+              {/* Compact High-tech Robot Mascot */}
               <div className="relative z-10 flex flex-col items-center justify-center">
-                <Bot className="w-8 h-8 text-cyan-300 group-hover:scale-110 transition-transform drop-shadow-[0_0_12px_rgba(6,182,212,0.9)]" />
-                <span className="text-[8px] font-black tracking-widest text-[#F0EDFF] uppercase bg-cyan-950/80 px-1.5 py-0.2 rounded-full border border-cyan-400/40 -mt-0.5">
-                  AI BOT
+                <Bot className="w-6 h-6 sm:w-6.5 sm:h-6.5 text-cyan-300 group-hover:scale-110 transition-transform drop-shadow-[0_0_8px_rgba(6,182,212,0.9)]" />
+                <span className="text-[7px] font-black tracking-widest text-[#F0EDFF] uppercase bg-cyan-950/90 px-1 py-0.1 rounded-full border border-cyan-400/30 -mt-0.5">
+                  AI
                 </span>
               </div>
 
               {/* Online Green Pulse Indicator */}
-              <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#0F0F1A] shadow-md shadow-emerald-400/80 animate-pulse" />
+              <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border border-[#0F0F1A] shadow-sm shadow-emerald-400/80 animate-pulse" />
             </div>
           )}
         </button>
       </div>
 
-      {/* 2. MAIN AI ASSISTANT CHAT MODAL (Exactly matching Image 1 style) */}
+      {/* 2. MAIN AI ASSISTANT CHAT MODAL (Smart screen anchoring) */}
       {isOpen && (
-        <div className="fixed bottom-36 sm:bottom-24 right-3 sm:right-6 w-[calc(100vw-24px)] sm:w-[420px] max-h-[78vh] h-[600px] z-[999999] flex flex-col bg-[#0B0B17]/95 backdrop-blur-2xl border-2 border-cyan-500/30 rounded-3xl shadow-2xl shadow-cyan-950/80 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div
+          className={`fixed bottom-24 sm:bottom-20 ${
+            position && position.x < window.innerWidth / 2 ? 'left-3 sm:left-6' : 'right-3 sm:right-6'
+          } w-[calc(100vw-24px)] sm:w-[410px] max-h-[76vh] h-[580px] z-[999999] flex flex-col bg-[#0B0B17]/95 backdrop-blur-2xl border-2 border-cyan-500/30 rounded-3xl shadow-2xl shadow-cyan-950/80 overflow-hidden animate-in fade-in zoom-in-95 duration-200`}
+        >
           {/* Header */}
           <div className="p-4 sm:p-4.5 bg-gradient-to-r from-[#6366F1] via-[#7C3AED] to-[#4F46E5] flex items-center justify-between shadow-lg shrink-0">
             <div className="flex items-center gap-3">
