@@ -1123,52 +1123,96 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Products CRUD
-  const addProduct = (prodData: Omit<Product, 'id' | 'soldCount' | 'updatedAt'>) => {
+  const addProduct = async (prodData: Omit<Product, 'id' | 'soldCount' | 'updatedAt'>) => {
     const sanitizedPrice = Math.max(0, prodData.price || 0);
     const sanitizedOriginalPrice = prodData.originalPrice ? Math.max(0, prodData.originalPrice) : undefined;
     const sanitizedName = prodData.name.trim();
+
+    // Use UUID to match Supabase
+    const newId = crypto.randomUUID ? crypto.randomUUID() : 'prod-' + Date.now();
 
     const newProduct: Product = {
       ...prodData,
       name: sanitizedName,
       price: sanitizedPrice,
       originalPrice: sanitizedOriginalPrice,
-      id: 'prod-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      id: newId,
       soldCount: 0,
       sold: 0,
-      isLocked: prodData.isLocked ?? true, // Mặc định khóa để bảo vệ sản phẩm do Admin tạo/chỉnh
+      isLocked: prodData.isLocked ?? true,
       updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
     };
+    
+    // Optimistic update
     const updated = [newProduct, ...products];
     setProducts(updated);
-    syncProductsToServer(updated);
-
-    // update category count
     setCategories((prev) =>
       prev.map((c) => (c.name === prodData.category ? { ...c, count: c.count + 1 } : c))
     );
 
-    showToast(`Đã thêm sản phẩm "${newProduct.name}" thành công! (🔒 Đã khóa bảo vệ)`, 'success');
+    try {
+      const { error } = await supabase.from('products').insert({
+        id: newId,
+        name: newProduct.name,
+        category: newProduct.category,
+        price: newProduct.price,
+        seller_price: newProduct.sellerPrice || newProduct.price,
+        original_price: newProduct.originalPrice,
+        stock: newProduct.stock?.toString() || 'unlimited',
+        status: newProduct.status,
+        description: newProduct.description,
+        image_url: newProduct.image,
+        hidden_keys_or_links: newProduct.downloadLinkOrKeys
+      });
+      if (error) throw error;
+      showToast(`Đã thêm sản phẩm "${newProduct.name}" lên Cloud thành công! (🔒 Đã khóa bảo vệ)`, 'success');
+    } catch (e) {
+      console.error('Lỗi khi lưu Supabase:', e);
+      showToast('Lỗi khi lưu lên Cloud, vui lòng thử lại', 'error');
+    }
   };
 
-  const updateProduct = (id: string, updates: Partial<Product>) => {
+  const updateProduct = async (id: string, updates: Partial<Product>) => {
+    let updatedProduct: Product | null = null;
     const updatedList = products.map((p) => {
       if (p.id === id) {
-        const updated = {
+        updatedProduct = {
           ...p,
           ...updates,
           name: updates.name !== undefined ? updates.name.trim() : p.name,
           price: updates.price !== undefined ? Math.max(0, updates.price) : p.price,
-          isLocked: updates.isLocked !== undefined ? updates.isLocked : true, // Tự động khóa bảo vệ khi Admin chỉnh sửa
+          isLocked: updates.isLocked !== undefined ? updates.isLocked : true,
           updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
         };
-        return updated;
+        return updatedProduct as Product;
       }
       return p;
     });
     setProducts(updatedList);
-    syncProductsToServer(updatedList);
-    showToast('Đã lưu thông tin sản phẩm và đồng bộ cơ sở dữ liệu! 🔒 (Đã khóa bảo vệ)', 'success');
+
+    if (updatedProduct) {
+      const p = updatedProduct as Product;
+      try {
+        const { error } = await supabase.from('products').update({
+          name: p.name,
+          category: p.category,
+          price: p.price,
+          seller_price: p.sellerPrice || p.price,
+          original_price: p.originalPrice,
+          stock: p.stock?.toString() || 'unlimited',
+          status: p.status,
+          description: p.description,
+          image_url: p.image,
+          hidden_keys_or_links: p.downloadLinkOrKeys
+        }).eq('id', id);
+
+        if (error) throw error;
+        showToast('Đã lưu thông tin sản phẩm và đồng bộ cơ sở dữ liệu Cloud! 🔒 (Đã khóa bảo vệ)', 'success');
+      } catch (e) {
+        console.error('Lỗi Update Supabase:', e);
+        showToast('Lỗi cập nhật trên Cloud', 'error');
+      }
+    }
   };
 
   const toggleProductLock = (id: string) => {
@@ -1187,7 +1231,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return p;
     });
     setProducts(updatedList);
-    syncProductsToServer(updatedList);
+    syncProductsToServer(updatedList); // Keep local sync as backup for lock state if you want
     if (nowLocked) {
       showToast(`🔒 Đã KHÓA "${targetName}"! Sản phẩm này sẽ không bị thay đổi khi hệ thống nâng cấp.`, 'success');
     } else {
@@ -1195,17 +1239,25 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const deleteProduct = (id: string) => {
+  const deleteProduct = async (id: string) => {
     const prod = products.find((p) => p.id === id);
     const updatedList = products.filter((p) => p.id !== id);
     setProducts(updatedList);
-    syncProductsToServer(updatedList);
+    
     if (prod) {
       setCategories((prev) =>
         prev.map((c) => (c.name === prod.category ? { ...c, count: Math.max(0, c.count - 1) } : c))
       );
     }
-    showToast('Đã xóa sản phẩm thành công', 'error');
+
+    try {
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) throw error;
+      showToast('Đã xóa sản phẩm trên Cloud thành công', 'success'); // Changed to success instead of error style
+    } catch (e) {
+      console.error('Lỗi Xóa Supabase:', e);
+      showToast('Lỗi khi xóa trên Cloud', 'error');
+    }
   };
 
   // Categories CRUD
