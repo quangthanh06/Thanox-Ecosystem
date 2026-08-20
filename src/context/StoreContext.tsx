@@ -87,8 +87,8 @@ interface StoreContextType {
   isAuthenticated: boolean;
 
   // Auth Actions
-  login: (identifier: string, password: string, rememberMe?: boolean) => { success: boolean; message?: string };
-  register: (username: string, email: string, password: string) => { success: boolean; message?: string };
+  login: (identifier: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; message?: string }>;
+  register: (username: string, email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   requestPasswordReset: (email: string) => { success: boolean; message?: string; otp?: string };
   resetPassword: (email: string, otpOrToken: string, newPassword: string) => { success: boolean; message?: string };
@@ -225,8 +225,39 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     };
     
-    fetchSupabaseProducts();
-  }, []);
+    const fetchSupabaseUsers = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+          
+          if (data && data.length > 0) {
+            const mappedUsers: User[] = data.map((u) => ({
+              id: u.id,
+              username: u.username,
+              email: u.email,
+              password: u.password,
+              role: u.role as 'admin' | 'user',
+              balance: Number(u.balance) || 0,
+              totalSpent: Number(u.total_spent) || 0,
+              status: u.status as 'active' | 'banned',
+              createdAt: u.created_at,
+              joinDate: new Date(u.created_at).toISOString().replace('T', ' ').substring(0, 16),
+            }));
+            
+            setUsers(mappedUsers);
+          }
+        } catch (err) {
+          console.error('Lỗi tải Users từ Supabase:', err);
+        }
+      };
+
+      fetchSupabaseProducts();
+      fetchSupabaseUsers();
+    }, []);
 
   const [categories, setCategories] = useState<Category[]>(() => {
     const loaded = safeGetItem<Category[]>('thanox_categories', INITIAL_CATEGORIES);
@@ -1787,30 +1818,37 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Auth Operations
-  const login = (identifier: string, _password: string, _rememberMe = true): { success: boolean; message?: string } => {
+  const login = async (identifier: string, password: string, _rememberMe = true): Promise<{ success: boolean; message?: string }> => {
     const cleanId = identifier.trim().toLowerCase();
     if (!cleanId) {
       return { success: false, message: 'Vui lòng nhập tên đăng nhập hoặc email' };
     }
 
-    const foundUser = users.find(
-      (u) => u.username.toLowerCase() === cleanId || u.email.toLowerCase() === cleanId
-    );
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .or(`username.ilike.${cleanId},email.ilike.${cleanId}`)
+        .eq('password', password)
+        .single();
+      
+      if (error || !data) {
+        return { success: false, message: 'Sai tài khoản hoặc mật khẩu.' };
+      }
 
-    if (!foundUser) {
-      return { success: false, message: 'Tài khoản không tồn tại trong hệ thống.' };
+      if (data.status === 'banned') {
+        return { success: false, message: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin để được giải quyết.' };
+      }
+
+      setCurrentUserId(data.id);
+      showToast(`Đăng nhập thành công! Xin chào ${data.username}`, 'success');
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: 'Lỗi máy chủ, vui lòng thử lại.' };
     }
-
-    if (foundUser.status === 'banned') {
-      return { success: false, message: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin để được giải quyết.' };
-    }
-
-    setCurrentUserId(foundUser.id);
-    showToast(`Đăng nhập thành công! Xin chào ${foundUser.username}`, 'success');
-    return { success: true };
   };
 
-  const register = (username: string, email: string, _password: string): { success: boolean; message?: string } => {
+  const register = async (username: string, email: string, password: string): Promise<{ success: boolean; message?: string }> => {
     const cleanUsername = username.trim();
     const cleanEmail = email.trim().toLowerCase();
 
@@ -1826,83 +1864,71 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return { success: false, message: 'Địa chỉ email không hợp lệ.' };
     }
 
-    const isDuplicateUsername = users.some(
-      (u) => u.username.toLowerCase() === cleanUsername.toLowerCase()
-    );
-    if (isDuplicateUsername) {
-      return { success: false, message: 'Tên đăng nhập này đã được sử dụng. Vui lòng chọn tên khác.' };
-    }
-
-    const isDuplicateEmail = users.some(
-      (u) => u.email.toLowerCase() === cleanEmail
-    );
-    if (isDuplicateEmail) {
-      return { success: false, message: 'Địa chỉ email này đã được liên kết với một tài khoản khác.' };
-    }
-
-    const refCodeToUse =
-      activeReferralCode ||
-      (typeof window !== 'undefined' ? sessionStorage.getItem('thanox_ref') : null);
-    let referrerUser: User | undefined;
-    if (refCodeToUse) {
-      const cleanRef = refCodeToUse.trim().toLowerCase();
-      referrerUser = users.find(
-        (u) =>
-          (u.refCode && u.refCode.toLowerCase() === cleanRef) ||
-          u.username.toLowerCase() === cleanRef
-      );
-    }
-
-    const newUser: User = {
-      id: 'user-' + Date.now(),
-      username: cleanUsername,
-      name: cleanUsername,
-      email: cleanEmail,
-      role: 'user',
-      balance: 0,
-      affiliateBalance: 0,
-      referredBy: referrerUser ? referrerUser.id : undefined,
-      refCode: cleanUsername.toUpperCase(),
-      totalOrders: 0,
-      totalSpent: 0,
-      status: 'active',
-      createdAt: new Date().toISOString().split('T')[0],
-      avatarText: cleanUsername.substring(0, 2).toUpperCase(),
-    };
-
-    setUsers((prev) => [newUser, ...prev]);
-    setCurrentUserId(newUser.id);
-
-    // Sync new user to Server DB so Admin sees the user in real-time
     try {
-      fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: cleanUsername,
-          email: cleanEmail,
-          password,
-          refCode: refCode || undefined,
-        }),
-      }).catch(() => {});
-    } catch {
-      // Offline fallback
+      // Check username duplicate
+      const { data: dupUser } = await supabase.from('users').select('id').eq('username', cleanUsername);
+      if (dupUser && dupUser.length > 0) {
+        return { success: false, message: 'Tên đăng nhập này đã được sử dụng. Vui lòng chọn tên khác.' };
+      }
+      
+      // Check email duplicate
+      const { data: dupEmail } = await supabase.from('users').select('id').eq('email', cleanEmail);
+      if (dupEmail && dupEmail.length > 0) {
+        return { success: false, message: 'Địa chỉ email này đã được liên kết với một tài khoản khác.' };
+      }
+      
+      const newId = crypto.randomUUID ? crypto.randomUUID() : 'user-' + Date.now();
+
+      const { error } = await supabase.from('users').insert({
+        id: newId,
+        username: cleanUsername,
+        email: cleanEmail,
+        password: password, // Note: storing plaintext for migration only
+        role: 'user',
+        balance: 0,
+        status: 'active'
+      });
+
+      if (error) throw error;
+      
+      const newUser: User = {
+        id: newId,
+        username: cleanUsername,
+        name: cleanUsername,
+        email: cleanEmail,
+        password: password,
+        role: 'user',
+        balance: 0,
+        affiliateBalance: 0,
+        totalOrders: 0,
+        totalSpent: 0,
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        joinDate: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        avatarText: cleanUsername.substring(0, 2).toUpperCase(),
+      };
+
+      setUsers((prev) => [newUser, ...prev]);
+      setCurrentUserId(newId);
+
+      setNotifications((prev) => [
+        {
+          id: 'notif-' + Date.now(),
+          title: `Thành viên mới gia nhập: ${newUser.username}`,
+          description: `Tài khoản ${newUser.username} vừa đăng ký thành công (${newUser.email})`,
+          time: 'Vừa xong',
+          read: false,
+          type: 'system',
+        },
+        ...prev,
+      ]);
+
+      showToast(`Đăng ký tài khoản "${newUser.username}" thành công!`, 'success');
+      return { success: true };
+    } catch (err) {
+      console.error(err);
+      return { success: false, message: 'Lỗi máy chủ khi đăng ký.' };
     }
-
-    setNotifications((prev) => [
-      {
-        id: 'notif-' + Date.now(),
-        title: `Thành viên mới gia nhập: ${newUser.username}`,
-        description: `Tài khoản ${newUser.username} vừa đăng ký thành công (${newUser.email})`,
-        time: 'Vừa xong',
-        read: false,
-        type: 'system',
-      },
-      ...prev,
-    ]);
-
-    showToast(`Đăng ký tài khoản "${newUser.username}" thành công!`, 'success');
-    return { success: true };
   };
 
   const logout = () => {
@@ -2002,12 +2028,30 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // User Actions
-  const updateUser = (id: string, updates: Partial<User>) => {
+  const updateUser = async (id: string, updates: Partial<User>) => {
     setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...updates } : u)));
-    showToast('Đã cập nhật thông tin người dùng', 'success');
+    
+    try {
+      const dbUpdates: any = {};
+      if (updates.username !== undefined) dbUpdates.username = updates.username;
+      if (updates.email !== undefined) dbUpdates.email = updates.email;
+      if (updates.password !== undefined) dbUpdates.password = updates.password;
+      if (updates.balance !== undefined) dbUpdates.balance = updates.balance;
+      if (updates.role !== undefined) dbUpdates.role = updates.role;
+      if (updates.status !== undefined) dbUpdates.status = updates.status;
+
+      if (Object.keys(dbUpdates).length > 0) {
+        const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
+        if (error) throw error;
+      }
+      showToast('Đã cập nhật thông tin người dùng trên Cloud', 'success');
+    } catch (e) {
+      console.error(e);
+      showToast('Lỗi khi cập nhật trên Cloud', 'error');
+    }
   };
 
-  const deleteUser = (id: string) => {
+  const deleteUser = async (id: string) => {
     const target = users.find((u) => u.id === id);
     if (!target) return;
     if (target.role === 'admin' || target.username === 'admin') {
@@ -2015,10 +2059,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return;
     }
     setUsers((prev) => prev.filter((u) => u.id !== id));
-    showToast(`Đã xóa tài khoản ${target.username} thành công`, 'success');
+    
+    try {
+      const { error } = await supabase.from('users').delete().eq('id', id);
+      if (error) throw error;
+      showToast(`Đã xóa tài khoản ${target.username} trên Cloud thành công`, 'success');
+    } catch (e) {
+      console.error(e);
+      showToast('Lỗi khi xóa tài khoản trên Cloud', 'error');
+    }
   };
 
-  const adjustUserBalance = (userId: string, amount: number, note: string) => {
+  const adjustUserBalance = async (userId: string, amount: number, note: string) => {
     const targetUser = users.find((u) => u.id === userId);
     if (!targetUser) return;
     const newBalance = Math.max(0, targetUser.balance + amount);
@@ -2039,18 +2091,33 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
     setTransactions((prev) => [newTx, ...prev]);
 
-    showToast(
-      `Đã ${amount >= 0 ? 'cộng' : 'trừ'} ${Math.abs(amount).toLocaleString('vi-VN')}đ vào ví của ${targetUser.username}`,
-      'success'
-    );
+    try {
+      const { error } = await supabase.from('users').update({ balance: newBalance }).eq('id', userId);
+      if (error) throw error;
+      showToast(
+        `Đã ${amount >= 0 ? 'cộng' : 'trừ'} ${Math.abs(amount).toLocaleString('vi-VN')}đ vào ví của ${targetUser.username} trên Cloud`,
+        'success'
+      );
+    } catch (e) {
+      console.error(e);
+      showToast('Lỗi đồng bộ số dư lên Cloud', 'error');
+    }
   };
 
-  const toggleBanUser = (id: string) => {
+  const toggleBanUser = async (id: string) => {
     const user = users.find((u) => u.id === id);
     if (!user) return;
     const newStatus = user.status === 'active' ? 'banned' : 'active';
     setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status: newStatus } : u)));
-    showToast(`Đã ${newStatus === 'banned' ? 'khóa' : 'mở khóa'} tài khoản ${user.username}`, newStatus === 'banned' ? 'error' : 'success');
+    
+    try {
+      const { error } = await supabase.from('users').update({ status: newStatus }).eq('id', id);
+      if (error) throw error;
+      showToast(`Đã ${newStatus === 'banned' ? 'khóa' : 'mở khóa'} tài khoản ${user.username} trên Cloud`, newStatus === 'banned' ? 'error' : 'success');
+    } catch (e) {
+      console.error(e);
+      showToast('Lỗi cập nhật trạng thái lên Cloud', 'error');
+    }
   };
 
   // Support Tickets

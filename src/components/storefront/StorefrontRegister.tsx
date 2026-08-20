@@ -110,15 +110,14 @@ export const StorefrontRegister: React.FC = () => {
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      const res = register(cleanUsername, cleanEmail, password);
+    register(cleanUsername, cleanEmail, password).then(res => {
       setIsLoading(false);
       if (res.success) {
         navigate(redirectPath, { replace: true });
       } else {
         setErrorMessage(res.message || 'Đăng ký không thành công');
       }
-    }, 400);
+    });
   };
 
   return (

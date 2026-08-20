@@ -65,15 +65,14 @@ export const StorefrontLogin: React.FC = () => {
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      const res = login(identifier, password, rememberMe);
+    login(identifier, password, rememberMe).then(res => {
       setIsLoading(false);
       if (res.success) {
         navigate(redirectPath, { replace: true });
       } else {
         setErrorMessage(res.message || 'Đăng nhập không thành công');
       }
-    }, 350);
+    });
   };
 
   const handle2FASubmit = (e: React.FormEvent) => {
@@ -95,15 +94,14 @@ export const StorefrontLogin: React.FC = () => {
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      const res = login(identifier, password, rememberMe);
+    login(identifier, password, rememberMe).then(res => {
       setIsLoading(false);
       if (res.success) {
         navigate(redirectPath, { replace: true });
       } else {
         setErrorMessage(res.message || 'Đăng nhập không thành công');
       }
-    }, 350);
+    });
   };
 
   return (
