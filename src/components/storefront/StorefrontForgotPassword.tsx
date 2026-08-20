@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 export const StorefrontForgotPassword: React.FC = () => {
-  const { requestPasswordReset, confirmPasswordReset, showToast } = useStore();
+  const { requestPasswordReset, resetPassword, showToast } = useStore();
   const navigate = useNavigate();
 
   const [step, setStep] = useState<'request' | 'reset'>('request');
@@ -31,7 +31,7 @@ export const StorefrontForgotPassword: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleRequestSubmit = (e: React.FormEvent) => {
+  const handleRequestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
@@ -43,7 +43,7 @@ export const StorefrontForgotPassword: React.FC = () => {
     }
 
     setIsLoading(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       const res = await requestPasswordReset(cleanEmail);
       setIsLoading(false);
       if (res.success) {
@@ -59,32 +59,35 @@ export const StorefrontForgotPassword: React.FC = () => {
     e.preventDefault();
     setErrorMessage(null);
 
-    if (!resetCode || resetCode.trim().length < 6) {
-      setErrorMessage('Vui lòng nhập mã xác thực OTP 6 số');
+    if (!resetCode || resetCode.length < 6) {
+      setErrorMessage('Vui l�ng nh?p m� x�c th?c g?m 6 ch? s?');
       return;
     }
 
     if (!newPassword || newPassword.length < 6) {
-      setErrorMessage('Mật khẩu mới phải có ít nhất 6 ký tự');
+      setErrorMessage('M?t kh?u m?i ph?i c� �t nh?t 6 k� t?');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setErrorMessage('Mật khẩu xác nhận không khớp');
+      setErrorMessage('M?t kh?u x�c nh?n kh�ng kh?p');
       return;
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      const res = confirmPasswordReset(email.trim().toLowerCase(), resetCode.trim(), newPassword);
+    try {
+      const res = await resetPassword(email.trim().toLowerCase(), resetCode.trim(), newPassword);
       setIsLoading(false);
       if (res.success) {
-        showToast('Đặt lại mật khẩu thành công! Hãy đăng nhập với mật khẩu mới.', 'success');
+        showToast('�?t l?i m?t kh?u th�nh c�ng! H�y dang nh?p v?i m?t kh?u m?i.', 'success');
         navigate('/login', { replace: true });
       } else {
-        setErrorMessage(res.message || 'Mã xác thực không đúng hoặc đã hết hạn');
+        setErrorMessage(res.message || 'M� x�c th?c kh�ng ch�nh x�c ho?c d� h?t h?n');
       }
-    }, 400);
+    } catch (err) {
+      setIsLoading(false);
+      setErrorMessage('L?i h? th?ng');
+    }
   };
 
   return (
