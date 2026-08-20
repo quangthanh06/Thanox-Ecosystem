@@ -76,20 +76,30 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
   // 2FA Google Authenticator testing state
   const [totpTestCode, setTotpTestCode] = useState('');
   const [totpTestResult, setTotpTestResult] = useState<{ valid: boolean; reason?: string } | null>(null);
+  const [pendingTwoFactorSecret, setPendingTwoFactorSecret] = useState<string | null>(null);
 
   const handleVerifyTotpTest = () => {
     if (!totpTestCode.trim()) {
-      showToast('Vui lòng nhập mã 6 số từ Google Authenticator trên điện thoại', 'error');
+      showToast('Vui l�ng nh?p m� 6 s? t? Google Authenticator tr�n di?n tho?i', 'error');
       return;
     }
-    const secret = formData.twoFactorSecret || 'JBSWY3DPEHPK3PXP';
+    // N?u c� m� t?m th� test m� t?m, n?u kh�ng th� test m� hi?n t?i
+    const secretToTest = pendingTwoFactorSecret || formData.twoFactorSecret || 'JBSWY3DPEHPK3PXP';
     const backup = formData.twoFactorBackupCode || '888999';
-    const res = verifyTotpCode(secret, totpTestCode.trim(), backup);
+    const res = verifyTotpCode(secretToTest, totpTestCode.trim(), backup);
     setTotpTestResult(res);
     if (res.valid) {
-      showToast('✅ Mã OTP chính xác! Google Authenticator đã kết nối thành công với Shop.', 'success');
+      if (pendingTwoFactorSecret) {
+        // �p d?ng ngay v�o formData v� C?p nh?t DB
+        setFormData((prev) => ({ ...prev, twoFactorSecret: pendingTwoFactorSecret }));
+        updateSettings({ twoFactorSecret: pendingTwoFactorSecret });
+        setPendingTwoFactorSecret(null); // �� x�c nh?n xong
+        showToast('?? M� OTP ch�nh x�c! Secret Key m?i d� du?c �p d?ng v� LUU v�o h? th?ng.', 'success');
+      } else {
+        showToast('? M� OTP ch�nh x�c! Google Authenticator dang ho?t d?ng t?t.', 'success');
+      }
     } else {
-      showToast(res.reason || 'Mã OTP không đúng hoặc đã hết hạn', 'error');
+      showToast(res.reason || 'M� OTP kh�ng d�ng ho?c d� h?t h?n', 'error');
     }
   };
 
@@ -99,10 +109,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
     for (let i = 0; i < 16; i++) {
       newSec += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    setFormData({ ...formData, twoFactorSecret: newSec });
+    // LUU �: Luu v�o state t?m, chua luu v�o formData
+    setPendingTwoFactorSecret(newSec);
     setTotpTestResult(null);
     setTotpTestCode('');
-    showToast(`Đã tạo Secret Key mới: ${newSec}. Hãy quét lại mã QR trên điện thoại!`, 'info');
+    showToast(`�� t?o Secret Key m?i: ${newSec}. H�y qu�t m� QR v� x�c nh?n ngay b�n du?i d? �p d?ng!`, 'info');
   };
 
   const copySecretToClipboard = (text: string) => {
@@ -2223,7 +2234,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                 <div className="md:col-span-5 flex flex-col items-center justify-center p-4 rounded-2xl bg-white border-2 border-amber-400/40 shadow-xl shadow-amber-500/10 text-center">
                   <img
                     src={generateGoogleAuthQrUrl(
-                      generateTotpUri(formData.twoFactorSecret || 'JBSWY3DPEHPK3PXP', 'admin@thanox.vn', formData.storeName || 'THANOX STORE')
+                      generateTotpUri(pendingTwoFactorSecret || formData.twoFactorSecret || 'JBSWY3DPEHPK3PXP', 'admin@thanox.vn', formData.storeName || 'THANOX STORE')
                     )}
                     alt="Google Authenticator QR"
                     className="w-48 h-48 rounded-xl object-contain"
@@ -2255,12 +2266,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                       <input
                         type="text"
                         readOnly
-                        value={formData.twoFactorSecret || 'JBSWY3DPEHPK3PXP'}
+                        value={pendingTwoFactorSecret || formData.twoFactorSecret || 'JBSWY3DPEHPK3PXP'}
                         className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl px-3 py-2 font-mono font-bold text-sm text-amber-300 tracking-wider"
                       />
                       <button
                         type="button"
-                        onClick={() => copySecretToClipboard(formData.twoFactorSecret || 'JBSWY3DPEHPK3PXP')}
+                        onClick={() => copySecretToClipboard(pendingTwoFactorSecret || formData.twoFactorSecret || 'JBSWY3DPEHPK3PXP')}
                         className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer shrink-0"
                         title="Sao chép Secret Key"
                       >
