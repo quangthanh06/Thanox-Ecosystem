@@ -329,6 +329,7 @@ export interface StoreSettings {
   botUsername?: string;
   facebookFanpage: string;
   typography?: TypographySettings;
+  aiBotSize?: 'small' | 'medium' | 'large';
   
   // Banking / VietQR Config
   bankEnabled: boolean;

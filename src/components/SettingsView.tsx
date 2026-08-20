@@ -1438,6 +1438,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                       className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
                     />
                   </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                      Kích Thước Bot AI (Màn Khách)
+                    </label>
+                    <select
+                      value={formData.aiBotSize || 'medium'}
+                      onChange={(e) => setFormData({ ...formData, aiBotSize: e.target.value as 'small' | 'medium' | 'large' })}
+                      className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
+                    >
+                      <option value="small">Nhỏ (Gọn gàng)</option>
+                      <option value="medium">Vừa (Mặc định)</option>
+                      <option value="large">To (Nổi bật)</option>
+                    </select>
+                  </div>
                 </div>
               </Card>
             </div>

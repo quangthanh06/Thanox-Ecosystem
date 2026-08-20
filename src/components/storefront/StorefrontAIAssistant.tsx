@@ -31,7 +31,7 @@ interface ChatMessage {
 }
 
 export const StorefrontAIAssistant: React.FC = () => {
-  const { products, settings, navigateToStorefront } = useStore();
+  const { products, settings, navigateToStorefront, appMode } = useStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isBubbleDismissed, setIsBubbleDismissed] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
@@ -42,6 +42,9 @@ export const StorefrontAIAssistant: React.FC = () => {
 
   const shopName = settings.storeName || 'THANOX STORE';
   const adminZalo = settings.adminZalo || settings.zaloHotline || '0916396901';
+
+  // Do not render in Admin mode
+  if (appMode === 'admin') return null;
 
   // Initial greeting
   useEffect(() => {
@@ -401,6 +404,11 @@ export const StorefrontAIAssistant: React.FC = () => {
     }
   };
 
+  const sizeClass = 
+    settings.aiBotSize === 'small' ? 'w-9 h-9 sm:w-10 sm:h-10' :
+    settings.aiBotSize === 'large' ? 'w-14 h-14 sm:w-16 sm:h-16' : 
+    'w-11 h-11 sm:w-12 sm:h-12';
+
   return (
     <>
       {/* 1. FLOATING DRAGGABLE MASCOT TRIGGER BUTTON (Drag anywhere on PC / Mobile & Compact Sleek Size) */}
@@ -423,8 +431,8 @@ export const StorefrontAIAssistant: React.FC = () => {
               }
         }
         className={`${
-          position ? '' : 'bottom-24 sm:bottom-6 right-4 sm:right-6'
-        } z-[999999] flex flex-col items-end pointer-events-auto select-none cursor-grab active:cursor-grabbing transition-transform`}
+          position ? '' : 'bottom-24 sm:bottom-28 left-4 sm:left-6'
+        } z-[999999] flex flex-col items-center pointer-events-auto select-none cursor-grab active:cursor-grabbing transition-transform`}
       >
         {/* Compact Animated Speech Bubble */}
         {!isOpen && !isBubbleDismissed && !isDragging && (
@@ -453,7 +461,7 @@ export const StorefrontAIAssistant: React.FC = () => {
               <X className="w-3 h-3" />
             </button>
             {/* Tooltip Arrow */}
-            <div className="absolute -bottom-1.5 right-5 w-2.5 h-2.5 bg-[#161626] border-b border-r border-cyan-400/50 transform rotate-45" />
+            <div className="absolute -bottom-1.5 right-1/2 translate-x-1/2 w-2.5 h-2.5 bg-[#161626] border-b border-r border-cyan-400/50 transform rotate-45" />
           </div>
         )}
 
@@ -468,11 +476,11 @@ export const StorefrontAIAssistant: React.FC = () => {
           title="Kéo để di chuyển • Nhấp để mở AI tư vấn"
         >
           {isOpen ? (
-            <div className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center text-white bg-[#0F0F1A] rounded-full">
+            <div className={`${sizeClass} flex items-center justify-center text-white bg-[#0F0F1A] rounded-full`}>
               <X className="w-6 h-6" />
             </div>
           ) : (
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-[#0F0F1A] via-[#161626] to-[#0A0A14] border border-cyan-400/80 flex items-center justify-center relative overflow-hidden">
+            <div className={`${sizeClass} rounded-full bg-gradient-to-br from-[#0F0F1A] via-[#161626] to-[#0A0A14] border border-cyan-400/80 flex items-center justify-center relative overflow-hidden`}>
               {/* Glowing Laser Pulse */}
               <div className="absolute inset-0 bg-gradient-to-tr from-[#7C3AED]/30 via-cyan-400/20 to-[#06B6D4]/30 animate-pulse" />
 
