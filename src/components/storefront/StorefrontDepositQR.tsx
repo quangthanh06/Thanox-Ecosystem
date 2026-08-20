@@ -136,6 +136,29 @@ export const StorefrontDepositQR: React.FC = () => {
     return () => clearTimeout(timer);
   }, [customAmountText, isTyping, minDeposit, maxDeposit]);
 
+  // Real-time Bank Reconciliation Polling (Checks every 3.5s)
+  useEffect(() => {
+    if (!transactionCode || !isValidAmount) return;
+
+    let isSubscribed = true;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/deposit/status/${encodeURIComponent(transactionCode)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.success && data.found && data.status === 'approved' && isSubscribed) {
+          showToast(`⚡ Nhận tiền thành công! Đã cộng ${(data.amount || activeAmount).toLocaleString('vi-VN')}đ vào ví`, 'success');
+          clearInterval(interval);
+        }
+      } catch {}
+    }, 3500);
+
+    return () => {
+      isSubscribed = false;
+      clearInterval(interval);
+    };
+  }, [transactionCode, isValidAmount, activeAmount, showToast]);
+
   const handleCustomAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsTyping(true);
     const raw = e.target.value.replace(/\D/g, '');

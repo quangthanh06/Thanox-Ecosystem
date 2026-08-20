@@ -476,6 +476,182 @@ app.post('/api/orders', (req, res) => {
   }
 });
 
+// 8. Health Check Endpoint (Deployment Liveness & Readiness Probes)
+app.get('/api/health', (req, res) => {
+  const db = readDB();
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: '2026.8.20',
+    stats: {
+      users: db.users?.length || 0,
+      products: db.products?.length || 0,
+      orders: db.orders?.length || 0,
+      topups: db.topups?.length || 0,
+    }
+  });
+});
+
+app.get('/api/ready', (req, res) => {
+  res.json({ ready: true, time: Date.now() });
+});
+
+// 9. Incident Reporting (Diagnostics & Monitoring)
+app.post('/api/incidents', (req, res) => {
+  try {
+    const { type, severity, message, route, stack } = req.body;
+    const db = readDB();
+    if (!db.incidents) db.incidents = [];
+
+    const incident = {
+      id: `inc-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      timestamp: new Date().toISOString(),
+      type: type || 'FRONTEND_RUNTIME_ERROR',
+      severity: severity || 'P2',
+      message: message || 'Unknown error',
+      route: route || '/',
+      stack: stack || '',
+      resolved: false
+    };
+
+    db.incidents.unshift(incident);
+    if (db.incidents.length > 200) db.incidents = db.incidents.slice(0, 200);
+    writeDB(db);
+
+    res.json({ success: true, incidentId: incident.id });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 10. Real-time Deposit Status Polling (Frontend polls every 3.5s)
+app.get('/api/deposit/status/:code', (req, res) => {
+  try {
+    const { code } = req.params;
+    const db = readDB();
+    const cleanCode = (code || '').trim().toUpperCase();
+
+    const topup = (db.topups || []).find(
+      t => (t.code && t.code.toUpperCase() === cleanCode) || 
+           (t.referenceCode && t.referenceCode.toUpperCase() === cleanCode) ||
+           (t.transferContent && t.transferContent.toUpperCase().includes(cleanCode))
+    );
+
+    if (!topup) {
+      return res.json({ success: true, status: 'pending', found: false });
+    }
+
+    res.json({
+      success: true,
+      found: true,
+      status: topup.status, // 'pending' | 'approved' | 'rejected'
+      amount: topup.amount,
+      approvedAt: topup.approvedAt || null
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 11. Automated Bank Webhook & Reconciliation Engine (MBBank 0326884292 - TRAN QUANG THANH)
+app.post(['/api/webhook/bank', '/api/webhook/sepay', '/api/webhook/thueapi'], (req, res) => {
+  try {
+    const payload = req.body;
+    console.log('[BANK WEBHOOK RECEIVED]:', JSON.stringify(payload));
+
+    if (!payload || typeof payload !== 'object') {
+      return res.status(400).json({ success: false, message: 'Invalid payload' });
+    }
+
+    const db = readDB();
+    if (!db.processedBankTransactions) db.processedBankTransactions = [];
+    if (!db.bankTransactions) db.bankTransactions = [];
+
+    const rawId = payload.id || payload.transaction_id || payload.trans_id || payload.ref_id || payload.transactionId || `tx-${Date.now()}`;
+    const transactionId = String(rawId).trim();
+    const amountIn = Number(payload.transferAmount || payload.amount || payload.amount_in || payload.amountIn || payload.money || 0);
+    const content = String(payload.content || payload.description || payload.memo || payload.transfer_content || payload.msg || '').trim();
+    const accountNumber = String(payload.accountNumber || payload.subAccount || payload.bank_account || '0326884292').trim();
+
+    // 1. IDEMPOTENCY CHECK — Chống cộng tiền 2 lần
+    if (db.processedBankTransactions.includes(transactionId)) {
+      console.log(`[BANK WEBHOOK] Transaction ${transactionId} already processed. Skipping duplicate.`);
+      return res.json({ success: true, message: 'Transaction already processed', idempotent: true });
+    }
+
+    // 2. Log Raw Bank Transaction
+    const bankRecord = {
+      id: transactionId,
+      timestamp: new Date().toISOString(),
+      amount: amountIn,
+      content: content,
+      accountNumber: accountNumber,
+      status: 'received'
+    };
+    db.bankTransactions.unshift(bankRecord);
+
+    // 3. MATCHING ENGINE — Tìm Deposit Order tương ứng
+    const cleanContent = content.toUpperCase().replace(/\s+/g, '');
+    let matchedTopup = null;
+
+    if (db.topups && Array.isArray(db.topups)) {
+      matchedTopup = db.topups.find(t => {
+        if (t.status === 'approved') return false;
+        const code = (t.code || t.referenceCode || '').toUpperCase().trim();
+        if (code && cleanContent.includes(code.replace(/\s+/g, ''))) return true;
+        if (t.transferContent && cleanContent.includes(t.transferContent.toUpperCase().replace(/\s+/g, ''))) return true;
+        return false;
+      });
+    }
+
+    // 4. RECONCILIATION & WALLET BALANCE CREDIT
+    if (matchedTopup && amountIn > 0) {
+      console.log(`[BANK MATCH SUCCESS] Matched Topup: ${matchedTopup.id}, Amount: ${amountIn}`);
+      matchedTopup.status = 'approved';
+      matchedTopup.approvedAt = new Date().toISOString();
+      matchedTopup.actualAmountReceived = amountIn;
+
+      const targetUser = db.users.find(u => u.id === matchedTopup.userId);
+      if (targetUser) {
+        const balanceBefore = Number(targetUser.balance || 0);
+        targetUser.balance = balanceBefore + amountIn;
+        const balanceAfter = targetUser.balance;
+
+        // 5. LEDGER ENTRY — Ghi nhận biến động số dư bất biến
+        if (!db.transactions) db.transactions = [];
+        db.transactions.unshift({
+          id: `TXN-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
+          userId: targetUser.id,
+          type: 'deposit',
+          amount: amountIn,
+          balanceBefore: balanceBefore,
+          balanceAfter: balanceAfter,
+          referenceId: transactionId,
+          description: `Nạp tiền tự động qua MBBank (Mã GD: ${transactionId})`,
+          createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+          status: 'completed'
+        });
+      }
+
+      db.processedBankTransactions.push(transactionId);
+      bankRecord.status = 'matched_and_credited';
+      bankRecord.matchedTopupId = matchedTopup.id;
+
+      writeDB(db);
+      return res.json({ success: true, message: 'Bank deposit matched and credited successfully', topup: matchedTopup });
+    } else {
+      console.log(`[BANK UNMATCHED] Content: "${content}", Amount: ${amountIn}. Sent to Admin review.`);
+      bankRecord.status = 'unmatched_review';
+      writeDB(db);
+      return res.json({ success: true, message: 'Bank transaction logged. Pending match or manual review.', matched: false });
+    }
+  } catch (err) {
+    console.error('[BANK WEBHOOK ERROR]:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // ================= STATIC FILES & SPA FALLBACK =================
 
 // Serve built frontend assets

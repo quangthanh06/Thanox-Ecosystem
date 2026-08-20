@@ -1,7 +1,9 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useStore } from '../../context/StoreContext';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
+import { ComponentErrorBoundary } from '../ComponentErrorBoundary';
 import {
   Wallet,
   Package,
@@ -17,9 +19,10 @@ import {
   CreditCard,
 } from 'lucide-react';
 
-export const StorefrontAccount: React.FC = () => {
+const StorefrontAccountContent: React.FC = () => {
   const {
     currentUser,
+    isAuthenticated,
     orders,
     topups,
     transactions,
@@ -28,8 +31,8 @@ export const StorefrontAccount: React.FC = () => {
     showToast,
   } = useStore();
 
-  const userOrders = orders.filter((o) => o.userId === currentUser.id);
-  const userTopups = topups.filter((t) => t.userId === currentUser.id);
+  const userOrders = (orders || []).filter((o) => o && o.userId === currentUser?.id);
+  const userTopups = (topups || []).filter((t) => t && t.userId === currentUser?.id);
 
   const handleApplySeller = () => {
     const res = applySeller('Đăng ký trở thành đại lý phân phối Thanox');
@@ -40,6 +43,27 @@ export const StorefrontAccount: React.FC = () => {
     }
   };
 
+  // If not logged in or guest, render a welcoming login prompt without breaking
+  if (!isAuthenticated || !currentUser || currentUser.id === 'guest') {
+    return (
+      <div className="max-w-md mx-auto text-center py-16 space-y-4">
+        <div className="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto text-2xl font-bold">
+          🔒
+        </div>
+        <h2 className="text-xl font-bold text-[#F0EDFF]">Vui Lòng Đăng Nhập</h2>
+        <p className="text-xs text-[#8B84A8]">
+          Bạn cần đăng nhập tài khoản để xem thông tin hồ sơ, số dư ví và các đơn hàng đã mua.
+        </p>
+        <Link
+          to="/login"
+          className="inline-block px-6 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-xs transition-colors cursor-pointer"
+        >
+          Đăng Nhập Ngay
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-5xl mx-auto space-y-8 py-4">
       {/* Profile Banner */}
@@ -47,22 +71,22 @@ export const StorefrontAccount: React.FC = () => {
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#7C3AED] to-[#06B6D4] p-0.5 shadow-xl shadow-[#7C3AED]/20">
             <div className="w-full h-full bg-[#0F0F1A] rounded-[14px] flex items-center justify-center text-white font-display font-extrabold text-2xl">
-              {(currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase()}
+              {(currentUser?.name || currentUser?.username || 'U').charAt(0).toUpperCase()}
             </div>
           </div>
 
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <h1 className="font-display font-bold text-xl sm:text-2xl text-[#F0EDFF]">
-                {currentUser.name || currentUser.username}
+                {currentUser?.name || currentUser?.username}
               </h1>
               <Badge variant="brand" size="xs">
-                {currentUser.role === 'admin' ? 'Quản Trị Viên' : 'Thành Viên VIP'}
+                {currentUser?.role === 'admin' ? 'Quản Trị Viên' : 'Thành Viên VIP'}
               </Badge>
             </div>
-            <p className="text-xs text-[#8B84A8]">{currentUser.email}</p>
+            <p className="text-xs text-[#8B84A8]">{currentUser?.email || ''}</p>
             <div className="text-[11px] text-[#6B658E]">
-              Thành viên từ: <span className="text-[#CBC7E0]">{currentUser.createdAt}</span>
+              Thành viên từ: <span className="text-[#CBC7E0]">{currentUser?.createdAt || 'Hôm nay'}</span>
             </div>
           </div>
         </div>
@@ -92,7 +116,7 @@ export const StorefrontAccount: React.FC = () => {
             </div>
           </div>
           <div className="font-display font-black text-2xl text-emerald-400">
-            {currentUser.balance.toLocaleString('vi-VN')} <span className="text-xs font-normal">đ</span>
+            {(currentUser?.balance ?? 0).toLocaleString('vi-VN')} <span className="text-xs font-normal">đ</span>
           </div>
           <button
             onClick={() => navigateToStorefront('account-wallet-deposit')}
@@ -130,7 +154,7 @@ export const StorefrontAccount: React.FC = () => {
             </div>
           </div>
           <div className="font-display font-black text-2xl text-[#F0EDFF]">
-            {currentUser.totalSpent.toLocaleString('vi-VN')} <span className="text-xs font-normal text-[#8B84A8]">đ</span>
+            {(currentUser?.totalSpent ?? 0).toLocaleString('vi-VN')} <span className="text-xs font-normal text-[#8B84A8]">đ</span>
           </div>
           <button
             onClick={() => navigateToStorefront('account-transactions')}
@@ -213,10 +237,10 @@ export const StorefrontAccount: React.FC = () => {
               <h3 className="font-display font-bold text-lg text-[#F0EDFF]">
                 Chương Trình Đại Lý / CTV Thanox Store
               </h3>
-              {currentUser.sellerStatus === 'active' && (
+              {currentUser?.sellerStatus === 'active' && (
                 <Badge variant="success" size="xs" dot>Đại Lý Chính Thức</Badge>
               )}
-              {currentUser.sellerStatus === 'pending' && (
+              {currentUser?.sellerStatus === 'pending' && (
                 <Badge variant="warning" size="xs" dot>Đang Chờ Duyệt</Badge>
               )}
             </div>
@@ -226,11 +250,11 @@ export const StorefrontAccount: React.FC = () => {
           </div>
 
           <div>
-            {currentUser.sellerStatus === 'active' ? (
+            {currentUser?.sellerStatus === 'active' ? (
               <div className="px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-bold text-xs">
                 ✓ Đã Kích Hoạt Giá Đại Lý
               </div>
-            ) : currentUser.sellerStatus === 'pending' ? (
+            ) : currentUser?.sellerStatus === 'pending' ? (
               <div className="px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold text-xs">
                 ⏳ Hồ Sơ Đang Chờ Admin Duyệt
               </div>
@@ -248,5 +272,13 @@ export const StorefrontAccount: React.FC = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+export const StorefrontAccount: React.FC = () => {
+  return (
+    <ComponentErrorBoundary componentName="Tài Khoản">
+      <StorefrontAccountContent />
+    </ComponentErrorBoundary>
   );
 };

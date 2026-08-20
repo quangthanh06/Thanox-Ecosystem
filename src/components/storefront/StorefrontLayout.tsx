@@ -215,12 +215,12 @@ export const StorefrontLayout: React.FC = () => {
           {/* Right Action Bar */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Customer Wallet Pill (When authenticated) */}
-            {isAuthenticated ? (
+            {isAuthenticated && currentUser ? (
               <div className="hidden sm:flex items-center bg-[#161626] border border-white/10 rounded-xl p-1.5 pl-3 gap-2.5 shrink-0 whitespace-nowrap">
                 <div className="text-left whitespace-nowrap">
                   <div className="text-[10px] uppercase font-bold text-[#8B84A8] whitespace-nowrap leading-none mb-0.5">Số dư ví</div>
                   <div className="font-display font-extrabold text-xs text-emerald-400 whitespace-nowrap leading-none">
-                    {currentUser.balance.toLocaleString('vi-VN')} <span className="text-[10px] font-bold">VND</span>
+                    {(currentUser?.balance ?? 0).toLocaleString('vi-VN')} <span className="text-[10px] font-bold">VND</span>
                   </div>
                 </div>
                 <Link
@@ -314,7 +314,7 @@ export const StorefrontLayout: React.FC = () => {
                     </button>
 
                     <div className="border-t border-white/5 pt-1 mt-1 space-y-1">
-                      {currentUser.role === 'admin' && (
+                      {currentUser?.role === 'admin' && (
                         <button
                           onClick={() => {
                             navigateToAdmin();
@@ -358,7 +358,7 @@ export const StorefrontLayout: React.FC = () => {
             )}
 
             {/* Desktop Switch to Admin Button (Admin only) */}
-            {isAuthenticated && currentUser.role === 'admin' && (
+            {isAuthenticated && currentUser?.role === 'admin' && (
               <Button
                 variant="secondary"
                 size="xs"
@@ -388,12 +388,12 @@ export const StorefrontLayout: React.FC = () => {
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-[#0F0F1A] border-b border-white/10 px-4 py-4 space-y-2">
-            {isAuthenticated ? (
+            {isAuthenticated && currentUser ? (
               <div className="p-3 bg-[#161626] rounded-xl flex items-center justify-between mb-3">
                 <div>
-                  <div className="text-[10px] text-[#8B84A8]">Số dư ví của {currentUser.username}:</div>
+                  <div className="text-[10px] text-[#8B84A8]">Số dư ví của {currentUser?.username || 'bạn'}:</div>
                   <div className="font-display font-bold text-sm text-emerald-400">
-                    {currentUser.balance.toLocaleString('vi-VN')}đ
+                    {(currentUser?.balance ?? 0).toLocaleString('vi-VN')}đ
                   </div>
                 </div>
                 <Link
@@ -409,14 +409,14 @@ export const StorefrontLayout: React.FC = () => {
                 <Link
                   to="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 px-3 rounded-xl bg-[#161626] border border-white/10 text-center text-xs font-bold text-[#F0EDFF]"
+                  className="py-2.5 px-3 rounded-xl bg-white/5 text-center text-xs font-bold text-[#F0EDFF] hover:bg-white/10 transition-colors"
                 >
                   Đăng Nhập
                 </Link>
                 <Link
                   to="/register"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 px-3 rounded-xl bg-[#7C3AED] text-center text-xs font-bold text-white shadow-sm"
+                  className="py-2.5 px-3 rounded-xl bg-[#7C3AED] text-center text-xs font-bold text-white hover:bg-[#6D28D9] transition-colors"
                 >
                   Đăng Ký
                 </Link>
@@ -424,48 +424,35 @@ export const StorefrontLayout: React.FC = () => {
             )}
 
             <Link
-              to="/"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
-            >
-              Trang Chủ
-            </Link>
-            <Link
               to="/products"
               onClick={() => setMobileMenuOpen(false)}
-              className="block w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
+              className="block py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5 hover:text-white"
             >
               Tất Cả Sản Phẩm
             </Link>
             <Link
-              to="/account/wallet/deposit"
+              to="/cart"
               onClick={() => setMobileMenuOpen(false)}
-              className="block w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-amber-300 hover:bg-white/5"
+              className="flex items-center justify-between py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5 hover:text-white"
             >
-              Nạp tiền VietQR 24/7
+              <span>Giỏ Hàng</span>
+              {cartItemsCount > 0 && (
+                <span className="px-2 py-0.5 rounded-full bg-[#7C3AED] text-white text-[10px] font-bold">
+                  {cartItemsCount}
+                </span>
+              )}
             </Link>
-            {isAuthenticated && (
-              <>
-                <Link
-                  to="/account/orders"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
-                >
-                  Đơn hàng & License Key
-                </Link>
-                <Link
-                  to="/affiliate"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
-                >
-                  Giới thiệu nhận hoa hồng
-                </Link>
-              </>
-            )}
+            <Link
+              to="/affiliate"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5 hover:text-white"
+            >
+              Kiếm Tiền Affiliate
+            </Link>
             <Link
               to="/support"
               onClick={() => setMobileMenuOpen(false)}
-              className="block w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5"
+              className="block py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5 hover:text-white"
             >
               Hỗ Trợ Kỹ Thuật
             </Link>
@@ -479,7 +466,7 @@ export const StorefrontLayout: React.FC = () => {
               </button>
             )}
 
-            {isAuthenticated && currentUser.role === 'admin' && (
+            {isAuthenticated && currentUser?.role === 'admin' && (
               <div className="pt-2 border-t border-white/5">
                 <button
                   onClick={() => {

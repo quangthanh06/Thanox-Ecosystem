@@ -16,7 +16,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
   }
 
   // Security Check: If route specifically requires Admin role
-  if (requireAdmin && currentUser.role !== 'admin') {
+  if (requireAdmin && currentUser?.role !== 'admin') {
     showToast('Bạn không có quyền truy cập khu vực Quản trị Admin', 'error');
     return <Navigate to="/" replace />;
   }

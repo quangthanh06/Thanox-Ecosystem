@@ -15,7 +15,7 @@ export const StorefrontTransactions: React.FC = () => {
   const { transactions, currentUser, navigateToStorefront } = useStore();
   const [filterType, setFilterType] = useState<string>('all');
 
-  const userTransactions = transactions.filter((tx) => tx.userId === currentUser.id);
+  const userTransactions = (transactions || []).filter((tx) => tx && tx.userId === currentUser?.id);
 
   const filtered = userTransactions.filter((tx) => {
     if (filterType === 'all') return true;

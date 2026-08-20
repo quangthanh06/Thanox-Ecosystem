@@ -19,7 +19,7 @@ export const StorefrontOrders: React.FC = () => {
   const { orders, products, currentUser, navigateToStorefront, showToast } = useStore();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  const userOrders = orders.filter((o) => o.userId === currentUser.id);
+  const userOrders = (orders || []).filter((o) => o && o.userId === currentUser?.id);
 
   const handleCopyKey = (key: string) => {
     navigator.clipboard.writeText(key);

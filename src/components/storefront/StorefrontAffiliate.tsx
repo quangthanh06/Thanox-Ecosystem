@@ -33,10 +33,10 @@ export const StorefrontAffiliate: React.FC = () => {
   const [copied, setCopied] = useState<boolean>(false);
 
   // Look up real affiliate record for current user
-  const userAffiliate = affiliates.find((a) => a.userId === currentUser.id);
+  const userAffiliate = (affiliates || []).find((a) => a && a.userId === currentUser?.id);
 
   // User referral code
-  const userRefCode = currentUser.refCode || currentUser.username.toUpperCase();
+  const userRefCode = currentUser?.refCode || (currentUser?.username ? currentUser.username.toUpperCase() : 'VIP');
 
   // Dynamic origin URL for referral link
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://thanox.vn';

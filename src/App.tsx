@@ -65,58 +65,15 @@ export default function App() {
             <Route path="support" element={<StorefrontSupport />} />
             <Route path="affiliate" element={<StorefrontAffiliate />} />
 
-            {/* Protected Account Routes */}
-            <Route
-              path="account"
-              element={
-                <ProtectedRoute>
-                  <StorefrontAccount />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="account/orders"
-              element={
-                <ProtectedRoute>
-                  <StorefrontOrders />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="account/orders/:id"
-              element={
-                <ProtectedRoute>
-                  <StorefrontOrders />
-                </ProtectedRoute>
-              }
-            />
-            {/* Wallet & Deposit Pages - Open for all visitors */}
+            {/* Account Routes */}
+            <Route path="account" element={<StorefrontAccount />} />
+            <Route path="account/orders" element={<StorefrontOrders />} />
+            <Route path="account/orders/:id" element={<StorefrontOrders />} />
             <Route path="account/wallet" element={<StorefrontDepositQR />} />
             <Route path="account/wallet/deposit" element={<StorefrontDepositQR />} />
-            <Route
-              path="account/transactions"
-              element={
-                <ProtectedRoute>
-                  <StorefrontTransactions />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="account/support"
-              element={
-                <ProtectedRoute>
-                  <StorefrontSupport />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="account/affiliate"
-              element={
-                <ProtectedRoute>
-                  <StorefrontAffiliate />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="account/transactions" element={<StorefrontTransactions />} />
+            <Route path="account/support" element={<StorefrontSupport />} />
+            <Route path="account/affiliate" element={<StorefrontAffiliate />} />
           </Route>
 
           {/* Admin Experience (/qtri) - Protected for Admin role only */}
