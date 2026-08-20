@@ -5,13 +5,25 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  // LUU Ý B?O M?T: Ki?m tra ch? ký (signature) t? headers
+  const signature = req.headers['signature'];
+  const expectedSecret = process.env.MBBANK_SECRET_KEY;
+
+  if (expectedSecret && signature !== expectedSecret) {
+    console.error('L?i b?o m?t: Signature không kh?p!', signature);
+    // V?n tr? v? 200 d? h? th?ng hacker không bi?t c?u trúc, ho?c 401
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   try {
     const payload = req.body;
     
-    // Thueapibank.vn thu?ng g?i v? m?t m?ng transactions (theo c?u trúc trong ?nh)
-    // Ho?c g?i tr?c ti?p thông tin giao d?ch n?u ch? có 1. 
-    // Ta linh ho?t x? lý c? 2 tru?ng h?p.
-    const transactions = payload.transactions || [payload];
+    // Ki?m tra c?u trúc JSON t? webhook POST
+    if (payload.status !== 'success' || !payload.transactions || !Array.isArray(payload.transactions)) {
+       return res.status(400).json({ error: 'Invalid payload structure' });
+    }
+
+    const transactions = payload.transactions;
 
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY; 
@@ -31,10 +43,9 @@ export default async function handler(req, res) {
       // Ch? x? lý giao d?ch nh?n ti?n (IN)
       if (tx.type && tx.type !== 'IN') continue;
       
-      // Map d? li?u t? thueapibank.vn sang chu?n c?a chúng ta
-      const txId = tx.transactionID || tx.id || tx.refNo;
+      const txId = tx.transactionID;
       const amount = tx.amount;
-      const content = tx.description || tx.content;
+      const content = tx.description;
       const time = tx.transactionDate || new Date().toISOString();
 
       if (!txId || !amount || !content) continue;
@@ -54,6 +65,7 @@ export default async function handler(req, res) {
       }
     }
 
+    // Tr? v? 200 OK d? ThueApiBank.vn không callback l?i
     return res.status(200).json({ status: 'success', processed: results.length, results });
 
   } catch (error) {
