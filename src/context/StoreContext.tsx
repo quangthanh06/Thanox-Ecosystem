@@ -1914,136 +1914,89 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Auth Operations
   const login = async (identifier: string, password: string, _rememberMe = true): Promise<{ success: boolean; message?: string }> => {
     const cleanId = identifier.trim().toLowerCase();
-    if (!cleanId) {
-      return { success: false, message: 'Vui lòng nhập tên đăng nhập hoặc email' };
-    }
-
+    if (!cleanId) return { success: false, message: 'Vui l�ng nh?p t�n dang nh?p ho?c email' };
     try {
-      let data = null;
-        let error = null;
-        if ((cleanId === 'admin@thanox.vn' || cleanId === 'admin') && password === 'adminthanox.vn') {
-          data = {
-            id: '00000000-0000-0000-0000-000000000001',
-            username: 'admin',
-            email: 'admin@thanox.vn',
-            password: 'adminthanox.vn',
-            role: 'admin',
-            status: 'active'
-          };
-          supabase.from('profiles').upsert({...data, balance: 0}).then();
+      let targetEmail = cleanId;
+      if (!cleanId.includes('@')) {
+        const { data: profile } = await supabase.from('profiles').select('email').eq('username', cleanId).single();
+        if (profile && profile.email) {
+          targetEmail = profile.email;
         } else {
-          const res = await supabase
-            .from('profiles')
-            .select('*')
-            .or(`username.ilike.${cleanId},email.ilike.${cleanId}`)
-            .eq('password', password)
-            .single();
-          data = res.data;
-          error = res.error;
+          return { success: false, message: 'Sai t�i kho?n ho?c m?t kh?u.' };
         }
+      }
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: targetEmail,
+        password: password,
+      });
+      if (authError || !authData.user) {
+        return { success: false, message: 'Sai t�i kho?n ho?c m?t kh?u.' };
+      }
+
+      // 1. Force state synchronously before navigation
+      setCurrentUserId(authData.user.id);
       
-      if (error || !data) {
-        return { success: false, message: 'Sai tài khoản hoặc mật khẩu.' };
+      // 2. �?i load profile tru?c khi redirect d? ProtectRoute kh�ng d� v? trang ch?
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', authData.user.id).single();
+      if (profile) {
+        const mappedUser: User = {
+          id: profile.id,
+          username: profile.username,
+          email: profile.email,
+          password: '***',
+          role: profile.role as 'admin' | 'user',
+          balance: Number(profile.balance) || 0,
+          totalSpent: Number(profile.total_spent) || 0,
+          status: profile.status as 'active' | 'banned',
+          createdAt: profile.created_at,
+          joinDate: new Date(profile.created_at).toISOString().replace('T', ' ').substring(0, 16),
+        };
+        setUsers(prev => {
+          const exists = prev.find(u => u.id === mappedUser.id);
+          if (exists) return prev.map(u => u.id === mappedUser.id ? mappedUser : u);
+          return [...prev, mappedUser];
+        });
       }
 
-      if (data.status === 'banned') {
-        return { success: false, message: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin để được giải quyết.' };
-      }
-
-      setCurrentUserId(data.id);
-      showToast(`Đăng nhập thành công! Xin chào ${data.username}`, 'success');
       return { success: true };
     } catch (err) {
-      return { success: false, message: 'Lỗi máy chủ, vui lòng thử lại.' };
+      return { success: false, message: 'L?i m�y ch?, vui l�ng th? l?i.' };
     }
   };
 
   const register = async (username: string, email: string, password: string): Promise<{ success: boolean; message?: string }> => {
     const cleanUsername = username.trim();
     const cleanEmail = email.trim().toLowerCase();
-
-    if (!cleanUsername || cleanUsername.length < 3) {
-      return { success: false, message: 'Tên đăng nhập phải có ít nhất 3 ký tự.' };
-    }
-
-    if (!/^[a-zA-Z0-9_]+$/.test(cleanUsername)) {
-      return { success: false, message: 'Tên đăng nhập chỉ bao gồm chữ cái, số và dấu gạch dưới (_).' };
-    }
-
-    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
-      return { success: false, message: 'Địa chỉ email không hợp lệ.' };
-    }
-
+    if (!cleanUsername || cleanUsername.length < 3) return { success: false, message: 'T�n dang nh?p ph?i c� �t nh?t 3 k� t?.' };
+    if (!/^[a-zA-Z0-9_]+$/.test(cleanUsername)) return { success: false, message: 'T�n dang nh?p ch? bao g?m ch? c�i, s? v� d?u g?ch du?i (_).' };
+    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) return { success: false, message: '�?a ch? email kh�ng h?p l?.' };
+    if (!password || password.length < 6) return { success: false, message: 'M?t kh?u ph?i c� �t nh?t 6 k� t?.' };
     try {
-      // Check username duplicate
-      const { data: dupUser } = await supabase.from('profiles').select('id').eq('username', cleanUsername);
-      if (dupUser && dupUser.length > 0) {
-        return { success: false, message: 'Tên đăng nhập này đã được sử dụng. Vui lòng chọn tên khác.' };
-      }
+      const { data: existingUser } = await supabase.from('profiles').select('username').eq('username', cleanUsername).single();
+      if (existingUser) return { success: false, message: 'T�n dang nh?p d� du?c s? d?ng.' };
       
-      // Check email duplicate
-      const { data: dupEmail } = await supabase.from('profiles').select('id').eq('email', cleanEmail);
-      if (dupEmail && dupEmail.length > 0) {
-        return { success: false, message: 'Địa chỉ email này đã được liên kết với một tài khoản khác.' };
-      }
-      
-      const newId = crypto.randomUUID ? crypto.randomUUID() : 'user-' + Date.now();
-
-      const { error } = await supabase.from('profiles').insert({
-        id: newId,
-        username: cleanUsername,
-        email: cleanEmail,
-        password: password, // Note: storing plaintext for migration only
-        role: 'user',
-        balance: 0,
-        status: 'active'
-      });
-
-      if (error) throw error;
-      
-      const newUser: User = {
-        id: newId,
-        username: cleanUsername,
-        name: cleanUsername,
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: cleanEmail,
         password: password,
-        role: 'user',
-        balance: 0,
-        affiliateBalance: 0,
-        totalOrders: 0,
-        totalSpent: 0,
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        joinDate: new Date().toISOString().replace('T', ' ').substring(0, 16),
-        avatarText: cleanUsername.substring(0, 2).toUpperCase(),
-      };
-
-      setUsers((prev) => [newUser, ...prev]);
-      setCurrentUserId(newId);
-
-      setNotifications((prev) => [
-        {
-          id: 'notif-' + Date.now(),
-          title: `Thành viên mới gia nhập: ${newUser.username}`,
-          description: `Tài khoản ${newUser.username} vừa đăng ký thành công (${newUser.email})`,
-          time: 'Vừa xong',
-          read: false,
-          type: 'system',
-        },
-        ...prev,
-      ]);
-
-      showToast(`Đăng ký tài khoản "${newUser.username}" thành công!`, 'success');
+        options: { data: { username: cleanUsername } }
+      });
+      if (authError) {
+        let msg = '�ang k� kh�ng th�nh c�ng.';
+        if (authError.message.includes('already registered')) msg = 'Email n�y d� du?c s? d?ng.';
+        return { success: false, message: msg };
+      }
+      showToast('�ang k� t�i kho?n th�nh c�ng!', 'success');
       return { success: true };
     } catch (err) {
-      console.error(err);
-      return { success: false, message: 'Lỗi máy chủ khi đăng ký.' };
+      return { success: false, message: '�� x?y ra l?i k?t n?i. Vui l�ng th? l?i sau.' };
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setCurrentUserId(null);
-    showToast('Đã đăng xuất khỏi hệ thống', 'info');
+    setCurrentUser(null);
+    showToast('�� dang xu?t kh?i h? th?ng', 'info');
   };
 
   // Forgot Password: Email normalization & OTP generation
