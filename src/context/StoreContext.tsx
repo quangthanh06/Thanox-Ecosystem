@@ -2259,6 +2259,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const updated = { ...prev, ...newSettings };
       try {
         localStorage.setItem('thanox_settings', JSON.stringify(updated));
+        supabase.from('settings').upsert({ id: 1, data: updated }).then(res => { if (res.error) console.error('Settings Sync Error', res.error); });
       } catch (e) {
         console.error('Failed to save settings:', e);
       }
