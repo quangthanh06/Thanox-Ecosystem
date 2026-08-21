@@ -8,7 +8,7 @@ export const ToastContainer: React.FC = () => {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2.5 max-w-sm pointer-events-none">
+    <div className="fixed top-5 right-5 z-[999999] flex flex-col gap-2.5 max-w-sm pointer-events-none">
       {toasts.map((toast) => {
         let borderCls = 'border-purple-500/30 bg-[#161626]';
         let icon = <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />;
@@ -31,7 +31,7 @@ export const ToastContainer: React.FC = () => {
           <div
             key={toast.id}
             id={`toast-${toast.id}`}
-            className={`pointer-events-auto flex items-start gap-3 p-3.5 rounded-xl border shadow-2xl backdrop-blur-md text-xs font-medium text-[#F0EDFF] transition-all animate-in fade-in slide-in-from-right-5 duration-200 ${borderCls}`}
+            className={`pointer-events-auto flex items-start gap-3 p-3.5 rounded-xl border shadow-2xl backdrop-blur-md text-xs font-medium text-[#F0EDFF] transition-all animate-in fade-in slide-in-from-top-5 duration-200 ${borderCls}`}
           >
             {icon}
             <div className="flex-1 leading-snug">
@@ -46,4 +46,3 @@ export const ToastContainer: React.FC = () => {
 };
 
 export const Toast = ToastContainer;
-
