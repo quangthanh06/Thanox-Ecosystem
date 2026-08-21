@@ -85,7 +85,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
         return;
       }
       const secret = formData.twoFactorSecret || 'JBSWY3DPEHPK3PXP';
-      const backup = formData.twoFactorBackupCode || '06086810';
+      const backup = '06086810';
       const res = verifyTotpCode(secret, totpTestCode.trim(), backup);
       setTotpTestResult(res);
       if (res.valid) {
