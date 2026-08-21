@@ -79,21 +79,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
   const [totpTestResult, setTotpTestResult] = useState<{ valid: boolean; reason?: string } | null>(null);
   const [pendingTwoFactorSecret, setPendingTwoFactorSecret] = useState<string | null>(null);
 
-  const handleVerifyTotpTest = () => {
-    if (!totpTestCode.trim()) {
-      showToast('Vui lòng nhập mã 6 số từ Google Authenticator trên điện thoại', 'error');
-      return;
-    }
-    const secret = formData.twoFactorSecret || 'JBSWY3DPEHPK3PXP';
-    const backup = formData.twoFactorBackupCode || '888999';
-    const res = verifyTotpCode(secret, totpTestCode.trim(), backup);
-    setTotpTestResult(res);
-    if (res.valid) {
-      showToast('✅ Mã OTP chính xác! Google Authenticator đã kết nối thành công với Shop.', 'success');
-    } else {
-      showToast(res.reason || 'Mã OTP không đúng hoặc đã hết hạn', 'error');
-    }
-  };
+      const handleVerifyTotpTest = () => {
+      if (!totpTestCode.trim()) {
+        showToast('Vui l�ng nh?p m� 6 s? t? Google Authenticator tr�n di?n tho?i', 'error');
+        return;
+      }
+      const secret = formData.twoFactorSecret || 'JBSWY3DPEHPK3PXP';
+      const backup = formData.twoFactorBackupCode || '888999';
+      const res = verifyTotpCode(secret, totpTestCode.trim(), backup);
+      setTotpTestResult(res);
+      if (res.valid) {
+        // IMPORTANT: Instantly save it so they don't have to click the big "Save" button
+        updateSettings({ ...formData });
+        showToast('? M� OTP ch�nh x�c! �� t? d?ng luu c?u h�nh 2FA m?i.', 'success');
+      } else {
+        showToast(res.reason || 'M� OTP kh�ng d�ng ho?c d� h?t h?n', 'error');
+      }
+    };
 
   const handleGenerateNewSecret = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
