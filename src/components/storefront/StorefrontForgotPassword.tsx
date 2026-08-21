@@ -79,11 +79,12 @@ export const StorefrontForgotPassword: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const res = await requestPasswordReset(cleanEmail);
+      const res = await resetPassword(email, resetCode, newPassword);
       setIsLoading(false);
       if (res.success) {
         setStep('reset');
-        setSuccessMessage('Đã gửi liên kết đặt lại mật khẩu vào email của bạn. Vui lòng kiểm tra hộp thư.');
+        showToast('�?i m?t kh?u th�nh c�ng! Vui l�ng dang nh?p l?i.', 'success');
+          navigate('/login');
       } else {
         setErrorMessage(res.message || 'Có lỗi xảy ra');
       }
