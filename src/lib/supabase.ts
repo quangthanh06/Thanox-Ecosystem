@@ -4,7 +4,7 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Thi?u bi?n môi tru?ng Supabase! Vui lòng ki?m tra file .env');
+  console.warn('Thi?u bi?n mï¿½i tru?ng Supabase! Vui lï¿½ng ki?m tra file .env');
 }
 
 export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
@@ -41,6 +41,6 @@ export const uploadMediaToSupabase = async (file: File, folder: string): Promise
     return publicUrlData.publicUrl;
   } catch (err: any) {
     console.error('Error uploading media:', err);
-    throw new Error(err?.message || 'L?i khi t?i t?p lên Cloud');
+    throw new Error(err?.message || 'Lá»—i khi táº£i t?p lï¿½n Cloud');
   }
 };

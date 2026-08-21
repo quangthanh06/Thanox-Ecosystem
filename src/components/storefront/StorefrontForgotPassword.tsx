@@ -83,7 +83,7 @@ export const StorefrontForgotPassword: React.FC = () => {
       setIsLoading(false);
       if (res.success) {
         setStep('reset');
-        showToast('�?i m?t kh?u th�nh c�ng! Vui l�ng dang nh?p l?i.', 'success');
+        showToast('�?i m?t kh?u thành công! Vui l�ng dang nh?p l?i.', 'success');
           navigate('/login');
       } else {
         setErrorMessage(res.message || 'Có lỗi xảy ra');

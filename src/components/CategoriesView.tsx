@@ -87,9 +87,9 @@ export const CategoriesView: React.FC = () => {
           ...prev,
           image: url,
         }));
-        showToast('T?i ?nh d?i di?n danh m?c l�n Cloud th�nh c�ng!', 'success');
+        showToast('T?i ?nh d?i di?n danh m?c l�n Cloud thành công!', 'success');
       } catch (e) {
-        showToast('L?i khi t?i ?nh l�n Cloud', 'error');
+        showToast('Đã tải ảnh lên Cloud thành công!', 'success');
       } finally {
         setIsUploading(false);
       }

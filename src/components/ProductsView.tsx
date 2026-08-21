@@ -163,9 +163,9 @@ export const ProductsView: React.FC = () => {
           attachedFileSize: formattedSize,
           attachedFileData: url,
         }));
-        showToast(`�� d�nh k�m t?p "${file.name}" (${formattedSize}) l�n Cloud th�nh c�ng!`, 'success');
+        showToast(`Đã đính kèm tệp "${file.name}" (${formattedSize}) lên Cloud thành công!`, 'success');
       } catch (e) {
-        showToast('L?i khi t?i t?p l�n Cloud', 'error');
+        showToast('Lỗi khi tải tệp lên Cloud', 'error');
       } finally {
         setIsUploading(false);
       }
@@ -178,7 +178,7 @@ export const ProductsView: React.FC = () => {
       attachedFileSize: '',
       attachedFileData: '',
     }));
-    showToast('Đã gỡ tệp đính kèm', 'info');
+    showToast('�� g? t?p d�nh k�m', 'info');
   };
 
   const handleImageFilesUpload = async (files: FileList | null) => {
@@ -200,9 +200,9 @@ export const ProductsView: React.FC = () => {
               image: prev.image || url,
             };
           });
-          showToast('�� t?i ?nh l�n Cloud th�nh c�ng!', 'success');
+          showToast('Đã tải ảnh lên Cloud thành công!', 'success');
         } catch (e: any) {
-          showToast(e?.message ? `L?i: ${e.message}` : 'L?i khi t?i ?nh l�n Cloud', 'error');
+          showToast('Đã tải ảnh lên Cloud thành công!', 'success');
         }
       });
     };
@@ -225,7 +225,7 @@ export const ProductsView: React.FC = () => {
       image: imgUrl,
       images: [imgUrl, ...(prev.images || []).filter((im) => im !== imgUrl)],
     }));
-    showToast('Đã đặt làm ảnh đại diện chính!', 'success');
+    showToast('�� d?t l�m ?nh d?i di?n ch�nh!', 'success');
   };
 
   const openCreateDrawer = () => {
@@ -332,7 +332,7 @@ export const ProductsView: React.FC = () => {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      showToast('Vui lòng nhập tên sản phẩm', 'error');
+      showToast('Vui l�ng nh?p t�n s?n ph?m', 'error');
       return;
     }
 
@@ -374,10 +374,10 @@ export const ProductsView: React.FC = () => {
 
     if (editingProduct) {
       updateProduct(editingProduct.id, payload);
-      showToast(`Đã cập nhật sản phẩm "${formData.name}"!`, 'success');
+      showToast(`�� c?p nh?t s?n ph?m "${formData.name}"!`, 'success');
     } else {
       addProduct(payload as any);
-      showToast(`Đã thêm mới sản phẩm "${formData.name}"!`, 'success');
+      showToast(`�� th�m m?i s?n ph?m "${formData.name}"!`, 'success');
     }
     setIsDrawerOpen(false);
   };
@@ -410,7 +410,7 @@ export const ProductsView: React.FC = () => {
       attachedFileData: product.attachedFileData,
     };
     addProduct(duplicatedData);
-    showToast(`Đã nhân bản "${product.name}" (🔒 Đã khóa)`, 'success');
+    showToast(`�� nh�n b?n "${product.name}"!`, 'success');
   };
 
   const toggleProductStatus = (product: Product) => {

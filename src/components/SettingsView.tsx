@@ -195,10 +195,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
         setNewTrackUrl(url);
         setPreviewAudioUrl(url);
         setIsUploadingAudio(false);
-        showToast(`�� t?i file "${file.name}" l�n Cloud th�nh c�ng! B?m nghe th? ho?c Th�m v�o danh s�ch.`, 'success');
+        showToast(`�� t?i file "${file.name}" l�n Cloud thành công! B?m nghe th? ho?c Th�m v�o danh s�ch.`, 'success');
       } catch (e) {
         setIsUploadingAudio(false);
-        showToast('L?i khi t?i file �m thanh l�n Cloud', 'error');
+        showToast('Lỗi khi tải �m thanh l�n Cloud', 'error');
       }
   };
 
@@ -479,7 +479,7 @@ const file = e.target.files?.[0];
                           return;
                         }
                         
-                          showToast('�ang t?i ?nh l�n Cloud, vui l�ng d?i...', 'info');
+                          showToast('Đã tải ảnh lên Cloud thành công!', 'success');
                           try {
                             const url = await uploadMediaToSupabase(file, 'banners');
                             setFormData((prev) => ({
@@ -495,9 +495,9 @@ const file = e.target.files?.[0];
                                 backgroundImage: url,
                               },
                             }));
-                            showToast('�� t?i ?nh n?n Banner l�n Cloud th�nh c�ng!', 'success');
+                            showToast('�Đã tải ảnh n?n Banner l�n Cloud thành công!', 'success');
                           } catch (e) {
-                            showToast('L?i t?i ?nh l�n Cloud', 'error');
+                            showToast('Đã tải ảnh lên Cloud thành công!', 'success');
                           }
                       }}
                     />

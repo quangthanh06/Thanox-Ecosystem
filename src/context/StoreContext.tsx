@@ -1212,10 +1212,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         hidden_keys_or_links: newProduct.downloadLinkOrKeys
       });
       if (error) throw error;
-      showToast(`Đã thêm sản phẩm "${newProduct.name}" lên Cloud thành công! (🔒 Đã khóa bảo vệ)`, 'success');
+      showToast(`�� th�m s?n ph?m "${newProduct.name}" l�n Cloud thành công!`, 'success');
     } catch (e) {
       console.error('Lỗi khi lưu Supabase:', e);
-      showToast('Lỗi khi lưu lên Cloud, vui lòng thử lại', 'error');
+      showToast('L?i khi luu l�n Cloud, vui l�ng th? l?i', 'error');
     }
   };
 
