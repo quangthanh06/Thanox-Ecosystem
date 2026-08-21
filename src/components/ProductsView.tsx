@@ -1,3 +1,4 @@
+import { uploadMediaToSupabase } from '../lib/supabase';
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Product, ProductStatus, ProductPackage } from '../types';
