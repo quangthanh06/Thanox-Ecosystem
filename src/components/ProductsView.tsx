@@ -145,7 +145,7 @@ export const ProductsView: React.FC = () => {
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   // File Upload Handlers (ALL File types: APK, ZIP, RAR, EXE, TXT, PDF, IPA...)
-  const handleAnyFileUpload = (files: FileList | null) => {
+  const handleAnyFileUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const file = files[0];
 
@@ -183,7 +183,7 @@ export const ProductsView: React.FC = () => {
   const handleImageFilesUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach((file) => {
+    Array.from(files).forEach(async (file) => {
       if (!file.type.startsWith('image/')) {
         showToast('Vui lòng chọn file hình ảnh (PNG, JPG, WEBP)', 'error');
         return;

@@ -169,7 +169,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
   const [selectedAudioFileName, setSelectedAudioFileName] = useState<string | null>(null);
   const [isUploadingAudio, setIsUploadingAudio] = useState(false);
 
-  const handleAudioFileUpload = (file: File | null) => {
+  const handleAudioFileUpload = async (file: File | null) => {
     if (!file) return;
 
     if (!file.type.startsWith('audio/') && !file.name.match(/\.(mp3|wav|ogg|m4a|aac)$/i)) {
@@ -471,8 +471,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                       id="hero-bg-upload"
                       accept="image/*"
                       className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
+                      onChange={async (e) => {
+const file = e.target.files?.[0];
                         if (!file) return;
                         if (!file.type.startsWith('image/')) {
                           showToast('Vui lòng chọn file hình ảnh', 'error');
