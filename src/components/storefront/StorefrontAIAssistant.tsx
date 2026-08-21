@@ -430,7 +430,7 @@ export const StorefrontAIAssistant: React.FC = () => {
               }
         }
         className={`${
-          position ? '' : 'bottom-24 sm:bottom-28 left-4 sm:left-6'
+          position ? '' : 'bottom-24 sm:bottom-28 right-0 sm:right-6'
         } z-[999999] flex flex-col items-center pointer-events-auto select-none cursor-grab active:cursor-grabbing transition-transform`}
       >
         {/* Compact Animated Speech Bubble */}

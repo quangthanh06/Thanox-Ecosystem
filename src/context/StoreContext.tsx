@@ -1159,11 +1159,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch (e) {
       console.error('Failed to save products to localStorage:', e);
     }
-    fetch('/api/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ products: updatedProducts }),
-    }).catch((err) => console.error('Products sync error:', err));
+    
+        // Sync to Supabase
+        supabase.from('store_settings').upsert({
+          id: 'default',
+          settings_data: updated,
+          updated_at: new Date().toISOString()
+        }).catch(err => console.error('Failed to sync settings to cloud', err));
+
   };
 
   // Products CRUD
