@@ -1212,7 +1212,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         hidden_keys_or_links: newProduct.downloadLinkOrKeys
       });
       if (error) throw error;
-      showToast(`�� th�m s?n ph?m "${newProduct.name}" l�n Cloud thành công!`, 'success');
+      showToast(`Đã thêm sản phẩm "${newProduct.name}" lên Cloud thành công!`, 'success');
     } catch (e) {
       console.error('Lỗi khi lưu Supabase:', e);
       showToast('L?i khi luu l�n Cloud, vui l�ng th? l?i', 'error');
@@ -1280,7 +1280,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setProducts(updatedList);
     syncProductsToServer(updatedList); // Keep local sync as backup for lock state if you want
     if (nowLocked) {
-      showToast(`🔒 Đã KHÓA "${targetName}"! Sản phẩm này sẽ không bị thay đổi khi hệ thống nâng cấp.`, 'success');
+      showToast(`🔒 ĐÃ KHÓA "${targetName}"! Sản phẩm này sẽ không bị thay đổi khi hệ thống nâng cấp.`, 'success');
     } else {
       showToast(`🔓 Đã MỞ KHÓA "${targetName}".`, 'info');
     }
@@ -1520,7 +1520,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       ...prev,
     ]);
 
-    showToast(`Đặt mua "${product.name}" thành công! Mã đơn: ${newOrderCode}`, 'success');
+    showToast(`Đã thêm "${product.name}${selectedPackage ? ` [${selectedPackage.name}]` : ''}" vào giỏ hàng!`, 'success');
     return true;
   };
 

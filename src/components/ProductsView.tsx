@@ -178,7 +178,7 @@ export const ProductsView: React.FC = () => {
       attachedFileSize: '',
       attachedFileData: '',
     }));
-    showToast('�� g? t?p d�nh k�m', 'info');
+    showToast('Đã gỡ tệp đính kèm', 'info');
   };
 
   const handleImageFilesUpload = async (files: FileList | null) => {
@@ -225,7 +225,7 @@ export const ProductsView: React.FC = () => {
       image: imgUrl,
       images: [imgUrl, ...(prev.images || []).filter((im) => im !== imgUrl)],
     }));
-    showToast('�� d?t l�m ?nh d?i di?n ch�nh!', 'success');
+    showToast('Đã đặt làm ảnh đại diện chính!', 'success');
   };
 
   const openCreateDrawer = () => {
@@ -332,7 +332,7 @@ export const ProductsView: React.FC = () => {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      showToast('Vui l�ng nh?p t�n s?n ph?m', 'error');
+      showToast('Vui l�ng nh?p t�n sản phẩm', 'error');
       return;
     }
 
@@ -374,10 +374,10 @@ export const ProductsView: React.FC = () => {
 
     if (editingProduct) {
       updateProduct(editingProduct.id, payload);
-      showToast(`�� c?p nh?t s?n ph?m "${formData.name}"!`, 'success');
+      showToast(`Đã cập nhật sản phẩm "${formData.name}"!`, 'success');
     } else {
       addProduct(payload as any);
-      showToast(`�� th�m m?i s?n ph?m "${formData.name}"!`, 'success');
+      showToast(`Đã thêm mới sản phẩm "${formData.name}"!`, 'success');
     }
     setIsDrawerOpen(false);
   };
@@ -410,7 +410,7 @@ export const ProductsView: React.FC = () => {
       attachedFileData: product.attachedFileData,
     };
     addProduct(duplicatedData);
-    showToast(`�� nh�n b?n "${product.name}"!`, 'success');
+    showToast(`Đã nhân bản "${product.name}"!`, 'success');
   };
 
   const toggleProductStatus = (product: Product) => {

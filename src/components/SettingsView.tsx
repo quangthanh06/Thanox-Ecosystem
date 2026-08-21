@@ -91,7 +91,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
       if (res.valid) {
         // IMPORTANT: Instantly save it so they don't have to click the big "Save" button
         updateSettings({ ...formData });
-        showToast('? M� OTP ch�nh x�c! �� t? d?ng luu c?u h�nh 2FA m?i.', 'success');
+        showToast('? M� OTP ch�nh x�c! �� t? d?ng luu c?u h�nh 2FA mới.', 'success');
       } else {
         showToast(res.reason || 'M� OTP kh�ng d�ng ho?c d� h?t h?n', 'error');
       }
