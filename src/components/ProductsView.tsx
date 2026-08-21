@@ -181,15 +181,13 @@ export const ProductsView: React.FC = () => {
   };
 
   const handleImageFilesUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+      if (!files || files.length === 0) return;
 
-    Array.from(files).forEach(async (file) => {
-      if (!file.type.startsWith('image/')) {
-        showToast('Vui lòng chọn file hình ảnh (PNG, JPG, WEBP)', 'error');
-        return;
-      }
-      const reader = new FileReader();
-      
+      Array.from(files).forEach(async (file) => {
+        if (!file.type.startsWith('image/')) {
+          showToast('Vui l�ng ch?n file h�nh ?nh (PNG, JPG, WEBP)', 'error');
+          return;
+        }
         try {
           const url = await uploadMediaToSupabase(file, 'products');
           setFormData((prev) => {
@@ -202,14 +200,13 @@ export const ProductsView: React.FC = () => {
             };
           });
           showToast('�� t?i ?nh l�n Cloud th�nh c�ng!', 'success');
-        } catch (e) {
-          showToast('L?i khi t?i ?nh l�n Cloud', 'error');
+        } catch (e: any) {
+          showToast(e?.message ? `L?i: ${e.message}` : 'L?i khi t?i ?nh l�n Cloud', 'error');
         }
+      });
+    };
 
-    });
-  };
-
-  const removeImage = (indexToRemove: number) => {
+    const removeImage = (indexToRemove: number) => {
     setFormData((prev) => {
       const currentImages = prev.images || [];
       const filtered = currentImages.filter((_, idx) => idx !== indexToRemove);

@@ -16,19 +16,22 @@ export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
  */
 export const uploadMediaToSupabase = async (file: File, folder: string): Promise<string> => {
   try {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const rawExt = file.name.split('.').pop() || 'png';
+    const cleanExt = rawExt.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cleanFolder = folder.replace(/[^a-zA-Z0-9_-]/g, '');
+    const fileName = `${cleanFolder}/${Date.now()}_${Math.random().toString(36).substring(7)}.${cleanExt}`;
 
     const { data, error } = await supabase.storage
       .from('store_media')
       .upload(fileName, file, {
         cacheControl: '3600',
-        upsert: false,
+        upsert: true,
+        contentType: file.type || (cleanExt === 'png' ? 'image/png' : cleanExt === 'jpg' || cleanExt === 'jpeg' ? 'image/jpeg' : 'application/octet-stream'),
       });
 
     if (error) {
       console.error('Supabase upload error:', error);
-      throw error;
+      throw new Error(error.message || 'L?i t? Supabase Storage');
     }
 
     const { data: publicUrlData } = supabase.storage
@@ -36,8 +39,8 @@ export const uploadMediaToSupabase = async (file: File, folder: string): Promise
       .getPublicUrl(fileName);
 
     return publicUrlData.publicUrl;
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error uploading media:', err);
-    throw err;
+    throw new Error(err?.message || 'L?i khi t?i t?p lên Cloud');
   }
 };
