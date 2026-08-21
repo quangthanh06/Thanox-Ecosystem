@@ -152,18 +152,22 @@ export const ProductsView: React.FC = () => {
     const sizeInMB = file.size / (1024 * 1024);
     const formattedSize = sizeInMB >= 1 ? `${sizeInMB.toFixed(1)} MB` : `${Math.round(file.size / 1024)} KB`;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      setFormData((prev) => ({
-        ...prev,
-        attachedFileName: file.name,
-        attachedFileSize: formattedSize,
-        attachedFileData: result,
-      }));
-      showToast(`Đã đính kèm tệp "${file.name}" (${formattedSize}) thành công!`, 'success');
-    };
-    reader.readAsDataURL(file);
+    
+      setIsUploading(true);
+      try {
+        const url = await uploadMediaToSupabase(file, 'digital_files');
+        setFormData((prev) => ({
+          ...prev,
+          attachedFileName: file.name,
+          attachedFileSize: formattedSize,
+          attachedFileData: url,
+        }));
+        showToast(`�� d�nh k�m t?p "${file.name}" (${formattedSize}) l�n Cloud th�nh c�ng!`, 'success');
+      } catch (e) {
+        showToast('L?i khi t?i t?p l�n Cloud', 'error');
+      } finally {
+        setIsUploading(false);
+      }
   };
 
   const removeAttachedFile = () => {
@@ -176,7 +180,7 @@ export const ProductsView: React.FC = () => {
     showToast('Đã gỡ tệp đính kèm', 'info');
   };
 
-  const handleImageFilesUpload = (files: FileList | null) => {
+  const handleImageFilesUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
     Array.from(files).forEach((file) => {
@@ -185,22 +189,23 @@ export const ProductsView: React.FC = () => {
         return;
       }
       const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        if (result) {
+      
+        try {
+          const url = await uploadMediaToSupabase(file, 'products');
           setFormData((prev) => {
             const currentImages = prev.images || [];
-            const newImages = [...currentImages, result];
+            const newImages = [...currentImages, url];
             return {
               ...prev,
               images: newImages,
-              image: prev.image || result,
+              image: prev.image || url,
             };
           });
-          showToast('Đã tải ảnh lên thành công!', 'success');
+          showToast('�� t?i ?nh l�n Cloud th�nh c�ng!', 'success');
+        } catch (e) {
+          showToast('L?i khi t?i ?nh l�n Cloud', 'error');
         }
-      };
-      reader.readAsDataURL(file);
+
     });
   };
 

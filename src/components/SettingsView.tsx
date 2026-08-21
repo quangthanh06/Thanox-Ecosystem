@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { StoreSettings } from '../types';
+import { uploadMediaToSupabase } from '../lib/supabase';
 import { DEFAULT_CARD_MATRIX } from '../data/mockData';
 import { useDragScroll } from '../hooks/useDragScroll';
 import { Card, CardHeader } from './ui/Card';
@@ -185,21 +186,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
       setNewTrackArtist('Thanox Audio');
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string;
-      if (dataUrl) {
-        setNewTrackUrl(dataUrl);
-        setPreviewAudioUrl(dataUrl);
+    
+      setIsUploadingAudio(true);
+      try {
+        const url = await uploadMediaToSupabase(file, 'audio');
+        setNewTrackUrl(url);
+        setPreviewAudioUrl(url);
         setIsUploadingAudio(false);
-        showToast(`Đã tải file "${file.name}" thành công! Bấm nghe thử hoặc bấm Thêm vào danh sách nhạc.`, 'success');
+        showToast(`�� t?i file "${file.name}" l�n Cloud th�nh c�ng! B?m nghe th? ho?c Th�m v�o danh s�ch.`, 'success');
+      } catch (e) {
+        setIsUploadingAudio(false);
+        showToast('L?i khi t?i file �m thanh l�n Cloud', 'error');
       }
-    };
-    reader.onerror = () => {
-      setIsUploadingAudio(false);
-      showToast('Lỗi khi đọc file âm thanh từ máy tính', 'error');
-    };
-    reader.readAsDataURL(file);
   };
 
   // VietQR Admin Preview states
@@ -478,25 +476,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                           showToast('Vui lòng chọn file hình ảnh', 'error');
                           return;
                         }
-                        const reader = new FileReader();
-                        reader.onload = (ev) => {
-                          const base64 = ev.target?.result as string;
-                          setFormData((prev) => ({
-                            ...prev,
-                            heroBanner: {
-                              ...(prev.heroBanner || {
-                                brightness: 65,
-                                blur: 0,
-                                overlayOpacity: 45,
-                                glowEffect: true,
-                                hotlineZalo: '0916396901',
-                              }),
-                              backgroundImage: base64,
-                            },
-                          }));
-                          showToast('Đã tải ảnh nền Banner từ máy tính thành công!', 'success');
-                        };
-                        reader.readAsDataURL(file);
+                        
+                          showToast('�ang t?i ?nh l�n Cloud, vui l�ng d?i...', 'info');
+                          try {
+                            const url = await uploadMediaToSupabase(file, 'banners');
+                            setFormData((prev) => ({
+                              ...prev,
+                              heroBanner: {
+                                ...(prev.heroBanner || {
+                                  brightness: 65,
+                                  blur: 0,
+                                  overlayOpacity: 45,
+                                  glowEffect: true,
+                                  hotlineZalo: '0916396901',
+                                }),
+                                backgroundImage: url,
+                              },
+                            }));
+                            showToast('�� t?i ?nh n?n Banner l�n Cloud th�nh c�ng!', 'success');
+                          } catch (e) {
+                            showToast('L?i t?i ?nh l�n Cloud', 'error');
+                          }
                       }}
                     />
 

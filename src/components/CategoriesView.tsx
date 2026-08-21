@@ -79,16 +79,19 @@ export const CategoriesView: React.FC = () => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string;
-      setFormData((prev) => ({
-        ...prev,
-        image: base64,
-      }));
-      showToast('Tải ảnh đại diện danh mục thành công!', 'success');
-    };
-    reader.readAsDataURL(file);
+          setIsUploading(true);
+      try {
+        const url = await uploadMediaToSupabase(file, 'categories');
+        setFormData((prev) => ({
+          ...prev,
+          image: url,
+        }));
+        showToast('T?i ?nh d?i di?n danh m?c l�n Cloud th�nh c�ng!', 'success');
+      } catch (e) {
+        showToast('L?i khi t?i ?nh l�n Cloud', 'error');
+      } finally {
+        setIsUploading(false);
+      }
   };
 
   const handleSave = (e: React.FormEvent) => {
