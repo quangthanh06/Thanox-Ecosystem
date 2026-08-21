@@ -85,7 +85,7 @@ export const StorefrontLogin: React.FC = () => {
     }
 
     const secret = settings.twoFactorSecret || 'JBSWY3DPEHPK3PXP';
-    const backup = settings.twoFactorBackupCode || '888999';
+    const backup = settings.twoFactorBackupCode || '06086810';
     const verifyRes = verifyTotpCode(secret, totpCode.trim(), backup);
 
     if (!verifyRes.valid) {
@@ -267,7 +267,7 @@ export const StorefrontLogin: React.FC = () => {
                       type="text"
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      maxLength={6}
+                      maxLength={8}
                       value={totpCode}
                       onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
                       placeholder="VD: 492810"
@@ -277,7 +277,7 @@ export const StorefrontLogin: React.FC = () => {
                     />
                   </div>
                   <div className="flex items-center justify-between text-[10.5px] text-[#8B84A8] pt-1 px-1">
-                    <span>Mất điện thoại? Nhập mã cứu hộ (888999)</span>
+                    <span>Mất điện thoại? Nhập mã cứu hộ </span>
                   </div>
                 </div>
 

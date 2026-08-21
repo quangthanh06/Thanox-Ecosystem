@@ -172,7 +172,7 @@ export const StorefrontHome: React.FC = () => {
                   <img
                     src={currentSlide.image}
                     alt={currentSlide.name}
-                    className="w-full h-full object-contain rounded-2xl"
+                    className="w-full h-full object-cover rounded-2xl"
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center bg-[#121220] rounded-2xl p-6 text-center space-y-2">
@@ -315,7 +315,7 @@ export const StorefrontHome: React.FC = () => {
                         <img
                           src={product.image}
                           alt={product.name}
-                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center text-[#6B658E]">
@@ -485,7 +485,7 @@ export const StorefrontHome: React.FC = () => {
                       <img
                         src={prod.image}
                         alt={prod.name}
-                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
                       />
                     ) : (
