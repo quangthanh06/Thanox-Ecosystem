@@ -1,14 +1,40 @@
 import { createClient } from '@supabase/supabase-js';
 
-export default async function handler(req, res) {
+// Minimal Vercel Serverless Function types (avoids implicit any from strict TS)
+interface VercelRequest {
+  method?: string;
+  headers: Record<string, string | string[] | undefined>;
+  body?: any;
+  query?: Record<string, any>;
+}
+
+interface VercelResponse {
+  status(code: number): { json(data: unknown): void };
+}
+
+interface LegacyUser {
+  username: string;
+  email?: string;
+  password?: string;
+  role?: string;
+  balance?: number;
+  total_spent?: number;
+  status?: string;
+  seller_status?: string | null;
+  seller_note?: string | null;
+  seller_applied_at?: string | null;
+  seller_approved_at?: string | null;
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
   }
 
-  // Yêu c?u secret key d? tránh ngu?i ngoài g?i b?a
+  // Require a secret key to prevent unauthorized calls
   const secret = req.headers['authorization'];
   if (secret !== 'Bearer ' + process.env.VITE_SUPABASE_ANON_KEY) {
-     return res.status(401).json({ error: 'Unauthorized' });
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -19,11 +45,11 @@ export default async function handler(req, res) {
   }
 
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: { persistSession: false, autoRefreshToken: false }
+    auth: { persistSession: false, autoRefreshToken: false },
   });
 
   try {
-    // L?y toàn b? user t? b?ng cu (users_legacy)
+    // Fetch all users from the legacy table (users_legacy)
     const { data: legacyUsers, error: fetchError } = await supabaseAdmin
       .from('users_legacy')
       .select('*');
@@ -36,35 +62,35 @@ export default async function handler(req, res) {
       return res.status(200).json({ message: 'No legacy users found to migrate.' });
     }
 
-    const results = [];
-    const errors = [];
+    const results: string[] = [];
+    const errors: string[] = [];
 
-    // Chuy?n d?i t?ng user
-    for (const oldUser of legacyUsers) {
-      // B? qua n?u email/password không h?p l?
+    // Migrate each user one by one
+    for (const oldUser of legacyUsers as LegacyUser[]) {
+      // Skip if email/password is invalid
       if (!oldUser.email || !oldUser.password) {
-         errors.push(`User ${oldUser.username} missing email or password.`);
-         continue;
-      }
-
-      // T?o user m?i trên Auth
-      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-        email: oldUser.email,
-        password: oldUser.password, // Supabase s? t? d?ng Bam (Hash) m?t kh?u này
-        email_confirm: true, // Xác nh?n luôn d? không c?n verify qua mail
-        user_metadata: {
-          username: oldUser.username,
-        }
-      });
-
-      if (authError) {
-        errors.push(`Failed to migrate ${oldUser.email}: ${authError.message}`);
+        errors.push(`User ${oldUser.username} missing email or password.`);
         continue;
       }
 
-      // Trigger 'handle_new_user' ? Database dã t? t?o profile, nhung ta c?n update l?i balance và các tru?ng cu
+      // Create new user on Supabase Auth
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: oldUser.email,
+        password: oldUser.password, // Supabase will hash this password automatically
+        email_confirm: true, // Auto-confirm so no email verification needed
+        user_metadata: {
+          username: oldUser.username,
+        },
+      });
+
+      if (authError || !authData.user) {
+        errors.push(`Failed to migrate ${oldUser.email}: ${authError?.message ?? 'unknown error'}`);
+        continue;
+      }
+
+      // The 'handle_new_user' DB trigger already created a profile; update legacy fields
       const newUserId = authData.user.id;
-      
+
       const { error: updateError } = await supabaseAdmin
         .from('profiles')
         .update({
@@ -75,14 +101,14 @@ export default async function handler(req, res) {
           seller_status: oldUser.seller_status || null,
           seller_note: oldUser.seller_note || null,
           seller_applied_at: oldUser.seller_applied_at || null,
-          seller_approved_at: oldUser.seller_approved_at || null
+          seller_approved_at: oldUser.seller_approved_at || null,
         })
         .eq('id', newUserId);
 
       if (updateError) {
-         errors.push(`Failed to update profile for ${oldUser.email}: ${updateError.message}`);
+        errors.push(`Failed to update profile for ${oldUser.email}: ${updateError.message}`);
       } else {
-         results.push(`Successfully migrated ${oldUser.email}`);
+        results.push(`Successfully migrated ${oldUser.email}`);
       }
     }
 
@@ -91,10 +117,10 @@ export default async function handler(req, res) {
       migratedCount: results.length,
       errorCount: errors.length,
       successes: results,
-      errors: errors
+      errors: errors,
     });
-
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    return res.status(500).json({ error: message });
   }
 }

@@ -486,6 +486,7 @@ export const StorefrontProductDetail: React.FC = () => {
     addToCart,
     createOrder,
     currentUser,
+    isAuthenticated,
     showToast,
   } = useStore();
 
@@ -550,6 +551,12 @@ export const StorefrontProductDetail: React.FC = () => {
   const effectiveUnitPrice = selectedPlan ? selectedPlan.price : productCurrentPrice;
 
   const handleBuyNow = () => {
+    // Guests must log in before buying or topping up
+    if (!isAuthenticated) {
+      showToast('Vui lòng đăng nhập tài khoản để mua hàng!', 'warning');
+      navigateToStorefront('login', `/products/${activeIdOrSlug || product.id}`);
+      return;
+    }
     const total = effectiveUnitPrice * quantity;
     if (currentUser.balance < total) {
       showToast(

@@ -683,6 +683,29 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [settings]);
 
+  // Load shared store settings from Supabase once on mount so every device
+  // (especially mobile) gets the admin-configured music playlist, banner, etc.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('store_settings')
+          .select('settings_data, updated_at')
+          .eq('id', 'default')
+          .maybeSingle();
+        if (error || cancelled || !data?.settings_data) return;
+        if (typeof data.settings_data !== 'object') return;
+        setSettings((prev) => ({ ...prev, ...data.settings_data }));
+      } catch {
+        // Offline / table missing: silently keep local settings
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Toast handler
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'success', title?: string) => {
     const id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
@@ -781,6 +804,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       target = '/account/support';
     } else if (page === 'affiliate') {
       target = '/account/affiliate';
+    } else if (page === 'login') {
+      // param = path to return to after successful login (e.g. '/account/wallet/deposit')
+      target = param ? `/login?redirect=${encodeURIComponent(param)}` : '/login';
     }
     navigate(target);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1026,6 +1052,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (!isAuthenticated) {
       showToast('Vui lòng đăng nhập tài khoản để thực hiện thanh toán!', 'warning');
+      navigateToStorefront('login', '/cart');
       return false;
     }
 
@@ -1383,6 +1410,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (!isAuthenticated) {
       showToast('Vui lòng đăng nhập để mua sản phẩm!', 'warning');
+      navigateToStorefront('login', typeof window !== 'undefined' ? window.location.pathname : '/products');
       return false;
     }
 
@@ -1863,6 +1891,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         password: password,
       });
       if (authError || !authData.user) {
+        // Give users an actionable message for unconfirmed emails instead of a generic one
+        if (authError?.message?.toLowerCase().includes('email not confirmed')) {
+          return { success: false, message: 'Tài khoản chưa xác nhận email. Vui lòng kiểm tra hộp thư (cả mục Spam) và bấm link kích hoạt.' };
+        }
         return { success: false, message: 'Sai tài khoản hoặc mật khẩu.' };
       }
 
@@ -1914,10 +1946,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       });
       if (authError) {
         let msg = 'Đăng ký không thành công.';
-        if (authError.message.includes('already registered')) msg = 'Email này đã được sử dụng.';
+        const m = authError.message.toLowerCase();
+        if (m.includes('already registered') || m.includes('already been registered')) {
+          msg = 'Email này đã được sử dụng.';
+        } else if (m.includes('rate limit')) {
+          msg = 'Bạn đã đăng ký quá nhiều lần. Vui lòng thử lại sau ít phút.';
+        }
         return { success: false, message: msg };
       }
-      showToast('Đăng ký tài khoản thành công!', 'success');
+      showToast('Đăng ký tài khoản thành công! Vui lòng kiểm tra email để kích hoạt tài khoản trước khi đăng nhập.', 'success');
       return { success: true };
     } catch (err) {
       return { success: false, message: 'Đã xảy ra lỗi kết nối. Vui lòng thử lại sau.' };
@@ -2162,11 +2199,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } catch (e) {
         console.error('Failed to save settings:', e);
       }
-      fetch('/api/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings: updated }),
-      }).catch((err) => console.error('Settings sync error:', err));
+      // Sync settings to Supabase so every device (desktop & mobile) receives
+      // the same configuration: music playlist, banner, payments, etc.
+      supabase
+        .from('store_settings')
+        .upsert({
+          id: 'default',
+          settings_data: updated,
+          updated_at: new Date().toISOString(),
+        })
+        .then(
+          (res) => {
+            if (res.error) console.error('Failed to sync settings to cloud:', res.error.message);
+          },
+          (err: unknown) => console.error('Settings sync error:', err)
+        );
       return updated;
     });
     showToast('Đã lưu cấu hình hệ thống thành công', 'success');

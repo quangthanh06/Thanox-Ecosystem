@@ -1,45 +1,55 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Vercel Serverless Function signature
-export default async function handler(req, res) {
+// Minimal Vercel Serverless Function types (avoids implicit any from strict TS)
+interface VercelRequest {
+  method?: string;
+  headers: Record<string, string | string[] | undefined>;
+  body?: any;
+  query?: Record<string, any>;
+}
+
+interface VercelResponse {
+  status(code: number): { json(data: unknown): void };
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // 1. Authenticate Request
-  // (In production, checking headers/API key from SePay is strictly required)
+  // 1. Authenticate request (API key from SePay is required in production)
   const apiKey = req.headers['authorization'];
-  if (process.env.SEPAY_API_KEY && apiKey !== \Bearer \\) {
+  if (process.env.SEPAY_API_KEY && apiKey !== 'Bearer ' + process.env.SEPAY_API_KEY) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
   try {
-    const { id, amount, content, transferTime } = req.body;
+    const { id, amount, content, transferTime } = req.body || {};
 
     if (!id || !amount || !content) {
       return res.status(400).json({ error: 'Invalid payload' });
     }
 
-    // 2. Init Supabase (Use SERVICE_ROLE_KEY to bypass RLS and act as admin)
+    // 2. Init Supabase (SERVICE_ROLE_KEY bypasses RLS and acts as admin)
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY; 
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseKey) {
-      console.error("Missing Supabase credentials in ENV");
+      console.error('Missing Supabase credentials in ENV');
       return res.status(500).json({ error: 'Internal Server Error' });
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false }
+      auth: { persistSession: false },
     });
 
-    // 3. Call the Secure RPC
+    // 3. Call the secure RPC
     const { data, error } = await supabase.rpc('process_bank_webhook', {
       p_provider: 'sepay',
       p_transaction_id: String(id),
       p_amount: Number(amount),
       p_content: String(content),
-      p_transfer_time: transferTime || new Date().toISOString()
+      p_transfer_time: transferTime || new Date().toISOString(),
     });
 
     if (error) {
@@ -49,7 +59,6 @@ export default async function handler(req, res) {
 
     // Return the response from the DB (e.g. success, manual_review, ignored)
     return res.status(200).json(data);
-
   } catch (error) {
     console.error('Webhook processing error:', error);
     return res.status(500).json({ error: 'Internal Server Error' });

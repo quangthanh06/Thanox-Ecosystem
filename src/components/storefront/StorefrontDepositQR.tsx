@@ -101,8 +101,31 @@ export const StorefrontDepositQR: React.FC = () => {
     return `${prefix}${randomPart}`;
   };
 
+  // Guests must log in first: deposit money only after signing in
+  const DEPOSIT_REDIRECT = '/account/wallet/deposit';
+  useEffect(() => {
+    if (!isAuthenticated) {
+      showToast('Vui lòng đăng nhập tài khoản trước khi nạp tiền!', 'warning');
+      navigateToStorefront('login', DEPOSIT_REDIRECT);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
+
+  // Auto-scroll the QR section into view when an amount becomes valid
+  const scrollToQrSection = () => {
+    setTimeout(() => {
+      const qrEl = document.getElementById('deposit-qr-section');
+      if (qrEl) qrEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
+  };
+
   // Handle Preset Click
   const handleSelectPreset = (amt: number) => {
+    if (!isAuthenticated) {
+      showToast('Vui lòng đăng nhập tài khoản trước khi nạp tiền!', 'warning');
+      navigateToStorefront('login', DEPOSIT_REDIRECT);
+      return;
+    }
     setIsTyping(false);
     setSelectedPreset(amt);
     setCustomAmountText(amt.toLocaleString('vi-VN'));
@@ -110,6 +133,7 @@ export const StorefrontDepositQR: React.FC = () => {
     setQrLoadError(false);
     // Always generate a new unique code on amount selection
     setTransactionCode(generateNewTransactionCode());
+    scrollToQrSection();
   };
 
   // Debounced Custom Amount Input
@@ -118,7 +142,7 @@ export const StorefrontDepositQR: React.FC = () => {
 
     const timer = setTimeout(() => {
       const numericValue = parseInt(customAmountText.replace(/\D/g, ''), 10);
-      if (!customAmountText || isNaN(numericValue) || numericValue === 0) {
+        if (!customAmountText || isNaN(numericValue) || numericValue === 0) {
         setActiveAmount(0);
         setSelectedPreset(null);
         setTransactionCode('');
@@ -127,6 +151,7 @@ export const StorefrontDepositQR: React.FC = () => {
         setSelectedPreset(PRESET_AMOUNTS.includes(numericValue) ? numericValue : null);
         if (numericValue >= minDeposit && numericValue <= maxDeposit) {
           setTransactionCode(generateNewTransactionCode());
+          scrollToQrSection();
         } else {
           setTransactionCode('');
         }
@@ -224,6 +249,7 @@ const isAmountEntered = activeAmount > 0;
   const handleSubmitDeposit = () => {
     if (!isAuthenticated) {
       showToast('Vui lòng đăng nhập tài khoản trước khi tạo yêu cầu nạp tiền.', 'warning');
+      navigateToStorefront('login', DEPOSIT_REDIRECT);
       return;
     }
     if (!isValidAmount) {
@@ -252,6 +278,7 @@ const isAmountEntered = activeAmount > 0;
     e.preventDefault();
     if (!isAuthenticated) {
       showToast('Vui lòng đăng nhập tài khoản trước khi nạp thẻ cào.', 'warning');
+      navigateToStorefront('login', DEPOSIT_REDIRECT);
       return;
     }
     if (!cardSerial.trim() || cardSerial.trim().length < 6) {
@@ -300,7 +327,7 @@ const isAmountEntered = activeAmount > 0;
             </div>
           </div>
           <button
-            onClick={() => navigateToStorefront('account')}
+            onClick={() => navigateToStorefront('login', DEPOSIT_REDIRECT)}
             className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-black text-xs font-bold transition-colors cursor-pointer self-start sm:self-auto flex items-center gap-1.5 whitespace-nowrap"
           >
             Đăng Nhập Ngay <ArrowRight className="w-3.5 h-3.5" />
@@ -514,7 +541,7 @@ const isAmountEntered = activeAmount > 0;
             </div>
 
             <div className="lg:col-span-7 space-y-6">
-              <div className="bg-[rgba(255,255,255,0.05)] backdrop-blur-[26px] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.35)] rounded-3xl p-6 sm:p-8 space-y-6">
+              <div id="deposit-qr-section" className="bg-[rgba(255,255,255,0.05)] backdrop-blur-[26px] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.35)] rounded-3xl p-6 sm:p-8 space-y-6">
                 <div className="flex items-center justify-between border-b border-white/5 pb-4">
                   <div>
                     <h3 className="font-display font-bold text-base sm:text-lg text-[#F0EDFF] flex items-center gap-2">
