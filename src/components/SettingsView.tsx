@@ -2216,7 +2216,7 @@ const file = e.target.files?.[0];
                     Mở ứng dụng Google Authenticator trên điện thoại Android hoặc iPhone, quét mã QR dưới đây để kích hoạt bảo vệ 2 lớp.
                   </p>
                 </div>
-                <Badge variant={formData.enable2FA ? 'success' : 'default'} size="sm">
+                <Badge variant={formData.enable2FA ? 'success' : 'neutral'} size="sm">
                   {formData.enable2FA ? '🟢 2FA Đang Bật' : '⚪ 2FA Đang Tắt'}
                 </Badge>
               </div>
@@ -2774,3 +2774,4 @@ const file = e.target.files?.[0];
     </div>
   );
 };
+

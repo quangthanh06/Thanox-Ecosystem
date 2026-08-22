@@ -13,6 +13,7 @@ import {
   AlertCircle,
   HelpCircle,
   ShoppingBag,
+  ShieldCheck,
 } from 'lucide-react';
 
 export const StorefrontOrders: React.FC = () => {

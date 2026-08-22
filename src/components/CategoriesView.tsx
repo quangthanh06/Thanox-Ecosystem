@@ -40,6 +40,7 @@ export const CategoriesView: React.FC = () => {
   });
 
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const openCreateModal = () => {

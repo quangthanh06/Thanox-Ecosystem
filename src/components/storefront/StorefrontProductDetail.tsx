@@ -12,6 +12,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 
+const isAccountProduct = (product: Product) => product.productType === 'account' || product.category.toLowerCase().includes('tài khoản');
+
 // ============================================================================
 // 1. SUBCOMPONENT: BREADCRUMB
 // ============================================================================

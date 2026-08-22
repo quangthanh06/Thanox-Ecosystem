@@ -22,6 +22,8 @@ export interface ProductPlan {
   id: string;
   name: string; // e.g. '1 THÁNG', '3 THÁNG', '1 NĂM', 'VĨNH VIỄN'
   price: number;
+  originalPrice?: number;
+  sellerPrice?: number;
   keys?: string;
   downloadUrl?: string;
 }
@@ -105,7 +107,7 @@ export interface Order {
 
 export type UserRole = 'user' | 'vip' | 'seller' | 'affiliate' | 'admin';
 export type UserStatus = 'active' | 'banned';
-export type SellerStatus = 'none' | 'pending' | 'approved' | 'rejected' | 'suspended';
+export type SellerStatus = 'none' | 'pending' | 'approved' | 'rejected' | 'suspended' | 'active';
 
 export interface User {
   id: string;
@@ -126,6 +128,7 @@ export interface User {
   totalSpent: number;
   status: UserStatus;
   createdAt: string;
+  joinDate?: string;
   avatarText?: string;
   password?: string;
 }
@@ -166,16 +169,6 @@ export interface CardRechargeRequest {
   note?: string;
 }
 
-export interface CardSettings {
-  enabled: boolean;
-  feePercentage: number; // Chiết khấu hệ thống (ví dụ 15%)
-  userReceiveRate?: number; // % Thực nhận của user vào ví (ví dụ 85%)
-  networkRates?: Partial<Record<CardNetwork, number>>; // % Thực nhận theo từng nhà mạng
-  minAmount: number;
-  maxAmount: number;
-  allowedNetworks: CardNetwork[];
-  maintenanceMessage?: string;
-}
 
 export type TransactionType = 'purchase' | 'deposit' | 'withdraw' | 'commission' | 'adjustment' | 'card_recharge';
 
@@ -279,13 +272,22 @@ export interface CardSettings {
   maxAmount?: number;
 }
 
+export interface CardDenominationConfig {
+  amount: number;
+  receiveAmount: number;
+  feePercent: number;
+  enabled: boolean;
+}
+
 export interface StoreEffects {
-  glassEffect: boolean;
-  avatarFrame: boolean;
-  gradientName: boolean;
-  largeTitle: boolean;
-  motion: boolean;
-  autoMusic: boolean;
+  glassEffect?: boolean;
+  avatarFrame?: boolean;
+  gradientName?: boolean;
+  largeTitle?: boolean;
+  motion?: boolean;
+  autoMusic?: boolean;
+  snow?: boolean;
+  cherryBlossom?: boolean;
 }
 
 export interface TypographySettings {
@@ -350,6 +352,12 @@ export interface StoreSettings {
   // Announcement bar
   announcementText: string;
   announcementEnabled: boolean;
+  announcementBar?: {
+    enabled?: boolean;
+    text?: string;
+    linkText?: string;
+    linkUrl?: string;
+  };
 
   // Security & System
   enable2FA: boolean;
@@ -362,6 +370,7 @@ export interface StoreSettings {
   adminZalo?: string;
   adminHotline?: string;
   adminTelegram?: string;
+  telegramAdminId?: string;
   antiInspectEnabled?: boolean;
   antiDDoSEnabled?: boolean;
   antiBotShield?: boolean;
@@ -369,6 +378,7 @@ export interface StoreSettings {
   whitelistedIps?: string[];
   securityMode?: 'strict' | 'normal' | 'auto_shield';
   sessionTimeoutMinutes: number;
+  autoApprovalEnabled?: boolean;
   
   // Affiliate Configuration (Daily Cap + Qualifying order >= 200k)
   affiliateEnabled: boolean;
@@ -392,6 +402,7 @@ export interface StoreSettings {
 
 export type StorefrontPageId =
   | 'home'
+  | 'login'
   | 'products'
   | 'product-detail'
   | 'categories'
@@ -428,3 +439,5 @@ export interface AppNotification {
   read: boolean;
   type: 'order' | 'topup' | 'ticket' | 'system' | 'seller' | 'card';
 }
+
+

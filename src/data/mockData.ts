@@ -9,7 +9,8 @@ import {
   SupportTicket,
   StoreSettings,
   CardRechargeRequest,
-  AffiliateRewardRecord,
+  AffiliateReward,
+  CardDenominationConfig,
 } from '../types';
 
 export const INITIAL_CATEGORIES: Category[] = [
@@ -240,6 +241,7 @@ export const INITIAL_USERS: User[] = [
     totalOrders: 0,
     status: 'active',
     createdAt: '2026-01-01',
+    joinDate: '2026-01-01',
     refCode: 'ADMINVIP',
     sellerStatus: 'active',
   },
@@ -250,7 +252,7 @@ export const INITIAL_TOPUPS: TopupRequest[] = [];
 export const INITIAL_TRANSACTIONS: Transaction[] = [];
 export const INITIAL_AFFILIATES: AffiliateItem[] = [];
 export const INITIAL_CARD_RECHARGES: CardRechargeRequest[] = [];
-export const INITIAL_AFFILIATE_REWARDS: AffiliateRewardRecord[] = [];
+export const INITIAL_AFFILIATE_REWARDS: AffiliateReward[] = [];
 export const INITIAL_TICKETS: SupportTicket[] = [];
 
 export const DEFAULT_CARD_MATRIX: Record<string, CardDenominationConfig[]> = {
@@ -306,9 +308,8 @@ export const DEFAULT_CARD_MATRIX: Record<string, CardDenominationConfig[]> = {
 };
 
 export const INITIAL_SETTINGS: StoreSettings = {
-  shopName: 'THANOX STORE',
-  shopSlogan: 'Hệ Thống Tối Ưu Game & Key Bản Quyền Số 1 VN',
-  logoUrl: '',
+  storeName: 'THANOX STORE',
+  storeDescription: 'Hệ thống cung cấp dịch vụ kĩ thuật số tự động 24/7',
   bankEnabled: true,
   bankName: 'MBBank (Quân Đội)',
   bankCode: 'MB',
@@ -316,10 +317,10 @@ export const INITIAL_SETTINGS: StoreSettings = {
   accountHolder: 'TRAN QUANG THANH',
   transferPrefix: 'NAP',
   qrTemplate: 'compact2',
-  telegramBotToken: '',
   telegramAdminId: 'quangthank',
   telegramLink: '@quangthank',
   zaloHotline: '0916396901',
+  facebookFanpage: 'https://facebook.com/thanox',
   adminZalo: '0916396901',
   adminHotline: '0916396901',
   adminTelegram: 'quangthank',
@@ -330,15 +331,10 @@ export const INITIAL_SETTINGS: StoreSettings = {
   announcementText: '⚡ Nạp ví tự động qua VietQR 24/7. Giao key tức thì trong 3 giây.',
   announcementBar: {
     enabled: true,
-    text: '⚡ Nạp ví tự động qua VietQR 24/7. Giao key tức thì trong 3 giây.',
-    linkText: 'Nạp ngay',
-    linkUrl: '/account/wallet/deposit',
+    text: 'THANOX STORE KHAI TRƯƠNG: GIẢM GIÁ TẤT CẢ TÀI KHOẢN FREE FIRE LÊN ĐẾN 50%',
+    linkText: 'Xem Ngay',
+    linkUrl: '/products',
   },
-  theme: 'dark',
-  primaryColor: '#7C3AED',
-  accentColor: '#06B6D4',
-  surfaceColor: '#0F0F1A',
-  backgroundColor: '#08080F',
   enable2FA: false,
   twoFactorSecret: 'JBSWY3DPEHPK3PXP',
   twoFactorBackupCode: '888999',
@@ -378,8 +374,6 @@ export const INITIAL_SETTINGS: StoreSettings = {
   effects: {
     snow: false,
     cherryBlossom: false,
-    fireflies: false,
-    cyberpunkGlow: true,
   },
   minDeposit: 10000,
   maxDeposit: 10000000,
@@ -406,12 +400,12 @@ export const INITIAL_SETTINGS: StoreSettings = {
     telegramContact: '@quangthank',
   },
   typography: {
-    fontFamily: 'Space Grotesk',
-    titleWeight: 'black',
-    enableColorFlow: true,
-    colorMode: 'rainbow_flow',
+    fontFamily: 'Inter',
+    titleWeight: 'bold',
+    enableColorFlow: false,
+    colorMode: 'neon_purple',
     enableTextGlow: true,
-    enableChunkyTitles: true,
+    enableChunkyTitles: false,
     applyToNavAndButtons: true,
     applyToSectionHeadings: true,
   },

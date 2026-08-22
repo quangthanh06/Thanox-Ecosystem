@@ -21,6 +21,7 @@ import {
   CardNetwork,
   SellerStatus,
   ProductStatus,
+  ProductPackage,
 } from '../types';
 import {
   INITIAL_CATEGORIES,
@@ -30,6 +31,7 @@ import {
   INITIAL_TOPUPS,
   INITIAL_TRANSACTIONS,
   INITIAL_AFFILIATES,
+  INITIAL_AFFILIATE_REWARDS,
   INITIAL_TICKETS,
   INITIAL_SETTINGS,
 } from '../data/mockData';
@@ -90,9 +92,9 @@ interface StoreContextType {
   login: (identifier: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; message?: string }>;
   register: (username: string, email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
-  requestPasswordReset: (email: string) => { success: boolean; message?: string; otp?: string };
-  resetPassword: (email: string, otpOrToken: string, newPassword: string) => { success: boolean; message?: string };
-  adminResetPassword: (userId: string, newPass: string) => { success: boolean; message: string };
+  requestPasswordReset: (email: string) => Promise<{ success: boolean; message?: string; otp?: string }>;
+  resetPassword: (email: string, otpOrToken: string, newPassword: string) => Promise<{ success: boolean; message?: string }>;
+  adminResetPassword: (userId: string, newPass: string) => Promise<{ success: boolean; message: string }>;
   updateUserProfile: (updates: Partial<User>) => void;
 
   // Seller Actions
@@ -246,6 +248,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               status: u.status as 'active' | 'banned',
               createdAt: u.created_at,
               joinDate: new Date(u.created_at).toISOString().replace('T', ' ').substring(0, 16),
+              totalOrders: Number(u.total_orders) || 0,
             }));
             
             setUsers(mappedUsers);
@@ -535,7 +538,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     let isMounted = true;
     const syncWithServer = async () => {
       try {
-        const res = await fetch('/api/sync');
+        const res = await fetch(`/api/sync?t=${Date.now()}`, {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
         if (res.ok) {
           const json = await res.json();
           if (json.success && json.data && isMounted) {
@@ -1161,11 +1170,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     
         // Sync to Supabase
+        /*
         supabase.from('store_settings').upsert({
           id: 'default',
           settings_data: updated,
           updated_at: new Date().toISOString()
         }).catch(err => console.error('Failed to sync settings to cloud', err));
+        */
 
   };
 
@@ -1870,6 +1881,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           status: profile.status as 'active' | 'banned',
           createdAt: profile.created_at,
           joinDate: new Date(profile.created_at).toISOString().replace('T', ' ').substring(0, 16),
+          totalOrders: Number(profile.total_orders) || 0,
         };
         setUsers(prev => {
           const exists = prev.find(u => u.id === mappedUser.id);
@@ -1915,7 +1927,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const logout = async () => {
     await supabase.auth.signOut();
     setCurrentUserId(null);
-    setCurrentUser(null);
     showToast('Đã đăng xuất khỏi hệ thống', 'info');
   };
 
@@ -1943,7 +1954,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Admin Direct Password Reset for Customer Assistance
-  const adminResetPassword = (userId: string, newPass: string): { success: boolean; message: string } => {
+  const adminResetPassword = async (userId: string, newPass: string): Promise<{ success: boolean; message: string }> => {
     if (!newPass || newPass.length < 6) {
       return { success: false, message: 'Mật khẩu mới phải có ít nhất 6 ký tự!' };
     }
@@ -2208,7 +2219,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setAppMode,
         currentPage,
         setCurrentPage,
+        storefrontPage,
+        setStorefrontPage,
         selectedProductSlugOrId,
+        setSelectedProductSlugOrId,
+        selectedCategorySlug,
+        setSelectedCategorySlug,
         selectedOrderId,
         setSelectedOrderId,
         navigateToStorefront,
@@ -2293,4 +2309,5 @@ export const useStore = () => {
   }
   return context;
 };
+
 

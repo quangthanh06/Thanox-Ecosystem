@@ -15,6 +15,7 @@ import {
   EyeOff,
   Flame,
   ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 
 export const StorefrontForgotPassword: React.FC = () => {

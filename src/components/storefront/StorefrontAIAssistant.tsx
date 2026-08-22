@@ -109,7 +109,7 @@ export const StorefrontAIAssistant: React.FC = () => {
           ? matchingProducts
               .map(
                 (p) =>
-                  `▪ **${p.name}**\n   Giá từ: ${p.salePrice ? p.salePrice.toLocaleString('vi-VN') + 'đ' : p.price.toLocaleString('vi-VN') + 'đ'} | Trạng thái: ${p.status === 'in_stock' ? '🟢 Còn hàng' : '🟡 Đang cập nhật'}`
+                  `▪ **${p.name}**\n   Giá từ: ${p.salePrice ? p.salePrice.toLocaleString('vi-VN') + 'đ' : p.price.toLocaleString('vi-VN') + 'đ'} | Trạng thái: ${p.status === 'active' ? '🟢 Còn hàng' : '🟡 Đang cập nhật'}`
               )
               .join('\n\n')
           : '▪ Thanox ADR VIP V2 (20.000đ - 150.000đ)\n▪ Thanox Mod Menu Auto Headshot');
@@ -123,7 +123,7 @@ export const StorefrontAIAssistant: React.FC = () => {
           ? matchingProducts
               .map(
                 (p) =>
-                  `▪ **${p.name}**\n   Giá từ: ${p.salePrice ? p.salePrice.toLocaleString('vi-VN') + 'đ' : p.price.toLocaleString('vi-VN') + 'đ'} | Trạng thái: ${p.status === 'in_stock' ? '🟢 Còn hàng' : '🟡 Đang cập nhật'}`
+                  `▪ **${p.name}**\n   Giá từ: ${p.salePrice ? p.salePrice.toLocaleString('vi-VN') + 'đ' : p.price.toLocaleString('vi-VN') + 'đ'} | Trạng thái: ${p.status === 'active' ? '🟢 Còn hàng' : '🟡 Đang cập nhật'}`
               )
               .join('\n\n')
           : '▪ Thanox iOS IPA VIP (50.000đ - 250.000đ)\n▪ Chứng chỉ iOS Pro 1 năm');

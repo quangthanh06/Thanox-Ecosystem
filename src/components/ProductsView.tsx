@@ -144,6 +144,7 @@ export const ProductsView: React.FC = () => {
 
   // Delete Dialog State
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // File Upload Handlers (ALL File types: APK, ZIP, RAR, EXE, TXT, PDF, IPA...)
   const handleAnyFileUpload = async (files: FileList | null) => {
@@ -1204,7 +1205,7 @@ export const ProductsView: React.FC = () => {
                       <label className="text-[11px] font-semibold text-cyan-300 uppercase tracking-wider block">
                         3. Giá Bán Dành Cho Đại Lý / Cộng Tác Viên (CTV)
                       </label>
-                      <Badge variant="cyan" size="sm">Đại Lý / CTV</Badge>
+                      <Badge variant="info" size="sm">Đại Lý / CTV</Badge>
                     </div>
                     <div className="relative">
                       <input
@@ -1361,7 +1362,7 @@ export const ProductsView: React.FC = () => {
                             Sản phẩm Tài khoản sẽ tự động cấp <strong>Tài Khoản | Mật Khẩu | 2FA</strong> trực tiếp cho khách khi mua (Không dùng mã Key).
                           </p>
                         </div>
-                        <Badge variant="cyan" size="sm">
+                        <Badge variant="info" size="sm">
                           Acc Game / FF
                         </Badge>
                       </div>
@@ -1895,7 +1896,7 @@ export const ProductsView: React.FC = () => {
                           <ShieldCheck className="w-4 h-4 text-cyan-400" />
                           <span>Bàn Giao Tài Khoản & Mật Khẩu Tự Động</span>
                         </h4>
-                        <Badge variant="cyan" size="sm">Tự động bàn giao 100%</Badge>
+                        <Badge variant="info" size="sm">Tự động bàn giao 100%</Badge>
                       </div>
 
                       <p className="text-[11px] text-[#8B84A8]">
@@ -1908,10 +1909,10 @@ export const ProductsView: React.FC = () => {
                           Giao diện khách hàng nhìn thấy trong đơn hàng:
                         </div>
                         <div className="p-3 rounded-lg bg-[#080A14] border border-slate-800 font-mono text-xs text-emerald-400 space-y-1.5">
-                          <div>🎮 <strong>Tài khoản:</strong> {formData.accountUsername || (formData.accountsList ? formData.accountsList.split('|')[0] : 'thanhgaming.ff@gmail.com')}</div>
-                          <div>🔑 <strong>Mật khẩu:</strong> {formData.accountPassword || (formData.accountsList && formData.accountsList.split('|')[1] ? formData.accountsList.split('|')[1].split('\n')[0] : 'Thanox@2026')}</div>
-                          {(formData.account2FA || (formData.accountsList && formData.accountsList.split('|')[2])) && (
-                            <div>🛡️ <strong>2FA / Ghi chú:</strong> {formData.account2FA || formData.accountsList.split('|')[2].split('\n')[0]}</div>
+                          <div>🎮 <strong>Tài khoản:</strong> {formData.accountUsername || ((formData.accountsList || '').split('|')[0] || 'thanhgaming.ff@gmail.com')}</div>
+                          <div>🔑 <strong>Mật khẩu:</strong> {formData.accountPassword || ((formData.accountsList || '').split('|')[1]?.split('\n')[0] || 'Thanox@2026')}</div>
+                          {(formData.account2FA || (formData.accountsList || '').split('|')[2]) && (
+                            <div>🛡️ <strong>2FA / Ghi chú:</strong> {formData.account2FA || (formData.accountsList || '').split('|')[2]?.split('\n')[0]}</div>
                           )}
                         </div>
                       </div>
@@ -1942,7 +1943,7 @@ export const ProductsView: React.FC = () => {
                           <Download className="w-4 h-4 text-cyan-400" />
                           <span>Tệp Cài Đặt Khách Hàng Sẽ Nhận</span>
                         </h4>
-                        <Badge variant="cyan" size="sm">Download 1-Click</Badge>
+                        <Badge variant="info" size="sm">Download 1-Click</Badge>
                       </div>
 
                       {formData.attachedFileName ? (
