@@ -1,9 +1,10 @@
 -- ============================================================================
--- ATOMIC ORDER TRANSACTION MIGRATION (P0 FINANCIAL SAFETY)
+-- ATOMIC ORDER TRANSACTION MIGRATION (FINAL PRODUCTION VERSION)
 -- Đảm bảo 100% ACID Database Transaction: 1 Request => 1 PostgreSQL Transaction
+-- Giữ nguyên Schema gốc (UUID), không ALTER COLUMN TYPE, không nuốt lỗi
 -- ============================================================================
 
--- 1. BẢNG ORDERS: Cập nhật các cột bắt buộc cho đơn hàng tự động
+-- 1. BẢNG ORDERS: Bổ sung các cột metadata nếu chưa có (Idempotent)
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS order_code        TEXT NOT NULL DEFAULT ('DH-' || upper(substr(md5(random()::text),1,8)));
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS user_name         TEXT;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS product_name      TEXT;
@@ -15,14 +16,6 @@ ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS total_price       BIGINT NOT 
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS payment_method    TEXT NOT NULL DEFAULT 'wallet';
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS delivered_content TEXT;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS idem_key          TEXT;
-
--- Đồng bộ kiểu dữ liệu TEXT cho user_id & product_id để tương thích linh hoạt
-DO $$
-BEGIN
-  ALTER TABLE public.orders ALTER COLUMN user_id TYPE TEXT;
-  ALTER TABLE public.orders ALTER COLUMN product_id TYPE TEXT;
-EXCEPTION WHEN OTHERS THEN NULL;
-END $$;
 
 -- 2. INDEX IDEMPOTENCY (Chống trùng lặp tuyệt đối theo user + idempotency key)
 CREATE UNIQUE INDEX IF NOT EXISTS orders_idem_uniq ON public.orders (user_id, idem_key)
@@ -69,6 +62,8 @@ CREATE OR REPLACE FUNCTION public.create_order_atomic(
 ) RETURNS JSONB
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
+  v_user_uuid   UUID;
+  v_prod_uuid   UUID;
   v_prod        RECORD;
   v_pkg         JSONB;
   v_user        RECORD;
@@ -83,9 +78,26 @@ DECLARE
   v_existing    public.orders%ROWTYPE;
   v_new_balance BIGINT;
 BEGIN
+  -- Validate đầu vào & Ép kiểu UUID an toàn
   IF p_user_id IS NULL OR btrim(p_user_id) = '' THEN
     RETURN jsonb_build_object('status','error','code','AUTH_FAILED','error','Không xác định được danh tính người dùng');
   END IF;
+
+  BEGIN
+    v_user_uuid := p_user_id::UUID;
+  EXCEPTION WHEN OTHERS THEN
+    RETURN jsonb_build_object('status','error','code','INVALID_USER_ID','error','Mã người dùng không hợp lệ');
+  END;
+
+  IF p_product_id IS NULL OR btrim(p_product_id) = '' THEN
+    RETURN jsonb_build_object('status','error','code','PRODUCT_NOT_FOUND','error','Mã sản phẩm không hợp lệ');
+  END IF;
+
+  BEGIN
+    v_prod_uuid := p_product_id::UUID;
+  EXCEPTION WHEN OTHERS THEN
+    RETURN jsonb_build_object('status','error','code','PRODUCT_NOT_FOUND','error','Mã sản phẩm không tồn tại');
+  END;
 
   IF p_quantity IS NULL OR p_quantity < 1 OR p_quantity > 100 THEN
     RETURN jsonb_build_object('status','error','code','INVALID_QUANTITY','error','Số lượng mua không hợp lệ');
@@ -94,13 +106,13 @@ BEGIN
   -- 1. Idempotency Check: nếu trùng (user_id, idem_key) => trả về đơn cũ, KHÔNG trừ tiền lần 2
   IF p_idem_key IS NOT NULL AND btrim(p_idem_key) <> '' THEN
     SELECT * INTO v_existing FROM orders
-     WHERE user_id::text = p_user_id AND idem_key = p_idem_key LIMIT 1;
+     WHERE user_id = v_user_uuid AND idem_key = p_idem_key LIMIT 1;
     IF FOUND THEN
       RETURN jsonb_build_object(
         'status','success',
         'duplicate',true,
         'order', jsonb_build_object(
-          'id', v_existing.id,
+          'id', v_existing.id::text,
           'orderCode', v_existing.order_code,
           'productName', v_existing.product_name,
           'packageName', v_existing.package_name,
@@ -115,7 +127,7 @@ BEGIN
   END IF;
 
   -- 2. Khóa dòng User Profile (SELECT ... FOR UPDATE) để chống Race Condition số dư
-  SELECT * INTO v_user FROM profiles WHERE id::text = p_user_id FOR UPDATE;
+  SELECT * INTO v_user FROM profiles WHERE id = v_user_uuid FOR UPDATE;
   IF NOT FOUND THEN
     RETURN jsonb_build_object('status','error','code','USER_NOT_FOUND','error','Không tìm thấy tài khoản người dùng');
   END IF;
@@ -127,7 +139,7 @@ BEGIN
   v_is_seller := (v_user.role = 'seller');
 
   -- 3. Khóa dòng Product (SELECT ... FOR UPDATE) để chống Race Condition tồn kho
-  SELECT * INTO v_prod FROM products WHERE id::text = p_product_id FOR UPDATE;
+  SELECT * INTO v_prod FROM products WHERE id = v_prod_uuid FOR UPDATE;
   IF NOT FOUND THEN
     RETURN jsonb_build_object('status','error','code','PRODUCT_NOT_FOUND','error','Sản phẩm không tồn tại');
   END IF;
@@ -186,9 +198,9 @@ BEGIN
     v_delivered := array_to_string(v_take, E'\n');
     UPDATE products SET accounts_list = CASE WHEN array_length(v_lines, 1) > p_quantity
           THEN array_to_string(v_lines[p_quantity+1:], E'\n') ELSE '' END
-     WHERE id::text = v_prod.id::text;
+     WHERE id = v_prod_uuid;
     IF v_prod.stock IS NOT NULL AND v_prod.stock <> 'unlimited' THEN
-      UPDATE products SET stock = greatest(coalesce(v_stock_num, 0) - p_quantity, 0)::text WHERE id::text = v_prod.id::text;
+      UPDATE products SET stock = greatest(coalesce(v_stock_num, 0) - p_quantity, 0)::text WHERE id = v_prod_uuid;
     END IF;
   ELSE
     v_lines := ARRAY(SELECT line FROM unnest(string_to_array(COALESCE(v_prod.hidden_keys_or_links, ''), E'\n')) AS line WHERE btrim(line) <> '');
@@ -196,7 +208,7 @@ BEGIN
     v_delivered := CASE WHEN array_length(v_take, 1) > 0 THEN array_to_string(v_take, E'\n')
                         ELSE COALESCE(v_prod.hidden_keys_or_links, v_prod.download_url, v_prod.instructions, 'Đã kích hoạt tự động') END;
     IF v_prod.stock IS NOT NULL AND v_prod.stock <> 'unlimited' AND v_stock_num IS NOT NULL THEN
-      UPDATE products SET stock = greatest(v_stock_num - p_quantity, 0)::text WHERE id::text = v_prod.id::text;
+      UPDATE products SET stock = greatest(v_stock_num - p_quantity, 0)::text WHERE id = v_prod_uuid;
     END IF;
   END IF;
 
@@ -205,20 +217,20 @@ BEGIN
   UPDATE profiles
      SET balance = v_new_balance,
          total_spent = COALESCE(total_spent, 0) + v_total
-   WHERE id::text = p_user_id;
+   WHERE id = v_user_uuid;
 
   -- 9. Ghi đơn hàng (Insert Order)
   INSERT INTO orders (
     user_id, user_name, product_id, product_name, package_id, package_name,
     quantity, unit_price, total_price, status, payment_method, delivered_content, idem_key
   ) VALUES (
-    p_user_id, v_user.username, v_prod.id::text, v_prod.name, p_package_id,
+    v_user_uuid, v_user.username, v_prod_uuid, v_prod.name, p_package_id,
     COALESCE(v_pkg->>'name', ''), p_quantity, v_unit, v_total, 'completed', 'wallet',
     v_delivered, p_idem_key
   ) RETURNING * INTO v_order;
 
   -- 10. Tăng số lượng đã bán (Sold count)
-  UPDATE products SET sold_count = COALESCE(sold_count, 0) + p_quantity WHERE id::text = v_prod.id::text;
+  UPDATE products SET sold_count = COALESCE(sold_count, 0) + p_quantity WHERE id = v_prod_uuid;
 
   -- 11. Ghi sổ cái tài chính (Insert Purchase Ledger)
   INSERT INTO transactions (
@@ -232,7 +244,7 @@ BEGIN
   -- 12. Ghi nhật ký kiểm toán (Audit Log)
   INSERT INTO audit_log (actor_id, action, target_type, target_id, detail)
   VALUES (
-    p_user_id, 'PURCHASE', 'order', v_order.id,
+    p_user_id, 'PURCHASE', 'order', v_order.id::text,
     jsonb_build_object('product', v_prod.name, 'qty', p_quantity, 'total', v_total, 'unit_price', v_unit)
   );
 
@@ -240,7 +252,7 @@ BEGIN
   RETURN jsonb_build_object(
     'status', 'success',
     'order', jsonb_build_object(
-      'id', v_order.id,
+      'id', v_order.id::text,
       'orderCode', v_order.order_code,
       'productName', v_order.product_name,
       'packageName', v_order.package_name,
