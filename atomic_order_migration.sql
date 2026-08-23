@@ -127,7 +127,7 @@ BEGIN
   END IF;
 
   -- 2. Khóa dòng User Profile (SELECT ... FOR UPDATE) để chống Race Condition số dư
-  SELECT * INTO v_user FROM profiles WHERE id = v_user_uuid FOR UPDATE;
+  SELECT * INTO v_user FROM profiles WHERE id::text = p_user_id FOR UPDATE;
   IF NOT FOUND THEN
     RETURN jsonb_build_object('status','error','code','USER_NOT_FOUND','error','Không tìm thấy tài khoản người dùng');
   END IF;
@@ -139,7 +139,7 @@ BEGIN
   v_is_seller := (v_user.role = 'seller');
 
   -- 3. Khóa dòng Product (SELECT ... FOR UPDATE) để chống Race Condition tồn kho
-  SELECT * INTO v_prod FROM products WHERE id = v_prod_uuid FOR UPDATE;
+  SELECT * INTO v_prod FROM products WHERE id::text = p_product_id FOR UPDATE;
   IF NOT FOUND THEN
     RETURN jsonb_build_object('status','error','code','PRODUCT_NOT_FOUND','error','Sản phẩm không tồn tại');
   END IF;
@@ -198,9 +198,9 @@ BEGIN
     v_delivered := array_to_string(v_take, E'\n');
     UPDATE products SET accounts_list = CASE WHEN array_length(v_lines, 1) > p_quantity
           THEN array_to_string(v_lines[p_quantity+1:], E'\n') ELSE '' END
-     WHERE id = v_prod_uuid;
+     WHERE id::text = p_product_id;
     IF v_prod.stock IS NOT NULL AND v_prod.stock <> 'unlimited' THEN
-      UPDATE products SET stock = greatest(coalesce(v_stock_num, 0) - p_quantity, 0)::text WHERE id = v_prod_uuid;
+      UPDATE products SET stock = greatest(coalesce(v_stock_num, 0) - p_quantity, 0)::text WHERE id::text = p_product_id;
     END IF;
   ELSE
     v_lines := ARRAY(SELECT line FROM unnest(string_to_array(COALESCE(v_prod.hidden_keys_or_links, ''), E'\n')) AS line WHERE btrim(line) <> '');
@@ -208,7 +208,7 @@ BEGIN
     v_delivered := CASE WHEN array_length(v_take, 1) > 0 THEN array_to_string(v_take, E'\n')
                         ELSE COALESCE(v_prod.hidden_keys_or_links, v_prod.download_url, v_prod.instructions, 'Đã kích hoạt tự động') END;
     IF v_prod.stock IS NOT NULL AND v_prod.stock <> 'unlimited' AND v_stock_num IS NOT NULL THEN
-      UPDATE products SET stock = greatest(v_stock_num - p_quantity, 0)::text WHERE id = v_prod_uuid;
+      UPDATE products SET stock = greatest(v_stock_num - p_quantity, 0)::text WHERE id::text = p_product_id;
     END IF;
   END IF;
 
@@ -217,7 +217,7 @@ BEGIN
   UPDATE profiles
      SET balance = v_new_balance,
          total_spent = COALESCE(total_spent, 0) + v_total
-   WHERE id = v_user_uuid;
+   WHERE id::text = p_user_id;
 
   -- 9. Ghi đơn hàng (Insert Order)
   INSERT INTO orders (
