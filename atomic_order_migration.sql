@@ -17,6 +17,23 @@ ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS payment_method    TEXT NOT NU
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS delivered_content TEXT;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS idem_key          TEXT;
 
+-- Đảm bảo tương thích schema legacy nếu có cột amount
+DO $$
+BEGIN
+  BEGIN
+    ALTER TABLE public.orders ALTER COLUMN amount DROP NOT NULL;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+  BEGIN
+    ALTER TABLE public.orders ALTER COLUMN id SET DEFAULT ('ord-' || gen_random_uuid()::text);
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+  BEGIN
+    ALTER TABLE public.orders ALTER COLUMN order_code SET DEFAULT ('DH-' || upper(substr(md5(random()::text || clock_timestamp()::text),1,10)));
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+END $$;
+
 -- 2. INDEX IDEMPOTENCY (Chống trùng lặp tuyệt đối theo user + idempotency key)
 CREATE UNIQUE INDEX IF NOT EXISTS orders_idem_uniq ON public.orders (user_id, idem_key)
   WHERE idem_key IS NOT NULL;
@@ -223,7 +240,7 @@ BEGIN
 
   -- 9. Ghi đơn hàng (Insert Order)
   v_order_id := 'ord-' || gen_random_uuid()::text;
-  v_order_code := '#TX-' || floor(10000 + random() * 90000)::text;
+  v_order_code := 'DH-' || upper(substr(md5(random()::text || clock_timestamp()::text), 1, 10));
   INSERT INTO orders (
     id, order_code, user_id, user_name, product_id, product_name, package_id, package_name,
     quantity, unit_price, total_price, status, payment_method, delivered_content, idem_key
