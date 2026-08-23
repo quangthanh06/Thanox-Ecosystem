@@ -81,12 +81,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // 3. Đọc dữ liệu Người Dùng từ bảng profiles (Single Source of Truth)
-    const { data: userProfile, error: profileErr } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', targetUserId)
-      .single();
+    // 3 & 4. Đọc đồng thời Người Dùng & Sản Phẩm (Tối ưu độ trễ song song)
+    const [profileRes, productRes] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('id, username, email, role, balance, total_spent, status')
+        .eq('id', targetUserId)
+        .single(),
+      supabase
+        .from('products')
+        .select('id, name, price, seller_price, packages, product_type, stock, status, accounts_list, hidden_keys_or_links, download_url, instructions, sold_count')
+        .eq('id', productId)
+        .single(),
+    ]);
+
+    const { data: userProfile, error: profileErr } = profileRes;
+    const { data: product, error: productErr } = productRes;
 
     if (profileErr || !userProfile) {
       return res.status(404).json({ success: false, code: 'USER_NOT_FOUND', error: 'Không tìm thấy thông tin tài khoản người dùng' });
@@ -95,13 +105,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (userProfile.status === 'banned') {
       return res.status(403).json({ success: false, code: 'USER_BANNED', error: 'Tài khoản của bạn đã bị khóa' });
     }
-
-    // 4. Đọc dữ liệu Sản Phẩm từ bảng products
-    const { data: product, error: productErr } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', productId)
-      .single();
 
     if (productErr || !product) {
       return res.status(404).json({ success: false, code: 'PRODUCT_NOT_FOUND', error: 'Sản phẩm không tồn tại' });
@@ -186,72 +189,70 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       deliveredContent = product.download_url || product.instructions || selectedPackageObj?.downloadUrl || 'Đã kích hoạt tự động';
     }
 
-    // 8. Trừ ví người dùng trên Server Database (Atomic Update)
+    // 8 & 9. Trừ ví & Cập nhật kho song song (Parallel Financial & Inventory Execution)
     const newBalance = currentBalance - total;
-    const { error: debitErr } = await supabase
-      .from('profiles')
-      .update({
-        balance: newBalance,
-        total_spent: (Number(userProfile.total_spent) || 0) + total,
-      })
-      .eq('id', targetUserId);
+    const [debitRes, stockRes] = await Promise.all([
+      supabase
+        .from('profiles')
+        .update({
+          balance: newBalance,
+          total_spent: (Number(userProfile.total_spent) || 0) + total,
+        })
+        .eq('id', targetUserId),
+      supabase
+        .from('products')
+        .update({
+          accounts_list: updatedAccountsList,
+          hidden_keys_or_links: updatedHiddenKeys,
+          stock: currentStockNum !== null ? String(currentStockNum) : product.stock,
+          sold_count: (Number(product.sold_count) || 0) + qty,
+        })
+        .eq('id', productId),
+    ]);
 
-    if (debitErr) {
-      console.error('[API Order] Debit error:', debitErr);
+    if (debitRes.error) {
+      console.error('[API Order] Debit error:', debitRes.error);
       return res.status(500).json({ success: false, code: 'DEBIT_FAILED', error: 'Không thể trừ tiền trong ví' });
     }
 
-    // 9. Cập nhật tồn kho sản phẩm
-    await supabase
-      .from('products')
-      .update({
-        accounts_list: updatedAccountsList,
-        hidden_keys_or_links: updatedHiddenKeys,
-        stock: currentStockNum !== null ? String(currentStockNum) : product.stock,
-        sold_count: (Number(product.sold_count) || 0) + qty,
-      })
-      .eq('id', productId);
-
-    // 10. Tạo đơn hàng trong bảng orders
+    // 10 & 11. Tạo đơn hàng và ghi sổ cái song song
     const orderNum = Math.floor(10000 + Math.random() * 90000);
     const orderCode = `#TX-${orderNum}`;
 
-    const { data: createdOrder, error: orderErr } = await supabase
-      .from('orders')
-      .insert({
-        user_id: targetUserId,
-        user_name: userProfile.username,
-        product_id: product.id,
-        product_name: product.name,
-        package_id: packageId || null,
-        package_name: selectedPackageObj?.name || null,
-        quantity: qty,
-        unit_price: unitPrice,
-        total_price: total,
-        status: 'completed',
-        payment_method: 'wallet',
-        delivered_content: deliveredContent,
-        idem_key: idempotencyKey || `api-${Date.now()}`,
-      })
-      .select()
-      .single();
+    const [orderRes, txRes] = await Promise.all([
+      supabase
+        .from('orders')
+        .insert({
+          user_id: targetUserId,
+          user_name: userProfile.username,
+          product_id: product.id,
+          product_name: product.name,
+          package_id: packageId || null,
+          package_name: selectedPackageObj?.name || null,
+          quantity: qty,
+          unit_price: unitPrice,
+          total_price: total,
+          status: 'completed',
+          payment_method: 'wallet',
+          delivered_content: deliveredContent,
+          idem_key: idempotencyKey || `api-${Date.now()}`,
+        })
+        .select()
+        .single(),
+      supabase
+        .from('transactions')
+        .insert({
+          user_id: targetUserId,
+          user_name: userProfile.username,
+          type: 'purchase',
+          amount: -total,
+          balance_after: newBalance,
+          description: `Thanh toán mua ${product.name}${selectedPackageObj?.name ? ` [${selectedPackageObj.name}]` : ''} (x${qty})`,
+          status: 'completed',
+        }),
+    ]);
 
-    if (orderErr) {
-      console.error('[API Order] Order insert error:', orderErr);
-    }
-
-    // 11. Ghi sổ cái tài chính transactions (PURCHASE ledger)
-    await supabase
-      .from('transactions')
-      .insert({
-        user_id: targetUserId,
-        user_name: userProfile.username,
-        type: 'purchase',
-        amount: -total,
-        balance_after: newBalance,
-        description: `Thanh toán mua ${product.name}${selectedPackageObj?.name ? ` [${selectedPackageObj.name}]` : ''} (x${qty})`,
-        status: 'completed',
-      });
+    const createdOrder = orderRes.data;
 
     return res.status(200).json({
       success: true,

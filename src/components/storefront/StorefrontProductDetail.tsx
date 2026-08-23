@@ -14,6 +14,7 @@ import {
   X,
   Copy,
   Check,
+  Loader2,
 } from 'lucide-react';
 
 // isAccountProduct: import chung từ utils/productAccount (nhận diện acc/nick/gmail
@@ -147,6 +148,7 @@ interface ProductInfoProps {
   isProductSale: boolean;
   productDiscountPercent?: number;
   effectiveUnitPrice: number;
+  isPurchasing?: boolean;
   onBuyNow: () => void;
   onAddToCart: () => void;
 }
@@ -163,6 +165,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
   isProductSale,
   productDiscountPercent,
   effectiveUnitPrice,
+  isPurchasing = false,
   onBuyNow,
   onAddToCart,
 }) => {
@@ -367,11 +370,21 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
           {/* MUA NGAY Button (Full width, min-height 54px on mobile) */}
           <button
             type="button"
+            disabled={isPurchasing}
             onClick={onBuyNow}
-            className="buy-button w-full min-h-[52px] sm:min-h-[54px] py-3.5 rounded-[14px] bg-[#10E6A1] hover:bg-[#05C989] text-black font-black uppercase text-[15px] shadow-[0_4px_20px_rgba(16,230,161,0.25)] flex items-center justify-center gap-2 transition-all duration-200 transform hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer tracking-wide focus-visible:outline-2 focus-visible:outline-[#10E6A1]/60 focus-visible:outline-offset-2"
+            className={`buy-button w-full min-h-[52px] sm:min-h-[54px] py-3.5 rounded-[14px] ${isPurchasing ? 'bg-[#10E6A1]/60 cursor-not-allowed opacity-80' : 'bg-[#10E6A1] hover:bg-[#05C989] cursor-pointer active:scale-[0.98]'} text-black font-black uppercase text-[15px] shadow-[0_4px_20px_rgba(16,230,161,0.25)] flex items-center justify-center gap-2 transition-all duration-150 transform hover:-translate-y-0.5 tracking-wide focus-visible:outline-2 focus-visible:outline-[#10E6A1]/60 focus-visible:outline-offset-2`}
           >
-            <ShoppingCart className="w-5 h-5 text-black stroke-[2.5]" />
-            <span>{isAcc ? 'MUA TÀI KHOẢN NGAY' : 'MUA NGAY'} ({(effectiveUnitPrice * quantity).toLocaleString('vi-VN')} VNĐ)</span>
+            {isPurchasing ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin text-black stroke-[2.5]" />
+                <span>ĐANG XỬ LÝ ĐƠN HÀNG...</span>
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-5 h-5 text-black stroke-[2.5]" />
+                <span>{isAcc ? 'MUA TÀI KHOẢN NGAY' : 'MUA NGAY'} ({(effectiveUnitPrice * quantity).toLocaleString('vi-VN')} VNĐ)</span>
+              </>
+            )}
           </button>
 
           {/* THÊM VÀO GIỎ Button */}
@@ -584,32 +597,39 @@ export const StorefrontProductDetail: React.FC = () => {
   } | null>(null);
 
   const [copiedKey, setCopiedKey] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
 
   const handleBuyNow = async () => {
+    if (isPurchasing) return;
     // Guests must log in before buying
     if (!isAuthenticated) {
       showToast('Vui lòng đăng nhập tài khoản để mua hàng!', 'warning');
       navigateToStorefront('login', `/products/${activeIdOrSlug || product.id}`);
       return;
     }
-    const total = effectiveUnitPrice * quantity;
-    const success = await createOrder(product.id, quantity, 'wallet', selectedPlan || undefined);
-    if (success) {
-      // Find newly created order from state or construct display
-      const latestOrder = orders.find(o => o.productId === product.id) || {
-        productName: product.name,
-        packageName: selectedPlan?.name,
-        totalPrice: total,
-        orderCode: '#TX-' + Math.floor(10000 + Math.random() * 90000),
-        deliveredContent: product.hiddenKeysOrLinks || product.accountsList || 'Đã kích hoạt tự động',
-      };
-      setPurchaseSuccessOrder({
-        productName: product.name,
-        packageName: selectedPlan?.name,
-        totalPrice: total,
-        orderCode: latestOrder.orderCode || ('#TX-' + Math.floor(10000 + Math.random() * 90000)),
-        deliveredContent: latestOrder.deliveredContent || product.hiddenKeysOrLinks,
-      });
+    setIsPurchasing(true);
+    try {
+      const total = effectiveUnitPrice * quantity;
+      const success = await createOrder(product.id, quantity, 'wallet', selectedPlan || undefined);
+      if (success) {
+        // Find newly created order from state or construct display
+        const latestOrder = orders.find(o => o.productId === product.id) || {
+          productName: product.name,
+          packageName: selectedPlan?.name,
+          totalPrice: total,
+          orderCode: '#TX-' + Math.floor(10000 + Math.random() * 90000),
+          deliveredContent: product.hiddenKeysOrLinks || product.accountsList || 'Đã kích hoạt tự động',
+        };
+        setPurchaseSuccessOrder({
+          productName: product.name,
+          packageName: selectedPlan?.name,
+          totalPrice: total,
+          orderCode: latestOrder.orderCode || ('#TX-' + Math.floor(10000 + Math.random() * 90000)),
+          deliveredContent: latestOrder.deliveredContent || product.hiddenKeysOrLinks,
+        });
+      }
+    } finally {
+      setIsPurchasing(false);
     }
   };
 
@@ -746,6 +766,7 @@ export const StorefrontProductDetail: React.FC = () => {
           isProductSale={isProductSale}
           productDiscountPercent={productDiscountPercent}
           effectiveUnitPrice={effectiveUnitPrice}
+          isPurchasing={isPurchasing}
           onBuyNow={handleBuyNow}
           onAddToCart={() => addToCart(product, quantity, selectedPlan || undefined)}
         />

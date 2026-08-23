@@ -22,6 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
+  Loader2,
 } from 'lucide-react';
 import { getThemeTypography } from '../../utils/themeStyles';
 import { useDragScroll } from '../../hooks/useDragScroll';
@@ -75,16 +76,23 @@ export const StorefrontHome: React.FC = () => {
   });
 
   const featuredProducts = activeProducts.filter((p) => p.featured);
+  const [purchasingId, setPurchasingId] = useState<string | null>(null);
 
   const handleQuickBuy = async (productId: string, price: number) => {
+    if (purchasingId) return;
     if (!isAuthenticated) {
       showToast('Vui lòng đăng nhập tài khoản để mua hàng!', 'warning');
       navigateToStorefront('login', '/');
       return;
     }
-    const success = await createOrder(productId, 1, 'wallet');
-    if (success) {
-      navigateToStorefront('account-orders');
+    setPurchasingId(productId);
+    try {
+      const success = await createOrder(productId, 1, 'wallet');
+      if (success) {
+        navigateToStorefront('account-orders');
+      }
+    } finally {
+      setPurchasingId(null);
     }
   };
 
@@ -400,6 +408,8 @@ export const StorefrontHome: React.FC = () => {
                             <Button
                               variant="primary"
                               size="sm"
+                              isLoading={purchasingId === product.id}
+                              disabled={purchasingId !== null}
                               onClick={() => handleQuickBuy(product.id, displayPrice)}
                             >
                               Mua Ngay
@@ -582,6 +592,8 @@ export const StorefrontHome: React.FC = () => {
                           <Button
                             variant="primary"
                             size="xs"
+                            isLoading={purchasingId === prod.id}
+                            disabled={purchasingId !== null}
                             onClick={() => handleQuickBuy(prod.id, displayPrice)}
                             className="justify-center font-bold"
                           >
