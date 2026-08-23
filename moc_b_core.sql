@@ -278,3 +278,8 @@ DROP POLICY IF EXISTS "products_admin_delete" ON public.products;
 CREATE POLICY "products_admin_delete" ON public.products
   FOR DELETE TO authenticated
   USING (EXISTS (SELECT 1 FROM public.profiles pr WHERE pr.id = auth.uid() AND pr.role = 'admin'));
+
+-- Dọn 2 policy cũ cấp cho role {public} (mọi người kể cả anon) — đã thay bằng
+-- bộ products_admin_* ở trên + VIEW products_public cho khách
+DROP POLICY IF EXISTS "Admin can manage all products" ON public.products;
+DROP POLICY IF EXISTS "Public can view active products" ON public.products;
