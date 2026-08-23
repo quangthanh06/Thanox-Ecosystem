@@ -14,6 +14,7 @@ import {
   Flame,
   CheckCircle2,
   ChevronDown,
+  Eye,
 } from 'lucide-react';
 import { getThemeTypography } from '../../utils/themeStyles';
 import { useDragScroll } from '../../hooks/useDragScroll';
@@ -264,6 +265,21 @@ export const StorefrontProducts: React.FC = () => {
                           -{discount}%
                         </span>
                       ) : null}
+                    </div>
+
+                    {/* Nút Xem Chi Tiết nằm giữa ảnh — chỉ hiện khi rê chuột / chạm vào card */}
+                    <div className="absolute inset-0 z-[5] flex items-center justify-center bg-gradient-to-t from-black/55 via-black/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200 pointer-events-none">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigateToStorefront('product-detail', product.id);
+                        }}
+                        className="pointer-events-none group-hover:pointer-events-auto group-active:pointer-events-auto px-3.5 sm:px-4 py-2 rounded-xl bg-[#7C3AED]/95 hover:bg-[#8B5CF6] active:scale-95 text-white text-[11px] sm:text-xs font-extrabold uppercase tracking-wide shadow-lg shadow-purple-950/50 border border-white/25 backdrop-blur-sm transition-all hover:scale-105 cursor-pointer flex items-center gap-1.5"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Xem Chi Tiết</span>
+                      </button>
                     </div>
                   </div>
 

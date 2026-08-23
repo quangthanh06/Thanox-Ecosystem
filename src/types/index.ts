@@ -398,6 +398,9 @@ export interface StoreSettings {
 
   // Hero Banner Customizer
   heroBanner?: HeroBannerSettings;
+
+  // Gói dịch vụ theo sản phẩm (map productId -> packages), đồng bộ qua store_settings
+  productPackages?: Record<string, ProductPackage[]>;
 }
 
 export type StorefrontPageId =

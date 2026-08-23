@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { isAccountLikeProduct } from '../utils/productAccount';
 import {
   PageId,
   StorefrontPageId,
@@ -163,6 +164,34 @@ const safeGetItem = <T,>(key: string, fallback: T): T => {
   }
 };
 
+// ============================================================================
+// SUPABASE PRODUCTS EXTENDED COLUMNS (packages, sale, product_type, ...)
+// null = chưa probe, true = đã chạy migration (cột tồn tại), false = chưa có cột
+// ============================================================================
+let productsExtendedReady: boolean | null = null;
+
+const isMissingColumnError = (err: unknown): boolean => {
+  if (!err || typeof err !== 'object') return false;
+  const e = err as { code?: string; message?: string };
+  const code = String(e.code || '');
+  const msg = String(e.message || '');
+  return code === 'PGRST204' || code === '42703' || /does not exist|Could not find the '(packages|product_type|is_sale|sale_price|instructions|accounts_list|images|download_url)'/i.test(msg);
+};
+
+// Payload các cột mở rộng (chỉ gửi khi migration đã được áp dụng)
+const buildExtendedProductPayload = (p: Product): Record<string, unknown> => ({
+  packages: (p.packages && p.packages.length > 0 ? p.packages : p.plans) || [],
+  product_type: p.productType || 'key',
+  is_sale: Boolean(p.isSale ?? p.saleActive),
+  sale_price: p.salePrice ?? null,
+  instructions: p.instructions || '',
+  accounts_list: p.accountsList || '',
+  images: p.images || [],
+  download_url: p.downloadUrl || '',
+  featured: p.featured ?? true,
+  sold_count: p.soldCount ?? p.sold ?? 0,
+});
+
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Navigation State
   const [appMode, setAppMode] = useState<'admin' | 'storefront'>('admin');
@@ -183,6 +212,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
 
   // Persistent States with Safe LocalStorage Parsing
+  // Ref giữ productPackages MỚI NHẤT (tránh race giữa effect tải store_settings
+  // và effect tải products — bản tải sau không được đè mất gói của bản trước)
+  const productPackagesRef = React.useRef<Record<string, ProductPackage[]>>({});
+
   const [products, setProducts] = useState<Product[]>(() => {
     const loaded = safeGetItem<Product[] | null>('thanox_products', null);
     if (loaded && Array.isArray(loaded) && loaded.length > 0) {
@@ -195,6 +228,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     const fetchSupabaseProducts = async () => {
       try {
+        // Probe 1 lần: kiểm tra cột mở rộng (packages...) đã tồn tại trên DB chưa
+        const { error: probeError } = await supabase.from('products').select('packages').limit(1);
+        productsExtendedReady = !probeError;
+
         const { data, error } = await supabase
           .from('products')
           .select('*')
@@ -203,22 +240,53 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (error) throw error;
         
         if (data && data.length > 0) {
-          const mappedProducts: Product[] = data.map((p) => ({
+          // Bản localStorage (do admin cấu hình) dùng để bổ sung các trường
+          // mà DB chưa có cột (packages, sale, instructions...) — tránh mất dữ liệu
+          // trình duyệt đang dùng trước khi migration được chạy.
+          const localSnapshot = products;
+          // Gói dịch vụ đồng bộ qua store_settings (cloud, hoạt động cả khi chưa migration)
+          // Ưu tiên ref (mới nhất) rồi tới state closure (từ localStorage)
+          const cloudPackages = { ...(settings.productPackages || {}), ...productPackagesRef.current };
+
+          const mappedProducts: Product[] = data.map((p) => {
+            const local = localSnapshot.find((lp) => lp.id === p.id);
+            const dbPackages = Array.isArray(p.packages) ? (p.packages as ProductPackage[]) : [];
+            const settingsPkgs = cloudPackages[p.id] || [];
+            const localPkgs = local?.packages || local?.plans || [];
+            const packages = dbPackages.length > 0 ? dbPackages : settingsPkgs.length > 0 ? settingsPkgs : localPkgs;
+
+            return {
             id: p.id,
             name: p.name,
             category: p.category,
             price: p.price,
-            sellerPrice: p.seller_price,
+            sellerPrice: p.sellerPrice ?? p.seller_price,
             basePrice: p.original_price,
             stock: p.stock === 'unlimited' ? 'unlimited' : Number(p.stock) || 0,
             status: p.status as ProductStatus,
             description: p.description || '',
-            image: p.image_url || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
+            image: p.image_url || local?.image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
             // ONLY LOAD FOR ADMIN! We will fix this in RLS later.
-            downloadLinkOrKeys: p.hidden_keys_or_links || '',
-            soldCount: 0,
-            featured: true,
-          }));
+            downloadLinkOrKeys: p.hidden_keys_or_links || local?.downloadLinkOrKeys || '',
+            soldCount: p.sold_count ?? local?.soldCount ?? 0,
+            featured: p.featured ?? local?.featured ?? true,
+            // === Trường mở rộng: ưu tiên DB, fallback về bản localStorage ===
+            packages,
+            plans: packages,
+            productType: (p.product_type as Product['productType']) || local?.productType,
+            isSale: p.is_sale ?? local?.isSale,
+            saleActive: p.is_sale ?? local?.saleActive,
+            salePrice: p.sale_price ?? local?.salePrice,
+            instructions: p.instructions || local?.instructions || '',
+            accountsList: p.accounts_list || local?.accountsList || '',
+            images: Array.isArray(p.images) ? (p.images as string[]) : local?.images,
+            downloadUrl: p.download_url || local?.downloadUrl || '',
+            licenseKeys: local?.licenseKeys || '',
+            attachedFileName: local?.attachedFileName || '',
+            attachedFileSize: local?.attachedFileSize || '',
+            attachedFileData: local?.attachedFileData || '',
+            };
+          });
           
           setProducts(mappedProducts);
         }
@@ -696,7 +764,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           .maybeSingle();
         if (error || cancelled || !data?.settings_data) return;
         if (typeof data.settings_data !== 'object') return;
-        setSettings((prev) => ({ ...prev, ...data.settings_data }));
+        const cloudSettings = data.settings_data as StoreSettings;
+        setSettings((prev) => ({ ...prev, ...cloudSettings }));
+
+        // Gói dịch vụ admin cấu hình (lưu kèm settings cloud) — áp lên sản phẩm
+        // để mọi thiết bị thấy gói ngay cả khi chưa chạy migration cột packages.
+        const cloudPkgs = cloudSettings.productPackages || {};
+        if (Object.keys(cloudPkgs).length > 0) {
+          productPackagesRef.current = { ...productPackagesRef.current, ...cloudPkgs };
+          setProducts((prev) =>
+            prev.map((p) => {
+              const pkgs = cloudPkgs[p.id];
+              return pkgs && pkgs.length > 0 ? { ...p, packages: pkgs, plans: pkgs } : p;
+            })
+          );
+        }
       } catch {
         // Offline / table missing: silently keep local settings
       }
@@ -1095,11 +1177,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const unitPrice = getItemEffectivePrice(item.product, buyer, item.selectedPackage);
       const itemTotal = unitPrice * item.quantity;
 
-      const isAcc =
-        item.product.category.toLowerCase().includes('tài khoản') ||
-        item.product.category.toLowerCase().includes('acc') ||
-        item.product.category.toLowerCase().includes('nick') ||
-        item.product.productType === 'account';
+      const isAcc = isAccountLikeProduct(item.product);
 
       let deliveredText = item.product.downloadLinkOrKeys || 'Hệ thống đã giao sản phẩm thành công.';
       let deliveredKey = item.product.downloadLinkOrKeys?.split('\n')[0] || 'KEY-AUTO-' + Math.floor(100000 + Math.random() * 900000);
@@ -1195,7 +1273,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch (e) {
       console.error('Failed to save products to localStorage:', e);
     }
-    
+
         // Sync to Supabase
         /*
         supabase.from('store_settings').upsert({
@@ -1205,6 +1283,42 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }).catch(err => console.error('Failed to sync settings to cloud', err));
         */
 
+  };
+
+  // Đồng bộ gói dịch vụ của sản phẩm lên Cloud qua bảng store_settings
+  // (hoạt động ngay cả khi chưa chạy migration thêm cột packages).
+  // packages rỗng => xóa key để mọi thiết bị nhận biết gói đã bị gỡ.
+  const syncProductPackagesToCloud = (productId: string, packages: ProductPackage[]) => {
+    setSettings((prev) => {
+      const map = { ...(prev.productPackages || {}) };
+      if (packages && packages.length > 0) {
+        map[productId] = packages;
+      } else {
+        delete map[productId];
+      }
+      // Cập nhật ngay ref để các lần tải sau không đè mất gói vừa lưu
+      productPackagesRef.current = { ...productPackagesRef.current, ...map };
+      const updated = { ...prev, productPackages: map };
+      try {
+        localStorage.setItem('thanox_settings', JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to save settings:', e);
+      }
+      supabase
+        .from('store_settings')
+        .upsert({
+          id: 'default',
+          settings_data: updated,
+          updated_at: new Date().toISOString(),
+        })
+        .then(
+          (res) => {
+            if (res.error) console.error('Failed to sync product packages to cloud:', res.error.message);
+          },
+          (err: unknown) => console.error('Product packages sync error:', err)
+        );
+      return updated;
+    });
   };
 
   // Products CRUD
@@ -1236,7 +1350,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     try {
-      const { error } = await supabase.from('products').insert({
+      const baseInsert = {
         id: newId,
         name: newProduct.name,
         category: newProduct.category,
@@ -1248,12 +1362,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         description: newProduct.description,
         image_url: newProduct.image,
         hidden_keys_or_links: newProduct.downloadLinkOrKeys
-      });
+      };
+      const extendedPayload = productsExtendedReady === true ? buildExtendedProductPayload(newProduct) : {};
+
+      let { error } = await supabase.from('products').insert({ ...baseInsert, ...extendedPayload });
+      // Nếu DB chưa có cột mở rộng (chưa chạy migration) → thử lại không kèm cột mở rộng
+      if (error && productsExtendedReady === true && isMissingColumnError(error)) {
+        productsExtendedReady = false;
+        ({ error } = await supabase.from('products').insert(baseInsert));
+      }
       if (error) throw error;
+      // Đồng bộ gói dịch vụ lên cloud (qua store_settings) cho mọi thiết bị
+      syncProductPackagesToCloud(newId, newProduct.packages || newProduct.plans || []);
       showToast(`Đã thêm sản phẩm "${newProduct.name}" lên Cloud thành công!`, 'success');
     } catch (e) {
       console.error('Lỗi khi lưu Supabase:', e);
-      showToast('L?i khi luu l�n Cloud, vui l�ng th? l?i', 'error');
+      showToast('Lỗi khi lưu lên Cloud, vui lòng thử lại', 'error');
     }
   };
 
@@ -1278,7 +1402,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (updatedProduct) {
       const p = updatedProduct as Product;
       try {
-        const { error } = await supabase.from('products').update({
+        const baseUpdate = {
           name: p.name,
           category: p.category,
           price: p.price,
@@ -1289,9 +1413,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           description: p.description,
           image_url: p.image,
           hidden_keys_or_links: p.downloadLinkOrKeys
-        }).eq('id', id);
+        };
+        const extendedPayload = productsExtendedReady === true ? buildExtendedProductPayload(p) : {};
 
+        let { error } = await supabase.from('products').update({ ...baseUpdate, ...extendedPayload }).eq('id', id);
+        // Nếu DB chưa có cột mở rộng (chưa chạy migration) → thử lại không kèm cột mở rộng
+        if (error && productsExtendedReady === true && isMissingColumnError(error)) {
+          productsExtendedReady = false;
+          ({ error } = await supabase.from('products').update(baseUpdate).eq('id', id));
+        }
         if (error) throw error;
+        // Đồng bộ gói dịch vụ lên cloud (qua store_settings) cho mọi thiết bị
+        syncProductPackagesToCloud(id, p.packages || p.plans || []);
         showToast('Đã lưu thông tin sản phẩm và đồng bộ cơ sở dữ liệu Cloud! 🔒 (Đã khóa bảo vệ)', 'success');
       } catch (e) {
         console.error('Lỗi Update Supabase:', e);
@@ -1338,6 +1471,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const { error } = await supabase.from('products').delete().eq('id', id);
       if (error) throw error;
+      // Dọn gói dịch vụ của sản phẩm đã xóa khỏi store_settings cloud
+      syncProductPackagesToCloud(id, []);
       showToast('Đã xóa sản phẩm trên Cloud thành công', 'success'); // Changed to success instead of error style
     } catch (e) {
       console.error('Lỗi Xóa Supabase:', e);
@@ -1443,11 +1578,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       );
     }
 
-    const isAccProduct =
-      product.category.toLowerCase().includes('tài khoản') ||
-      product.category.toLowerCase().includes('acc') ||
-      product.category.toLowerCase().includes('nick') ||
-      product.productType === 'account';
+    const isAccProduct = isAccountLikeProduct(product);
 
     let deliveredText = '';
     let deliveredKey = '';
@@ -1667,6 +1798,57 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       ...prev,
     ]);
 
+    // === ĐƯỜNG NẠP THẬT (SePay/MB webhook): ghi topup lên Cloud để webhook
+    // ngân hàng match transfer_note và duyệt tự động qua RPC process_bank_webhook.
+    // Cần policy "topups_insert_own" trong security_fix_rls.sql; nếu chưa chạy
+    // SQL thì bỏ qua im lặng và vẫn giữ luồng local như cũ. ===
+    void (async () => {
+      try {
+        const { data: cloudTopup, error: cloudErr } = await supabase
+          .from('topups')
+          .insert({
+            user_id: buyer.id,
+            amount,
+            status: 'pending',
+            method,
+            transfer_note: newTopup.transferNote,
+          })
+          .select('id')
+          .single();
+
+        if (cloudErr || !cloudTopup) {
+          console.warn('[Topup] Chưa đồng bộ Cloud (chạy security_fix_rls.sql để bật):', cloudErr?.message || 'no row');
+          return;
+        }
+        // Polling trạng thái: khi webhook duyệt THẬT trên DB → cộng số dư theo nguồn thật
+        const pollId = cloudTopup.id;
+        let tries = 0;
+        const timer = setInterval(async () => {
+          tries++;
+          try {
+            const { data: t } = await supabase.from('topups').select('status').eq('id', pollId).maybeSingle();
+            if (t?.status === 'approved') {
+              clearInterval(timer);
+              // Lấy số dư thật từ profiles (webhook RPC đã cộng trên DB)
+              const { data: prof } = await supabase.from('profiles').select('balance').eq('id', buyer.id).maybeSingle();
+              if (prof) {
+                setUsers((prev) => prev.map((u) => (u.id === buyer.id ? { ...u, balance: Number(prof.balance) || 0 } : u)));
+              }
+              setTopups((prev) =>
+                prev.map((tp) =>
+                  tp.id === newTopup.id
+                    ? { ...tp, status: 'approved', processedAt: new Date().toISOString().replace('T', ' ').substring(0, 16) }
+                    : tp
+                )
+              );
+              showToast(`🎉 Webhook ngân hàng xác nhận: +${amount.toLocaleString('vi-VN')}đ vào ví!`, 'success');
+            }
+          } catch {}
+          if (tries >= 30) clearInterval(timer); // dừng sau ~5 phút
+        }, 10000);
+      } catch {}
+    })();
+
     // Ultra-Fast Auto Credit Simulator (8 seconds)
     if (settings.autoApprovalEnabled !== false) {
       setTimeout(() => {
@@ -1876,6 +2058,32 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const login = async (identifier: string, password: string, _rememberMe = true): Promise<{ success: boolean; message?: string }> => {
     const cleanId = identifier.trim().toLowerCase();
     if (!cleanId) return { success: false, message: 'Vui lòng nhập tên đăng nhập hoặc email' };
+
+    // === CHỐNG DÒ MẬT KHẨU (brute force): 5 lần sai liên tiếp => khóa 5 phút ===
+    try {
+      const raw = localStorage.getItem('thanox_login_guard');
+      if (raw) {
+        const guard = JSON.parse(raw) as { fails: number; lockedUntil?: number };
+        if (guard.lockedUntil && Date.now() < guard.lockedUntil) {
+          const secs = Math.ceil((guard.lockedUntil - Date.now()) / 1000);
+          return { success: false, message: `Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau ${secs} giây.` };
+        }
+      }
+    } catch {}
+
+    const recordLoginFail = (): { fails: number; lockedUntil?: number } => {
+      try {
+        const raw = localStorage.getItem('thanox_login_guard');
+        const guard = raw ? (JSON.parse(raw) as { fails: number }) : { fails: 0 };
+        const fails = (guard.fails || 0) + 1;
+        const next = fails >= 5 ? { fails: 0, lockedUntil: Date.now() + 5 * 60 * 1000 } : { fails };
+        localStorage.setItem('thanox_login_guard', JSON.stringify(next));
+        return next;
+      } catch {
+        return { fails: 1 };
+      }
+    };
+
     try {
       let targetEmail = cleanId;
       if (!cleanId.includes('@')) {
@@ -1883,7 +2091,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (profile && profile.email) {
           targetEmail = profile.email;
         } else {
-          return { success: false, message: 'Sai tài khoản hoặc mật khẩu.' };
+          const g = recordLoginFail();
+          return { success: false, message: g.lockedUntil ? 'Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau 5 phút.' : `Sai tài khoản hoặc mật khẩu. (Còn ${5 - g.fails} lần thử)` };
         }
       }
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -1891,12 +2100,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         password: password,
       });
       if (authError || !authData.user) {
+        const g = recordLoginFail();
+        if (g.lockedUntil) {
+          return { success: false, message: 'Bạn đã nhập sai quá nhiều lần. Tài khoản bị khóa tạm 5 phút.' };
+        }
         // Give users an actionable message for unconfirmed emails instead of a generic one
         if (authError?.message?.toLowerCase().includes('email not confirmed')) {
           return { success: false, message: 'Tài khoản chưa xác nhận email. Vui lòng kiểm tra hộp thư (cả mục Spam) và bấm link kích hoạt.' };
         }
-        return { success: false, message: 'Sai tài khoản hoặc mật khẩu.' };
+        return { success: false, message: `Sai tài khoản hoặc mật khẩu. (Còn ${5 - g.fails} lần thử)` };
       }
+
+      // Đăng nhập thành công => xóa bộ đếm sai
+      try {
+        localStorage.removeItem('thanox_login_guard');
+      } catch {}
 
       setCurrentUserId(authData.user.id);
       

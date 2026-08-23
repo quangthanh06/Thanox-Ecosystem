@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
+import { isAccountLikeProduct } from '../../utils/productAccount';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import {
@@ -141,10 +142,9 @@ export const StorefrontOrders: React.FC = () => {
                 const rawContent = order.deliveredContent || order.key || prod?.downloadLinkOrKeys || '';
                 
                 const isAcc =
-                  (order.category || prod?.category || '').toLowerCase().includes('tài khoản') ||
-                  (order.category || prod?.category || '').toLowerCase().includes('acc') ||
-                  (order.category || prod?.category || '').toLowerCase().includes('nick') ||
-                  prod?.productType === 'account' ||
+                  (prod ? isAccountLikeProduct(prod) : false) ||
+                  (order.category || '').toLowerCase().includes('tài khoản') ||
+                  (order.category || '').toLowerCase().includes('acc') ||
                   rawContent.includes('TÀI KHOẢN:') ||
                   rawContent.includes('Tài khoản:') ||
                   rawContent.includes('|');

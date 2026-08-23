@@ -34,3 +34,8 @@ lerna-debug.log*
 .idea
 
 .antigravity
+
+# Build archives & local logs
+*.zip
+dev-server.log
+*.tsbuildinfo

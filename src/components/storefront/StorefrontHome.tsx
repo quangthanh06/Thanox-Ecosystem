@@ -21,6 +21,7 @@ import {
   TrendingUp,
   ChevronLeft,
   ChevronRight,
+  Eye,
 } from 'lucide-react';
 import { getThemeTypography } from '../../utils/themeStyles';
 import { useDragScroll } from '../../hooks/useDragScroll';
@@ -162,8 +163,8 @@ export const StorefrontHome: React.FC = () => {
               </div>
             </div>
 
-            {/* Right Showcase Image Card (5 cols) */}
-            <div className="lg:col-span-5 hidden lg:flex justify-center items-center">
+            {/* Right Showcase Image Card (5 cols) — hiện cả trên mobile để màn hẹp vẫn xem được ảnh sản phẩm */}
+            <div className="lg:col-span-5 flex justify-center items-center">
               <div
                 onClick={() => navigateToStorefront('product-detail', currentSlide.id)}
                 className="relative w-full max-w-2xl aspect-video rounded-3xl bg-gradient-to-b from-white/10 to-white/5 border border-white/15 p-2 shadow-2xl backdrop-blur-md overflow-hidden group/card cursor-pointer hover:border-cyan-400/50 transition-all hover:scale-105"
@@ -331,6 +332,21 @@ export const StorefrontHome: React.FC = () => {
                           GIẢM {discount}%
                         </span>
                       )}
+
+                      {/* Nút Xem Chi Tiết nằm giữa ảnh — chỉ hiện khi rê chuột / chạm vào card */}
+                      <div className="absolute inset-0 z-[5] flex items-center justify-center bg-gradient-to-t from-black/55 via-black/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200 pointer-events-none">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigateToStorefront('product-detail', product.id);
+                          }}
+                          className="pointer-events-none group-hover:pointer-events-auto group-active:pointer-events-auto px-3.5 sm:px-4 py-2 rounded-xl bg-[#7C3AED]/95 hover:bg-[#8B5CF6] active:scale-95 text-white text-[11px] sm:text-xs font-extrabold uppercase tracking-wide shadow-lg shadow-purple-950/50 border border-white/25 backdrop-blur-sm transition-all hover:scale-105 cursor-pointer flex items-center gap-1.5"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Xem Chi Tiết</span>
+                        </button>
+                      </div>
                     </div>
 
                     <div>
@@ -499,6 +515,21 @@ export const StorefrontHome: React.FC = () => {
                     <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-black/80 text-emerald-400">
                       Đã bán: {prod.soldCount}
                     </span>
+
+                    {/* Nút Xem Chi Tiết nằm giữa ảnh — chỉ hiện khi rê chuột / chạm vào card */}
+                    <div className="absolute inset-0 z-[5] flex items-center justify-center bg-gradient-to-t from-black/55 via-black/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200 pointer-events-none">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigateToStorefront('product-detail', prod.id);
+                        }}
+                        className="pointer-events-none group-hover:pointer-events-auto group-active:pointer-events-auto px-3.5 sm:px-4 py-2 rounded-xl bg-[#7C3AED]/95 hover:bg-[#8B5CF6] active:scale-95 text-white text-[11px] sm:text-xs font-extrabold uppercase tracking-wide shadow-lg shadow-purple-950/50 border border-white/25 backdrop-blur-sm transition-all hover:scale-105 cursor-pointer flex items-center gap-1.5"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Xem Chi Tiết</span>
+                      </button>
+                    </div>
                   </div>
 
                   <h4

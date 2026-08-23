@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useStore } from '../../context/StoreContext';
 import { Product, ProductPlan } from '../../types';
+import { isAccountLikeProduct as isAccountProduct } from '../../utils/productAccount';
 import {
   ShoppingCart,
   Zap,
@@ -12,7 +13,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-const isAccountProduct = (product: Product) => product.productType === 'account' || product.category.toLowerCase().includes('tài khoản');
+// isAccountProduct: import chung từ utils/productAccount (nhận diện acc/nick/gmail
+// theo productType, category và cả tên sản phẩm — VD "ACC CLONE LV5")
 
 // ============================================================================
 // 1. SUBCOMPONENT: BREADCRUMB
@@ -204,7 +206,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
             CÒN LẠI TRONG KHO
           </span>
           <span className="text-base sm:text-lg font-black text-[#F8FAFC] mt-0.5 block leading-none">
-            {product.stock === 'unlimited' ? '∞ Không giới hạn' : `${product.stock} ${isAcc ? 'Nick' : 'Key'}`}
+            {product.stock === 'unlimited' ? '∞ Không giới hạn' : `${product.stock} ${isAcc ? 'Acc' : 'Key'}`}
           </span>
         </div>
       </div>
@@ -303,6 +305,11 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
 
                       {/* Right: Plan Price */}
                       <div className="text-right shrink-0">
+                        {plan.originalPrice && plan.originalPrice > plan.price && (
+                          <div className="text-[10.5px] font-medium text-[#64748B] line-through leading-[1.2]">
+                            {plan.originalPrice.toLocaleString('vi-VN')}đ
+                          </div>
+                        )}
                         <span
                           className={`plan-price text-[14.5px] sm:text-[15px] font-black leading-[1.35] ${
                             isSelected ? 'text-[#10E6A1]' : 'text-[#22D3EE]'
@@ -533,19 +540,34 @@ export const StorefrontProductDetail: React.FC = () => {
     ? Math.round(((productOriginalPrice - productCurrentPrice) / productOriginalPrice) * 100)
     : undefined;
 
-  // Service Plans list
-  const productPlans: ProductPlan[] =
+  // Service Plans list: ưu tiên gói admin cấu hình; nếu chưa có gói nào thì
+  // hiển thị 1 gói chuẩn theo giá niêm yết để khách luôn có chỗ chọn (như ảnh mẫu)
+  const configuredPlans: ProductPlan[] =
     product.plans && product.plans.length > 0
       ? product.plans
       : product.packages && product.packages.length > 0
       ? product.packages
       : [];
 
+  const productPlans: ProductPlan[] =
+    configuredPlans.length > 0
+      ? configuredPlans
+      : isAccountProduct(product)
+      ? []
+      : [
+          {
+            id: 'goi-chuan',
+            name: 'GÓI CHUẨN',
+            price: productCurrentPrice,
+          },
+        ];
+
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(
     productPlans.length > 0 ? productPlans[0].id : null
   );
 
-  const selectedPlan = productPlans.find((p) => p.id === selectedPlanId) || null;
+  // Tự động chọn gói đầu tiên khi danh sách gói tải về sau (async) hoặc đổi sản phẩm
+  const selectedPlan = productPlans.find((p) => p.id === selectedPlanId) || (productPlans.length > 0 ? productPlans[0] : null);
 
   // Effective unit price calculation
   const effectiveUnitPrice = selectedPlan ? selectedPlan.price : productCurrentPrice;

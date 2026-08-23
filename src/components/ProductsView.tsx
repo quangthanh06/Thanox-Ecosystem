@@ -1,4 +1,5 @@
 import { uploadMediaToSupabase } from '../lib/supabase';
+import { isAccountLikeCategory } from '../utils/productAccount';
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Product, ProductStatus, ProductPackage } from '../types';
@@ -77,15 +78,8 @@ export const ProductsView: React.FC = () => {
   const [pkgKeysInput, setPkgKeysInput] = useState('');
 
   // Helper to determine if a product category is Account/Nick/Acc FF
-  const isAccountCategory = (catName: string): boolean => {
-    const c = (catName || '').toLowerCase();
-    return (
-      c.includes('tài khoản') ||
-      c.includes('acc') ||
-      c.includes('nick') ||
-      c.includes('gmail')
-    );
-  };
+  // (dùng chung qua utils/productAccount để storefront & admin nhận diện giống nhau)
+  const isAccountCategory = (catName: string): boolean => isAccountLikeCategory(catName);
 
   // Form Fields
   const [formData, setFormData] = useState<{
@@ -619,6 +613,17 @@ export const ProductsView: React.FC = () => {
                           {product.originalPrice.toLocaleString('vi-VN')}đ
                         </div>
                       )}
+                      {(() => {
+                        const pkgs = product.packages || product.plans || [];
+                        return pkgs.length > 0 ? (
+                          <div
+                            className="mt-1 text-[9.5px] font-bold text-cyan-300 bg-cyan-500/10 border border-cyan-500/25 rounded-md px-1.5 py-0.5 inline-block"
+                            title={pkgs.map((g) => `${g.name}: ${g.price.toLocaleString('vi-VN')}đ`).join('\n')}
+                          >
+                            📦 {pkgs.length} gói dịch vụ
+                          </div>
+                        ) : null;
+                      })()}
                     </td>
 
                     {/* Sold Count */}

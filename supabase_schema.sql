@@ -25,6 +25,18 @@ CREATE TABLE public.products (
     image_url TEXT,
     -- Cột này CỰC KỲ QUAN TRỌNG: Sẽ được bảo mật, không gửi xuống frontend nếu chưa mua
     hidden_keys_or_links TEXT, 
+    -- Gói dịch vụ theo thời hạn (1 NGÀY / 7 NGÀY / 1 THÁNG...) — xem migration_phase7_storefront_upgrade.sql
+    packages JSONB DEFAULT '[]'::jsonb,
+    product_type TEXT DEFAULT 'key',
+    is_sale BOOLEAN DEFAULT false,
+    sale_price BIGINT,
+    instructions TEXT,
+    accounts_list TEXT,
+    images JSONB DEFAULT '[]'::jsonb,
+    download_url TEXT,
+    featured BOOLEAN DEFAULT true,
+    sold_count BIGINT DEFAULT 0,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
 );
 

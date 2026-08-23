@@ -322,84 +322,12 @@ export const StorefrontAIAssistant: React.FC = () => {
     }, 400);
   };
 
-  const [position, setPosition] = useState<{ x: number; y: number } | null>(() => {
+  // AI Bot cố định bên TRÁI màn hình (không kéo thả nữa) — dọn vị trí cũ nếu có
+  useEffect(() => {
     try {
-      const saved = localStorage.getItem('thanox_ai_bot_pos');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
-          return {
-            x: Math.max(10, Math.min(parsed.x, window.innerWidth - 60)),
-            y: Math.max(10, Math.min(parsed.y, window.innerHeight - 80)),
-          };
-        }
-      }
+      localStorage.removeItem('thanox_ai_bot_pos');
     } catch {}
-    return null;
-  });
-
-  const dragRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number; moved: boolean } | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0 && e.pointerType === 'mouse') return;
-
-    const el = e.currentTarget.getBoundingClientRect();
-    const currentX = position ? position.x : el.left;
-    const currentY = position ? position.y : el.top;
-
-    dragRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      initialX: currentX,
-      initialY: currentY,
-      moved: false,
-    };
-
-    try {
-      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    } catch {}
-  };
-
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragRef.current) return;
-
-    const dx = e.clientX - dragRef.current.startX;
-    const dy = e.clientY - dragRef.current.startY;
-
-    if (Math.hypot(dx, dy) > 5) {
-      dragRef.current.moved = true;
-      setIsDragging(true);
-      setIsBubbleDismissed(true);
-
-      const newX = Math.max(10, Math.min(window.innerWidth - 55, dragRef.current.initialX + dx));
-      const newY = Math.max(10, Math.min(window.innerHeight - 65, dragRef.current.initialY + dy));
-
-      setPosition({ x: newX, y: newY });
-    }
-  };
-
-  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragRef.current) return;
-
-    const moved = dragRef.current.moved;
-    dragRef.current = null;
-
-    try {
-      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-    } catch {}
-
-    if (moved) {
-      if (position) {
-        localStorage.setItem('thanox_ai_bot_pos', JSON.stringify(position));
-      }
-      setTimeout(() => setIsDragging(false), 50);
-    } else {
-      setIsDragging(false);
-      setIsOpen((prev) => !prev);
-      setIsBubbleDismissed(true);
-    }
-  };
+  }, []);
 
   const sizeClass = 
     settings.aiBotSize === 'small' ? 'w-9 h-9 sm:w-10 sm:h-10' :
@@ -410,31 +338,12 @@ export const StorefrontAIAssistant: React.FC = () => {
 
   return (
     <>
-      {/* 1. FLOATING DRAGGABLE MASCOT TRIGGER BUTTON (Drag anywhere on PC / Mobile & Compact Sleek Size) */}
+      {/* 1. FLOATING MASCOT TRIGGER BUTTON (Cố định bên TRÁI, đứng im — giống nhau trên PC & Mobile) */}
       <div
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        style={
-          position
-            ? {
-                position: 'fixed',
-                left: `${position.x}px`,
-                top: `${position.y}px`,
-                touchAction: 'none',
-              }
-            : {
-                position: 'fixed',
-                touchAction: 'none',
-              }
-        }
-        className={`${
-          position ? '' : 'bottom-24 sm:bottom-28 right-0 sm:right-6'
-        } z-[999999] flex flex-col items-center pointer-events-auto select-none cursor-grab active:cursor-grabbing transition-transform`}
+        className="fixed bottom-24 sm:bottom-28 left-0 sm:left-6 z-[999999] flex flex-col items-center pointer-events-auto select-none"
       >
         {/* Compact Animated Speech Bubble */}
-        {!isOpen && !isBubbleDismissed && !isDragging && (
+        {!isOpen && !isBubbleDismissed && (
           <div
             onClick={(e) => {
               e.stopPropagation();
@@ -467,12 +376,16 @@ export const StorefrontAIAssistant: React.FC = () => {
         {/* 3D Cyber Mascot Avatar Button (Sleek Compact 44px) */}
         <button
           type="button"
+          onClick={() => {
+            setIsOpen((prev) => !prev);
+            setIsBubbleDismissed(true);
+          }}
           className={`relative group p-0.5 rounded-full transition-all duration-300 cursor-pointer shadow-xl ${
             isOpen
               ? 'bg-gradient-to-r from-red-500 to-pink-600 scale-105 ring-2 ring-pink-500/40 shadow-red-500/30'
               : 'bg-gradient-to-r from-[#7C3AED] via-[#06B6D4] to-[#3B82F6] hover:scale-110 ring-2 ring-cyan-400/50 hover:ring-cyan-300 shadow-[0_0_18px_rgba(6,182,212,0.5)]'
           }`}
-          title="Kéo để di chuyển • Nhấp để mở AI tư vấn"
+          title="Nhấp để mở AI tư vấn"
         >
           {isOpen ? (
             <div className={`${sizeClass} flex items-center justify-center text-white bg-[#0F0F1A] rounded-full`}>
@@ -498,12 +411,10 @@ export const StorefrontAIAssistant: React.FC = () => {
         </button>
       </div>
 
-      {/* 2. MAIN AI ASSISTANT CHAT MODAL (Smart screen anchoring) */}
+      {/* 2. MAIN AI ASSISTANT CHAT MODAL (Neo luôn bên trái theo bot) */}
       {isOpen && (
         <div
-          className={`fixed bottom-24 sm:bottom-20 ${
-            position && position.x < window.innerWidth / 2 ? 'left-3 sm:left-6' : 'right-3 sm:right-6'
-          } w-[calc(100vw-24px)] sm:w-[410px] max-h-[76vh] h-[580px] z-[999999] flex flex-col bg-[#0B0B17]/95 backdrop-blur-2xl border-2 border-cyan-500/30 rounded-3xl shadow-2xl shadow-cyan-950/80 overflow-hidden animate-in fade-in zoom-in-95 duration-200`}
+          className="fixed bottom-24 sm:bottom-20 left-2 sm:left-6 w-[calc(100vw-16px)] sm:w-[410px] max-h-[76vh] h-[580px] z-[999999] flex flex-col bg-[#0B0B17]/95 backdrop-blur-2xl border-2 border-cyan-500/30 rounded-3xl shadow-2xl shadow-cyan-950/80 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         >
           {/* Header */}
           <div className="p-4 sm:p-4.5 bg-gradient-to-r from-[#6366F1] via-[#7C3AED] to-[#4F46E5] flex items-center justify-between shadow-lg shrink-0">

@@ -14,29 +14,13 @@ import {
   RotateCcw,
 } from 'lucide-react';
 
-const DEFAULT_TRACKS = [
-  {
-    id: 'track-1',
-    title: 'Cyberpunk Electro Energy 2026',
-    artist: 'Thanox Audio Team',
-    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-  },
-  {
-    id: 'track-2',
-    title: 'Future Synthwave Neon Drift',
-    artist: 'Thanox VIP Gaming',
-    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-  },
-];
-
 export const MusicPlayer: React.FC = () => {
   const { settings } = useStore();
 
   const isEnabled = settings.musicEnabled !== false;
-  const tracks =
-    settings.musicTracks && settings.musicTracks.length > 0
-      ? settings.musicTracks
-      : DEFAULT_TRACKS;
+  // Chỉ dùng bài hát Admin cấu hình — KHÔNG dùng nhạc mặc định nữa.
+  // Danh sách trống => ẩn hoàn toàn widget nhạc để Admin tự thêm bài mới.
+  const tracks = settings.musicTracks && settings.musicTracks.length > 0 ? settings.musicTracks : [];
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -180,7 +164,8 @@ export const MusicPlayer: React.FC = () => {
     }
   };
 
-  if (!isEnabled) return null;
+  // Không có bài hát nào => không render widget nhạc (đã xóa hết bài trong Admin)
+  if (!isEnabled || tracks.length === 0) return null;
 
   return (
     <>
