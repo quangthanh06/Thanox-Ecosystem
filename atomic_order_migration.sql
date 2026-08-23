@@ -94,7 +94,7 @@ BEGIN
   -- 1. Idempotency Check: nếu trùng (user_id, idem_key) => trả về đơn cũ, KHÔNG trừ tiền lần 2
   IF p_idem_key IS NOT NULL AND btrim(p_idem_key) <> '' THEN
     SELECT * INTO v_existing FROM orders
-     WHERE user_id = p_user_id AND idem_key = p_idem_key LIMIT 1;
+     WHERE user_id::text = p_user_id AND idem_key = p_idem_key LIMIT 1;
     IF FOUND THEN
       RETURN jsonb_build_object(
         'status','success',
@@ -115,7 +115,7 @@ BEGIN
   END IF;
 
   -- 2. Khóa dòng User Profile (SELECT ... FOR UPDATE) để chống Race Condition số dư
-  SELECT * INTO v_user FROM profiles WHERE id = p_user_id FOR UPDATE;
+  SELECT * INTO v_user FROM profiles WHERE id::text = p_user_id FOR UPDATE;
   IF NOT FOUND THEN
     RETURN jsonb_build_object('status','error','code','USER_NOT_FOUND','error','Không tìm thấy tài khoản người dùng');
   END IF;
@@ -186,9 +186,9 @@ BEGIN
     v_delivered := array_to_string(v_take, E'\n');
     UPDATE products SET accounts_list = CASE WHEN array_length(v_lines, 1) > p_quantity
           THEN array_to_string(v_lines[p_quantity+1:], E'\n') ELSE '' END
-     WHERE id = v_prod.id;
+     WHERE id::text = v_prod.id::text;
     IF v_prod.stock IS NOT NULL AND v_prod.stock <> 'unlimited' THEN
-      UPDATE products SET stock = greatest(coalesce(v_stock_num, 0) - p_quantity, 0)::text WHERE id = v_prod.id;
+      UPDATE products SET stock = greatest(coalesce(v_stock_num, 0) - p_quantity, 0)::text WHERE id::text = v_prod.id::text;
     END IF;
   ELSE
     v_lines := ARRAY(SELECT line FROM unnest(string_to_array(COALESCE(v_prod.hidden_keys_or_links, ''), E'\n')) AS line WHERE btrim(line) <> '');
@@ -196,7 +196,7 @@ BEGIN
     v_delivered := CASE WHEN array_length(v_take, 1) > 0 THEN array_to_string(v_take, E'\n')
                         ELSE COALESCE(v_prod.hidden_keys_or_links, v_prod.download_url, v_prod.instructions, 'Đã kích hoạt tự động') END;
     IF v_prod.stock IS NOT NULL AND v_prod.stock <> 'unlimited' AND v_stock_num IS NOT NULL THEN
-      UPDATE products SET stock = greatest(v_stock_num - p_quantity, 0)::text WHERE id = v_prod.id;
+      UPDATE products SET stock = greatest(v_stock_num - p_quantity, 0)::text WHERE id::text = v_prod.id::text;
     END IF;
   END IF;
 
@@ -205,7 +205,7 @@ BEGIN
   UPDATE profiles
      SET balance = v_new_balance,
          total_spent = COALESCE(total_spent, 0) + v_total
-   WHERE id = p_user_id;
+   WHERE id::text = p_user_id;
 
   -- 9. Ghi đơn hàng (Insert Order)
   INSERT INTO orders (
@@ -218,7 +218,7 @@ BEGIN
   ) RETURNING * INTO v_order;
 
   -- 10. Tăng số lượng đã bán (Sold count)
-  UPDATE products SET sold_count = COALESCE(sold_count, 0) + p_quantity WHERE id = v_prod.id;
+  UPDATE products SET sold_count = COALESCE(sold_count, 0) + p_quantity WHERE id::text = v_prod.id::text;
 
   -- 11. Ghi sổ cái tài chính (Insert Purchase Ledger)
   INSERT INTO transactions (
