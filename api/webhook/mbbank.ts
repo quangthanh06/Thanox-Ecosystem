@@ -1,19 +1,22 @@
 import { createClient } from '@supabase/supabase-js';
+import {
+  isProviderPayload,
+  normalizeTransactionList,
+  verifyWebhookAuth,
+  getWebhookSecret,
+  MAX_WEBHOOK_BODY_BYTES,
+} from '../lib/payment';
 
 /**
- * THUEAPIBANK (provider chính — MB Bank qua THUEAPI)
- * ------------------------------------------------
- * THUEAPI gửi lịch sử giao dịch MB Bank về endpoint này dưới dạng:
- * { status: 'success', transactions: [{ transactionID, amount, description,
- *   transactionDate, type: 'IN' | 'OUT' }] }
- *
- * Mỗi giao dịch được chuyển tiếp tới RPC `process_bank_webhook`
- * (provider = 'mbbank_thueapi') — RPC chịu trách nhiệm idempotency,
- * matching topup theo transfer_note, cộng ví và ghi ledger trong 1 transaction.
- *
- * Bảo mật: FAIL-CLOSED. Nếu MBBANK_SECRET_KEY chưa cấu hình → từ chối mọi request.
- * Chấp nhận secret qua header `signature` hoặc `Authorization: Bearer <secret>`.
- * (đọc kèm SEPAY_API_KEY cũ để tương thích cấu hình trước đây)
+ * THUEAPIBANK WEBHOOK (provider chính — MB Bank qua THUEAPI)
+ * POST /api/webhook/mbbank
+ * Headers: Content-Type: application/json, signature: <provider secret>
+ * Payload (đúng spec): { status:'success', message, transactions:[{
+ *   type:'IN', transactionID, amount:'100000', description }] }
+ * → Mỗi giao dịch IN hợp lệ được chuyển tiếp tới RPC `process_bank_webhook`
+ *   (provider='mbbank_thueapi') — RPC đảm bảo idempotency + matching +
+ *   cộng ví + ledger trong MỘT database transaction.
+ * Bảo mật: FAIL-CLOSED + so sánh hằng thời gian + giới hạn body.
  */
 
 interface VercelRequest {
@@ -26,92 +29,77 @@ interface VercelResponse {
   status(code: number): { json(data: unknown): void };
 }
 
-/** So sánh chuỗi hằng thời gian (chống timing attack) */
-const safeEqual = (a: string, b: string): boolean => {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-};
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+    return res.status(405).json({ success: false, error: { code: 'METHOD_NOT_ALLOWED' } });
   }
 
-  // === Fail-closed: buộc phải cấu hình secret mới nhận webhook ===
-  const expectedSecret = process.env.MBBANK_SECRET_KEY || process.env.SEPAY_API_KEY;
+  // === Fail-closed auth ===
+  const expectedSecret = getWebhookSecret();
   if (!expectedSecret) {
-    console.error('[THUEAPIBANK] Missing MBBANK_SECRET_KEY env — webhook disabled (fail-closed)');
-    return res.status(401).json({ error: 'Unauthorized' });
+    console.error('[THUEAPIBANK] No secret configured (THUEAPIBANK_SECRET_KEY/MBBANK_SECRET_KEY) — disabled');
+    return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED' } });
   }
-
-  const signatureHeader = req.headers['signature'];
-  const authHeader = req.headers['authorization'];
-  const provided = (Array.isArray(signatureHeader) ? signatureHeader[0] : signatureHeader) || '';
-  const bearer = (Array.isArray(authHeader) ? authHeader[0] : authHeader) || '';
-
-  const ok = safeEqual(provided, expectedSecret) || safeEqual(bearer, 'Bearer ' + expectedSecret);
-  if (!ok) {
-    console.error('[THUEAPIBANK] Signature mismatch — rejected');
-    return res.status(401).json({ error: 'Unauthorized' });
+  if (!verifyWebhookAuth(req.headers['signature'], req.headers['authorization'], expectedSecret)) {
+    return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED' } });
   }
 
   try {
-    const payload = req.body || {};
-
-    // Validate đúng cấu trúc THUEAPIBANK spec
-    if (payload.status !== 'success' || !payload.transactions || !Array.isArray(payload.transactions)) {
-      return res.status(400).json({ error: 'Invalid payload structure' });
+    const raw = req.body;
+    // Body size guard (stringified check — Vercel đã parse JSON, ước lượng bằng JSON length)
+    if (raw && JSON.stringify(raw).length > MAX_WEBHOOK_BODY_BYTES) {
+      return res.status(413).json({ success: false, error: { code: 'PAYLOAD_TOO_LARGE' } });
     }
 
-    const transactions = payload.transactions;
+    // === Schema validation theo spec — KHÔNG xử lý tài chính nếu malformed ===
+    if (!isProviderPayload(raw)) {
+      return res.status(400).json({ success: false, error: { code: 'INVALID_PAYLOAD' } });
+    }
+
+    const { valid, skippedCount, skipReasons } = normalizeTransactionList(raw.transactions);
+    if (valid.length === 0) {
+      // Trả 200 đúng flow provider (không có giao dịch hợp lệ nào — không credit)
+      return res.status(200).json({ status: 'success', processed: 0, skipped: skippedCount, reasons: skipReasons.slice(0, 5) });
+    }
 
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-
     if (!supabaseUrl || !supabaseKey) {
-      console.error('Missing Supabase credentials in ENV');
-      return res.status(500).json({ error: 'Internal Server Error' });
+      console.error('[THUEAPIBANK] Missing Supabase credentials');
+      return res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR' } });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false },
-    });
+    const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 
-    const results: Array<{ txId: string; data: unknown }> = [];
+    const results: Array<{ txId: string; outcome: string }> = [];
+    let rpcError = 0;
 
-    for (const tx of transactions) {
-      // Only process incoming transfers (IN)
-      if (tx.type && tx.type !== 'IN') continue;
-
-      const txId = tx.transactionID;
-      const amount = tx.amount;
-      const content = tx.description;
-      const time = tx.transactionDate || new Date().toISOString();
-
-      if (!txId || !amount || !content) continue;
-
+    for (const tx of valid) {
       const { data, error } = await supabase.rpc('process_bank_webhook', {
         p_provider: 'mbbank_thueapi',
-        p_transaction_id: String(txId),
-        p_amount: Number(amount),
-        p_content: String(content),
-        p_transfer_time: String(time),
+        p_transaction_id: tx.transactionId,
+        p_amount: tx.amount,
+        p_content: tx.description,
+        p_transfer_time: tx.transferTime,
       });
-
       if (error) {
-        console.error('Supabase RPC Error for TX:', txId, error);
+        rpcError++;
+        console.error('[THUEAPIBANK] RPC error for TX', tx.transactionId, error.message);
       } else {
-        results.push({ txId, data });
+        results.push({ txId: tx.transactionId, outcome: (data && (data as { status?: string }).status) || 'unknown' });
       }
     }
 
-    // Always return 200 so THUEAPIBANK does not retry forever
-    // (giao dịch duplicate tự bị bỏ qua ở RPC — idempotent)
-    return res.status(200).json({ status: 'success', processed: results.length, results });
+    // Luôn 200 với provider (retry không cần — RPC idempotent, duplicate bị ignore)
+    return res.status(200).json({
+      status: 'success',
+      processed: results.length,
+      skipped: skippedCount,
+      rpcError,
+      results: results.slice(0, 50),
+    });
   } catch (error) {
-    console.error('Webhook processing error:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    console.error('[THUEAPIBANK] Webhook processing error');
+    return res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR' } });
   }
 }

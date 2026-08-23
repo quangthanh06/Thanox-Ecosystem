@@ -1849,49 +1849,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } catch {}
     })();
 
-    // Ultra-Fast Auto Credit Simulator (8 seconds)
-    if (settings.autoApprovalEnabled !== false) {
-      setTimeout(() => {
-        setTopups((prev) =>
-          prev.map((t) =>
-            t.id === newTopup.id && t.status === 'pending'
-              ? {
-                  ...t,
-                  status: 'approved',
-                  processedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-                }
-              : t
-          )
-        );
-
-        setUsers((prev) =>
-          prev.map((u) =>
-            u.id === buyer.id ? { ...u, balance: u.balance + amount } : u
-          )
-        );
-
-        const autoTx: Transaction = {
-          id: 'tx-' + Date.now(),
-          txCode: '#GD-' + Math.floor(10000 + Math.random() * 90000),
-          type: 'deposit',
-          userId: buyer.id,
-          userName: buyer.username,
-          description: `Nạp tiền tự động VietQR (${newTopup.transferNote})`,
-          amount,
-          balanceAfter: (buyer.balance || 0) + amount,
-          createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-          status: 'completed',
-        };
-        setTransactions((prev) => [autoTx, ...prev]);
-
-        showToast(
-          `🎉 Nạp tiền thành công! Đã cộng +${amount.toLocaleString('vi-VN')}đ vào ví của bạn (Xử lý trong 8s)!`,
-          'success'
-        );
-      }, 8000);
-    }
-
-    showToast(`Đã gửi yêu cầu nạp ${amount.toLocaleString('vi-VN')}đ! Hệ thống đang tự động cộng tiền trong 8-10s...`, 'info');
+    // ⚠️ KHÔNG còn "auto credit simulator" phía client — tiền chỉ được cộng khi
+    // webhook/cron THUEAPIBANK xác nhận giao dịch THẬT trên server (RPC cộng
+    // ví + ghi ledger trong 1 DB transaction). Polling phía trên sẽ tự cập nhật
+    // số dư hiển thị theo nguồn thật khi topup được duyệt.
+    showToast(
+      `Đã tạo yêu cầu nạp ${amount.toLocaleString('vi-VN')}đ (${newTopup.transferNote}). Chuyển khoản đúng nội dung — hệ thống tự động cộng ví khi ngân hàng xác nhận.`,
+      'info'
+    );
     return generatedCode;
   };
 
