@@ -22,9 +22,9 @@ DECLARE
   rec RECORD;
 BEGIN
   FOR rec IN
-    SELECT p.proname,
-           (SELECT string_agg(format_type(p.proallargtypes[s]::oid, NULL), ', ')
-            FROM generate_series(1, coalesce(array_length(p.proallargtypes, 1), 0)) AS s) AS argtypes
+   SELECT
+  p.proname,
+  pg_get_function_identity_arguments(p.oid) AS argtypes
     FROM pg_proc p
     JOIN pg_namespace n ON n.oid = p.pronamespace
     WHERE p.proname IN ('process_bank_webhook', 'admin_approve_topup')
@@ -50,17 +50,17 @@ END $$;
 -- ---------------------------------------------------------------------------
 DROP POLICY IF EXISTS "topups_select_owner" ON public.topups;
 CREATE POLICY "topups_select_owner" ON public.topups
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING (auth.uid()::text = user_id::text);
 
 DROP POLICY IF EXISTS "topups_insert_own" ON public.topups;
 CREATE POLICY "topups_insert_own" ON public.topups
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (auth.uid()::text = user_id::text);
 
 -- Người dùng KHÔNG được tự đổi sang approved (chỉ webhook/admin duyệt)
 DROP POLICY IF EXISTS "topups_update_own_pending" ON public.topups;
 CREATE POLICY "topups_update_own_pending" ON public.topups
-  FOR UPDATE USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id AND status = 'pending');
+  FOR UPDATE USING (auth.uid()::text = user_id::text)
+  WITH CHECK (auth.uid()::text = user_id::text AND status = 'pending');
 
 -- ---------------------------------------------------------------------------
 -- 3) BANK TRANSACTIONS: không cho public ghi (mặc định deny khi RLS bật;
