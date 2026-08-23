@@ -5,7 +5,7 @@ import {
   getHistoryUrl,
   safeEqual,
   HISTORY_TIMEOUT_MS,
-} from '../lib/payment';
+} from '../_lib/payment';
 
 /**
  * THUEAPIBANK RECONCILIATION (đối soát khi webhook bị mất)

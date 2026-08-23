@@ -5,7 +5,7 @@ import {
   verifyWebhookAuth,
   getWebhookSecret,
   MAX_WEBHOOK_BODY_BYTES,
-} from '../lib/payment';
+} from '../_lib/payment';
 
 /**
  * THUEAPIBANK WEBHOOK (provider chính — MB Bank qua THUEAPI)
