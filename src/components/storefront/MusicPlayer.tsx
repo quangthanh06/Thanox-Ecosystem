@@ -1,46 +1,36 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
-import {
-  Music,
-  Play,
-  Pause,
-  SkipForward,
-  Volume2,
-  VolumeX,
-  ChevronDown,
-  ChevronUp,
-  Disc,
-  Radio,
-  RotateCcw,
-} from 'lucide-react';
 
+/**
+ * MusicPlayer — INVISIBLE background audio player.
+ * 
+ * Admin thêm nhạc trong Settings → có nhạc tự động phát nền.
+ * KHÔNG hiển thị widget nổi nào — tránh che thanh điều hướng mobile.
+ * Nhạc chỉ phát khi admin đã cấu hình ít nhất 1 bài trong settings.musicTracks.
+ */
 export const MusicPlayer: React.FC = () => {
   const { settings } = useStore();
 
   const isEnabled = settings.musicEnabled !== false;
-  // Chỉ dùng bài hát Admin cấu hình — KHÔNG dùng nhạc mặc định nữa.
-  // Danh sách trống => ẩn hoàn toàn widget nhạc để Admin tự thêm bài mới.
+  // Chỉ dùng bài hát Admin cấu hình — KHÔNG dùng nhạc mặc định.
+  // Danh sách trống => ẩn hoàn toàn (không render gì cả).
   const tracks = settings.musicTracks && settings.musicTracks.length > 0 ? settings.musicTracks : [];
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [volume, setVolume] = useState(0.5);
-  const [needsGesture, setNeedsGesture] = useState(true);
+  const [volume] = useState(0.5);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Clamp current track index
   const safeIndex = currentTrackIndex >= tracks.length ? 0 : currentTrackIndex;
   const currentTrack = tracks[safeIndex] || tracks[0];
 
-  // Update volume & mute
+  // Update volume
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : volume;
-      audioRef.current.muted = isMuted;
+      audioRef.current.volume = volume;
     }
-  }, [volume, isMuted]);
+  }, [volume]);
 
   // Handle track changes
   useEffect(() => {
@@ -50,9 +40,9 @@ export const MusicPlayer: React.FC = () => {
     }
   }, [safeIndex]);
 
-  // Comprehensive Auto-Play & First Interaction Unlocker
+  // Auto-Play on first user interaction (browser policy requires gesture)
   useEffect(() => {
-    if (!isEnabled) {
+    if (!isEnabled || tracks.length === 0) {
       if (audioRef.current && isPlaying) {
         audioRef.current.pause();
         setIsPlaying(false);
@@ -63,19 +53,16 @@ export const MusicPlayer: React.FC = () => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    // 1. Try immediate unmuted playback
+    // Try immediate unmuted playback
     audio.muted = false;
     audio.volume = volume;
     audio
       .play()
       .then(() => {
         setIsPlaying(true);
-        setNeedsGesture(false);
       })
       .catch(() => {
-        // Browser blocked unmuted autoplay.
-        // Try muted autoplay so track buffers
-        setNeedsGesture(true);
+        // Browser blocked autoplay — wait for user interaction
         audio.muted = true;
         audio
           .play()
@@ -87,7 +74,7 @@ export const MusicPlayer: React.FC = () => {
           });
       });
 
-    // 2. Global unlock on any user tap / click / touch / scroll anywhere on page
+    // Global unlock on any user tap / click / touch anywhere on page
     const unlockAndPlay = () => {
       if (audioRef.current) {
         audioRef.current.muted = false;
@@ -96,7 +83,6 @@ export const MusicPlayer: React.FC = () => {
           .play()
           .then(() => {
             setIsPlaying(true);
-            setNeedsGesture(false);
           })
           .catch(() => {});
       }
@@ -121,27 +107,7 @@ export const MusicPlayer: React.FC = () => {
     };
   }, [isEnabled, currentTrack?.url]);
 
-  const togglePlay = () => {
-    if (!audioRef.current) return;
-    if (isPlaying && !audioRef.current.paused) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      audioRef.current.muted = false;
-      audioRef.current.volume = volume;
-      audioRef.current
-        .play()
-        .then(() => {
-          setIsPlaying(true);
-          setNeedsGesture(false);
-        })
-        .catch((e) => {
-          console.warn('Playback error:', e);
-        });
-    }
-  };
-
-  // If only 1 track, repeat it automatically. If multiple, advance to next track.
+  // When track ends: repeat if 1 track, advance if multiple
   const handleTrackEnded = () => {
     if (tracks.length <= 1) {
       if (audioRef.current) {
@@ -153,182 +119,21 @@ export const MusicPlayer: React.FC = () => {
     }
   };
 
-  const nextTrack = () => {
-    if (tracks.length <= 1) {
-      if (audioRef.current) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(() => {});
-      }
-    } else {
-      setCurrentTrackIndex((prev) => (prev + 1) % tracks.length);
-    }
-  };
-
-  // Không có bài hát nào => không render widget nhạc (đã xóa hết bài trong Admin)
+  // Không có bài hát nào hoặc chưa bật => không render gì cả
   if (!isEnabled || tracks.length === 0) return null;
 
+  // INVISIBLE — chỉ render thẻ <audio> ẩn, không có widget nào
   return (
-    <>
-      <audio
-        ref={audioRef}
-        src={currentTrack?.url}
-        onEnded={handleTrackEnded}
-        onPause={() => setIsPlaying(false)}
-        onPlay={() => {
-          setIsPlaying(true);
-          setNeedsGesture(false);
-        }}
-        preload="auto"
-        playsInline
-        loop={tracks.length === 1}
-      />
-
-      <div className="fixed bottom-4 left-4 z-50 select-none">
-        {isExpanded ? (
-          <div className="bg-[#0F0F1A]/95 backdrop-blur-2xl border border-[#7C3AED]/40 shadow-[0_10px_35px_rgba(124,58,237,0.35)] rounded-3xl p-4 w-72 sm:w-80 space-y-3.5 transition-all duration-300 animate-in fade-in slide-in-from-bottom-3">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-[#7C3AED]/20 border border-[#7C3AED]/30 flex items-center justify-center text-[#9D5CF6]">
-                  <Radio className="w-3.5 h-3.5" />
-                </div>
-                <div>
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-[#F0EDFF]">
-                    Thanox Audio
-                  </span>
-                  <span className="text-[9.5px] text-[#8B84A8] ml-1.5 font-bold">
-                    ({safeIndex + 1}/{tracks.length}) {tracks.length === 1 && '• Lặp 1 bài'}
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsExpanded(false)}
-                className="p-1 text-[#8B84A8] hover:text-white rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
-                title="Thu gọn"
-              >
-                <ChevronDown className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Track Info */}
-            <div className="space-y-0.5">
-              <div className="font-display font-extrabold text-xs text-[#F0EDFF] truncate">
-                {currentTrack?.title || 'Cyberpunk Electro'}
-              </div>
-              <div className="text-[10.5px] text-[#8B84A8] truncate">
-                {currentTrack?.artist || 'Thanox VIP'}
-              </div>
-            </div>
-
-            {/* Visualizer & Controls */}
-            <div className="flex items-center justify-between gap-2 pt-1">
-              {/* Sound wave bars */}
-              <div className="flex items-end gap-1 h-5 w-12 shrink-0">
-                <span
-                  className={`w-1 bg-[#9D5CF6] rounded-full transition-all duration-200 ${
-                    isPlaying ? 'h-5 animate-pulse' : 'h-1.5'
-                  }`}
-                />
-                <span
-                  className={`w-1 bg-cyan-400 rounded-full transition-all duration-300 ${
-                    isPlaying ? 'h-3.5 animate-pulse' : 'h-2'
-                  }`}
-                />
-                <span
-                  className={`w-1 bg-purple-400 rounded-full transition-all duration-150 ${
-                    isPlaying ? 'h-4.5 animate-pulse' : 'h-1.5'
-                  }`}
-                />
-                <span
-                  className={`w-1 bg-emerald-400 rounded-full transition-all duration-250 ${
-                    isPlaying ? 'h-2.5 animate-pulse' : 'h-1'
-                  }`}
-                />
-              </div>
-
-              {/* Play / Next buttons */}
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={togglePlay}
-                  className="w-9 h-9 rounded-2xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white flex items-center justify-center shadow-lg shadow-[#7C3AED]/35 transition-transform active:scale-95 cursor-pointer"
-                  title={isPlaying ? 'Tạm dừng' : 'Phát nhạc'}
-                >
-                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
-                </button>
-                <button
-                  onClick={nextTrack}
-                  className="p-2 rounded-2xl bg-white/5 hover:bg-white/10 text-[#CBC7E0] hover:text-white transition-colors cursor-pointer"
-                  title={tracks.length === 1 ? 'Lặp lại bài hát' : 'Chuyển bài tiếp theo'}
-                >
-                  {tracks.length === 1 ? <RotateCcw className="w-3.5 h-3.5 text-cyan-400" /> : <SkipForward className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-
-              {/* Volume / Mute */}
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setIsMuted(!isMuted)}
-                  className="p-1.5 text-[#8B84A8] hover:text-white transition-colors cursor-pointer"
-                >
-                  {isMuted || volume === 0 ? (
-                    <VolumeX className="w-3.5 h-3.5 text-red-400" />
-                  ) : (
-                    <Volume2 className="w-3.5 h-3.5 text-cyan-400" />
-                  )}
-                </button>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={isMuted ? 0 : volume}
-                  onChange={(e) => {
-                    setVolume(parseFloat(e.target.value));
-                    setIsMuted(false);
-                  }}
-                  className="w-14 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#7C3AED]"
-                />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => {
-              if (needsGesture || !isPlaying) {
-                togglePlay();
-              } else {
-                setIsExpanded(true);
-              }
-            }}
-            className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-[#0F0F1A]/95 backdrop-blur-xl border ${
-              needsGesture
-                ? 'border-emerald-400/60 shadow-[0_0_25px_rgba(52,211,153,0.4)] animate-bounce'
-                : 'border-[#7C3AED]/40 shadow-[0_4px_25px_rgba(124,58,237,0.35)]'
-            } hover:border-[#7C3AED] text-white text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer group`}
-          >
-            <div
-              className={`w-6 h-6 rounded-xl ${
-                needsGesture ? 'bg-emerald-500/20 text-emerald-300' : 'bg-[#7C3AED]/20 text-[#9D5CF6]'
-              } border border-white/10 flex items-center justify-center group-hover:bg-[#7C3AED] group-hover:text-white transition-colors`}
-            >
-              <Music className={`w-3.5 h-3.5 ${isPlaying ? 'animate-bounce' : ''}`} />
-            </div>
-
-            <div className="flex flex-col text-left">
-              <span className="text-[11px] font-extrabold text-[#F0EDFF] max-w-[120px] sm:max-w-[150px] truncate">
-                {needsGesture ? '⚡ BẤM BẬT NHẠC SHOP' : currentTrack?.title || 'Phát Nhạc Nền'}
-              </span>
-              {needsGesture && (
-                <span className="text-[9px] text-emerald-400 font-normal">
-                  Chạm 1 lần để nghe
-                </span>
-              )}
-            </div>
-
-            <ChevronUp className="w-3.5 h-3.5 text-[#8B84A8]" />
-          </button>
-        )}
-      </div>
-    </>
+    <audio
+      ref={audioRef}
+      src={currentTrack?.url}
+      onEnded={handleTrackEnded}
+      onPause={() => setIsPlaying(false)}
+      onPlay={() => setIsPlaying(true)}
+      preload="auto"
+      playsInline
+      loop={tracks.length === 1}
+      style={{ display: 'none' }}
+    />
   );
 };

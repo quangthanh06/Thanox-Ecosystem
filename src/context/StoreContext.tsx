@@ -307,23 +307,49 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     const fetchSupabaseUsers = async () => {
         try {
+          // Query 'profiles' table (not 'users') — Supabase Auth trigger creates
+          // rows in profiles, not a separate users table.
           const { data, error } = await supabase
-            .from('users')
+            .from('profiles')
             .select('*')
             .order('created_at', { ascending: false });
 
-          if (error) throw error;
+          if (error) {
+            // Fallback: try legacy 'users' table if profiles doesn't exist
+            const { data: legacyData, error: legacyErr } = await supabase
+              .from('users')
+              .select('*')
+              .order('created_at', { ascending: false });
+            if (legacyErr) throw legacyErr;
+            if (legacyData && legacyData.length > 0) {
+              const mappedUsers: User[] = legacyData.map((u) => ({
+                id: u.id,
+                username: u.username,
+                email: u.email,
+                password: u.password || '***',
+                role: u.role as 'admin' | 'user',
+                balance: Number(u.balance) || 0,
+                totalSpent: Number(u.total_spent) || 0,
+                status: (u.status as 'active' | 'banned') || 'active',
+                createdAt: u.created_at,
+                joinDate: new Date(u.created_at).toISOString().replace('T', ' ').substring(0, 16),
+                totalOrders: Number(u.total_orders) || 0,
+              }));
+              setUsers(mappedUsers);
+            }
+            return;
+          }
           
           if (data && data.length > 0) {
             const mappedUsers: User[] = data.map((u) => ({
               id: u.id,
               username: u.username,
               email: u.email,
-              password: u.password,
+              password: u.password || '***',
               role: u.role as 'admin' | 'user',
               balance: Number(u.balance) || 0,
               totalSpent: Number(u.total_spent) || 0,
-              status: u.status as 'active' | 'banned',
+              status: (u.status as 'active' | 'banned') || 'active',
               createdAt: u.created_at,
               joinDate: new Date(u.created_at).toISOString().replace('T', ' ').substring(0, 16),
               totalOrders: Number(u.total_orders) || 0,
@@ -1709,12 +1735,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (!result || result.status !== 'success' || !result.order) {
       const code = result?.code || 'UNKNOWN';
+      // PACKAGE_NOT_FOUND: DB chưa có packages (chưa migration cột packages)
+      // → fallback về luồng local để vẫn mua được bình thường
+      if (code === 'PACKAGE_NOT_FOUND') {
+        console.warn('[createOrder] Server trả PACKAGE_NOT_FOUND — fallback local order flow');
+        return createOrderLocal(productId, quantity, paymentMethod, selectedPackage);
+      }
       const map: Record<string, string> = {
         INSUFFICIENT_BALANCE: 'Số dư ví không đủ! Vui lòng nạp thêm tiền.',
         OUT_OF_STOCK: 'Sản phẩm đã hết hàng!',
         PRODUCT_NOT_FOUND: 'Sản phẩm không tồn tại!',
         PRODUCT_NOT_ACTIVE: 'Sản phẩm hiện không bán!',
-        PACKAGE_NOT_FOUND: 'Gói dịch vụ không hợp lệ!',
         USER_BANNED: 'Tài khoản của bạn đã bị khóa!',
         INVALID_QUANTITY: 'Số lượng không hợp lệ!',
       };
@@ -1789,7 +1820,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Topup review actions with double-action prevention
-  const approveTopup = (id: string) => {
+  const approveTopup = async (id: string) => {
     const topup = topups.find((t) => t.id === id);
     if (!topup || topup.status !== 'pending') {
       showToast('Yêu cầu nạp này đã được xử lý trước đó', 'warning');
@@ -1799,6 +1830,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const targetUser = users.find((u) => u.id === topup.userId);
     const newBalance = (targetUser ? targetUser.balance : 0) + topup.amount;
 
+    // 1. Cập nhật local state ngay lập tức
     setUsers((prev) =>
       prev.map((u) => (u.id === topup.userId ? { ...u, balance: newBalance } : u))
     );
@@ -1815,7 +1847,43 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       )
     );
 
-    // Add deposit transaction
+    // 2. ĐỒNG BỘ CLOUD: Cộng số dư thật trên profiles (Supabase)
+    try {
+      // Thử RPC admin_adjust_balance trước
+      const { data: rpcResult, error: rpcErr } = await supabase.rpc('admin_adjust_balance', {
+        p_user_id: topup.userId,
+        p_amount: Math.round(topup.amount),
+        p_note: `Admin duyệt nạp tiền ${topup.transferNote || ''}`,
+      });
+      if (rpcErr) {
+        // RPC chưa có → fallback update trực tiếp bảng profiles
+        const { error: updateErr } = await supabase
+          .from('profiles')
+          .update({ balance: newBalance })
+          .eq('id', topup.userId);
+        if (updateErr) {
+          console.warn('[approveTopup] Không thể đồng bộ số dư lên Cloud:', updateErr.message);
+        }
+      } else {
+        // RPC thành công → lấy số dư thật từ kết quả
+        const r = rpcResult as { status?: string; balance?: number } | null;
+        if (r?.status === 'success' && r.balance !== undefined) {
+          setUsers((prev) =>
+            prev.map((u) => (u.id === topup.userId ? { ...u, balance: Number(r.balance) } : u))
+          );
+        }
+      }
+      // Cập nhật topup status trên cloud
+      await supabase
+        .from('topups')
+        .update({ status: 'approved' })
+        .eq('transfer_note', topup.transferNote)
+        .eq('user_id', topup.userId);
+    } catch (e) {
+      console.warn('[approveTopup] Cloud sync failed (non-blocking):', e);
+    }
+
+    // 3. Ghi transaction log
     const newTx: Transaction = {
       id: 'tx-' + Date.now(),
       txCode: '#GD-' + Math.floor(10000 + Math.random() * 90000),
@@ -2242,6 +2310,27 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
         return { success: false, message: msg };
       }
+      // Thêm user mới vào local state ngay lập tức để hiển thị trong admin panel
+      if (authData.user) {
+        const newUser: User = {
+          id: authData.user.id,
+          username: cleanUsername,
+          email: cleanEmail,
+          password: '***',
+          role: 'user',
+          balance: 0,
+          totalSpent: 0,
+          totalOrders: 0,
+          status: 'active',
+          createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+          joinDate: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        };
+        setUsers(prev => {
+          const exists = prev.find(u => u.id === newUser.id || u.email === cleanEmail);
+          if (exists) return prev;
+          return [...prev, newUser];
+        });
+      }
       showToast('Đăng ký tài khoản thành công! Vui lòng kiểm tra email để kích hoạt tài khoản trước khi đăng nhập.', 'success');
       return { success: true };
     } catch (err) {
@@ -2314,8 +2403,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (updates.status !== undefined) dbUpdates.status = updates.status;
 
       if (Object.keys(dbUpdates).length > 0) {
-        const { error } = await supabase.from('users').update(dbUpdates).eq('id', id);
-        if (error) throw error;
+        const { error } = await supabase.from('profiles').update(dbUpdates).eq('id', id);
+        if (error) {
+          // Fallback: try legacy 'users' table
+          const { error: legacyErr } = await supabase.from('users').update(dbUpdates).eq('id', id);
+          if (legacyErr) throw legacyErr;
+        }
       }
       showToast('Đã cập nhật thông tin người dùng trên Cloud', 'success');
     } catch (e) {
@@ -2334,8 +2427,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setUsers((prev) => prev.filter((u) => u.id !== id));
     
     try {
-      const { error } = await supabase.from('users').delete().eq('id', id);
-      if (error) throw error;
+      const { error } = await supabase.from('profiles').delete().eq('id', id);
+      if (error) {
+        // Fallback: try legacy 'users' table
+        const { error: legacyErr } = await supabase.from('users').delete().eq('id', id);
+        if (legacyErr) throw legacyErr;
+      }
       showToast(`Đã xóa tài khoản ${target.username} trên Cloud thành công`, 'success');
     } catch (e) {
       console.error(e);
@@ -2422,8 +2519,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status: newStatus } : u)));
     
     try {
-      const { error } = await supabase.from('users').update({ status: newStatus }).eq('id', id);
-      if (error) throw error;
+      const { error } = await supabase.from('profiles').update({ status: newStatus }).eq('id', id);
+      if (error) {
+        // Fallback: try legacy 'users' table
+        const { error: legacyErr } = await supabase.from('users').update({ status: newStatus }).eq('id', id);
+        if (legacyErr) throw legacyErr;
+      }
       showToast(`Đã ${newStatus === 'banned' ? 'khóa' : 'mở khóa'} tài khoản ${user.username} trên Cloud`, newStatus === 'banned' ? 'error' : 'success');
     } catch (e) {
       console.error(e);
