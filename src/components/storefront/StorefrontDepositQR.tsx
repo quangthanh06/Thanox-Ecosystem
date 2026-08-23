@@ -154,9 +154,8 @@ export const StorefrontDepositQR: React.FC = () => {
     setCustomAmountText(amt.toLocaleString('vi-VN'));
     setActiveAmount(amt);
     setQrLoadError(false);
-    // Always generate a new unique code on amount selection
-    setTransactionCode(generateNewTransactionCode());
-    scrollToQrSection();
+    setTransactionCode('');
+    setTimeLeft(null);
   };
 
   // Debounced Custom Amount Input
@@ -169,15 +168,12 @@ export const StorefrontDepositQR: React.FC = () => {
         setActiveAmount(0);
         setSelectedPreset(null);
         setTransactionCode('');
+        setTimeLeft(null);
       } else {
         setActiveAmount(numericValue);
         setSelectedPreset(PRESET_AMOUNTS.includes(numericValue) ? numericValue : null);
-        if (numericValue >= minDeposit && numericValue <= maxDeposit) {
-          setTransactionCode(generateNewTransactionCode());
-          scrollToQrSection();
-        } else {
-          setTransactionCode('');
-        }
+        setTransactionCode('');
+        setTimeLeft(null);
       }
     }, 250);
 
@@ -188,6 +184,13 @@ const isAmountEntered = activeAmount > 0;
   const isBelowMin = isAmountEntered && activeAmount < minDeposit;
   const isAboveMax = isAmountEntered && activeAmount > maxDeposit;
   const isValidAmount = isAmountEntered && !isBelowMin && !isAboveMax;
+
+  const handleGenerateQR = () => {
+    if (isValidAmount) {
+      setTransactionCode(generateNewTransactionCode());
+      scrollToQrSection();
+    }
+  };
 
   // Real-time Bank Reconciliation Polling (Checks every 3.5s)
   useEffect(() => {
@@ -528,11 +531,20 @@ const isAmountEntered = activeAmount > 0;
                 </div>
 
                 {isValidAmount && (
-                  <div className="p-3.5 rounded-2xl bg-[#7C3AED]/15 border border-[#7C3AED]/30 flex items-center justify-between text-xs">
-                    <span className="text-[#CBC7E0] font-medium">Số tiền thanh toán:</span>
-                    <span className="font-display font-extrabold text-lg text-emerald-400">
-                      {activeAmount.toLocaleString('vi-VN')} <span className="text-xs font-bold text-emerald-300">đ</span>
-                    </span>
+                  <div className="space-y-3">
+                    <div className="p-3.5 rounded-2xl bg-[#7C3AED]/15 border border-[#7C3AED]/30 flex items-center justify-between text-xs">
+                      <span className="text-[#CBC7E0] font-medium">Số tiền thanh toán:</span>
+                      <span className="font-display font-extrabold text-lg text-emerald-400">
+                        {activeAmount.toLocaleString('vi-VN')} <span className="text-xs font-bold text-emerald-300">đ</span>
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleGenerateQR}
+                      className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#06B6D4] text-white font-bold text-sm hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(124,58,237,0.3)]"
+                    >
+                      <QrCode className="w-5 h-5" />
+                      Tạo Mã QR Nạp Tiền
+                    </button>
                   </div>
                 )}
               </div>
@@ -587,7 +599,7 @@ const isAmountEntered = activeAmount > 0;
                   </Badge>
                 </div>
 
-                {!isValidAmount ? (
+                {!transactionCode ? (
                   <div className="py-14 px-6 rounded-2xl border border-dashed border-white/10 bg-[#161626]/40 text-center space-y-3">
                     <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 mx-auto flex items-center justify-center text-[#8B84A8]">
                       <QrCode className="w-8 h-8 opacity-60" />
@@ -597,9 +609,15 @@ const isAmountEntered = activeAmount > 0;
                         Chưa có mã QR
                       </h4>
                       <p className="text-xs text-[#8B84A8] mt-1 max-w-sm mx-auto">
-                        Vui lòng chọn hoặc nhập số tiền từ{' '}
-                        <strong className="text-white">{minDeposit.toLocaleString('vi-VN')}đ</strong> đến{' '}
-                        <strong className="text-white">{maxDeposit.toLocaleString('vi-VN')}đ</strong> để tạo mã QR thanh toán.
+                        {isValidAmount ? (
+                          <>Vui lòng bấm nút <strong className="text-white">Tạo Mã QR Nạp Tiền</strong> để tiếp tục.</>
+                        ) : (
+                          <>
+                            Vui lòng chọn hoặc nhập số tiền từ{' '}
+                            <strong className="text-white">{minDeposit.toLocaleString('vi-VN')}đ</strong> đến{' '}
+                            <strong className="text-white">{maxDeposit.toLocaleString('vi-VN')}đ</strong> để tạo mã QR thanh toán.
+                          </>
+                        )}
                       </p>
                     </div>
                   </div>
