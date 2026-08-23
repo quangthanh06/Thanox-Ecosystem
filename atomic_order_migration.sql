@@ -93,6 +93,8 @@ DECLARE
   v_stock_num   INT;
   v_order_id    TEXT;
   v_order_code  TEXT;
+  v_tx_id       TEXT;
+  v_tx_code     TEXT;
   v_order       public.orders%ROWTYPE;
   v_existing    public.orders%ROWTYPE;
   v_new_balance BIGINT;
@@ -254,10 +256,12 @@ BEGIN
   UPDATE products SET sold_count = COALESCE(sold_count, 0) + p_quantity WHERE id::text = p_product_id;
 
   -- 11. Ghi sổ cái tài chính (Insert Purchase Ledger)
+  v_tx_id := 'tx-' || gen_random_uuid()::text;
+  v_tx_code := '#GD-' || floor(10000 + random() * 90000)::text;
   INSERT INTO transactions (
-    user_id, user_name, type, amount, balance_after, description, status
+    id, tx_code, user_id, user_name, type, amount, balance_after, description, status
   ) VALUES (
-    p_user_id, v_user.username, 'purchase', -v_total, v_new_balance,
+    v_tx_id, v_tx_code, p_user_id, v_user.username, 'purchase', -v_total, v_new_balance,
     'Thanh toán mua ' || v_prod.name || CASE WHEN v_pkg IS NOT NULL THEN ' [' || COALESCE(v_pkg->>'name','') || ']' ELSE '' END || ' (x' || p_quantity::text || ')',
     'completed'
   );
