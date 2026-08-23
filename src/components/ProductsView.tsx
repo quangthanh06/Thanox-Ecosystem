@@ -1686,11 +1686,11 @@ export const ProductsView: React.FC = () => {
                         onClick={() => {
                           const basePrice = formData.price || 50000;
                           const standardPackages: ProductPackage[] = [
-                            { id: 'pkg-' + Date.now() + '-1', name: '1 GIỜ', price: Math.round(basePrice * 0.2), originalPrice: Math.round(basePrice * 0.35), sellerPrice: Math.round(basePrice * 0.15) },
-                            { id: 'pkg-' + Date.now() + '-2', name: '1 NGÀY', price: Math.round(basePrice * 0.4), originalPrice: Math.round(basePrice * 0.6), sellerPrice: Math.round(basePrice * 0.3) },
-                            { id: 'pkg-' + Date.now() + '-3', name: '7 NGÀY', price: Math.round(basePrice * 0.8), originalPrice: basePrice, sellerPrice: Math.round(basePrice * 0.6) },
-                            { id: 'pkg-' + Date.now() + '-4', name: '1 THÁNG', price: basePrice, originalPrice: Math.round(basePrice * 1.4), sellerPrice: Math.round(basePrice * 0.7) },
-                            { id: 'pkg-' + Date.now() + '-5', name: 'VĨNH VIỄN', price: Math.round(basePrice * 2.5), originalPrice: Math.round(basePrice * 3.5), sellerPrice: Math.round(basePrice * 1.8) },
+                            { id: 'pkg-' + Date.now() + '-1', name: '1 GIỜ', price: Math.round(basePrice * 0.2), sellerPrice: Math.round(basePrice * 0.15) },
+                            { id: 'pkg-' + Date.now() + '-2', name: '1 NGÀY', price: Math.round(basePrice * 0.4), sellerPrice: Math.round(basePrice * 0.3) },
+                            { id: 'pkg-' + Date.now() + '-3', name: '7 NGÀY', price: Math.round(basePrice * 0.8), sellerPrice: Math.round(basePrice * 0.6) },
+                            { id: 'pkg-' + Date.now() + '-4', name: '1 THÁNG', price: basePrice, sellerPrice: Math.round(basePrice * 0.7) },
+                            { id: 'pkg-' + Date.now() + '-5', name: 'VĨNH VIỄN', price: Math.round(basePrice * 2.5), sellerPrice: Math.round(basePrice * 1.8) },
                           ];
                           setFormData((prev) => ({
                             ...prev,
