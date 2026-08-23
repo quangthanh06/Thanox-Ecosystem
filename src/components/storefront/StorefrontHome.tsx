@@ -76,13 +76,13 @@ export const StorefrontHome: React.FC = () => {
 
   const featuredProducts = activeProducts.filter((p) => p.featured);
 
-  const handleQuickBuy = (productId: string, price: number) => {
+  const handleQuickBuy = async (productId: string, price: number) => {
     if (currentUser.balance < price) {
       showToast(`Số dư ví không đủ (${currentUser.balance.toLocaleString('vi-VN')}đ). Chuyển sang nạp tiền...`, 'warning');
       navigateToStorefront('account-wallet-deposit');
       return;
     }
-    const success = createOrder(productId, 1, 'wallet');
+    const success = await createOrder(productId, 1, 'wallet');
     if (success) {
       navigateToStorefront('account-orders');
     }

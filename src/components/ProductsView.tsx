@@ -1,4 +1,4 @@
-import { uploadMediaToSupabase } from '../lib/supabase';
+import { uploadMediaToSupabase, supabase } from '../lib/supabase';
 import { isAccountLikeCategory } from '../utils/productAccount';
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
@@ -321,6 +321,22 @@ export const ProductsView: React.FC = () => {
       attachedFileSize: product.attachedFileSize || '',
       attachedFileData: product.attachedFileData || '',
     });
+    // Cột key/acc đã bị thu quyền đọc ở DB → admin lấy qua RPC riêng (chỉ role admin)
+    void (async () => {
+      try {
+        const { data: d } = (await supabase.rpc('admin_get_product_secrets', {
+          p_product_id: product.id,
+        })) as { data?: { hidden_keys_or_links?: string; accounts_list?: string; download_url?: string } | null };
+        if (d && (d.hidden_keys_or_links !== undefined || d.accounts_list !== undefined)) {
+          setFormData((prev) => ({
+            ...prev,
+            downloadLinkOrKeys: d.hidden_keys_or_links || prev.downloadLinkOrKeys,
+            accountsList: d.accounts_list || prev.accountsList,
+            downloadUrl: d.download_url || prev.downloadUrl,
+          }));
+        }
+      } catch {}
+    })();
     setIsDrawerOpen(true);
   };
 

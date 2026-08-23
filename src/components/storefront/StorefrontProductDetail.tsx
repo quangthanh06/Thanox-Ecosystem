@@ -572,7 +572,7 @@ export const StorefrontProductDetail: React.FC = () => {
   // Effective unit price calculation
   const effectiveUnitPrice = selectedPlan ? selectedPlan.price : productCurrentPrice;
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
     // Guests must log in before buying or topping up
     if (!isAuthenticated) {
       showToast('Vui lòng đăng nhập tài khoản để mua hàng!', 'warning');
@@ -588,7 +588,7 @@ export const StorefrontProductDetail: React.FC = () => {
       navigateToStorefront('account-wallet-deposit');
       return;
     }
-    const success = createOrder(product.id, quantity, 'wallet', selectedPlan || undefined);
+    const success = await createOrder(product.id, quantity, 'wallet', selectedPlan || undefined);
     if (success) {
       navigateToStorefront('account-orders');
     }

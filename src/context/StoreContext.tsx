@@ -61,7 +61,7 @@ interface StoreContextType {
   removeFromCart: (productId: string) => void;
   updateCartQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
-  checkoutCart: (paymentMethod: Order['paymentMethod']) => boolean;
+  checkoutCart: (paymentMethod: Order['paymentMethod']) => Promise<boolean>;
 
   // Layout & UI
   isSidebarOpen: boolean;
@@ -119,7 +119,7 @@ interface StoreContextType {
   deleteCategory: (id: string) => void;
 
   updateOrderStatus: (id: string, status: Order['status']) => void;
-  createOrder: (productId: string, quantity: number, paymentMethod: Order['paymentMethod'], selectedPackage?: ProductPackage) => boolean;
+  createOrder: (productId: string, quantity: number, paymentMethod: Order['paymentMethod'], selectedPackage?: ProductPackage) => Promise<boolean>;
 
   approveTopup: (id: string) => void;
   rejectTopup: (id: string, reason: string) => void;
@@ -179,8 +179,16 @@ const isMissingColumnError = (err: unknown): boolean => {
 };
 
 // Payload các cột mở rộng (chỉ gửi khi migration đã được áp dụng)
+// Strip key/link bí mật khỏi packages trước khi lưu lên cloud (cột packages
+// public cho UI; key giao hàng chỉ nằm trong hidden_keys_or_links đã bị thu quyền)
+const sanitizePackages = (pkgs?: ProductPackage[]): ProductPackage[] =>
+  (pkgs || []).map((x) => {
+    const { keys, downloadUrl, ...rest } = x;
+    return rest as ProductPackage;
+  });
+
 const buildExtendedProductPayload = (p: Product): Record<string, unknown> => ({
-  packages: (p.packages && p.packages.length > 0 ? p.packages : p.plans) || [],
+  packages: sanitizePackages(p.packages && p.packages.length > 0 ? p.packages : p.plans),
   product_type: p.productType || 'key',
   is_sale: Boolean(p.isSale ?? p.saleActive),
   sale_price: p.salePrice ?? null,
@@ -751,20 +759,66 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [settings]);
 
+  // Mốc B: load đơn hàng CLOUD của user (admin xem hết) — merge với local cũ
+  useEffect(() => {
+    if (!currentUserId) return;
+    (async () => {
+      try {
+        const isAdmin = users.find((u) => u.id === currentUserId)?.role === 'admin';
+        let q = supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(300);
+        if (!isAdmin) q = q.eq('user_id', currentUserId);
+        const { data, error } = await q;
+        if (error || !Array.isArray(data)) return; // bảng chưa có (chưa chạy SQL) → im lặng
+        const cloud: Order[] = data.map((r) => ({
+          id: r.id,
+          orderCode: r.order_code,
+          userId: r.user_id,
+          userName: r.user_name || '',
+          userEmail: '',
+          productId: r.product_id,
+          productName: r.product_name || '',
+          category: '',
+          quantity: r.quantity ?? 1,
+          unitPrice: Number(r.unit_price) || 0,
+          totalPrice: Number(r.total_price) || 0,
+          totalAmount: Number(r.total_price) || 0,
+          paymentMethod: (r.payment_method as Order['paymentMethod']) || 'wallet',
+          status: (r.status as Order['status']) || 'completed',
+          createdAt: r.created_at ? String(r.created_at).replace('T', ' ').substring(0, 16) : '',
+          deliveredContent: r.delivered_content || '',
+          packageName: r.package_name || undefined,
+        }));
+        setOrders((prev) => {
+          const cloudIds = new Set(cloud.map((o) => o.id));
+          return [...cloud, ...prev.filter((o) => !cloudIds.has(o.id))];
+        });
+      } catch {}
+    })();
+  }, [currentUserId]);
+
   // Load shared store settings from Supabase once on mount so every device
   // (especially mobile) gets the admin-configured music playlist, banner, etc.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const { data, error } = await supabase
-          .from('store_settings')
-          .select('settings_data, updated_at')
-          .eq('id', 'default')
-          .maybeSingle();
-        if (error || cancelled || !data?.settings_data) return;
-        if (typeof data.settings_data !== 'object') return;
-        const cloudSettings = data.settings_data as StoreSettings;
+        // Dùng RPC get_public_settings (đã strip secret nhạy cảm ở DB).
+        // RPC chưa tồn tại (chưa chạy moc_b_core.sql) → fallback select cũ.
+        let cloudSettings: StoreSettings | null = null;
+        const { data: rpcData, error: rpcErr } = await supabase.rpc('get_public_settings');
+        if (!rpcErr && rpcData && typeof rpcData === 'object') {
+          cloudSettings = rpcData as StoreSettings;
+        } else {
+          const { data, error } = await supabase
+            .from('store_settings')
+            .select('settings_data, updated_at')
+            .eq('id', 'default')
+            .maybeSingle();
+          if (!error && data?.settings_data && typeof data.settings_data === 'object') {
+            cloudSettings = data.settings_data as StoreSettings;
+          }
+        }
+        if (cancelled || !cloudSettings) return;
         setSettings((prev) => ({ ...prev, ...cloudSettings }));
 
         // Gói dịch vụ admin cấu hình (lưu kèm settings cloud) — áp lên sản phẩm
@@ -1126,7 +1180,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     ]);
   };
 
-  const checkoutCart = (paymentMethod: Order['paymentMethod']): boolean => {
+  const checkoutCart = async (paymentMethod: Order['paymentMethod']): Promise<boolean> => {
     if (cart.length === 0) {
       showToast('Giỏ hàng của bạn đang trống!', 'warning');
       return false;
@@ -1139,8 +1193,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     const buyer = currentUser;
-    const isSeller = buyer.sellerStatus === 'approved';
-
     const total = cart.reduce((sum, item) => {
       const price = getItemEffectivePrice(item.product, buyer, item.selectedPackage);
       return sum + price * item.quantity;
@@ -1151,118 +1203,27 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return false;
     }
 
-    const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
-    const createdOrders: Order[] = [];
-
-    // Deduct user balance atomically if paying by wallet
-    if (paymentMethod === 'wallet') {
-      const newBal = buyer.balance - total;
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === buyer.id
-            ? {
-                ...u,
-                balance: newBal,
-                totalOrders: (u.totalOrders || 0) + cart.length,
-                totalSpent: (u.totalSpent || 0) + total,
-              }
-            : u
-        )
-      );
+    // ===== SERVER-SIDE: từng item qua RPC create_order (kiểm giá/stock/ví ở DB).
+    // createOrder tự fallback local nếu RPC chưa áp. createOrder tự cập nhật
+    // orders/balance thật/notification/toast cho từng đơn. =====
+    let created = 0;
+    for (const item of cart) {
+      const ok = await createOrder(item.product.id, item.quantity, paymentMethod, item.selectedPackage);
+      if (ok) created++;
     }
 
-    // Process each cart item into real order
-    cart.forEach((item, index) => {
-      const itemCode = '#TX-' + Math.floor(10000 + Math.random() * 90000);
-      const unitPrice = getItemEffectivePrice(item.product, buyer, item.selectedPackage);
-      const itemTotal = unitPrice * item.quantity;
-
-      const isAcc = isAccountLikeProduct(item.product);
-
-      let deliveredText = item.product.downloadLinkOrKeys || 'Hệ thống đã giao sản phẩm thành công.';
-      let deliveredKey = item.product.downloadLinkOrKeys?.split('\n')[0] || 'KEY-AUTO-' + Math.floor(100000 + Math.random() * 900000);
-
-      if (isAcc) {
-        if (item.product.accountUsername || item.product.accountPassword) {
-          deliveredText = `🎮 TÀI KHOẢN: ${item.product.accountUsername || ''}\n🔑 MẬT KHẨU: ${item.product.accountPassword || ''}${item.product.account2FA ? `\n🛡️ 2FA / GHI CHÚ: ${item.product.account2FA}` : ''}`;
-          deliveredKey = `TK: ${item.product.accountUsername} | MK: ${item.product.accountPassword}`;
-        }
-      }
-
-      const newOrder: Order = {
-        id: 'ord-' + Date.now() + '-' + index,
-        orderCode: itemCode,
-        userId: buyer.id,
-        userName: buyer.username,
-        userEmail: buyer.email,
-        productId: item.product.id,
-        productName: item.product.name,
-        category: item.product.category,
-        productCategory: item.product.category,
-        quantity: item.quantity,
-        unitPrice,
-        totalPrice: itemTotal,
-        totalAmount: itemTotal,
-        paymentMethod,
-        status: 'completed',
-        createdAt: nowStr,
-        deliveredContent: deliveredText,
-        key: deliveredKey,
-        isSellerOrder: isSeller,
-      };
-
-      createdOrders.push(newOrder);
-
-      // Increment product real sold count
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === item.product.id ? { ...p, soldCount: (p.soldCount || 0) + item.quantity } : p
-        )
-      );
-    });
-
-    setOrders((prev) => [...createdOrders, ...prev]);
-
-    // Financial Transaction log
-    const newTx: Transaction = {
-      id: 'tx-' + Date.now(),
-      txCode: '#GD-' + Math.floor(10000 + Math.random() * 90000),
-      type: 'purchase',
-      userId: buyer.id,
-      userName: buyer.username,
-      description: `Thanh toán ${cart.length} sản phẩm (${createdOrders.map((o) => o.orderCode).join(', ')})`,
-      amount: -total,
-      balanceAfter: paymentMethod === 'wallet' ? buyer.balance - total : buyer.balance,
-      createdAt: nowStr,
-      status: 'completed',
-    };
-    setTransactions((prev) => [newTx, ...prev]);
-
-    // Process Affiliate Reward if applicable
-    if (createdOrders.length > 0) {
-      processAffiliateRewardForOrder(
-        createdOrders[0].id,
-        createdOrders[0].orderCode,
-        total,
-        buyer
-      );
+    if (created === 0) {
+      showToast('Không thể thanh toán đơn nào — vui lòng kiểm tra lại giỏ hàng!', 'error');
+      return false;
     }
 
-    // Notification
-    setNotifications((prev) => [
-      {
-        id: 'notif-' + Date.now(),
-        title: `Đơn hàng mới (${createdOrders[0].orderCode})`,
-        description: `${buyer.username} vừa mua ${cart.length} sản phẩm (${total.toLocaleString('vi-VN')}đ)`,
-        time: 'Vừa xong',
-        read: false,
-        type: 'order',
-      },
-      ...prev,
-    ]);
+    // Affiliate cho đơn đầu tiên của lần checkout này
+    processAffiliateRewardForOrder('ord-' + Date.now(), '#TX-' + Math.floor(10000 + Math.random() * 90000), total, buyer);
 
     clearCart();
-    showToast(`Thanh toán thành công ${createdOrders.length} đơn hàng!`, 'success');
+    if (created < cart.length) {
+      showToast(`Thanh toán thành công ${created}/${cart.length} sản phẩm (một số sản phẩm lỗi/hết hàng)!`, 'warning');
+    }
     return true;
   };
 
@@ -1291,8 +1252,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const syncProductPackagesToCloud = (productId: string, packages: ProductPackage[]) => {
     setSettings((prev) => {
       const map = { ...(prev.productPackages || {}) };
-      if (packages && packages.length > 0) {
-        map[productId] = packages;
+      const safePkgs = sanitizePackages(packages);
+      if (safePkgs.length > 0) {
+        map[productId] = safePkgs;
       } else {
         delete map[productId];
       }
@@ -1534,7 +1496,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Customer creates order in storefront
-  const createOrder = (
+  const createOrderLocal = (
     productId: string,
     quantity: number,
     paymentMethod: Order['paymentMethod'],
@@ -1694,6 +1656,128 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return true;
   };
 
+  // ===== MUA HÀNG SERVER-SIDE (Mốc B): ưu tiên RPC create_order trên DB =====
+  // Server tự kiểm giá (từ DB), stock, số dư; trừ ví; giao key/acc; ghi đơn +
+  // audit trong 1 transaction. Nếu RPC chưa được áp (chưa chạy moc_b_core.sql)
+  // → tự fallback về luồng local cũ, web vẫn sống.
+  const createOrder = async (
+    productId: string,
+    quantity: number,
+    paymentMethod: Order['paymentMethod'],
+    selectedPackage?: ProductPackage
+  ): Promise<boolean> => {
+    if (!isAuthenticated) {
+      showToast('Vui lòng đăng nhập để mua sản phẩm!', 'warning');
+      navigateToStorefront('login', typeof window !== 'undefined' ? window.location.pathname : '/products');
+      return false;
+    }
+    if (settings.maintenanceMode) {
+      showToast('Hệ thống đang bảo trì tạm thời, vui lòng quay lại sau!', 'warning');
+      return false;
+    }
+
+    type CreateOrderResult = { status?: string; code?: string; order?: Record<string, unknown>; duplicate?: boolean } | null;
+    let result: CreateOrderResult = null;
+    try {
+      const { data, error } = await supabase.rpc('create_order', {
+        p_product_id: productId,
+        p_package_id: selectedPackage?.id ?? null,
+        p_quantity: quantity,
+        p_idem_key: `ui-${productId}-${selectedPackage?.id ?? 'base'}-${Date.now()}`,
+      });
+      if (error) throw error;
+      result = (data as CreateOrderResult) ?? null;
+    } catch (e) {
+      const msg = String((e as { message?: string })?.message || '');
+      if (/Could not find|does not exist|PGRST202|404/i.test(msg)) {
+        // RPC chưa có trên DB (chưa chạy moc_b_core.sql) → dùng luồng local cũ
+        return createOrderLocal(productId, quantity, paymentMethod, selectedPackage);
+      }
+      showToast('Lỗi hệ thống khi tạo đơn, vui lòng thử lại!', 'error');
+      return false;
+    }
+
+    if (!result || result.status !== 'success' || !result.order) {
+      const code = result?.code || 'UNKNOWN';
+      const map: Record<string, string> = {
+        INSUFFICIENT_BALANCE: 'Số dư ví không đủ! Vui lòng nạp thêm tiền.',
+        OUT_OF_STOCK: 'Sản phẩm đã hết hàng!',
+        PRODUCT_NOT_FOUND: 'Sản phẩm không tồn tại!',
+        PRODUCT_NOT_ACTIVE: 'Sản phẩm hiện không bán!',
+        PACKAGE_NOT_FOUND: 'Gói dịch vụ không hợp lệ!',
+        USER_BANNED: 'Tài khoản của bạn đã bị khóa!',
+        INVALID_QUANTITY: 'Số lượng không hợp lệ!',
+      };
+      showToast(map[code] || 'Không thể tạo đơn hàng lúc này!', 'error');
+      if (code === 'INSUFFICIENT_BALANCE') navigateToStorefront('account-wallet-deposit');
+      return false;
+    }
+
+    // Thành công trên SERVER — cập nhật UI theo nguồn thật
+    const o = result.order;
+    const total = Number(o.totalPrice ?? 0);
+    const buyer = currentUser;
+    const newOrder: Order = {
+      id: String(o.id ?? 'ord-' + Date.now()),
+      orderCode: String(o.orderCode ?? ''),
+      userId: buyer.id,
+      userName: buyer.username,
+      userEmail: buyer.email,
+      productId,
+      productName: String(o.productName ?? ''),
+      category: (products.find((pr) => pr.id === productId)?.category) || '',
+      productCategory: (products.find((pr) => pr.id === productId)?.category) || '',
+      quantity: Number(o.quantity ?? 1),
+      unitPrice: Number(o.unitPrice ?? total),
+      totalPrice: total,
+      totalAmount: total,
+      paymentMethod,
+      status: 'completed',
+      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      deliveredContent: String(o.deliveredContent ?? ''),
+      key: String(o.deliveredContent ?? '').split('\n')[0],
+      packageName: (o.packageName as string) || selectedPackage?.name,
+    };
+    setOrders((prev) => [newOrder, ...prev]);
+
+    // Làm mới số dư THẬT từ profiles (server đã trừ)
+    try {
+      const { data: prof } = await supabase.from('profiles').select('balance, total_spent').eq('id', buyer.id).maybeSingle();
+      if (prof) {
+        setUsers((prev) => prev.map((u) => (u.id === buyer.id
+          ? { ...u, balance: Number(prof.balance) || 0, totalSpent: Number(prof.total_spent) || u.totalSpent, totalOrders: (u.totalOrders || 0) + 1 }
+          : u)));
+      }
+    } catch {}
+
+    const newTx: Transaction = {
+      id: 'tx-' + Date.now(),
+      txCode: '#GD-' + Math.floor(10000 + Math.random() * 90000),
+      type: 'purchase',
+      userId: buyer.id,
+      userName: buyer.username,
+      description: `Thanh toán mua ${newOrder.productName}${newOrder.packageName ? ` [${newOrder.packageName}]` : ''} (x${newOrder.quantity})`,
+      amount: -total,
+      balanceAfter: currentUser.balance - total,
+      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      status: 'completed',
+    };
+    setTransactions((prev) => [newTx, ...prev]);
+    setNotifications((prev) => [
+      {
+        id: 'notif-' + Date.now(),
+        title: `Đơn hàng mới ${newOrder.orderCode}`,
+        description: `${buyer.username} vừa mua ${newOrder.productName} (${total.toLocaleString('vi-VN')}đ)`,
+        time: 'Vừa xong',
+        read: false,
+        type: 'order',
+      },
+      ...prev,
+    ]);
+    showToast(`🎉 Mua hàng thành công! Đơn ${newOrder.orderCode} — xem key trong Đơn Hàng!`, 'success');
+    return true;
+  };
+
   // Topup review actions with double-action prevention
   const approveTopup = (id: string) => {
     const topup = topups.find((t) => t.id === id);
@@ -1771,6 +1855,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     proofImage?: string
   ): string => {
     const buyer = currentUser;
+    // Kill switch: chế độ bảo trì → không nhận nạp mới
+    if (settings.maintenanceMode) {
+      showToast('Hệ thống đang bảo trì tạm thời — chưa nhận yêu cầu nạp mới!', 'warning');
+      return '';
+    }
+    // Rate limit: tối đa 5 yêu cầu nạp đang chờ / người dùng (chống spam)
+    const pendingCount = topups.filter((t) => t.userId === buyer.id && t.status === 'pending').length;
+    if (pendingCount >= 5) {
+      showToast('Bạn đang có quá nhiều yêu cầu nạp chưa hoàn tất. Vui lòng hoàn tất/chờ xử lý các mã trước!', 'warning');
+      return '';
+    }
     const generatedCode = '#NAP-' + Math.floor(1000 + Math.random() * 9000);
     const newTopup: TopupRequest = {
       id: 'topup-' + Date.now(),

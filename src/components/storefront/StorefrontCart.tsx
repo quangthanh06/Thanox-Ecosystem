@@ -39,12 +39,12 @@ export const StorefrontCart: React.FC = () => {
   );
   const isBalanceSufficient = currentUser.balance >= totalAmount;
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (paymentMethod === 'wallet' && !isBalanceSufficient) {
       navigateToStorefront('account-wallet-deposit');
       return;
     }
-    const success = checkoutCart(paymentMethod);
+    const success = await checkoutCart(paymentMethod);
     if (success) {
       navigateToStorefront('account-orders');
     }

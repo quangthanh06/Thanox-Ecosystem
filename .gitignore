@@ -39,3 +39,6 @@ lerna-debug.log*
 *.zip
 dev-server.log
 *.tsbuildinfo
+
+.vercel
+.env*
