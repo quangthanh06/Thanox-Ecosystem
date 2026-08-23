@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 
 export const OrdersView: React.FC = () => {
-  const { orders, updateOrderStatus, showToast, navigateToStorefront } = useStore();
+  const { orders, updateOrderStatus, showToast, navigateToStorefront, refundOrder } = useStore();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -278,9 +278,29 @@ export const OrdersView: React.FC = () => {
         subtitle="Thông tin giao dịch, khách hàng và nội dung bàn giao"
         footer={
           selectedOrder && (
-            <Button variant="secondary" size="sm" onClick={() => setSelectedOrder(null)}>
-              Đóng
-            </Button>
+            <div className="flex items-center justify-between w-full gap-2">
+              {selectedOrder.status === 'completed' ? (
+                <Button
+                  variant="danger"
+                  size="sm"
+                  leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+                  onClick={async () => {
+                    const reason = window.prompt(`Hoàn tiền ${selectedOrder.totalPrice.toLocaleString('vi-VN')}đ cho đơn ${selectedOrder.orderCode}.
+Lý do hoàn tiền:`, 'Khách yêu cầu hoàn tiền');
+                    if (reason === null) return;
+                    const ok = await refundOrder(selectedOrder.id, reason);
+                    if (ok) setSelectedOrder(null);
+                  }}
+                >
+                  Hoàn Tiền
+                </Button>
+              ) : (
+                <span />
+              )}
+              <Button variant="secondary" size="sm" onClick={() => setSelectedOrder(null)}>
+                Đóng
+              </Button>
+            </div>
           )
         }
       >

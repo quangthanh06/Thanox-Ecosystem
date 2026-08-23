@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
+import { supabase } from '../../lib/supabase';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { CardNetwork } from '../../types';
@@ -173,11 +174,16 @@ const isAmountEntered = activeAmount > 0;
     let isSubscribed = true;
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/deposit/status/${encodeURIComponent(transactionCode)}`);
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.success && data.found && data.status === 'approved' && isSubscribed) {
-          showToast(`⚡ Nhận tiền thành công! Đã cộng ${(data.amount || activeAmount).toLocaleString('vi-VN')}đ vào ví`, 'success');
+        // Poll bảng topups trên Supabase (RLS chỉ cho xem topup của chính mình) —
+        // thay cho endpoint legacy /api/deposit/status không tồn tại trên Vercel
+        const { data } = await supabase
+          .from('topups')
+          .select('id, status, amount')
+          .ilike('transfer_note', '%' + transactionCode + '%')
+          .eq('status', 'approved')
+          .limit(1);
+        if (isSubscribed && data && data.length > 0) {
+          showToast(`⚡ Nhận tiền thành công! Đã cộng ${(data[0].amount || activeAmount).toLocaleString('vi-VN')}đ vào ví`, 'success');
           clearInterval(interval);
         }
       } catch {}

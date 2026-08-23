@@ -80,7 +80,7 @@ export interface Category {
   sortOrder?: number;
 }
 
-export type OrderStatus = 'completed' | 'pending' | 'processing' | 'failed' | 'cancelled';
+export type OrderStatus = 'completed' | 'pending' | 'processing' | 'failed' | 'cancelled' | 'refunded';
 
 export interface Order {
   id: string;

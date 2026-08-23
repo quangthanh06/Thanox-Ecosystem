@@ -128,6 +128,7 @@ interface StoreContextType {
   updateUser: (id: string, updates: Partial<User>) => void;
   deleteUser: (id: string) => void;
   adjustUserBalance: (userId: string, amount: number, note: string) => void;
+  refundOrder: (orderId: string, reason: string) => Promise<boolean>;
   toggleBanUser: (id: string) => void;
 
   sendTicketMessage: (ticketId: string, message: string, sender?: 'admin' | 'user') => void;
@@ -2337,34 +2338,72 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const adjustUserBalance = async (userId: string, amount: number, note: string) => {
     const targetUser = users.find((u) => u.id === userId);
     if (!targetUser) return;
-    const newBalance = Math.max(0, targetUser.balance + amount);
 
-    setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, balance: newBalance } : u)));
-
-    const newTx: Transaction = {
-      id: 'tx-' + Date.now(),
-      txCode: '#GD-' + Math.floor(10000 + Math.random() * 90000),
-      type: amount >= 0 ? 'deposit' : 'withdraw',
-      userId: targetUser.id,
-      userName: targetUser.username,
-      description: `Điều chỉnh số dư bởi Admin (${note || 'Thao tác thủ công'})`,
-      amount,
-      balanceAfter: newBalance,
-      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-      status: 'completed',
-    };
-    setTransactions((prev) => [newTx, ...prev]);
-
+    // SERVER-SIDE: RPC admin_adjust_balance — cộng đúng bảng profiles (số dư thật),
+    // khóa dòng, ghi ledger + audit_log. KHÔNG sửa balance trực tiếp ở client.
     try {
-      const { error } = await supabase.from('users').update({ balance: newBalance }).eq('id', userId);
+      const { data, error } = await supabase.rpc('admin_adjust_balance', {
+        p_user_id: userId,
+        p_amount: Math.round(amount),
+        p_note: note || '',
+      });
       if (error) throw error;
+      const r = data as { status?: string; code?: string; balance?: number } | null;
+      if (r?.status !== 'success') {
+        showToast(r?.code === 'FORBIDDEN' ? 'Bạn không có quyền điều chỉnh số dư!' : 'Không thể điều chỉnh số dư (' + (r?.code || 'lỗi') + ')', 'error');
+        return;
+      }
+      const newBalance = Number(r.balance ?? 0);
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, balance: newBalance } : u)));
+      const newTx: Transaction = {
+        id: 'tx-' + Date.now(),
+        txCode: '#GD-' + Math.floor(10000 + Math.random() * 90000),
+        type: amount >= 0 ? 'deposit' : 'withdraw',
+        userId: targetUser.id,
+        userName: targetUser.username,
+        description: `Điều chỉnh số dư bởi Admin (${note || 'Thao tác thủ công'})`,
+        amount,
+        balanceAfter: newBalance,
+        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        status: 'completed',
+      };
+      setTransactions((prev) => [newTx, ...prev]);
       showToast(
-        `Đã ${amount >= 0 ? 'cộng' : 'trừ'} ${Math.abs(amount).toLocaleString('vi-VN')}đ vào ví của ${targetUser.username} trên Cloud`,
+        `Đã ${amount >= 0 ? 'cộng' : 'trừ'} ${Math.abs(amount).toLocaleString('vi-VN')}đ vào ví của ${targetUser.username} (số dư mới: ${newBalance.toLocaleString('vi-VN')}đ)`,
         'success'
       );
     } catch (e) {
       console.error(e);
-      showToast('Lỗi đồng bộ số dư lên Cloud', 'error');
+      showToast('Lỗi điều chỉnh số dư (server)', 'error');
+    }
+  };
+
+  // ADMIN HOÀN TIỀN ĐƠN CLOUD — RPC admin_refund_order: cộng lại ví đúng 1 lần,
+  // đơn -> refunded, ledger REFUND + audit. KHÔNG sửa lịch sử gốc.
+  const refundOrder = async (orderId: string, reason: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.rpc('admin_refund_order', {
+        p_order_id: orderId,
+        p_reason: reason || '',
+      });
+      if (error) throw error;
+      const r = data as { status?: string; code?: string; refunded?: number } | null;
+      if (r?.status !== 'success') {
+        showToast(
+          r?.code === 'ALREADY_REFUNDED' ? 'Đơn này đã được hoàn tiền trước đó!' :
+          r?.code === 'NOT_REFUNDABLE' ? 'Chỉ hoàn tiền được đơn đã hoàn thành!' :
+          r?.code === 'FORBIDDEN' ? 'Bạn không có quyền hoàn tiền!' : 'Không thể hoàn tiền (' + (r?.code || 'lỗi') + ')',
+          'error'
+        );
+        return false;
+      }
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: 'refunded' as const } : o)));
+      showToast(`✅ Đã hoàn ${(r.refunded ?? 0).toLocaleString('vi-VN')}đ vào ví khách (ledger REFUND + audit đã ghi)`, 'success');
+      return true;
+    } catch (e) {
+      console.error(e);
+      showToast('Lỗi hoàn tiền (server)', 'error');
+      return false;
     }
   };
 
@@ -2610,6 +2649,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updateUser,
         deleteUser,
         adjustUserBalance,
+        refundOrder,
         toggleBanUser,
         sendTicketMessage,
         updateTicketStatus,
