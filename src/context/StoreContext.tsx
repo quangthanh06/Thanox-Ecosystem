@@ -1798,10 +1798,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       ...prev,
     ]);
 
-    // === ĐƯỜNG NẠP THẬT (SePay/MB webhook): ghi topup lên Cloud để webhook
-    // ngân hàng match transfer_note và duyệt tự động qua RPC process_bank_webhook.
-    // Cần policy "topups_insert_own" trong security_fix_rls.sql; nếu chưa chạy
-    // SQL thì bỏ qua im lặng và vẫn giữ luồng local như cũ. ===
+    // === ĐƯỜNG NẠP THẬT (THUEAPIBANK — MB Bank qua THUEAPI): ghi topup lên Cloud
+    // để webhook /api/webhook/mbbank match transfer_note và duyệt tự động qua RPC
+    // process_bank_webhook. Cần policy "topups_insert_own" trong security_fix_rls.sql;
+    // nếu chưa chạy SQL thì bỏ qua im lặng và vẫn giữ luồng local như cũ. ===
     void (async () => {
       try {
         const { data: cloudTopup, error: cloudErr } = await supabase

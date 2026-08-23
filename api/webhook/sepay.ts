@@ -1,11 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Minimal Vercel Serverless Function types (avoids implicit any from strict TS)
+/**
+ * ⚠️ LEGACY / BACKWARD-COMPATIBILITY ONLY
+ * Provider thanh toán chính thức là THUEAPIBANK (MB Bank qua THUEAPI) — xem api/webhook/mbbank.ts.
+ * Endpoint SePay này được giữ lại chỉ để tương thích cấu hình cũ; mỗi giao dịch vẫn
+ * đi qua cùng RPC idempotent `process_bank_webhook` nên KHÔNG bao giờ cộng tiền 2 lần
+ * dù cùng giao dịch đến từ cả hai kênh.
+ *
+ * Bảo mật: FAIL-CLOSED — thiếu SEPAY_API_KEY trong ENV → từ chối mọi request.
+ */
+
 interface VercelRequest {
   method?: string;
   headers: Record<string, string | string[] | undefined>;
   body?: any;
-  query?: Record<string, any>;
 }
 
 interface VercelResponse {
@@ -17,9 +25,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // 1. Authenticate request (API key from SePay is required in production)
+  // Fail-closed: bắt buộc có API key từ SePay
   const apiKey = req.headers['authorization'];
-  if (process.env.SEPAY_API_KEY && apiKey !== 'Bearer ' + process.env.SEPAY_API_KEY) {
+  const provided = (Array.isArray(apiKey) ? apiKey[0] : apiKey) || '';
+  if (!process.env.SEPAY_API_KEY || provided !== 'Bearer ' + process.env.SEPAY_API_KEY) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -30,7 +39,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Invalid payload' });
     }
 
-    // 2. Init Supabase (SERVICE_ROLE_KEY bypasses RLS and acts as admin)
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
@@ -43,7 +51,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       auth: { persistSession: false },
     });
 
-    // 3. Call the secure RPC
     const { data, error } = await supabase.rpc('process_bank_webhook', {
       p_provider: 'sepay',
       p_transaction_id: String(id),
@@ -57,7 +64,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Database transaction failed' });
     }
 
-    // Return the response from the DB (e.g. success, manual_review, ignored)
     return res.status(200).json(data);
   } catch (error) {
     console.error('Webhook processing error:', error);

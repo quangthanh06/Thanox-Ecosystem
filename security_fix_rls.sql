@@ -1,38 +1,82 @@
 -- ============================================================================
--- SECURITY FIX: CHẶN GIẢ MẠO WEBHOOK NẠP TIỀN
--- Vấn đề: bất kỳ ai (không cần đăng nhập) đều gọi được RPC process_bank_webhook
--- → có thể bơm giao dịch giả vào bảng bank_transactions / duyệt hộ topup pending.
--- (Hiện chưa rút được tiền vì anon không insert được topups, nhưng phải chặn.)
+-- SECURITY FIX (v2 — an toàn, áp cho mọi overload, bỏ qua nếu chưa tồn tại)
+--
+-- Vấn đề đã audit & xác minh thực tế (2026-08-23):
+--   1. ANON (không đăng nhập) gọi được RPC process_bank_webhook
+--      → có thể bơm giao dịch giả / duyệt hộ topup pending của người khác.
+--   2. RPC admin_approve_topup là SECURITY DEFINER (chạy với quyền admin)
+--      → nếu public gọi được thì ai cũng duyệt topup tùy ý.
+--   3. Người dùng (authenticated) chưa thể tự tạo topup của chính mình
+--      → chặn đường nạp tự động end-to-end của THUEAPIBANK.
 --
 -- CÁCH CHẠY: Supabase Dashboard → SQL Editor → dán toàn bộ → Run. Chạy 1 lần.
--- Sau khi chạy: chỉ Vercel serverless (dùng SERVICE_ROLE_KEY) gọi được webhook.
+-- Idempotent: chạy lại bao nhiêu lần cũng an toàn, không đụng hàm khác.
 -- ============================================================================
 
--- 1) Thu hồi quyền gọi RPC webhook với anon & authenticated (client thường)
-REVOKE EXECUTE ON FUNCTION public.process_bank_webhook(TEXT, TEXT, BIGINT, TEXT, TIMESTAMPTZ)
-  FROM anon, authenticated;
--- Chỉ service_role (server Vercel) được gọi
-GRANT EXECUTE ON FUNCTION public.process_bank_webhook(TEXT, TEXT, BIGINT, TEXT, TIMESTAMPTZ)
-  TO service_role;
+-- ---------------------------------------------------------------------------
+-- 1) CHẶN PUBLIC GỌI RPC TÀI CHÍNH — từng overload một, đúng tên hàm
+--    Sau khi chạy: chỉ service_role (Vercel serverless) gọi được.
+-- ---------------------------------------------------------------------------
+DO $$
+DECLARE
+  rec RECORD;
+BEGIN
+  FOR rec IN
+    SELECT p.proname,
+           (SELECT string_agg(format_type(p.proallargtypes[s]::oid, NULL), ', ')
+            FROM generate_series(1, coalesce(array_length(p.proallargtypes, 1), 0)) AS s) AS argtypes
+    FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE p.proname IN ('process_bank_webhook', 'admin_approve_topup')
+      AND n.nspname = 'public'
+  LOOP
+    EXECUTE format('REVOKE EXECUTE ON FUNCTION public.%I(%s) FROM anon, authenticated',
+                   rec.proname, coalesce(rec.argtypes, ''));
+    RAISE NOTICE 'Đã thu hồi EXECUTE public: %(%)', rec.proname, coalesce(rec.argtypes, '');
+  END LOOP;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+                 WHERE p.proname IN ('process_bank_webhook', 'admin_approve_topup')
+                   AND n.nspname = 'public') THEN
+    RAISE NOTICE 'Không tìm thấy hàm cần chặn — bỏ qua (an toàn).';
+  END IF;
+END $$;
 
--- 2) Chặn khách đọc lệnh nạp pending của người khác (chỉ chủ sở hữu & service)
+-- (service_role không bị ảnh hưởng — REVOKE chỉ áp cho anon/authenticated;
+--  service_role giữ EXECUTE mặc định qua role PUBLIC)
+
+-- ---------------------------------------------------------------------------
+-- 2) TOPUPS: người dùng chỉ được tạo & đọc topup CỦA CHÍNH MÌNH
+--    (webhook dùng service_role nên không bị ảnh hưởng)
+-- ---------------------------------------------------------------------------
 DROP POLICY IF EXISTS "topups_select_owner" ON public.topups;
 CREATE POLICY "topups_select_owner" ON public.topups
-  FOR SELECT
-  USING (true); -- giữ nếu bạn muốn admin-app đọc; an toàn hơn: (auth.uid() = user_id)
+  FOR SELECT USING (auth.uid() = user_id);
 
--- 3) (Khuyến nghị) Người dùng chỉ được tạo topup cho chính mình
 DROP POLICY IF EXISTS "topups_insert_own" ON public.topups;
 CREATE POLICY "topups_insert_own" ON public.topups
-  FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Người dùng KHÔNG được tự đổi sang approved (chỉ webhook/admin duyệt)
+DROP POLICY IF EXISTS "topups_update_own_pending" ON public.topups;
+CREATE POLICY "topups_update_own_pending" ON public.topups
+  FOR UPDATE USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id AND status = 'pending');
+
+-- ---------------------------------------------------------------------------
+-- 3) BANK TRANSACTIONS: không cho public ghi (mặc định deny khi RLS bật;
+--    giữ policy SELECT này nếu bảng chưa có policy đọc nào)
+-- ---------------------------------------------------------------------------
+DROP POLICY IF EXISTS "bank_transactions_read_owner" ON public.bank_transactions;
+CREATE POLICY "bank_transactions_read_owner" ON public.bank_transactions
+  FOR SELECT USING (false); -- chỉ service_role (bypass RLS) đọc được
 
 -- ============================================================================
--- KIỂM TRA SAU KHI CHẠY (trả về danh sách rỗng nếu đã chặn sạch):
--- select routine_name from information_schema.routine_privileges
---   where routine_name = 'process_bank_webhook' and grantee in ('anon','authenticated');
+-- KIỂM TRA SAU KHI CHẠY (phải trả về 0 dòng):
+--   SELECT routine_name, grantee FROM information_schema.routine_privileges
+--   WHERE routine_name IN ('process_bank_webhook','admin_approve_topup')
+--     AND grantee IN ('anon','authenticated');
 -- ============================================================================
 
--- ⚠️ LƯU Ý QUAN TRỌNG NGOÀI SQL:
--- Token THUEAPI_MB_TOKEN từng bị lộ trong .env.example trên GitHub.
--- Hãy vào thueapi.vn ĐỔI (rotate) token đó. Token cũ trong lịch sử Git vẫn xem được.
+-- ⚠️ LƯU Ý BẮT BUỘC NGOÀI SQL:
+-- Token THUEAPI_MB_TOKEN cũ (b7872a...) đã từng lộ trên GitHub → PHẢI đổi trên thueapi.vn,
+-- sau đó cập nhật lại ENV trên Vercel (MBBANK_SECRET_KEY + THUEAPI_MB_TOKEN mới).
