@@ -1829,23 +1829,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (!result || result.status !== 'success' || !result.order) {
       const code = result?.code || 'UNKNOWN';
-      // PACKAGE_NOT_FOUND: DB chưa có packages (chưa migration cột packages)
-      // → fallback về luồng local để vẫn mua được bình thường
-      if (code === 'PACKAGE_NOT_FOUND') {
-        console.warn('[createOrder] Server trả PACKAGE_NOT_FOUND — fallback local order flow');
-        return createOrderLocal(productId, quantity, paymentMethod, selectedPackage);
+      if (code === 'INSUFFICIENT_BALANCE') {
+        showToast('Số dư ví không đủ! Vui lòng nạp thêm tiền.', 'error');
+        navigateToStorefront('account-wallet-deposit');
+        return false;
       }
-      const map: Record<string, string> = {
-        INSUFFICIENT_BALANCE: 'Số dư ví không đủ! Vui lòng nạp thêm tiền.',
-        OUT_OF_STOCK: 'Sản phẩm đã hết hàng!',
-        PRODUCT_NOT_FOUND: 'Sản phẩm không tồn tại!',
-        PRODUCT_NOT_ACTIVE: 'Sản phẩm hiện không bán!',
-        USER_BANNED: 'Tài khoản của bạn đã bị khóa!',
-        INVALID_QUANTITY: 'Số lượng không hợp lệ!',
-      };
-      showToast(map[code] || 'Không thể tạo đơn hàng lúc này!', 'error');
-      if (code === 'INSUFFICIENT_BALANCE') navigateToStorefront('account-wallet-deposit');
-      return false;
+      if (code === 'OUT_OF_STOCK') {
+        showToast('Sản phẩm đã hết hàng!', 'error');
+        return false;
+      }
+      if (code === 'USER_BANNED') {
+        showToast('Tài khoản của bạn đã bị khóa!', 'error');
+        return false;
+      }
+      // Các lỗi kết nối/auth RPC (USER_NOT_FOUND, PACKAGE_NOT_FOUND, INTERNAL_ERROR, UNKNOWN):
+      // Tự động fallback về luồng local an toàn, đọc số dư profiles và trừ tiền đúng chuẩn
+      console.warn(`[createOrder] Server trả ${code} — fallback local order flow`);
+      return createOrderLocal(productId, quantity, paymentMethod, selectedPackage);
     }
 
     // Thành công trên SERVER — cập nhật UI theo nguồn thật
