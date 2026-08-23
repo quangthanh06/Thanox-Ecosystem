@@ -106,7 +106,7 @@ BEGIN
   -- 1. Idempotency Check: nếu trùng (user_id, idem_key) => trả về đơn cũ, KHÔNG trừ tiền lần 2
   IF p_idem_key IS NOT NULL AND btrim(p_idem_key) <> '' THEN
     SELECT * INTO v_existing FROM orders
-     WHERE user_id = v_user_uuid AND idem_key = p_idem_key LIMIT 1;
+     WHERE user_id::text = p_user_id AND idem_key = p_idem_key LIMIT 1;
     IF FOUND THEN
       RETURN jsonb_build_object(
         'status','success',
@@ -224,7 +224,7 @@ BEGIN
     user_id, user_name, product_id, product_name, package_id, package_name,
     quantity, unit_price, total_price, status, payment_method, delivered_content, idem_key
   ) VALUES (
-    v_user_uuid, v_user.username, v_prod_uuid, v_prod.name, p_package_id,
+    p_user_id, v_user.username, p_product_id, v_prod.name, p_package_id,
     COALESCE(v_pkg->>'name', ''), p_quantity, v_unit, v_total, 'completed', 'wallet',
     v_delivered, p_idem_key
   ) RETURNING * INTO v_order;
