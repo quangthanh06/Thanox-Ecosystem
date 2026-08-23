@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { isAccountLikeProduct } from '../utils/productAccount';
@@ -167,7 +167,7 @@ const safeGetItem = <T,>(key: string, fallback: T): T => {
 
 // ============================================================================
 // SUPABASE PRODUCTS EXTENDED COLUMNS (packages, sale, product_type, ...)
-// null = chưa probe, true = đã chạy migration (cột tồn tại), false = chưa có cột
+// null = chÆ°a probe, true = Ä‘Ã£ cháº¡y migration (cá»™t tá»“n táº¡i), false = chÆ°a cÃ³ cá»™t
 // ============================================================================
 let productsExtendedReady: boolean | null = null;
 
@@ -179,9 +179,9 @@ const isMissingColumnError = (err: unknown): boolean => {
   return code === 'PGRST204' || code === '42703' || /does not exist|Could not find the '(packages|product_type|is_sale|sale_price|instructions|accounts_list|images|download_url)'/i.test(msg);
 };
 
-// Payload các cột mở rộng (chỉ gửi khi migration đã được áp dụng)
-// Strip key/link bí mật khỏi packages trước khi lưu lên cloud (cột packages
-// public cho UI; key giao hàng chỉ nằm trong hidden_keys_or_links đã bị thu quyền)
+// Payload cÃ¡c cá»™t má»Ÿ rá»™ng (chá»‰ gá»­i khi migration Ä‘Ã£ Ä‘Æ°á»£c Ã¡p dá»¥ng)
+// Strip key/link bÃ­ máº­t khá»i packages trÆ°á»›c khi lÆ°u lÃªn cloud (cá»™t packages
+// public cho UI; key giao hÃ ng chá»‰ náº±m trong hidden_keys_or_links Ä‘Ã£ bá»‹ thu quyá»n)
 const sanitizePackages = (pkgs?: ProductPackage[]): ProductPackage[] =>
   (pkgs || []).map((x) => {
     const { keys, downloadUrl, ...rest } = x;
@@ -221,8 +221,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
 
   // Persistent States with Safe LocalStorage Parsing
-  // Ref giữ productPackages MỚI NHẤT (tránh race giữa effect tải store_settings
-  // và effect tải products — bản tải sau không được đè mất gói của bản trước)
+  // Ref giá»¯ productPackages Má»šI NHáº¤T (trÃ¡nh race giá»¯a effect táº£i store_settings
+  // vÃ  effect táº£i products â€” báº£n táº£i sau khÃ´ng Ä‘Æ°á»£c Ä‘Ã¨ máº¥t gÃ³i cá»§a báº£n trÆ°á»›c)
   const productPackagesRef = React.useRef<Record<string, ProductPackage[]>>({});
 
   const [products, setProducts] = useState<Product[]>(() => {
@@ -237,11 +237,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     const fetchSupabaseProducts = async () => {
       try {
-        // Probe 1 lần: kiểm tra cột mở rộng (packages...) đã tồn tại trên DB chưa
+        // Probe 1 láº§n: kiá»ƒm tra cá»™t má»Ÿ rá»™ng (packages...) Ä‘Ã£ tá»“n táº¡i trÃªn DB chÆ°a
         const { error: probeError } = await supabase.from('products').select('packages').limit(1);
         productsExtendedReady = !probeError;
 
-        // Đọc qua VIEW công khai (không chứa cột key/acc bí mật — moc_b_core.sql)
+        // Äá»c qua VIEW cÃ´ng khai (khÃ´ng chá»©a cá»™t key/acc bÃ­ máº­t â€” moc_b_core.sql)
         const { data, error } = await supabase
           .from('products_public')
           .select('*')
@@ -250,12 +250,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (error) throw error;
         
         if (data && data.length > 0) {
-          // Bản localStorage (do admin cấu hình) dùng để bổ sung các trường
-          // mà DB chưa có cột (packages, sale, instructions...) — tránh mất dữ liệu
-          // trình duyệt đang dùng trước khi migration được chạy.
+          // Báº£n localStorage (do admin cáº¥u hÃ¬nh) dÃ¹ng Ä‘á»ƒ bá»• sung cÃ¡c trÆ°á»ng
+          // mÃ  DB chÆ°a cÃ³ cá»™t (packages, sale, instructions...) â€” trÃ¡nh máº¥t dá»¯ liá»‡u
+          // trÃ¬nh duyá»‡t Ä‘ang dÃ¹ng trÆ°á»›c khi migration Ä‘Æ°á»£c cháº¡y.
           const localSnapshot = products;
-          // Gói dịch vụ đồng bộ qua store_settings (cloud, hoạt động cả khi chưa migration)
-          // Ưu tiên ref (mới nhất) rồi tới state closure (từ localStorage)
+          // GÃ³i dá»‹ch vá»¥ Ä‘á»“ng bá»™ qua store_settings (cloud, hoáº¡t Ä‘á»™ng cáº£ khi chÆ°a migration)
+          // Æ¯u tiÃªn ref (má»›i nháº¥t) rá»“i tá»›i state closure (tá»« localStorage)
           const cloudPackages = { ...(settings.productPackages || {}), ...productPackagesRef.current };
 
           const mappedProducts: Product[] = data.map((p) => {
@@ -280,7 +280,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             downloadLinkOrKeys: p.hidden_keys_or_links || local?.downloadLinkOrKeys || '',
             soldCount: p.sold_count ?? local?.soldCount ?? 0,
             featured: p.featured ?? local?.featured ?? true,
-            // === Trường mở rộng: ưu tiên DB, fallback về bản localStorage ===
+            // === TrÆ°á»ng má»Ÿ rá»™ng: Æ°u tiÃªn DB, fallback vá» báº£n localStorage ===
             packages,
             plans: packages,
             productType: (p.product_type as Product['productType']) || local?.productType,
@@ -301,13 +301,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           setProducts(mappedProducts);
         }
       } catch (err) {
-        console.error('Lỗi tải sản phẩm từ Supabase:', err);
+        console.error('Lá»—i táº£i sáº£n pháº©m tá»« Supabase:', err);
       }
     };
     
     const fetchSupabaseUsers = async () => {
         try {
-          // Query 'profiles' table (not 'users') — Supabase Auth trigger creates
+          // Query 'profiles' table (not 'users') â€” Supabase Auth trigger creates
           // rows in profiles, not a separate users table.
           const { data, error } = await supabase
             .from('profiles')
@@ -358,12 +358,50 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             setUsers(mappedUsers);
           }
         } catch (err) {
-          console.error('Lỗi tải Users từ Supabase:', err);
+          console.error('Lá»—i táº£i Users tá»« Supabase:', err);
+        }
+      };
+
+      const fetchSupabaseTopups = async () => {
+        try {
+          const { data: topupsData, error: topupsErr } = await supabase
+            .from('topups')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (!topupsErr && topupsData && topupsData.length > 0) {
+            const { data: profilesData } = await supabase.from('profiles').select('id, username');
+            const userMap = new Map();
+            profilesData?.forEach((p) => userMap.set(p.id, p.username));
+
+            const mappedTopups: TopupRequest[] = topupsData.map((t: any) => ({
+              id: t.id,
+              requestCode: t.transfer_note || ('#NAP-' + String(t.id).substring(0, 4).toUpperCase()),
+              userId: t.user_id,
+              userName: userMap.get(t.user_id) || 'KhÃ¡ch',
+              amount: Number(t.amount) || 0,
+              method: (t.method as 'bank' | 'momo' | 'card') || 'bank',
+              status: (t.status as 'pending' | 'approved' | 'rejected') || 'pending',
+              createdAt: t.created_at ? String(t.created_at).replace('T', ' ').substring(0, 16) : '',
+              transferNote: t.transfer_note || '',
+            }));
+            
+            setTopups((prev) => {
+               const merged = [...mappedTopups];
+               prev.forEach((p) => {
+                 if (!merged.find((m) => m.transferNote === p.transferNote)) merged.push(p);
+               });
+               return merged;
+            });
+          }
+        } catch (e) {
+          console.error('Lá»—i táº£i Topups tá»« Supabase:', e);
         }
       };
 
       fetchSupabaseProducts();
       fetchSupabaseUsers();
+      fetchSupabaseTopups();
     }, []);
 
   const [categories, setCategories] = useState<Category[]>(() => {
@@ -467,8 +505,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const fallbackUser: User = {
     id: 'guest',
-    username: 'Khách',
-    name: 'Khách hàng',
+    username: 'KhÃ¡ch',
+    name: 'KhÃ¡ch hÃ ng',
     email: 'guest@thanox.vn',
     role: 'user',
     balance: 0,
@@ -603,11 +641,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     // 1. Console Self-XSS Warning Banner
     console.log(
-      '%c🛑 DỪNG LẠI! CẢNH BÁO BẢO MẬT THANOX 🛑',
+      '%cðŸ›‘ Dá»ªNG Láº I! Cáº¢NH BÃO Báº¢O Máº¬T THANOX ðŸ›‘',
       'color: #EF4444; font-size: 22px; font-weight: bold;'
     );
     console.log(
-      '%cĐây là tính năng dành riêng cho nhà phát triển. Tuyệt đối KHÔNG dán bất kỳ đoạn mã script nào vào đây để tránh bị hacker đánh cắp tài khoản!',
+      '%cÄÃ¢y lÃ  tÃ­nh nÄƒng dÃ nh riÃªng cho nhÃ  phÃ¡t triá»ƒn. Tuyá»‡t Ä‘á»‘i KHÃ”NG dÃ¡n báº¥t ká»³ Ä‘oáº¡n mÃ£ script nÃ o vÃ o Ä‘Ã¢y Ä‘á»ƒ trÃ¡nh bá»‹ hacker Ä‘Ã¡nh cáº¯p tÃ i khoáº£n!',
       'color: #F59E0B; font-size: 13px; font-weight: 600;'
     );
 
@@ -787,7 +825,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [settings]);
 
-  // Mốc B: load đơn hàng CLOUD của user (admin xem hết) — merge với local cũ
+  // Má»‘c B: load Ä‘Æ¡n hÃ ng CLOUD cá»§a user (admin xem háº¿t) â€” merge vá»›i local cÅ©
   useEffect(() => {
     if (!currentUserId) return;
     (async () => {
@@ -796,7 +834,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         let q = supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(300);
         if (!isAdmin) q = q.eq('user_id', currentUserId);
         const { data, error } = await q;
-        if (error || !Array.isArray(data)) return; // bảng chưa có (chưa chạy SQL) → im lặng
+        if (error || !Array.isArray(data)) return; // báº£ng chÆ°a cÃ³ (chÆ°a cháº¡y SQL) â†’ im láº·ng
         const cloud: Order[] = data.map((r) => ({
           id: r.id,
           orderCode: r.order_code,
@@ -830,8 +868,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     let cancelled = false;
     (async () => {
       try {
-        // Dùng RPC get_public_settings (đã strip secret nhạy cảm ở DB).
-        // RPC chưa tồn tại (chưa chạy moc_b_core.sql) → fallback select cũ.
+        // DÃ¹ng RPC get_public_settings (Ä‘Ã£ strip secret nháº¡y cáº£m á»Ÿ DB).
+        // RPC chÆ°a tá»“n táº¡i (chÆ°a cháº¡y moc_b_core.sql) â†’ fallback select cÅ©.
         let cloudSettings: StoreSettings | null = null;
         const { data: rpcData, error: rpcErr } = await supabase.rpc('get_public_settings');
         if (!rpcErr && rpcData && typeof rpcData === 'object') {
@@ -849,8 +887,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (cancelled || !cloudSettings) return;
         setSettings((prev) => ({ ...prev, ...cloudSettings }));
 
-        // Gói dịch vụ admin cấu hình (lưu kèm settings cloud) — áp lên sản phẩm
-        // để mọi thiết bị thấy gói ngay cả khi chưa chạy migration cột packages.
+        // GÃ³i dá»‹ch vá»¥ admin cáº¥u hÃ¬nh (lÆ°u kÃ¨m settings cloud) â€” Ã¡p lÃªn sáº£n pháº©m
+        // Ä‘á»ƒ má»i thiáº¿t bá»‹ tháº¥y gÃ³i ngay cáº£ khi chÆ°a cháº¡y migration cá»™t packages.
         const cloudPkgs = cloudSettings.productPackages || {};
         if (Object.keys(cloudPkgs).length > 0) {
           productPackagesRef.current = { ...productPackagesRef.current, ...cloudPkgs };
@@ -1000,14 +1038,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return [...prev, { product, quantity, selectedPackage }];
     });
     showToast(
-      `Đã thêm "${product.name}${selectedPackage ? ` [${selectedPackage.name}]` : ''}" vào giỏ hàng!`,
+      `ÄÃ£ thÃªm "${product.name}${selectedPackage ? ` [${selectedPackage.name}]` : ''}" vÃ o giá» hÃ ng!`,
       'success'
     );
   };
 
   const removeFromCart = (productId: string) => {
     setCart((prev) => prev.filter((item) => item.product.id !== productId));
-    showToast('Đã xóa sản phẩm khỏi giỏ hàng', 'info');
+    showToast('ÄÃ£ xÃ³a sáº£n pháº©m khá»i giá» hÃ ng', 'info');
   };
 
   const updateCartQuantity = (productId: string, quantity: number) => {
@@ -1076,7 +1114,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Self-referral protection: A user cannot refer themselves
     if (referrerId === buyer.id) return;
 
-    // Check minimum qualifying order value (default 200.000đ)
+    // Check minimum qualifying order value (default 200.000Ä‘)
     const minOrderVal = settings.affiliateMinimumOrderValue ?? 200000;
     if (orderTotal < minOrderVal) return;
 
@@ -1086,7 +1124,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
     if (alreadyRewarded) return;
 
-    // Determine reward amount (default: 10.000đ, or higher tier if enabled)
+    // Determine reward amount (default: 10.000Ä‘, or higher tier if enabled)
     let rawReward = settings.affiliateDefaultReward ?? 10000;
     if (
       settings.affiliateHigherTierEnabled &&
@@ -1106,7 +1144,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const dailyCap = settings.affiliateDailyCap ?? 500000;
     if (todayRewardsSum >= dailyCap) {
-      console.log(`[Affiliate] Referrer ${referrer.username} reached daily reward cap of ${dailyCap}đ.`);
+      console.log(`[Affiliate] Referrer ${referrer.username} reached daily reward cap of ${dailyCap}Ä‘.`);
       return;
     }
 
@@ -1186,7 +1224,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       type: 'commission',
       userId: referrer.id,
       userName: referrer.username,
-      description: `Hoa hồng giới thiệu: Đơn ${orderCode} của ${buyer.username} (+${rewardAmount.toLocaleString('vi-VN')}đ vào Số Dư Affiliate)`,
+      description: `Hoa há»“ng giá»›i thiá»‡u: ÄÆ¡n ${orderCode} cá»§a ${buyer.username} (+${rewardAmount.toLocaleString('vi-VN')}Ä‘ vÃ o Sá»‘ DÆ° Affiliate)`,
       amount: rewardAmount,
       balanceAfter: referrer.balance || 0,
       createdAt: nowStr,
@@ -1198,9 +1236,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setNotifications((prev) => [
       {
         id: 'notif-' + Date.now(),
-        title: `Nhận thưởng giới thiệu +${rewardAmount.toLocaleString('vi-VN')}đ`,
-        description: `Bạn vừa nhận ${rewardAmount.toLocaleString('vi-VN')}đ hoa hồng từ đơn hàng hợp lệ của ${buyer.username} (${orderCode})`,
-        time: 'Vừa xong',
+        title: `Nháº­n thÆ°á»Ÿng giá»›i thiá»‡u +${rewardAmount.toLocaleString('vi-VN')}Ä‘`,
+        description: `Báº¡n vá»«a nháº­n ${rewardAmount.toLocaleString('vi-VN')}Ä‘ hoa há»“ng tá»« Ä‘Æ¡n hÃ ng há»£p lá»‡ cá»§a ${buyer.username} (${orderCode})`,
+        time: 'Vá»«a xong',
         read: false,
         type: 'system',
       },
@@ -1210,12 +1248,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const checkoutCart = async (paymentMethod: Order['paymentMethod']): Promise<boolean> => {
     if (cart.length === 0) {
-      showToast('Giỏ hàng của bạn đang trống!', 'warning');
+      showToast('Giá» hÃ ng cá»§a báº¡n Ä‘ang trá»‘ng!', 'warning');
       return false;
     }
 
     if (!isAuthenticated) {
-      showToast('Vui lòng đăng nhập tài khoản để thực hiện thanh toán!', 'warning');
+      showToast('Vui lÃ²ng Ä‘Äƒng nháº­p tÃ i khoáº£n Ä‘á»ƒ thá»±c hiá»‡n thanh toÃ¡n!', 'warning');
       navigateToStorefront('login', '/cart');
       return false;
     }
@@ -1227,13 +1265,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, 0);
 
     if (paymentMethod === 'wallet' && buyer.balance < total) {
-      showToast(`Số dư ví không đủ! Cần thêm ${(total - buyer.balance).toLocaleString('vi-VN')} VNĐ`, 'error');
+      showToast(`Sá»‘ dÆ° vÃ­ khÃ´ng Ä‘á»§! Cáº§n thÃªm ${(total - buyer.balance).toLocaleString('vi-VN')} VNÄ`, 'error');
       return false;
     }
 
-    // ===== SERVER-SIDE: từng item qua RPC create_order (kiểm giá/stock/ví ở DB).
-    // createOrder tự fallback local nếu RPC chưa áp. createOrder tự cập nhật
-    // orders/balance thật/notification/toast cho từng đơn. =====
+    // ===== SERVER-SIDE: tá»«ng item qua RPC create_order (kiá»ƒm giÃ¡/stock/vÃ­ á»Ÿ DB).
+    // createOrder tá»± fallback local náº¿u RPC chÆ°a Ã¡p. createOrder tá»± cáº­p nháº­t
+    // orders/balance tháº­t/notification/toast cho tá»«ng Ä‘Æ¡n. =====
     let created = 0;
     for (const item of cart) {
       const ok = await createOrder(item.product.id, item.quantity, paymentMethod, item.selectedPackage);
@@ -1241,16 +1279,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     if (created === 0) {
-      showToast('Không thể thanh toán đơn nào — vui lòng kiểm tra lại giỏ hàng!', 'error');
+      showToast('KhÃ´ng thá»ƒ thanh toÃ¡n Ä‘Æ¡n nÃ o â€” vui lÃ²ng kiá»ƒm tra láº¡i giá» hÃ ng!', 'error');
       return false;
     }
 
-    // Affiliate cho đơn đầu tiên của lần checkout này
+    // Affiliate cho Ä‘Æ¡n Ä‘áº§u tiÃªn cá»§a láº§n checkout nÃ y
     processAffiliateRewardForOrder('ord-' + Date.now(), '#TX-' + Math.floor(10000 + Math.random() * 90000), total, buyer);
 
     clearCart();
     if (created < cart.length) {
-      showToast(`Thanh toán thành công ${created}/${cart.length} sản phẩm (một số sản phẩm lỗi/hết hàng)!`, 'warning');
+      showToast(`Thanh toÃ¡n thÃ nh cÃ´ng ${created}/${cart.length} sáº£n pháº©m (má»™t sá»‘ sáº£n pháº©m lá»—i/háº¿t hÃ ng)!`, 'warning');
     }
     return true;
   };
@@ -1274,9 +1312,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   };
 
-  // Đồng bộ gói dịch vụ của sản phẩm lên Cloud qua bảng store_settings
-  // (hoạt động ngay cả khi chưa chạy migration thêm cột packages).
-  // packages rỗng => xóa key để mọi thiết bị nhận biết gói đã bị gỡ.
+  // Äá»“ng bá»™ gÃ³i dá»‹ch vá»¥ cá»§a sáº£n pháº©m lÃªn Cloud qua báº£ng store_settings
+  // (hoáº¡t Ä‘á»™ng ngay cáº£ khi chÆ°a cháº¡y migration thÃªm cá»™t packages).
+  // packages rá»—ng => xÃ³a key Ä‘á»ƒ má»i thiáº¿t bá»‹ nháº­n biáº¿t gÃ³i Ä‘Ã£ bá»‹ gá»¡.
   const syncProductPackagesToCloud = (productId: string, packages: ProductPackage[]) => {
     setSettings((prev) => {
       const map = { ...(prev.productPackages || {}) };
@@ -1286,15 +1324,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } else {
         delete map[productId];
       }
-      // Cập nhật ngay ref để các lần tải sau không đè mất gói vừa lưu
+      // Cáº­p nháº­t ngay ref Ä‘á»ƒ cÃ¡c láº§n táº£i sau khÃ´ng Ä‘Ã¨ máº¥t gÃ³i vá»«a lÆ°u
       productPackagesRef.current = { ...productPackagesRef.current, ...map };
-      // Đồng bộ LUÔN cột products.packages — RPC create_order đọc từ cột này
+      // Äá»“ng bá»™ LUÃ”N cá»™t products.packages â€” RPC create_order Ä‘á»c tá»« cá»™t nÃ y
       void supabase
         .from('products')
         .update({ packages: map[productId] || [] })
         .eq('id', productId)
         .then((res: { error: { message: string } | null }) => {
-          if (res.error) console.warn('[Packages] chưa ghi được cột products:', res.error.message);
+          if (res.error) console.warn('[Packages] chÆ°a ghi Ä‘Æ°á»£c cá»™t products:', res.error.message);
         });
       const updated = { ...prev, productPackages: map };
       try {
@@ -1364,18 +1402,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const extendedPayload = productsExtendedReady === true ? buildExtendedProductPayload(newProduct) : {};
 
       let { error } = await supabase.from('products').insert({ ...baseInsert, ...extendedPayload });
-      // Nếu DB chưa có cột mở rộng (chưa chạy migration) → thử lại không kèm cột mở rộng
+      // Náº¿u DB chÆ°a cÃ³ cá»™t má»Ÿ rá»™ng (chÆ°a cháº¡y migration) â†’ thá»­ láº¡i khÃ´ng kÃ¨m cá»™t má»Ÿ rá»™ng
       if (error && productsExtendedReady === true && isMissingColumnError(error)) {
         productsExtendedReady = false;
         ({ error } = await supabase.from('products').insert(baseInsert));
       }
       if (error) throw error;
-      // Đồng bộ gói dịch vụ lên cloud (qua store_settings) cho mọi thiết bị
+      // Äá»“ng bá»™ gÃ³i dá»‹ch vá»¥ lÃªn cloud (qua store_settings) cho má»i thiáº¿t bá»‹
       syncProductPackagesToCloud(newId, newProduct.packages || newProduct.plans || []);
-      showToast(`Đã thêm sản phẩm "${newProduct.name}" lên Cloud thành công!`, 'success');
+      showToast(`ÄÃ£ thÃªm sáº£n pháº©m "${newProduct.name}" lÃªn Cloud thÃ nh cÃ´ng!`, 'success');
     } catch (e) {
-      console.error('Lỗi khi lưu Supabase:', e);
-      showToast('Lỗi khi lưu lên Cloud, vui lòng thử lại', 'error');
+      console.error('Lá»—i khi lÆ°u Supabase:', e);
+      showToast('Lá»—i khi lÆ°u lÃªn Cloud, vui lÃ²ng thá»­ láº¡i', 'error');
     }
   };
 
@@ -1415,18 +1453,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const extendedPayload = productsExtendedReady === true ? buildExtendedProductPayload(p) : {};
 
         let { error } = await supabase.from('products').update({ ...baseUpdate, ...extendedPayload }).eq('id', id);
-        // Nếu DB chưa có cột mở rộng (chưa chạy migration) → thử lại không kèm cột mở rộng
+        // Náº¿u DB chÆ°a cÃ³ cá»™t má»Ÿ rá»™ng (chÆ°a cháº¡y migration) â†’ thá»­ láº¡i khÃ´ng kÃ¨m cá»™t má»Ÿ rá»™ng
         if (error && productsExtendedReady === true && isMissingColumnError(error)) {
           productsExtendedReady = false;
           ({ error } = await supabase.from('products').update(baseUpdate).eq('id', id));
         }
         if (error) throw error;
-        // Đồng bộ gói dịch vụ lên cloud (qua store_settings) cho mọi thiết bị
+        // Äá»“ng bá»™ gÃ³i dá»‹ch vá»¥ lÃªn cloud (qua store_settings) cho má»i thiáº¿t bá»‹
         syncProductPackagesToCloud(id, p.packages || p.plans || []);
-        showToast('Đã lưu thông tin sản phẩm và đồng bộ cơ sở dữ liệu Cloud! 🔒 (Đã khóa bảo vệ)', 'success');
+        showToast('ÄÃ£ lÆ°u thÃ´ng tin sáº£n pháº©m vÃ  Ä‘á»“ng bá»™ cÆ¡ sá»Ÿ dá»¯ liá»‡u Cloud! ðŸ”’ (ÄÃ£ khÃ³a báº£o vá»‡)', 'success');
       } catch (e) {
-        console.error('Lỗi Update Supabase:', e);
-        showToast('Lỗi cập nhật trên Cloud', 'error');
+        console.error('Lá»—i Update Supabase:', e);
+        showToast('Lá»—i cáº­p nháº­t trÃªn Cloud', 'error');
       }
     }
   };
@@ -1449,9 +1487,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setProducts(updatedList);
     syncProductsToServer(updatedList); // Keep local sync as backup for lock state if you want
     if (nowLocked) {
-      showToast(`🔒 ĐÃ KHÓA "${targetName}"! Sản phẩm này sẽ không bị thay đổi khi hệ thống nâng cấp.`, 'success');
+      showToast(`ðŸ”’ ÄÃƒ KHÃ“A "${targetName}"! Sáº£n pháº©m nÃ y sáº½ khÃ´ng bá»‹ thay Ä‘á»•i khi há»‡ thá»‘ng nÃ¢ng cáº¥p.`, 'success');
     } else {
-      showToast(`🔓 Đã MỞ KHÓA "${targetName}".`, 'info');
+      showToast(`ðŸ”“ ÄÃ£ Má»ž KHÃ“A "${targetName}".`, 'info');
     }
   };
 
@@ -1469,12 +1507,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const { error } = await supabase.from('products').delete().eq('id', id);
       if (error) throw error;
-      // Dọn gói dịch vụ của sản phẩm đã xóa khỏi store_settings cloud
+      // Dá»n gÃ³i dá»‹ch vá»¥ cá»§a sáº£n pháº©m Ä‘Ã£ xÃ³a khá»i store_settings cloud
       syncProductPackagesToCloud(id, []);
-      showToast('Đã xóa sản phẩm trên Cloud thành công', 'success'); // Changed to success instead of error style
+      showToast('ÄÃ£ xÃ³a sáº£n pháº©m trÃªn Cloud thÃ nh cÃ´ng', 'success'); // Changed to success instead of error style
     } catch (e) {
-      console.error('Lỗi Xóa Supabase:', e);
-      showToast('Lỗi khi xóa trên Cloud', 'error');
+      console.error('Lá»—i XÃ³a Supabase:', e);
+      showToast('Lá»—i khi xÃ³a trÃªn Cloud', 'error');
     }
   };
 
@@ -1491,7 +1529,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       count: 0,
     };
     setCategories((prev) => [...prev, newCat]);
-    showToast(`Đã thêm danh mục "${newCat.name}"`, 'success');
+    showToast(`ÄÃ£ thÃªm danh má»¥c "${newCat.name}"`, 'success');
   };
 
   const updateCategory = (id: string, updates: Partial<Category>) => {
@@ -1505,7 +1543,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       );
     }
 
-    showToast('Đã cập nhật danh mục', 'success');
+    showToast('ÄÃ£ cáº­p nháº­t danh má»¥c', 'success');
   };
 
   const deleteCategory = (id: string) => {
@@ -1522,13 +1560,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     setCategories(remainingCats);
-    showToast(`Đã xóa danh mục "${targetCat.name}"`, 'error');
+    showToast(`ÄÃ£ xÃ³a danh má»¥c "${targetCat.name}"`, 'error');
   };
 
   // Orders CRUD
   const updateOrderStatus = (id: string, status: Order['status']) => {
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
-    showToast(`Đã cập nhật trạng thái đơn hàng sang "${status}"`, 'info');
+    showToast(`ÄÃ£ cáº­p nháº­t tráº¡ng thÃ¡i Ä‘Æ¡n hÃ ng sang "${status}"`, 'info');
   };
 
   // Customer creates order in storefront
@@ -1542,7 +1580,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!product) return false;
 
     if (!isAuthenticated) {
-      showToast('Vui lòng đăng nhập để mua sản phẩm!', 'warning');
+      showToast('Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ mua sáº£n pháº©m!', 'warning');
       navigateToStorefront('login', typeof window !== 'undefined' ? window.location.pathname : '/products');
       return false;
     }
@@ -1553,7 +1591,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const total = unitPrice * quantity;
 
     if (paymentMethod === 'wallet' && buyer.balance < total) {
-      showToast('Số dư ví không đủ! Vui lòng nạp thêm tiền.', 'error');
+      showToast('Sá»‘ dÆ° vÃ­ khÃ´ng Ä‘á»§! Vui lÃ²ng náº¡p thÃªm tiá»n.', 'error');
       return false;
     }
 
@@ -1603,17 +1641,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         if (firstAcc.includes('|')) {
           const parts = firstAcc.split('|');
-          deliveredText = `🎮 TÀI KHOẢN: ${parts[0] || ''}\n🔑 MẬT KHẨU: ${parts[1] || ''}${parts[2] ? `\n🛡️ 2FA / GHI CHÚ: ${parts[2]}` : ''}`;
+          deliveredText = `ðŸŽ® TÃ€I KHOáº¢N: ${parts[0] || ''}\nðŸ”‘ Máº¬T KHáº¨U: ${parts[1] || ''}${parts[2] ? `\nðŸ›¡ï¸ 2FA / GHI CHÃš: ${parts[2]}` : ''}`;
           deliveredKey = `TK: ${parts[0]} | MK: ${parts[1]}`;
         } else {
           deliveredText = firstAcc;
           deliveredKey = firstAcc;
         }
       } else if (product.accountUsername || product.accountPassword) {
-        deliveredText = `🎮 TÀI KHOẢN: ${product.accountUsername || ''}\n🔑 MẬT KHẨU: ${product.accountPassword || ''}${product.account2FA ? `\n🛡️ 2FA / GHI CHÚ: ${product.account2FA}` : ''}`;
+        deliveredText = `ðŸŽ® TÃ€I KHOáº¢N: ${product.accountUsername || ''}\nðŸ”‘ Máº¬T KHáº¨U: ${product.accountPassword || ''}${product.account2FA ? `\nðŸ›¡ï¸ 2FA / GHI CHÃš: ${product.account2FA}` : ''}`;
         deliveredKey = `TK: ${product.accountUsername} | MK: ${product.accountPassword}`;
       } else {
-        deliveredText = product.downloadLinkOrKeys || 'Hệ thống đã ghi nhận đơn hàng tài khoản của bạn.';
+        deliveredText = product.downloadLinkOrKeys || 'Há»‡ thá»‘ng Ä‘Ã£ ghi nháº­n Ä‘Æ¡n hÃ ng tÃ i khoáº£n cá»§a báº¡n.';
         deliveredKey = product.downloadLinkOrKeys || 'ACC-DELIVERED';
       }
     } else {
@@ -1621,7 +1659,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         selectedPackage?.keys ||
         selectedPackage?.downloadUrl ||
         product.downloadLinkOrKeys ||
-        'Hệ thống đã gửi link kích hoạt đến email của bạn.';
+        'Há»‡ thá»‘ng Ä‘Ã£ gá»­i link kÃ­ch hoáº¡t Ä‘áº¿n email cá»§a báº¡n.';
       deliveredKey = deliveredText.split('\n')[0] || 'KEY-TX-' + Math.floor(100000 + Math.random() * 900000);
     }
 
@@ -1664,7 +1702,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       type: 'purchase',
       userId: buyer.id,
       userName: buyer.username,
-      description: `Thanh toán mua ${product.name}${selectedPackage ? ` [${selectedPackage.name}]` : ''} (x${quantity})`,
+      description: `Thanh toÃ¡n mua ${product.name}${selectedPackage ? ` [${selectedPackage.name}]` : ''} (x${quantity})`,
       amount: -total,
       balanceAfter: newBalance,
       createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
@@ -1679,23 +1717,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setNotifications((prev) => [
       {
         id: 'notif-' + Date.now(),
-        title: `Đơn hàng mới ${newOrderCode}`,
-        description: `${buyer.username} vừa mua ${product.name} (${total.toLocaleString('vi-VN')}đ)`,
-        time: 'Vừa xong',
+        title: `ÄÆ¡n hÃ ng má»›i ${newOrderCode}`,
+        description: `${buyer.username} vá»«a mua ${product.name} (${total.toLocaleString('vi-VN')}Ä‘)`,
+        time: 'Vá»«a xong',
         read: false,
         type: 'order',
       },
       ...prev,
     ]);
 
-    showToast(`Đã thêm "${product.name}${selectedPackage ? ` [${selectedPackage.name}]` : ''}" vào giỏ hàng!`, 'success');
+    showToast(`ÄÃ£ thÃªm "${product.name}${selectedPackage ? ` [${selectedPackage.name}]` : ''}" vÃ o giá» hÃ ng!`, 'success');
     return true;
   };
 
-  // ===== MUA HÀNG SERVER-SIDE (Mốc B): ưu tiên RPC create_order trên DB =====
-  // Server tự kiểm giá (từ DB), stock, số dư; trừ ví; giao key/acc; ghi đơn +
-  // audit trong 1 transaction. Nếu RPC chưa được áp (chưa chạy moc_b_core.sql)
-  // → tự fallback về luồng local cũ, web vẫn sống.
+  // ===== MUA HÃ€NG SERVER-SIDE (Má»‘c B): Æ°u tiÃªn RPC create_order trÃªn DB =====
+  // Server tá»± kiá»ƒm giÃ¡ (tá»« DB), stock, sá»‘ dÆ°; trá»« vÃ­; giao key/acc; ghi Ä‘Æ¡n +
+  // audit trong 1 transaction. Náº¿u RPC chÆ°a Ä‘Æ°á»£c Ã¡p (chÆ°a cháº¡y moc_b_core.sql)
+  // â†’ tá»± fallback vá» luá»“ng local cÅ©, web váº«n sá»‘ng.
   const createOrder = async (
     productId: string,
     quantity: number,
@@ -1703,12 +1741,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     selectedPackage?: ProductPackage
   ): Promise<boolean> => {
     if (!isAuthenticated) {
-      showToast('Vui lòng đăng nhập để mua sản phẩm!', 'warning');
+      showToast('Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ mua sáº£n pháº©m!', 'warning');
       navigateToStorefront('login', typeof window !== 'undefined' ? window.location.pathname : '/products');
       return false;
     }
     if (settings.maintenanceMode) {
-      showToast('Hệ thống đang bảo trì tạm thời, vui lòng quay lại sau!', 'warning');
+      showToast('Há»‡ thá»‘ng Ä‘ang báº£o trÃ¬ táº¡m thá»i, vui lÃ²ng quay láº¡i sau!', 'warning');
       return false;
     }
 
@@ -1726,35 +1764,35 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch (e) {
       const msg = String((e as { message?: string })?.message || '');
       if (/Could not find|does not exist|PGRST202|404/i.test(msg)) {
-        // RPC chưa có trên DB (chưa chạy moc_b_core.sql) → dùng luồng local cũ
+        // RPC chÆ°a cÃ³ trÃªn DB (chÆ°a cháº¡y moc_b_core.sql) â†’ dÃ¹ng luá»“ng local cÅ©
         return createOrderLocal(productId, quantity, paymentMethod, selectedPackage);
       }
-      showToast('Lỗi hệ thống khi tạo đơn, vui lòng thử lại!', 'error');
+      showToast('Lá»—i há»‡ thá»‘ng khi táº¡o Ä‘Æ¡n, vui lÃ²ng thá»­ láº¡i!', 'error');
       return false;
     }
 
     if (!result || result.status !== 'success' || !result.order) {
       const code = result?.code || 'UNKNOWN';
-      // PACKAGE_NOT_FOUND: DB chưa có packages (chưa migration cột packages)
-      // → fallback về luồng local để vẫn mua được bình thường
+      // PACKAGE_NOT_FOUND: DB chÆ°a cÃ³ packages (chÆ°a migration cá»™t packages)
+      // â†’ fallback vá» luá»“ng local Ä‘á»ƒ váº«n mua Ä‘Æ°á»£c bÃ¬nh thÆ°á»ng
       if (code === 'PACKAGE_NOT_FOUND') {
-        console.warn('[createOrder] Server trả PACKAGE_NOT_FOUND — fallback local order flow');
+        console.warn('[createOrder] Server tráº£ PACKAGE_NOT_FOUND â€” fallback local order flow');
         return createOrderLocal(productId, quantity, paymentMethod, selectedPackage);
       }
       const map: Record<string, string> = {
-        INSUFFICIENT_BALANCE: 'Số dư ví không đủ! Vui lòng nạp thêm tiền.',
-        OUT_OF_STOCK: 'Sản phẩm đã hết hàng!',
-        PRODUCT_NOT_FOUND: 'Sản phẩm không tồn tại!',
-        PRODUCT_NOT_ACTIVE: 'Sản phẩm hiện không bán!',
-        USER_BANNED: 'Tài khoản của bạn đã bị khóa!',
-        INVALID_QUANTITY: 'Số lượng không hợp lệ!',
+        INSUFFICIENT_BALANCE: 'Sá»‘ dÆ° vÃ­ khÃ´ng Ä‘á»§! Vui lÃ²ng náº¡p thÃªm tiá»n.',
+        OUT_OF_STOCK: 'Sáº£n pháº©m Ä‘Ã£ háº¿t hÃ ng!',
+        PRODUCT_NOT_FOUND: 'Sáº£n pháº©m khÃ´ng tá»“n táº¡i!',
+        PRODUCT_NOT_ACTIVE: 'Sáº£n pháº©m hiá»‡n khÃ´ng bÃ¡n!',
+        USER_BANNED: 'TÃ i khoáº£n cá»§a báº¡n Ä‘Ã£ bá»‹ khÃ³a!',
+        INVALID_QUANTITY: 'Sá»‘ lÆ°á»£ng khÃ´ng há»£p lá»‡!',
       };
-      showToast(map[code] || 'Không thể tạo đơn hàng lúc này!', 'error');
+      showToast(map[code] || 'KhÃ´ng thá»ƒ táº¡o Ä‘Æ¡n hÃ ng lÃºc nÃ y!', 'error');
       if (code === 'INSUFFICIENT_BALANCE') navigateToStorefront('account-wallet-deposit');
       return false;
     }
 
-    // Thành công trên SERVER — cập nhật UI theo nguồn thật
+    // ThÃ nh cÃ´ng trÃªn SERVER â€” cáº­p nháº­t UI theo nguá»“n tháº­t
     const o = result.order;
     const total = Number(o.totalPrice ?? 0);
     const buyer = currentUser;
@@ -1781,7 +1819,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
     setOrders((prev) => [newOrder, ...prev]);
 
-    // Làm mới số dư THẬT từ profiles (server đã trừ)
+    // LÃ m má»›i sá»‘ dÆ° THáº¬T tá»« profiles (server Ä‘Ã£ trá»«)
     try {
       const { data: prof } = await supabase.from('profiles').select('balance, total_spent').eq('id', buyer.id).maybeSingle();
       if (prof) {
@@ -1797,7 +1835,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       type: 'purchase',
       userId: buyer.id,
       userName: buyer.username,
-      description: `Thanh toán mua ${newOrder.productName}${newOrder.packageName ? ` [${newOrder.packageName}]` : ''} (x${newOrder.quantity})`,
+      description: `Thanh toÃ¡n mua ${newOrder.productName}${newOrder.packageName ? ` [${newOrder.packageName}]` : ''} (x${newOrder.quantity})`,
       amount: -total,
       balanceAfter: currentUser.balance - total,
       createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
@@ -1807,15 +1845,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setNotifications((prev) => [
       {
         id: 'notif-' + Date.now(),
-        title: `Đơn hàng mới ${newOrder.orderCode}`,
-        description: `${buyer.username} vừa mua ${newOrder.productName} (${total.toLocaleString('vi-VN')}đ)`,
-        time: 'Vừa xong',
+        title: `ÄÆ¡n hÃ ng má»›i ${newOrder.orderCode}`,
+        description: `${buyer.username} vá»«a mua ${newOrder.productName} (${total.toLocaleString('vi-VN')}Ä‘)`,
+        time: 'Vá»«a xong',
         read: false,
         type: 'order',
       },
       ...prev,
     ]);
-    showToast(`🎉 Mua hàng thành công! Đơn ${newOrder.orderCode} — xem key trong Đơn Hàng!`, 'success');
+    showToast(`ðŸŽ‰ Mua hÃ ng thÃ nh cÃ´ng! ÄÆ¡n ${newOrder.orderCode} â€” xem key trong ÄÆ¡n HÃ ng!`, 'success');
     return true;
   };
 
@@ -1823,14 +1861,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const approveTopup = async (id: string) => {
     const topup = topups.find((t) => t.id === id);
     if (!topup || topup.status !== 'pending') {
-      showToast('Yêu cầu nạp này đã được xử lý trước đó', 'warning');
+      showToast('YÃªu cáº§u náº¡p nÃ y Ä‘Ã£ Ä‘Æ°á»£c xá»­ lÃ½ trÆ°á»›c Ä‘Ã³', 'warning');
       return;
     }
 
     const targetUser = users.find((u) => u.id === topup.userId);
     const newBalance = (targetUser ? targetUser.balance : 0) + topup.amount;
 
-    // 1. Cập nhật local state ngay lập tức
+    // 1. Cáº­p nháº­t local state ngay láº­p tá»©c
     setUsers((prev) =>
       prev.map((u) => (u.id === topup.userId ? { ...u, balance: newBalance } : u))
     );
@@ -1847,25 +1885,25 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       )
     );
 
-    // 2. ĐỒNG BỘ CLOUD: Cộng số dư thật trên profiles (Supabase)
+    // 2. Äá»’NG Bá»˜ CLOUD: Cá»™ng sá»‘ dÆ° tháº­t trÃªn profiles (Supabase)
     try {
-      // Thử RPC admin_adjust_balance trước
+      // Thá»­ RPC admin_adjust_balance trÆ°á»›c
       const { data: rpcResult, error: rpcErr } = await supabase.rpc('admin_adjust_balance', {
         p_user_id: topup.userId,
         p_amount: Math.round(topup.amount),
-        p_note: `Admin duyệt nạp tiền ${topup.transferNote || ''}`,
+        p_note: `Admin duyá»‡t náº¡p tiá»n ${topup.transferNote || ''}`,
       });
       if (rpcErr) {
-        // RPC chưa có → fallback update trực tiếp bảng profiles
+        // RPC chÆ°a cÃ³ â†’ fallback update trá»±c tiáº¿p báº£ng profiles
         const { error: updateErr } = await supabase
           .from('profiles')
           .update({ balance: newBalance })
           .eq('id', topup.userId);
         if (updateErr) {
-          console.warn('[approveTopup] Không thể đồng bộ số dư lên Cloud:', updateErr.message);
+          console.warn('[approveTopup] KhÃ´ng thá»ƒ Ä‘á»“ng bá»™ sá»‘ dÆ° lÃªn Cloud:', updateErr.message);
         }
       } else {
-        // RPC thành công → lấy số dư thật từ kết quả
+        // RPC thÃ nh cÃ´ng â†’ láº¥y sá»‘ dÆ° tháº­t tá»« káº¿t quáº£
         const r = rpcResult as { status?: string; balance?: number } | null;
         if (r?.status === 'success' && r.balance !== undefined) {
           setUsers((prev) =>
@@ -1873,7 +1911,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           );
         }
       }
-      // Cập nhật topup status trên cloud
+      // Cáº­p nháº­t topup status trÃªn cloud
       await supabase
         .from('topups')
         .update({ status: 'approved' })
@@ -1890,7 +1928,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       type: 'deposit',
       userId: topup.userId,
       userName: topup.userName,
-      description: `Nạp tiền qua ${topup.method} (${topup.transferNote})`,
+      description: `Náº¡p tiá»n qua ${topup.method} (${topup.transferNote})`,
       amount: topup.amount,
       balanceAfter: newBalance,
       createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
@@ -1899,7 +1937,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setTransactions((prev) => [newTx, ...prev]);
 
     showToast(
-      `Đã duyệt nạp tiền ${topup.amount.toLocaleString('vi-VN')}đ cho ${topup.userName}!`,
+      `ÄÃ£ duyá»‡t náº¡p tiá»n ${topup.amount.toLocaleString('vi-VN')}Ä‘ cho ${topup.userName}!`,
       'success'
     );
   };
@@ -1907,7 +1945,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const rejectTopup = (id: string, reason: string) => {
     const topup = topups.find((t) => t.id === id);
     if (!topup || topup.status !== 'pending') {
-      showToast('Yêu cầu nạp này đã được xử lý trước đó', 'warning');
+      showToast('YÃªu cáº§u náº¡p nÃ y Ä‘Ã£ Ä‘Æ°á»£c xá»­ lÃ½ trÆ°á»›c Ä‘Ã³', 'warning');
       return;
     }
 
@@ -1917,13 +1955,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           ? {
               ...t,
               status: 'rejected',
-              rejectReason: reason || 'Giao dịch không khớp sao kê',
+              rejectReason: reason || 'Giao dá»‹ch khÃ´ng khá»›p sao kÃª',
               processedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
             }
           : t
       )
     );
-    showToast('Đã từ chối yêu cầu nạp tiền', 'error');
+    showToast('ÄÃ£ tá»« chá»‘i yÃªu cáº§u náº¡p tiá»n', 'error');
   };
 
   const createTopupRequest = (
@@ -1933,15 +1971,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     proofImage?: string
   ): string => {
     const buyer = currentUser;
-    // Kill switch: chế độ bảo trì → không nhận nạp mới
+    // Kill switch: cháº¿ Ä‘á»™ báº£o trÃ¬ â†’ khÃ´ng nháº­n náº¡p má»›i
     if (settings.maintenanceMode) {
-      showToast('Hệ thống đang bảo trì tạm thời — chưa nhận yêu cầu nạp mới!', 'warning');
+      showToast('Há»‡ thá»‘ng Ä‘ang báº£o trÃ¬ táº¡m thá»i â€” chÆ°a nháº­n yÃªu cáº§u náº¡p má»›i!', 'warning');
       return '';
     }
-    // Rate limit: tối đa 5 yêu cầu nạp đang chờ / người dùng (chống spam)
+    // Rate limit: tá»‘i Ä‘a 5 yÃªu cáº§u náº¡p Ä‘ang chá» / ngÆ°á»i dÃ¹ng (chá»‘ng spam)
     const pendingCount = topups.filter((t) => t.userId === buyer.id && t.status === 'pending').length;
-    if (pendingCount >= 5) {
-      showToast('Bạn đang có quá nhiều yêu cầu nạp chưa hoàn tất. Vui lòng hoàn tất/chờ xử lý các mã trước!', 'warning');
+    if (pendingCount >= 1) {
+      showToast('Bạn đang có 1 yêu cầu nạp chưa hoàn tất. Vui lòng chờ Admin duyệt mã trước đó!', 'error');
       return '';
     }
     const generatedCode = '#NAP-' + Math.floor(1000 + Math.random() * 9000);
@@ -1962,19 +2000,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setNotifications((prev) => [
       {
         id: 'notif-' + Date.now(),
-        title: `Yêu cầu nạp tiền mới ${newTopup.requestCode}`,
-        description: `${buyer.username} gửi yêu cầu nạp ${amount.toLocaleString('vi-VN')}đ qua ${method}`,
-        time: 'Vừa xong',
+        title: `YÃªu cáº§u náº¡p tiá»n má»›i ${newTopup.requestCode}`,
+        description: `${buyer.username} gá»­i yÃªu cáº§u náº¡p ${amount.toLocaleString('vi-VN')}Ä‘ qua ${method}`,
+        time: 'Vá»«a xong',
         read: false,
         type: 'topup',
       },
       ...prev,
     ]);
 
-    // === ĐƯỜNG NẠP THẬT (THUEAPIBANK — MB Bank qua THUEAPI): ghi topup lên Cloud
-    // để webhook /api/webhook/mbbank match transfer_note và duyệt tự động qua RPC
-    // process_bank_webhook. Cần policy "topups_insert_own" trong security_fix_rls.sql;
-    // nếu chưa chạy SQL thì bỏ qua im lặng và vẫn giữ luồng local như cũ. ===
+    // === ÄÆ¯á»œNG Náº P THáº¬T (THUEAPIBANK â€” MB Bank qua THUEAPI): ghi topup lÃªn Cloud
+    // Ä‘á»ƒ webhook /api/webhook/mbbank match transfer_note vÃ  duyá»‡t tá»± Ä‘á»™ng qua RPC
+    // process_bank_webhook. Cáº§n policy "topups_insert_own" trong security_fix_rls.sql;
+    // náº¿u chÆ°a cháº¡y SQL thÃ¬ bá» qua im láº·ng vÃ  váº«n giá»¯ luá»“ng local nhÆ° cÅ©. ===
     void (async () => {
       try {
         const { data: cloudTopup, error: cloudErr } = await supabase
@@ -1990,10 +2028,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           .single();
 
         if (cloudErr || !cloudTopup) {
-          console.warn('[Topup] Chưa đồng bộ Cloud (chạy security_fix_rls.sql để bật):', cloudErr?.message || 'no row');
+          console.warn('[Topup] ChÆ°a Ä‘á»“ng bá»™ Cloud (cháº¡y security_fix_rls.sql Ä‘á»ƒ báº­t):', cloudErr?.message || 'no row');
           return;
         }
-        // Polling trạng thái: khi webhook duyệt THẬT trên DB → cộng số dư theo nguồn thật
+        // Polling tráº¡ng thÃ¡i: khi webhook duyá»‡t THáº¬T trÃªn DB â†’ cá»™ng sá»‘ dÆ° theo nguá»“n tháº­t
         const pollId = cloudTopup.id;
         let tries = 0;
         const timer = setInterval(async () => {
@@ -2002,7 +2040,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const { data: t } = await supabase.from('topups').select('status').eq('id', pollId).maybeSingle();
             if (t?.status === 'approved') {
               clearInterval(timer);
-              // Lấy số dư thật từ profiles (webhook RPC đã cộng trên DB)
+              // Láº¥y sá»‘ dÆ° tháº­t tá»« profiles (webhook RPC Ä‘Ã£ cá»™ng trÃªn DB)
               const { data: prof } = await supabase.from('profiles').select('balance').eq('id', buyer.id).maybeSingle();
               if (prof) {
                 setUsers((prev) => prev.map((u) => (u.id === buyer.id ? { ...u, balance: Number(prof.balance) || 0 } : u)));
@@ -2014,26 +2052,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     : tp
                 )
               );
-              showToast(`🎉 Webhook ngân hàng xác nhận: +${amount.toLocaleString('vi-VN')}đ vào ví!`, 'success');
+              showToast(`ðŸŽ‰ Webhook ngÃ¢n hÃ ng xÃ¡c nháº­n: +${amount.toLocaleString('vi-VN')}Ä‘ vÃ o vÃ­!`, 'success');
             }
           } catch {}
-          if (tries >= 30) clearInterval(timer); // dừng sau ~5 phút
+          if (tries >= 30) clearInterval(timer); // dá»«ng sau ~5 phÃºt
         }, 10000);
       } catch {}
     })();
 
-    // ⚠️ KHÔNG còn "auto credit simulator" phía client — tiền chỉ được cộng khi
-    // webhook/cron THUEAPIBANK xác nhận giao dịch THẬT trên server (RPC cộng
-    // ví + ghi ledger trong 1 DB transaction). Polling phía trên sẽ tự cập nhật
-    // số dư hiển thị theo nguồn thật khi topup được duyệt.
+    // âš ï¸ KHÃ”NG cÃ²n "auto credit simulator" phÃ­a client â€” tiá»n chá»‰ Ä‘Æ°á»£c cá»™ng khi
+    // webhook/cron THUEAPIBANK xÃ¡c nháº­n giao dá»‹ch THáº¬T trÃªn server (RPC cá»™ng
+    // vÃ­ + ghi ledger trong 1 DB transaction). Polling phÃ­a trÃªn sáº½ tá»± cáº­p nháº­t
+    // sá»‘ dÆ° hiá»ƒn thá»‹ theo nguá»“n tháº­t khi topup Ä‘Æ°á»£c duyá»‡t.
     showToast(
-      `Đã tạo yêu cầu nạp ${amount.toLocaleString('vi-VN')}đ (${newTopup.transferNote}). Chuyển khoản đúng nội dung — hệ thống tự động cộng ví khi ngân hàng xác nhận.`,
+      `ÄÃ£ táº¡o yÃªu cáº§u náº¡p ${amount.toLocaleString('vi-VN')}Ä‘ (${newTopup.transferNote}). Chuyá»ƒn khoáº£n Ä‘Ãºng ná»™i dung â€” há»‡ thá»‘ng tá»± Ä‘á»™ng cá»™ng vÃ­ khi ngÃ¢n hÃ ng xÃ¡c nháº­n.`,
       'info'
     );
     return generatedCode;
   };
 
-  // Card Recharge (Nạp thẻ cào) Actions
+  // Card Recharge (Náº¡p tháº» cÃ o) Actions
   const createCardRecharge = (
     network: CardNetwork,
     declaredAmount: number,
@@ -2041,11 +2079,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     pin: string
   ): { success: boolean; message: string } => {
     if (!isAuthenticated) {
-      return { success: false, message: 'Vui lòng đăng nhập tài khoản trước khi nạp thẻ!' };
+      return { success: false, message: 'Vui lÃ²ng Ä‘Äƒng nháº­p tÃ i khoáº£n trÆ°á»›c khi náº¡p tháº»!' };
     }
 
     if (!serial.trim() || !pin.trim()) {
-      return { success: false, message: 'Vui lòng nhập đầy đủ số Serial và Mã thẻ (PIN)!' };
+      return { success: false, message: 'Vui lÃ²ng nháº­p Ä‘áº§y Ä‘á»§ sá»‘ Serial vÃ  MÃ£ tháº» (PIN)!' };
     }
 
     const fee = settings.cardSettings?.feePercentage ?? 15;
@@ -2072,17 +2110,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setNotifications((prev) => [
       {
         id: 'notif-' + Date.now(),
-        title: `Nạp thẻ cào mới ${cardCode}`,
-        description: `${currentUser.username} nạp thẻ ${network} ${declaredAmount.toLocaleString('vi-VN')}đ (Thực nhận: ${receivedAmount.toLocaleString('vi-VN')}đ)`,
-        time: 'Vừa xong',
+        title: `Náº¡p tháº» cÃ o má»›i ${cardCode}`,
+        description: `${currentUser.username} náº¡p tháº» ${network} ${declaredAmount.toLocaleString('vi-VN')}Ä‘ (Thá»±c nháº­n: ${receivedAmount.toLocaleString('vi-VN')}Ä‘)`,
+        time: 'Vá»«a xong',
         read: false,
         type: 'card',
       },
       ...prev,
     ]);
 
-    showToast(`Đã gửi thẻ cào ${network} ${declaredAmount.toLocaleString('vi-VN')}đ lên hệ thống xử lý!`, 'success');
-    return { success: true, message: `Thẻ cào ${cardCode} đã được ghi nhận và đang được kiểm tra.` };
+    showToast(`ÄÃ£ gá»­i tháº» cÃ o ${network} ${declaredAmount.toLocaleString('vi-VN')}Ä‘ lÃªn há»‡ thá»‘ng xá»­ lÃ½!`, 'success');
+    return { success: true, message: `Tháº» cÃ o ${cardCode} Ä‘Ã£ Ä‘Æ°á»£c ghi nháº­n vÃ  Ä‘ang Ä‘Æ°á»£c kiá»ƒm tra.` };
   };
 
   const approveCardRecharge = (id: string) => {
@@ -2108,7 +2146,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       type: 'card_recharge',
       userId: card.userId,
       userName: card.userName,
-      description: `Nạp thẻ cào ${card.network} ${card.declaredAmount.toLocaleString('vi-VN')}đ thành công (+${card.receivedAmount.toLocaleString('vi-VN')}đ vào ví)`,
+      description: `Náº¡p tháº» cÃ o ${card.network} ${card.declaredAmount.toLocaleString('vi-VN')}Ä‘ thÃ nh cÃ´ng (+${card.receivedAmount.toLocaleString('vi-VN')}Ä‘ vÃ o vÃ­)`,
       amount: card.receivedAmount,
       balanceAfter: newBalance,
       createdAt: nowStr,
@@ -2116,7 +2154,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
     setTransactions((prev) => [newTx, ...prev]);
 
-    showToast(`Đã duyệt thẻ cào ${card.code} và cộng ${card.receivedAmount.toLocaleString('vi-VN')}đ vào ví khách hàng ${card.userName}!`, 'success');
+    showToast(`ÄÃ£ duyá»‡t tháº» cÃ o ${card.code} vÃ  cá»™ng ${card.receivedAmount.toLocaleString('vi-VN')}Ä‘ vÃ o vÃ­ khÃ¡ch hÃ ng ${card.userName}!`, 'success');
   };
 
   const rejectCardRecharge = (id: string, reason: string) => {
@@ -2126,21 +2164,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         c.id === id ? { ...c, status: 'invalid', processedAt: nowStr, note: reason } : c
       )
     );
-    showToast('Đã từ chối thẻ cào không hợp lệ', 'info');
+    showToast('ÄÃ£ tá»« chá»‘i tháº» cÃ o khÃ´ng há»£p lá»‡', 'info');
   };
 
   // Seller Program Actions
   const applySeller = (note?: string): { success: boolean; message: string } => {
     if (!isAuthenticated) {
-      return { success: false, message: 'Vui lòng đăng nhập để đăng ký trở thành Đại Lý / Seller!' };
+      return { success: false, message: 'Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ Ä‘Äƒng kÃ½ trá»Ÿ thÃ nh Äáº¡i LÃ½ / Seller!' };
     }
 
     if (currentUser.sellerStatus === 'approved') {
-      return { success: false, message: 'Bạn đã là Đại Lý / Seller của Thanox!' };
+      return { success: false, message: 'Báº¡n Ä‘Ã£ lÃ  Äáº¡i LÃ½ / Seller cá»§a Thanox!' };
     }
 
     if (currentUser.sellerStatus === 'pending') {
-      return { success: false, message: 'Yêu cầu đăng ký Đại Lý của bạn đang chờ Admin phê duyệt!' };
+      return { success: false, message: 'YÃªu cáº§u Ä‘Äƒng kÃ½ Äáº¡i LÃ½ cá»§a báº¡n Ä‘ang chá» Admin phÃª duyá»‡t!' };
     }
 
     const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
@@ -2151,7 +2189,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           ? {
               ...u,
               sellerStatus: 'pending',
-              sellerNote: note || 'Đăng ký chương trình Đại Lý Thanox',
+              sellerNote: note || 'ÄÄƒng kÃ½ chÆ°Æ¡ng trÃ¬nh Äáº¡i LÃ½ Thanox',
               sellerAppliedAt: nowStr,
             }
           : u
@@ -2161,17 +2199,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setNotifications((prev) => [
       {
         id: 'notif-' + Date.now(),
-        title: 'Đăng ký Đại Lý / Seller mới',
-        description: `Thành viên ${currentUser.username} vừa đăng ký trở thành Đại Lý / CTV`,
-        time: 'Vừa xong',
+        title: 'ÄÄƒng kÃ½ Äáº¡i LÃ½ / Seller má»›i',
+        description: `ThÃ nh viÃªn ${currentUser.username} vá»«a Ä‘Äƒng kÃ½ trá»Ÿ thÃ nh Äáº¡i LÃ½ / CTV`,
+        time: 'Vá»«a xong',
         read: false,
         type: 'seller',
       },
       ...prev,
     ]);
 
-    showToast('Đã gửi yêu cầu đăng ký Đại Lý! Admin sẽ duyệt tài khoản của bạn sớm nhất.', 'success');
-    return { success: true, message: 'Đăng ký thành công, vui lòng chờ duyệt!' };
+    showToast('ÄÃ£ gá»­i yÃªu cáº§u Ä‘Äƒng kÃ½ Äáº¡i LÃ½! Admin sáº½ duyá»‡t tÃ i khoáº£n cá»§a báº¡n sá»›m nháº¥t.', 'success');
+    return { success: true, message: 'ÄÄƒng kÃ½ thÃ nh cÃ´ng, vui lÃ²ng chá» duyá»‡t!' };
   };
 
   const updateSellerStatus = (userId: string, status: SellerStatus, note?: string) => {
@@ -2189,22 +2227,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           : u
       )
     );
-    showToast(`Đã cập nhật trạng thái Đại Lý của tài khoản sang "${status}"`, 'info');
+    showToast(`ÄÃ£ cáº­p nháº­t tráº¡ng thÃ¡i Äáº¡i LÃ½ cá»§a tÃ i khoáº£n sang "${status}"`, 'info');
   };
 
   // Auth Operations
   const login = async (identifier: string, password: string, _rememberMe = true): Promise<{ success: boolean; message?: string }> => {
     const cleanId = identifier.trim().toLowerCase();
-    if (!cleanId) return { success: false, message: 'Vui lòng nhập tên đăng nhập hoặc email' };
+    if (!cleanId) return { success: false, message: 'Vui lÃ²ng nháº­p tÃªn Ä‘Äƒng nháº­p hoáº·c email' };
 
-    // === CHỐNG DÒ MẬT KHẨU (brute force): 5 lần sai liên tiếp => khóa 5 phút ===
+    // === CHá»NG DÃ’ Máº¬T KHáº¨U (brute force): 5 láº§n sai liÃªn tiáº¿p => khÃ³a 5 phÃºt ===
     try {
       const raw = localStorage.getItem('thanox_login_guard');
       if (raw) {
         const guard = JSON.parse(raw) as { fails: number; lockedUntil?: number };
         if (guard.lockedUntil && Date.now() < guard.lockedUntil) {
           const secs = Math.ceil((guard.lockedUntil - Date.now()) / 1000);
-          return { success: false, message: `Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau ${secs} giây.` };
+          return { success: false, message: `Báº¡n Ä‘Ã£ nháº­p sai quÃ¡ nhiá»u láº§n. Vui lÃ²ng thá»­ láº¡i sau ${secs} giÃ¢y.` };
         }
       }
     } catch {}
@@ -2230,7 +2268,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           targetEmail = profile.email;
         } else {
           const g = recordLoginFail();
-          return { success: false, message: g.lockedUntil ? 'Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau 5 phút.' : `Sai tài khoản hoặc mật khẩu. (Còn ${5 - g.fails} lần thử)` };
+          return { success: false, message: g.lockedUntil ? 'Báº¡n Ä‘Ã£ nháº­p sai quÃ¡ nhiá»u láº§n. Vui lÃ²ng thá»­ láº¡i sau 5 phÃºt.' : `Sai tÃ i khoáº£n hoáº·c máº­t kháº©u. (CÃ²n ${5 - g.fails} láº§n thá»­)` };
         }
       }
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -2240,16 +2278,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (authError || !authData.user) {
         const g = recordLoginFail();
         if (g.lockedUntil) {
-          return { success: false, message: 'Bạn đã nhập sai quá nhiều lần. Tài khoản bị khóa tạm 5 phút.' };
+          return { success: false, message: 'Báº¡n Ä‘Ã£ nháº­p sai quÃ¡ nhiá»u láº§n. TÃ i khoáº£n bá»‹ khÃ³a táº¡m 5 phÃºt.' };
         }
         // Give users an actionable message for unconfirmed emails instead of a generic one
         if (authError?.message?.toLowerCase().includes('email not confirmed')) {
-          return { success: false, message: 'Tài khoản chưa xác nhận email. Vui lòng kiểm tra hộp thư (cả mục Spam) và bấm link kích hoạt.' };
+          return { success: false, message: 'TÃ i khoáº£n chÆ°a xÃ¡c nháº­n email. Vui lÃ²ng kiá»ƒm tra há»™p thÆ° (cáº£ má»¥c Spam) vÃ  báº¥m link kÃ­ch hoáº¡t.' };
         }
-        return { success: false, message: `Sai tài khoản hoặc mật khẩu. (Còn ${5 - g.fails} lần thử)` };
+        return { success: false, message: `Sai tÃ i khoáº£n hoáº·c máº­t kháº©u. (CÃ²n ${5 - g.fails} láº§n thá»­)` };
       }
 
-      // Đăng nhập thành công => xóa bộ đếm sai
+      // ÄÄƒng nháº­p thÃ nh cÃ´ng => xÃ³a bá»™ Ä‘áº¿m sai
       try {
         localStorage.removeItem('thanox_login_guard');
       } catch {}
@@ -2280,20 +2318,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       return { success: true };
     } catch (err) {
-      return { success: false, message: 'Lỗi máy chủ, vui lòng thử lại.' };
+      return { success: false, message: 'Lá»—i mÃ¡y chá»§, vui lÃ²ng thá»­ láº¡i.' };
     }
   };
 
   const register = async (username: string, email: string, password: string): Promise<{ success: boolean; message?: string }> => {
     const cleanUsername = username.trim();
     const cleanEmail = email.trim().toLowerCase();
-    if (!cleanUsername || cleanUsername.length < 3) return { success: false, message: 'Tên đăng nhập phải có ít nhất 3 ký tự.' };
-    if (!/^[a-zA-Z0-9_]+$/.test(cleanUsername)) return { success: false, message: 'Tên đăng nhập chỉ bao gồm chữ cái, số và dấu gạch dưới (_).' };
-    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) return { success: false, message: 'Địa chỉ email không hợp lệ.' };
-    if (!password || password.length < 6) return { success: false, message: 'Mật khẩu phải có ít nhất 6 ký tự.' };
+    if (!cleanUsername || cleanUsername.length < 3) return { success: false, message: 'TÃªn Ä‘Äƒng nháº­p pháº£i cÃ³ Ã­t nháº¥t 3 kÃ½ tá»±.' };
+    if (!/^[a-zA-Z0-9_]+$/.test(cleanUsername)) return { success: false, message: 'TÃªn Ä‘Äƒng nháº­p chá»‰ bao gá»“m chá»¯ cÃ¡i, sá»‘ vÃ  dáº¥u gáº¡ch dÆ°á»›i (_).' };
+    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) return { success: false, message: 'Äá»‹a chá»‰ email khÃ´ng há»£p lá»‡.' };
+    if (!password || password.length < 6) return { success: false, message: 'Máº­t kháº©u pháº£i cÃ³ Ã­t nháº¥t 6 kÃ½ tá»±.' };
     try {
       const { data: existingUser } = await supabase.from('profiles').select('username').eq('username', cleanUsername).single();
-      if (existingUser) return { success: false, message: 'Tên đăng nhập đã được sử dụng.' };
+      if (existingUser) return { success: false, message: 'TÃªn Ä‘Äƒng nháº­p Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng.' };
       
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: cleanEmail,
@@ -2301,16 +2339,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         options: { data: { username: cleanUsername } }
       });
       if (authError) {
-        let msg = 'Đăng ký không thành công.';
+        let msg = 'ÄÄƒng kÃ½ khÃ´ng thÃ nh cÃ´ng.';
         const m = authError.message.toLowerCase();
         if (m.includes('already registered') || m.includes('already been registered')) {
-          msg = 'Email này đã được sử dụng.';
+          msg = 'Email nÃ y Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng.';
         } else if (m.includes('rate limit')) {
-          msg = 'Bạn đã đăng ký quá nhiều lần. Vui lòng thử lại sau ít phút.';
+          msg = 'Báº¡n Ä‘Ã£ Ä‘Äƒng kÃ½ quÃ¡ nhiá»u láº§n. Vui lÃ²ng thá»­ láº¡i sau Ã­t phÃºt.';
         }
         return { success: false, message: msg };
       }
-      // Thêm user mới vào local state ngay lập tức để hiển thị trong admin panel
+      // ThÃªm user má»›i vÃ o local state ngay láº­p tá»©c Ä‘á»ƒ hiá»ƒn thá»‹ trong admin panel
       if (authData.user) {
         const newUser: User = {
           id: authData.user.id,
@@ -2331,54 +2369,54 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           return [...prev, newUser];
         });
       }
-      showToast('Đăng ký tài khoản thành công! Vui lòng kiểm tra email để kích hoạt tài khoản trước khi đăng nhập.', 'success');
+      showToast('ÄÄƒng kÃ½ tÃ i khoáº£n thÃ nh cÃ´ng! Vui lÃ²ng kiá»ƒm tra email Ä‘á»ƒ kÃ­ch hoáº¡t tÃ i khoáº£n trÆ°á»›c khi Ä‘Äƒng nháº­p.', 'success');
       return { success: true };
     } catch (err) {
-      return { success: false, message: 'Đã xảy ra lỗi kết nối. Vui lòng thử lại sau.' };
+      return { success: false, message: 'ÄÃ£ xáº£y ra lá»—i káº¿t ná»‘i. Vui lÃ²ng thá»­ láº¡i sau.' };
     }
   };
 
   const logout = async () => {
     await supabase.auth.signOut();
     setCurrentUserId(null);
-    showToast('Đã đăng xuất khỏi hệ thống', 'info');
+    showToast('ÄÃ£ Ä‘Äƒng xuáº¥t khá»i há»‡ thá»‘ng', 'info');
   };
 
   // Forgot Password: Email normalization & OTP generation
   const requestPasswordReset = async (email: string): Promise<{ success: boolean; message?: string; otp?: string }> => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email);
-      if (error) return { success: false, message: 'Lỗi khi gửi email xác thực.' };
-      return { success: true, message: 'Đã gửi email khôi phục mật khẩu.' };
+      if (error) return { success: false, message: 'Lá»—i khi gá»­i email xÃ¡c thá»±c.' };
+      return { success: true, message: 'ÄÃ£ gá»­i email khÃ´i phá»¥c máº­t kháº©u.' };
     } catch (err) {
-      return { success: false, message: 'Lỗi máy chủ.' };
+      return { success: false, message: 'Lá»—i mÃ¡y chá»§.' };
     }
   };
 
   const resetPassword = async (email: string, otpOrToken: string, newPassword: string): Promise<{ success: boolean; message?: string }> => {
     try {
       const { error } = await supabase.auth.verifyOtp({ email, token: otpOrToken, type: 'recovery' });
-      if (error) return { success: false, message: 'Mã xác thực không hợp lệ.' };
+      if (error) return { success: false, message: 'MÃ£ xÃ¡c thá»±c khÃ´ng há»£p lá»‡.' };
       const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
-      if (updateError) return { success: false, message: 'Không thể cập nhật mật khẩu.' };
+      if (updateError) return { success: false, message: 'KhÃ´ng thá»ƒ cáº­p nháº­t máº­t kháº©u.' };
       return { success: true };
     } catch (err) {
-      return { success: false, message: 'Lỗi máy chủ.' };
+      return { success: false, message: 'Lá»—i mÃ¡y chá»§.' };
     }
   };
 
   // Admin Direct Password Reset for Customer Assistance
   const adminResetPassword = async (userId: string, newPass: string): Promise<{ success: boolean; message: string }> => {
     if (!newPass || newPass.length < 6) {
-      return { success: false, message: 'Mật khẩu mới phải có ít nhất 6 ký tự!' };
+      return { success: false, message: 'Máº­t kháº©u má»›i pháº£i cÃ³ Ã­t nháº¥t 6 kÃ½ tá»±!' };
     }
 
     setUsers((prev) =>
       prev.map((u) => (u.id === userId ? { ...u, password: newPass } : u))
     );
 
-    showToast('Đã đặt lại mật khẩu mới cho tài khoản khách hàng thành công!', 'success');
-    return { success: true, message: 'Mật khẩu đã được cập nhật.' };
+    showToast('ÄÃ£ Ä‘áº·t láº¡i máº­t kháº©u má»›i cho tÃ i khoáº£n khÃ¡ch hÃ ng thÃ nh cÃ´ng!', 'success');
+    return { success: true, message: 'Máº­t kháº©u Ä‘Ã£ Ä‘Æ°á»£c cáº­p nháº­t.' };
   };
 
   const updateUserProfile = (updates: Partial<User>) => {
@@ -2386,7 +2424,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setUsers((prev) =>
       prev.map((u) => (u.id === currentUser.id ? { ...u, ...updates } : u))
     );
-    showToast('Đã cập nhật hồ sơ cá nhân thành công!', 'success');
+    showToast('ÄÃ£ cáº­p nháº­t há»“ sÆ¡ cÃ¡ nhÃ¢n thÃ nh cÃ´ng!', 'success');
   };
 
   // User Actions
@@ -2410,10 +2448,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (legacyErr) throw legacyErr;
         }
       }
-      showToast('Đã cập nhật thông tin người dùng trên Cloud', 'success');
+      showToast('ÄÃ£ cáº­p nháº­t thÃ´ng tin ngÆ°á»i dÃ¹ng trÃªn Cloud', 'success');
     } catch (e) {
       console.error(e);
-      showToast('Lỗi khi cập nhật trên Cloud', 'error');
+      showToast('Lá»—i khi cáº­p nháº­t trÃªn Cloud', 'error');
     }
   };
 
@@ -2421,7 +2459,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const target = users.find((u) => u.id === id);
     if (!target) return;
     if (target.role === 'admin' || target.username === 'admin') {
-      showToast('Không thể xóa tài khoản Quản trị viên Master (Super Admin)', 'error');
+      showToast('KhÃ´ng thá»ƒ xÃ³a tÃ i khoáº£n Quáº£n trá»‹ viÃªn Master (Super Admin)', 'error');
       return;
     }
     setUsers((prev) => prev.filter((u) => u.id !== id));
@@ -2433,10 +2471,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const { error: legacyErr } = await supabase.from('users').delete().eq('id', id);
         if (legacyErr) throw legacyErr;
       }
-      showToast(`Đã xóa tài khoản ${target.username} trên Cloud thành công`, 'success');
+      showToast(`ÄÃ£ xÃ³a tÃ i khoáº£n ${target.username} trÃªn Cloud thÃ nh cÃ´ng`, 'success');
     } catch (e) {
       console.error(e);
-      showToast('Lỗi khi xóa tài khoản trên Cloud', 'error');
+      showToast('Lá»—i khi xÃ³a tÃ i khoáº£n trÃªn Cloud', 'error');
     }
   };
 
@@ -2444,8 +2482,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const targetUser = users.find((u) => u.id === userId);
     if (!targetUser) return;
 
-    // SERVER-SIDE: RPC admin_adjust_balance — cộng đúng bảng profiles (số dư thật),
-    // khóa dòng, ghi ledger + audit_log. KHÔNG sửa balance trực tiếp ở client.
+    // SERVER-SIDE: RPC admin_adjust_balance â€” cá»™ng Ä‘Ãºng báº£ng profiles (sá»‘ dÆ° tháº­t),
+    // khÃ³a dÃ²ng, ghi ledger + audit_log. KHÃ”NG sá»­a balance trá»±c tiáº¿p á»Ÿ client.
     try {
       const { data, error } = await supabase.rpc('admin_adjust_balance', {
         p_user_id: userId,
@@ -2455,7 +2493,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (error) throw error;
       const r = data as { status?: string; code?: string; balance?: number } | null;
       if (r?.status !== 'success') {
-        showToast(r?.code === 'FORBIDDEN' ? 'Bạn không có quyền điều chỉnh số dư!' : 'Không thể điều chỉnh số dư (' + (r?.code || 'lỗi') + ')', 'error');
+        showToast(r?.code === 'FORBIDDEN' ? 'Báº¡n khÃ´ng cÃ³ quyá»n Ä‘iá»u chá»‰nh sá»‘ dÆ°!' : 'KhÃ´ng thá»ƒ Ä‘iá»u chá»‰nh sá»‘ dÆ° (' + (r?.code || 'lá»—i') + ')', 'error');
         return;
       }
       const newBalance = Number(r.balance ?? 0);
@@ -2466,7 +2504,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         type: amount >= 0 ? 'deposit' : 'withdraw',
         userId: targetUser.id,
         userName: targetUser.username,
-        description: `Điều chỉnh số dư bởi Admin (${note || 'Thao tác thủ công'})`,
+        description: `Äiá»u chá»‰nh sá»‘ dÆ° bá»Ÿi Admin (${note || 'Thao tÃ¡c thá»§ cÃ´ng'})`,
         amount,
         balanceAfter: newBalance,
         createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
@@ -2474,17 +2512,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
       setTransactions((prev) => [newTx, ...prev]);
       showToast(
-        `Đã ${amount >= 0 ? 'cộng' : 'trừ'} ${Math.abs(amount).toLocaleString('vi-VN')}đ vào ví của ${targetUser.username} (số dư mới: ${newBalance.toLocaleString('vi-VN')}đ)`,
+        `ÄÃ£ ${amount >= 0 ? 'cá»™ng' : 'trá»«'} ${Math.abs(amount).toLocaleString('vi-VN')}Ä‘ vÃ o vÃ­ cá»§a ${targetUser.username} (sá»‘ dÆ° má»›i: ${newBalance.toLocaleString('vi-VN')}Ä‘)`,
         'success'
       );
     } catch (e) {
       console.error(e);
-      showToast('Lỗi điều chỉnh số dư (server)', 'error');
+      showToast('Lá»—i Ä‘iá»u chá»‰nh sá»‘ dÆ° (server)', 'error');
     }
   };
 
-  // ADMIN HOÀN TIỀN ĐƠN CLOUD — RPC admin_refund_order: cộng lại ví đúng 1 lần,
-  // đơn -> refunded, ledger REFUND + audit. KHÔNG sửa lịch sử gốc.
+  // ADMIN HOÃ€N TIá»€N ÄÆ N CLOUD â€” RPC admin_refund_order: cá»™ng láº¡i vÃ­ Ä‘Ãºng 1 láº§n,
+  // Ä‘Æ¡n -> refunded, ledger REFUND + audit. KHÃ”NG sá»­a lá»‹ch sá»­ gá»‘c.
   const refundOrder = async (orderId: string, reason: string): Promise<boolean> => {
     try {
       const { data, error } = await supabase.rpc('admin_refund_order', {
@@ -2495,19 +2533,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const r = data as { status?: string; code?: string; refunded?: number } | null;
       if (r?.status !== 'success') {
         showToast(
-          r?.code === 'ALREADY_REFUNDED' ? 'Đơn này đã được hoàn tiền trước đó!' :
-          r?.code === 'NOT_REFUNDABLE' ? 'Chỉ hoàn tiền được đơn đã hoàn thành!' :
-          r?.code === 'FORBIDDEN' ? 'Bạn không có quyền hoàn tiền!' : 'Không thể hoàn tiền (' + (r?.code || 'lỗi') + ')',
+          r?.code === 'ALREADY_REFUNDED' ? 'ÄÆ¡n nÃ y Ä‘Ã£ Ä‘Æ°á»£c hoÃ n tiá»n trÆ°á»›c Ä‘Ã³!' :
+          r?.code === 'NOT_REFUNDABLE' ? 'Chá»‰ hoÃ n tiá»n Ä‘Æ°á»£c Ä‘Æ¡n Ä‘Ã£ hoÃ n thÃ nh!' :
+          r?.code === 'FORBIDDEN' ? 'Báº¡n khÃ´ng cÃ³ quyá»n hoÃ n tiá»n!' : 'KhÃ´ng thá»ƒ hoÃ n tiá»n (' + (r?.code || 'lá»—i') + ')',
           'error'
         );
         return false;
       }
       setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: 'refunded' as const } : o)));
-      showToast(`✅ Đã hoàn ${(r.refunded ?? 0).toLocaleString('vi-VN')}đ vào ví khách (ledger REFUND + audit đã ghi)`, 'success');
+      showToast(`âœ… ÄÃ£ hoÃ n ${(r.refunded ?? 0).toLocaleString('vi-VN')}Ä‘ vÃ o vÃ­ khÃ¡ch (ledger REFUND + audit Ä‘Ã£ ghi)`, 'success');
       return true;
     } catch (e) {
       console.error(e);
-      showToast('Lỗi hoàn tiền (server)', 'error');
+      showToast('Lá»—i hoÃ n tiá»n (server)', 'error');
       return false;
     }
   };
@@ -2525,10 +2563,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const { error: legacyErr } = await supabase.from('users').update({ status: newStatus }).eq('id', id);
         if (legacyErr) throw legacyErr;
       }
-      showToast(`Đã ${newStatus === 'banned' ? 'khóa' : 'mở khóa'} tài khoản ${user.username} trên Cloud`, newStatus === 'banned' ? 'error' : 'success');
+      showToast(`ÄÃ£ ${newStatus === 'banned' ? 'khÃ³a' : 'má»Ÿ khÃ³a'} tÃ i khoáº£n ${user.username} trÃªn Cloud`, newStatus === 'banned' ? 'error' : 'success');
     } catch (e) {
       console.error(e);
-      showToast('Lỗi cập nhật trạng thái lên Cloud', 'error');
+      showToast('Lá»—i cáº­p nháº­t tráº¡ng thÃ¡i lÃªn Cloud', 'error');
     }
   };
 
@@ -2538,7 +2576,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const newMsg = {
       id: 'm-' + Date.now(),
       sender,
-      senderName: sender === 'admin' ? 'Thanox Admin' : (currentUser?.username || 'Khách hàng'),
+      senderName: sender === 'admin' ? 'Thanox Admin' : (currentUser?.username || 'KhÃ¡ch hÃ ng'),
       message,
       time: timeNow,
     };
@@ -2556,13 +2594,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     if (sender === 'admin') {
-      showToast('Đã gửi phản hồi tới khách hàng', 'success');
+      showToast('ÄÃ£ gá»­i pháº£n há»“i tá»›i khÃ¡ch hÃ ng', 'success');
     }
   };
 
   const updateTicketStatus = (ticketId: string, status: SupportTicket['status']) => {
     setTickets((prev) => prev.map((t) => (t.id === ticketId ? { ...t, status } : t)));
-    showToast(`Đã cập nhật trạng thái ticket sang "${status}"`, 'info');
+    showToast(`ÄÃ£ cáº­p nháº­t tráº¡ng thÃ¡i ticket sang "${status}"`, 'info');
   };
 
   const createSupportTicket = (subject: string, category: string, message: string, relatedOrderCode?: string) => {
@@ -2596,21 +2634,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setNotifications((prev) => [
       {
         id: 'notif-' + Date.now(),
-        title: `Ticket mới ${newTicket.ticketNumber}`,
+        title: `Ticket má»›i ${newTicket.ticketNumber}`,
         description: `${buyer.username}: ${subject}`,
-        time: 'Vừa xong',
+        time: 'Vá»«a xong',
         read: false,
         type: 'ticket',
       },
       ...prev,
     ]);
 
-    showToast(`Đã gửi yêu cầu hỗ trợ "${newTicket.ticketNumber}"`, 'success');
+    showToast(`ÄÃ£ gá»­i yÃªu cáº§u há»— trá»£ "${newTicket.ticketNumber}"`, 'success');
     return newTicket.id;
   };
 
   const createTicket = (subject: string, message: string): string => {
-    return createSupportTicket(subject, 'Hỗ trợ kỹ thuật', message);
+    return createSupportTicket(subject, 'Há»— trá»£ ká»¹ thuáº­t', message);
   };
 
   const addTicketMessage = (ticketId: string, message: string) => {
@@ -2643,7 +2681,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         );
       return updated;
     });
-    showToast('Đã lưu cấu hình hệ thống thành công', 'success');
+    showToast('ÄÃ£ lÆ°u cáº¥u hÃ¬nh há»‡ thá»‘ng thÃ nh cÃ´ng', 'success');
   };
 
   const markNotificationRead = (id: string) => {
@@ -2652,7 +2690,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const markAllNotificationsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    showToast('Đã đánh dấu đọc tất cả thông báo', 'info');
+    showToast('ÄÃ£ Ä‘Ã¡nh dáº¥u Ä‘á»c táº¥t cáº£ thÃ´ng bÃ¡o', 'info');
   };
 
   const resetToDefaultData = () => {
@@ -2668,7 +2706,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setTickets(INITIAL_TICKETS);
     setSettings(INITIAL_SETTINGS);
     setNotifications([]);
-    showToast('Đã đặt lại dữ liệu mẫu (đã bảo vệ các sản phẩm đang KHÓA)!', 'success');
+    showToast('ÄÃ£ Ä‘áº·t láº¡i dá»¯ liá»‡u máº«u (Ä‘Ã£ báº£o vá»‡ cÃ¡c sáº£n pháº©m Ä‘ang KHÃ“A)!', 'success');
   };
 
   const resetToZeroData = () => {
@@ -2683,7 +2721,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setAffiliateRewards([]);
     setTickets([]);
     setNotifications([]);
-    showToast('Đã xóa trắng toàn bộ dữ liệu mẫu!', 'warning');
+    showToast('ÄÃ£ xÃ³a tráº¯ng toÃ n bá»™ dá»¯ liá»‡u máº«u!', 'warning');
   };
 
   return (
@@ -2784,5 +2822,7 @@ export const useStore = () => {
   }
   return context;
 };
+
+
 
 
