@@ -1,34 +1,91 @@
 import { createClient } from '@supabase/supabase-js';
-import {
-  isProviderPayload,
-  normalizeTransactionList,
-  getHistoryUrl,
-  safeEqual,
-  HISTORY_TIMEOUT_MS,
-} from '../_lib/payment';
 
 /**
  * THUEAPIBANK RECONCILIATION (đối soát khi webhook bị mất)
- * GET /api/cron/reconcile-thueapibank
+ * GET /api/cron/reconcile-thueapibank  (cũng nhận POST để trigger tay)
  *
- * Auth: Vercel Cron tự gửi `Authorization: Bearer $CRON_SECRET`.
- *       Fail-closed: chưa cấu hình CRON_SECRET → từ chối (401).
- * Flow: GET https://thueapibank.vn/historyapimbv2/{THUEAPI_MB_TOKEN}
- *   → validate schema → với mỗi giao dịch IN hợp lệ gọi RPC process_bank_webhook
- *   (cùng đường với webhook → giao dịch đã xử lý tự bị ignore — idempotent,
- *    webhook + cron cùng TX = ĐÚNG MỘT credit).
+ * Auth: Vercel Cron tự gửi `Authorization: Bearer $CRON_SECRET`. FAIL-CLOSED:
+ * chưa cấu hình CRON_SECRET → 401.
+ *
+ * Flow (ĐÚNG SPEC, không đoán):
+ *   GET https://thueapibank.vn/historyapimbv2/{THUEAPI_MB_TOKEN}
+ *   → { status:'success', transactions:[{ type:'IN', transactionID, amount:'50000',
+ *       description, transactionDate:'14/01/2026' }] }
+ *   → validate schema → mỗi TX IN hợp lệ gọi cùng RPC `process_bank_webhook`
+ *     như webhook → giao dịch đã xử lý tự bị ignore (idempotent):
+ *     webhook + cron cùng TX = ĐÚNG MỘT credit.
+ *
+ * Lưu ý deploy: KHÔNG import module ngoài thư mục này (giải thích ở mbbank.ts).
+ * Logic parse giữ ĐỒNG BỘ với api/webhook/mbbank.ts và api/_lib/payment.test.ts.
  */
 
 interface VercelRequest {
   method?: string;
   headers: Record<string, string | string[] | undefined>;
-  body?: any;
-  query?: Record<string, any>;
 }
 
 interface VercelResponse {
   status(code: number): { json(data: unknown): void };
 }
+
+// ===== Shared THUEAPIBANK utilities (inline — mirror of api/_lib/payment.ts) =====
+interface ThueTx {
+  type?: string;
+  transactionID?: string | number;
+  amount?: string | number;
+  description?: string;
+  transactionDate?: string;
+}
+interface NormalizedTx {
+  transactionId: string;
+  amount: number;
+  description: string;
+  transferTime: string;
+}
+
+const HISTORY_TIMEOUT_MS = 10_000;
+
+const safeEqual = (a: string, b: string): boolean => {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+};
+
+const parseVietnamDate = (raw?: string): string => {
+  if (!raw) return new Date().toISOString();
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(raw.trim());
+  if (!m) {
+    const asIso = new Date(raw).getTime();
+    return Number.isFinite(asIso) ? new Date(asIso).toISOString() : new Date().toISOString();
+  }
+  const date = new Date(Date.UTC(Number(m[3]), Number(m[2]) - 1, Number(m[1]), 7, 0, 0));
+  return Number.isFinite(date.getTime()) ? date.toISOString() : new Date().toISOString();
+};
+
+const normalizeTransaction = (tx: ThueTx): NormalizedTx | null => {
+  if (!tx || typeof tx !== 'object') return null;
+  if (tx.type !== undefined && tx.type !== 'IN') return null;
+  const transactionId = tx.transactionID === undefined ? '' : String(tx.transactionID).trim();
+  if (!transactionId || transactionId.length > 100) return null;
+  const amountNum = typeof tx.amount === 'number' ? tx.amount : Number(String(tx.amount ?? '').replace(/[,\s]/g, ''));
+  if (!Number.isFinite(amountNum) || amountNum <= 0 || amountNum > 1_000_000_000) return null;
+  const description = String(tx.description ?? '').trim();
+  if (!description) return null;
+  return {
+    transactionId,
+    amount: Math.round(amountNum),
+    description: description.slice(0, 500),
+    transferTime: parseVietnamDate(tx.transactionDate),
+  };
+};
+
+const isProviderPayload = (payload: unknown): payload is { transactions: ThueTx[] } => {
+  if (!payload || typeof payload !== 'object') return false;
+  const p = payload as { status?: unknown; transactions?: unknown };
+  return p.status === 'success' && Array.isArray(p.transactions);
+};
+// ===== End shared utilities =====
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET' && req.method !== 'POST') {
@@ -54,10 +111,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // 1. Gọi GET history đúng spec, có timeout — không treo vô hạn
+    const base = process.env.THUEAPIBANK_HISTORY_URL || 'https://thueapibank.vn/historyapimbv2';
+    const historyUrl = `${base}/${token}`;
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), HISTORY_TIMEOUT_MS);
-    const historyUrl = getHistoryUrl();
     const response = await fetch(historyUrl, {
       method: 'GET',
       signal: controller.signal,
@@ -65,23 +123,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }).finally(() => clearTimeout(timeout));
 
     if (!response.ok) {
-      return res.status(502).json({
-        success: false,
-        error: { code: 'PROVIDER_UNAVAILABLE', detail: `history HTTP ${response.status}` },
-      });
+      return res.status(502).json({ success: false, error: { code: 'PROVIDER_UNAVAILABLE', detail: `history HTTP ${response.status}` } });
     }
 
     const payload: unknown = await response.json();
-
-    // 2. Validate schema — malformed thì KHÔNG xử lý tài chính
     if (!isProviderPayload(payload)) {
       return res.status(502).json({ success: false, error: { code: 'PROVIDER_RESPONSE_INVALID' } });
     }
 
-    // 3. Forward từng giao dịch IN qua đúng RPC idempotent của webhook
-    const { valid, skippedCount } = normalizeTransactionList(payload.transactions);
-    const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
+    const valid: NormalizedTx[] = [];
+    let skipped = 0;
+    for (const tx of payload.transactions) {
+      const n = normalizeTransaction(tx);
+      if (n) valid.push(n);
+      else skipped++;
+    }
 
+    const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
     let credited = 0;
     let duplicate = 0;
     let review = 0;
@@ -110,7 +168,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       success: true,
       fetched: payload.transactions.length,
       eligible: valid.length,
-      skipped: skippedCount,
+      skipped,
       credited,
       duplicateIgnored: duplicate,
       manualReview: review,
