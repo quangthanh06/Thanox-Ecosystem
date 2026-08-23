@@ -234,11 +234,11 @@ BEGIN
   END IF;
 
   -- 8. Trừ ví profiles (Debit Profile)
-  v_new_balance := v_user.balance - v_total;
   UPDATE profiles
-     SET balance = v_new_balance,
+     SET balance = balance - v_total,
          total_spent = COALESCE(total_spent, 0) + v_total
-   WHERE id::text = p_user_id;
+   WHERE id::text = p_user_id
+  RETURNING balance INTO v_new_balance;
 
   -- 9. Ghi đơn hàng (Insert Order)
   v_order_id := 'ord-' || gen_random_uuid()::text;
