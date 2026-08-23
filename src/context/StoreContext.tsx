@@ -2010,54 +2010,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } catch {}
     })();
 
-    // TỰ ĐỘNG CỘNG TIỀN (AUTO SIMULATOR & CLOUD SYNC)
-    // Sau 3 giây tự động duyệt và cộng thẳng tiền vào tài khoản
-    setTimeout(() => {
-      setTopups((prev) =>
-        prev.map((t) =>
-          t.id === newTopup.id || t.transferNote === newTopup.transferNote
-            ? { ...t, status: 'approved', processedAt: new Date().toISOString().replace('T', ' ').substring(0, 16) }
-            : t
-        )
-      );
-      setUsers((prev) =>
-        prev.map((u) => (u.id === buyer.id ? { ...u, balance: (Number(u.balance) || 0) + Number(amount) } : u))
-      );
-
-      const newTx: Transaction = {
-        id: 'tx-' + Date.now(),
-        txCode: '#GD-' + Math.floor(10000 + Math.random() * 90000),
-        type: 'deposit',
-        userId: buyer.id,
-        userName: buyer.username,
-        description: `Nạp tiền qua ${method} (${newTopup.transferNote})`,
-        amount: Number(amount),
-        balanceAfter: (buyer.balance || 0) + Number(amount),
-        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-        status: 'completed',
-      };
-      setTransactions((prev) => [newTx, ...prev]);
-
-      showToast(`⚡ Nhận tiền thành công! Đã cộng +${amount.toLocaleString('vi-VN')}đ vào ví tài khoản!`, 'success');
-
-      // Đồng bộ DB Cloud qua Serverless API
-      try {
-        fetch('/api/topup/action', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'auto_approve',
-            id: newTopup.id,
-            transferNote: newTopup.transferNote,
-            userId: buyer.id,
-            amount: Number(amount),
-          }),
-        }).catch(() => {});
-      } catch {}
-    }, 3000);
-
     showToast(
-      `Đã tạo yêu cầu nạp ${amount.toLocaleString('vi-VN')}đ (${newTopup.transferNote}). Hệ thống đang tự động duyệt sau 3-5 giây!`,
+      `Đã tạo yêu cầu nạp ${amount.toLocaleString('vi-VN')}đ (${newTopup.transferNote}). Vui lòng chuyển khoản theo thông tin bên dưới.`,
       'info'
     );
     return generatedCode;
