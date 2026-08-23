@@ -167,7 +167,7 @@ const safeGetItem = <T,>(key: string, fallback: T): T => {
 
 // ============================================================================
 // SUPABASE PRODUCTS EXTENDED COLUMNS (packages, sale, product_type, ...)
-// null = chÆ°a probe, true = Ä‘Ã£ cháº¡y migration (cá»™t tá»“n táº¡i), false = chÆ°a cÃ³ cá»™t
+// null = chÃ†Â°a probe, true = Ã„â€˜ÃƒÂ£ chÃ¡ÂºÂ¡y migration (cÃ¡Â»â„¢t tÃ¡Â»â€œn tÃ¡ÂºÂ¡i), false = chÃ†Â°a cÃƒÂ³ cÃ¡Â»â„¢t
 // ============================================================================
 let productsExtendedReady: boolean | null = null;
 
@@ -179,9 +179,9 @@ const isMissingColumnError = (err: unknown): boolean => {
   return code === 'PGRST204' || code === '42703' || /does not exist|Could not find the '(packages|product_type|is_sale|sale_price|instructions|accounts_list|images|download_url)'/i.test(msg);
 };
 
-// Payload cÃ¡c cá»™t má»Ÿ rá»™ng (chá»‰ gá»­i khi migration Ä‘Ã£ Ä‘Æ°á»£c Ã¡p dá»¥ng)
-// Strip key/link bÃ­ máº­t khá»i packages trÆ°á»›c khi lÆ°u lÃªn cloud (cá»™t packages
-// public cho UI; key giao hÃ ng chá»‰ náº±m trong hidden_keys_or_links Ä‘Ã£ bá»‹ thu quyá»n)
+// Payload cÃƒÂ¡c cÃ¡Â»â„¢t mÃ¡Â»Å¸ rÃ¡Â»â„¢ng (chÃ¡Â»â€° gÃ¡Â»Â­i khi migration Ã„â€˜ÃƒÂ£ Ã„â€˜Ã†Â°Ã¡Â»Â£c ÃƒÂ¡p dÃ¡Â»Â¥ng)
+// Strip key/link bÃƒÂ­ mÃ¡ÂºÂ­t khÃ¡Â»Âi packages trÃ†Â°Ã¡Â»â€ºc khi lÃ†Â°u lÃƒÂªn cloud (cÃ¡Â»â„¢t packages
+// public cho UI; key giao hÃƒÂ ng chÃ¡Â»â€° nÃ¡ÂºÂ±m trong hidden_keys_or_links Ã„â€˜ÃƒÂ£ bÃ¡Â»â€¹ thu quyÃ¡Â»Ân)
 const sanitizePackages = (pkgs?: ProductPackage[]): ProductPackage[] =>
   (pkgs || []).map((x) => {
     const { keys, downloadUrl, ...rest } = x;
@@ -221,8 +221,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
 
   // Persistent States with Safe LocalStorage Parsing
-  // Ref giá»¯ productPackages Má»šI NHáº¤T (trÃ¡nh race giá»¯a effect táº£i store_settings
-  // vÃ  effect táº£i products â€” báº£n táº£i sau khÃ´ng Ä‘Æ°á»£c Ä‘Ã¨ máº¥t gÃ³i cá»§a báº£n trÆ°á»›c)
+  // Ref giÃ¡Â»Â¯ productPackages MÃ¡Â»Å¡I NHÃ¡ÂºÂ¤T (trÃƒÂ¡nh race giÃ¡Â»Â¯a effect tÃ¡ÂºÂ£i store_settings
+  // vÃƒÂ  effect tÃ¡ÂºÂ£i products Ã¢â‚¬â€ bÃ¡ÂºÂ£n tÃ¡ÂºÂ£i sau khÃƒÂ´ng Ã„â€˜Ã†Â°Ã¡Â»Â£c Ã„â€˜ÃƒÂ¨ mÃ¡ÂºÂ¥t gÃƒÂ³i cÃ¡Â»Â§a bÃ¡ÂºÂ£n trÃ†Â°Ã¡Â»â€ºc)
   const productPackagesRef = React.useRef<Record<string, ProductPackage[]>>({});
 
   const [products, setProducts] = useState<Product[]>(() => {
@@ -237,11 +237,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     const fetchSupabaseProducts = async () => {
       try {
-        // Probe 1 láº§n: kiá»ƒm tra cá»™t má»Ÿ rá»™ng (packages...) Ä‘Ã£ tá»“n táº¡i trÃªn DB chÆ°a
+        // Probe 1 lÃ¡ÂºÂ§n: kiÃ¡Â»Æ’m tra cÃ¡Â»â„¢t mÃ¡Â»Å¸ rÃ¡Â»â„¢ng (packages...) Ã„â€˜ÃƒÂ£ tÃ¡Â»â€œn tÃ¡ÂºÂ¡i trÃƒÂªn DB chÃ†Â°a
         const { error: probeError } = await supabase.from('products').select('packages').limit(1);
         productsExtendedReady = !probeError;
 
-        // Äá»c qua VIEW cÃ´ng khai (khÃ´ng chá»©a cá»™t key/acc bÃ­ máº­t â€” moc_b_core.sql)
+        // Ã„ÂÃ¡Â»Âc qua VIEW cÃƒÂ´ng khai (khÃƒÂ´ng chÃ¡Â»Â©a cÃ¡Â»â„¢t key/acc bÃƒÂ­ mÃ¡ÂºÂ­t Ã¢â‚¬â€ moc_b_core.sql)
         const { data, error } = await supabase
           .from('products_public')
           .select('*')
@@ -250,12 +250,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (error) throw error;
         
         if (data && data.length > 0) {
-          // Báº£n localStorage (do admin cáº¥u hÃ¬nh) dÃ¹ng Ä‘á»ƒ bá»• sung cÃ¡c trÆ°á»ng
-          // mÃ  DB chÆ°a cÃ³ cá»™t (packages, sale, instructions...) â€” trÃ¡nh máº¥t dá»¯ liá»‡u
-          // trÃ¬nh duyá»‡t Ä‘ang dÃ¹ng trÆ°á»›c khi migration Ä‘Æ°á»£c cháº¡y.
+          // BÃ¡ÂºÂ£n localStorage (do admin cÃ¡ÂºÂ¥u hÃƒÂ¬nh) dÃƒÂ¹ng Ã„â€˜Ã¡Â»Æ’ bÃ¡Â»â€¢ sung cÃƒÂ¡c trÃ†Â°Ã¡Â»Âng
+          // mÃƒÂ  DB chÃ†Â°a cÃƒÂ³ cÃ¡Â»â„¢t (packages, sale, instructions...) Ã¢â‚¬â€ trÃƒÂ¡nh mÃ¡ÂºÂ¥t dÃ¡Â»Â¯ liÃ¡Â»â€¡u
+          // trÃƒÂ¬nh duyÃ¡Â»â€¡t Ã„â€˜ang dÃƒÂ¹ng trÃ†Â°Ã¡Â»â€ºc khi migration Ã„â€˜Ã†Â°Ã¡Â»Â£c chÃ¡ÂºÂ¡y.
           const localSnapshot = products;
-          // GÃ³i dá»‹ch vá»¥ Ä‘á»“ng bá»™ qua store_settings (cloud, hoáº¡t Ä‘á»™ng cáº£ khi chÆ°a migration)
-          // Æ¯u tiÃªn ref (má»›i nháº¥t) rá»“i tá»›i state closure (tá»« localStorage)
+          // GÃƒÂ³i dÃ¡Â»â€¹ch vÃ¡Â»Â¥ Ã„â€˜Ã¡Â»â€œng bÃ¡Â»â„¢ qua store_settings (cloud, hoÃ¡ÂºÂ¡t Ã„â€˜Ã¡Â»â„¢ng cÃ¡ÂºÂ£ khi chÃ†Â°a migration)
+          // Ã†Â¯u tiÃƒÂªn ref (mÃ¡Â»â€ºi nhÃ¡ÂºÂ¥t) rÃ¡Â»â€œi tÃ¡Â»â€ºi state closure (tÃ¡Â»Â« localStorage)
           const cloudPackages = { ...(settings.productPackages || {}), ...productPackagesRef.current };
 
           const mappedProducts: Product[] = data.map((p) => {
@@ -280,7 +280,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             downloadLinkOrKeys: p.hidden_keys_or_links || local?.downloadLinkOrKeys || '',
             soldCount: p.sold_count ?? local?.soldCount ?? 0,
             featured: p.featured ?? local?.featured ?? true,
-            // === TrÆ°á»ng má»Ÿ rá»™ng: Æ°u tiÃªn DB, fallback vá» báº£n localStorage ===
+            // === TrÃ†Â°Ã¡Â»Âng mÃ¡Â»Å¸ rÃ¡Â»â„¢ng: Ã†Â°u tiÃƒÂªn DB, fallback vÃ¡Â»Â bÃ¡ÂºÂ£n localStorage ===
             packages,
             plans: packages,
             productType: (p.product_type as Product['productType']) || local?.productType,
@@ -301,13 +301,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           setProducts(mappedProducts);
         }
       } catch (err) {
-        console.error('Lá»—i táº£i sáº£n pháº©m tá»« Supabase:', err);
+        console.error('LÃ¡Â»â€”i tÃ¡ÂºÂ£i sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m tÃ¡Â»Â« Supabase:', err);
       }
     };
     
     const fetchSupabaseUsers = async () => {
         try {
-          // Query 'profiles' table (not 'users') â€” Supabase Auth trigger creates
+          // Query 'profiles' table (not 'users') Ã¢â‚¬â€ Supabase Auth trigger creates
           // rows in profiles, not a separate users table.
           const { data, error } = await supabase
             .from('profiles')
@@ -358,7 +358,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             setUsers(mappedUsers);
           }
         } catch (err) {
-          console.error('Lá»—i táº£i Users tá»« Supabase:', err);
+          console.error('LÃ¡Â»â€”i tÃ¡ÂºÂ£i Users tÃ¡Â»Â« Supabase:', err);
         }
       };
 
@@ -378,7 +378,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               id: t.id,
               requestCode: t.transfer_note || ('#NAP-' + String(t.id).substring(0, 4).toUpperCase()),
               userId: t.user_id,
-              userName: userMap.get(t.user_id) || 'KhÃ¡ch',
+              userName: userMap.get(t.user_id) || 'KhÃƒÂ¡ch',
               amount: Number(t.amount) || 0,
               method: (t.method as 'bank' | 'momo' | 'card') || 'bank',
               status: (t.status as 'pending' | 'approved' | 'rejected') || 'pending',
@@ -395,7 +395,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             });
           }
         } catch (e) {
-          console.error('Lá»—i táº£i Topups tá»« Supabase:', e);
+          console.error('LÃ¡Â»â€”i tÃ¡ÂºÂ£i Topups tÃ¡Â»Â« Supabase:', e);
         }
       };
 
@@ -505,8 +505,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const fallbackUser: User = {
     id: 'guest',
-    username: 'KhÃ¡ch',
-    name: 'KhÃ¡ch hÃ ng',
+    username: 'KhÃƒÂ¡ch',
+    name: 'KhÃƒÂ¡ch hÃƒÂ ng',
     email: 'guest@thanox.vn',
     role: 'user',
     balance: 0,
@@ -641,11 +641,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     // 1. Console Self-XSS Warning Banner
     console.log(
-      '%cðŸ›‘ Dá»ªNG Láº I! Cáº¢NH BÃO Báº¢O Máº¬T THANOX ðŸ›‘',
+      '%cÃ°Å¸â€ºâ€˜ DÃ¡Â»ÂªNG LÃ¡ÂºÂ I! CÃ¡ÂºÂ¢NH BÃƒÂO BÃ¡ÂºÂ¢O MÃ¡ÂºÂ¬T THANOX Ã°Å¸â€ºâ€˜',
       'color: #EF4444; font-size: 22px; font-weight: bold;'
     );
     console.log(
-      '%cÄÃ¢y lÃ  tÃ­nh nÄƒng dÃ nh riÃªng cho nhÃ  phÃ¡t triá»ƒn. Tuyá»‡t Ä‘á»‘i KHÃ”NG dÃ¡n báº¥t ká»³ Ä‘oáº¡n mÃ£ script nÃ o vÃ o Ä‘Ã¢y Ä‘á»ƒ trÃ¡nh bá»‹ hacker Ä‘Ã¡nh cáº¯p tÃ i khoáº£n!',
+      '%cÃ„ÂÃƒÂ¢y lÃƒÂ  tÃƒÂ­nh nÃ„Æ’ng dÃƒÂ nh riÃƒÂªng cho nhÃƒÂ  phÃƒÂ¡t triÃ¡Â»Æ’n. TuyÃ¡Â»â€¡t Ã„â€˜Ã¡Â»â€˜i KHÃƒâ€NG dÃƒÂ¡n bÃ¡ÂºÂ¥t kÃ¡Â»Â³ Ã„â€˜oÃ¡ÂºÂ¡n mÃƒÂ£ script nÃƒÂ o vÃƒÂ o Ã„â€˜ÃƒÂ¢y Ã„â€˜Ã¡Â»Æ’ trÃƒÂ¡nh bÃ¡Â»â€¹ hacker Ã„â€˜ÃƒÂ¡nh cÃ¡ÂºÂ¯p tÃƒÂ i khoÃ¡ÂºÂ£n!',
       'color: #F59E0B; font-size: 13px; font-weight: 600;'
     );
 
@@ -825,7 +825,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [settings]);
 
-  // Má»‘c B: load Ä‘Æ¡n hÃ ng CLOUD cá»§a user (admin xem háº¿t) â€” merge vá»›i local cÅ©
+  // MÃ¡Â»â€˜c B: load Ã„â€˜Ã†Â¡n hÃƒÂ ng CLOUD cÃ¡Â»Â§a user (admin xem hÃ¡ÂºÂ¿t) Ã¢â‚¬â€ merge vÃ¡Â»â€ºi local cÃ…Â©
   useEffect(() => {
     if (!currentUserId) return;
     (async () => {
@@ -834,7 +834,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         let q = supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(300);
         if (!isAdmin) q = q.eq('user_id', currentUserId);
         const { data, error } = await q;
-        if (error || !Array.isArray(data)) return; // báº£ng chÆ°a cÃ³ (chÆ°a cháº¡y SQL) â†’ im láº·ng
+        if (error || !Array.isArray(data)) return; // bÃ¡ÂºÂ£ng chÃ†Â°a cÃƒÂ³ (chÃ†Â°a chÃ¡ÂºÂ¡y SQL) Ã¢â€ â€™ im lÃ¡ÂºÂ·ng
         const cloud: Order[] = data.map((r) => ({
           id: r.id,
           orderCode: r.order_code,
@@ -868,8 +868,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     let cancelled = false;
     (async () => {
       try {
-        // DÃ¹ng RPC get_public_settings (Ä‘Ã£ strip secret nháº¡y cáº£m á»Ÿ DB).
-        // RPC chÆ°a tá»“n táº¡i (chÆ°a cháº¡y moc_b_core.sql) â†’ fallback select cÅ©.
+        // DÃƒÂ¹ng RPC get_public_settings (Ã„â€˜ÃƒÂ£ strip secret nhÃ¡ÂºÂ¡y cÃ¡ÂºÂ£m Ã¡Â»Å¸ DB).
+        // RPC chÃ†Â°a tÃ¡Â»â€œn tÃ¡ÂºÂ¡i (chÃ†Â°a chÃ¡ÂºÂ¡y moc_b_core.sql) Ã¢â€ â€™ fallback select cÃ…Â©.
         let cloudSettings: StoreSettings | null = null;
         const { data: rpcData, error: rpcErr } = await supabase.rpc('get_public_settings');
         if (!rpcErr && rpcData && typeof rpcData === 'object') {
@@ -887,8 +887,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (cancelled || !cloudSettings) return;
         setSettings((prev) => ({ ...prev, ...cloudSettings }));
 
-        // GÃ³i dá»‹ch vá»¥ admin cáº¥u hÃ¬nh (lÆ°u kÃ¨m settings cloud) â€” Ã¡p lÃªn sáº£n pháº©m
-        // Ä‘á»ƒ má»i thiáº¿t bá»‹ tháº¥y gÃ³i ngay cáº£ khi chÆ°a cháº¡y migration cá»™t packages.
+        // GÃƒÂ³i dÃ¡Â»â€¹ch vÃ¡Â»Â¥ admin cÃ¡ÂºÂ¥u hÃƒÂ¬nh (lÃ†Â°u kÃƒÂ¨m settings cloud) Ã¢â‚¬â€ ÃƒÂ¡p lÃƒÂªn sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m
+        // Ã„â€˜Ã¡Â»Æ’ mÃ¡Â»Âi thiÃ¡ÂºÂ¿t bÃ¡Â»â€¹ thÃ¡ÂºÂ¥y gÃƒÂ³i ngay cÃ¡ÂºÂ£ khi chÃ†Â°a chÃ¡ÂºÂ¡y migration cÃ¡Â»â„¢t packages.
         const cloudPkgs = cloudSettings.productPackages || {};
         if (Object.keys(cloudPkgs).length > 0) {
           productPackagesRef.current = { ...productPackagesRef.current, ...cloudPkgs };
@@ -1038,14 +1038,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return [...prev, { product, quantity, selectedPackage }];
     });
     showToast(
-      `ÄÃ£ thÃªm "${product.name}${selectedPackage ? ` [${selectedPackage.name}]` : ''}" vÃ o giá» hÃ ng!`,
+      `Ã„ÂÃƒÂ£ thÃƒÂªm "${product.name}${selectedPackage ? ` [${selectedPackage.name}]` : ''}" vÃƒÂ o giÃ¡Â»Â hÃƒÂ ng!`,
       'success'
     );
   };
 
   const removeFromCart = (productId: string) => {
     setCart((prev) => prev.filter((item) => item.product.id !== productId));
-    showToast('ÄÃ£ xÃ³a sáº£n pháº©m khá»i giá» hÃ ng', 'info');
+    showToast('Ã„ÂÃƒÂ£ xÃƒÂ³a sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m khÃ¡Â»Âi giÃ¡Â»Â hÃƒÂ ng', 'info');
   };
 
   const updateCartQuantity = (productId: string, quantity: number) => {
@@ -1114,7 +1114,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Self-referral protection: A user cannot refer themselves
     if (referrerId === buyer.id) return;
 
-    // Check minimum qualifying order value (default 200.000Ä‘)
+    // Check minimum qualifying order value (default 200.000Ã„â€˜)
     const minOrderVal = settings.affiliateMinimumOrderValue ?? 200000;
     if (orderTotal < minOrderVal) return;
 
@@ -1124,7 +1124,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
     if (alreadyRewarded) return;
 
-    // Determine reward amount (default: 10.000Ä‘, or higher tier if enabled)
+    // Determine reward amount (default: 10.000Ã„â€˜, or higher tier if enabled)
     let rawReward = settings.affiliateDefaultReward ?? 10000;
     if (
       settings.affiliateHigherTierEnabled &&
@@ -1144,7 +1144,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const dailyCap = settings.affiliateDailyCap ?? 500000;
     if (todayRewardsSum >= dailyCap) {
-      console.log(`[Affiliate] Referrer ${referrer.username} reached daily reward cap of ${dailyCap}Ä‘.`);
+      console.log(`[Affiliate] Referrer ${referrer.username} reached daily reward cap of ${dailyCap}Ã„â€˜.`);
       return;
     }
 
@@ -1224,7 +1224,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       type: 'commission',
       userId: referrer.id,
       userName: referrer.username,
-      description: `Hoa há»“ng giá»›i thiá»‡u: ÄÆ¡n ${orderCode} cá»§a ${buyer.username} (+${rewardAmount.toLocaleString('vi-VN')}Ä‘ vÃ o Sá»‘ DÆ° Affiliate)`,
+      description: `Hoa hÃ¡Â»â€œng giÃ¡Â»â€ºi thiÃ¡Â»â€¡u: Ã„ÂÃ†Â¡n ${orderCode} cÃ¡Â»Â§a ${buyer.username} (+${rewardAmount.toLocaleString('vi-VN')}Ã„â€˜ vÃƒÂ o SÃ¡Â»â€˜ DÃ†Â° Affiliate)`,
       amount: rewardAmount,
       balanceAfter: referrer.balance || 0,
       createdAt: nowStr,
@@ -1236,9 +1236,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setNotifications((prev) => [
       {
         id: 'notif-' + Date.now(),
-        title: `Nháº­n thÆ°á»Ÿng giá»›i thiá»‡u +${rewardAmount.toLocaleString('vi-VN')}Ä‘`,
-        description: `Báº¡n vá»«a nháº­n ${rewardAmount.toLocaleString('vi-VN')}Ä‘ hoa há»“ng tá»« Ä‘Æ¡n hÃ ng há»£p lá»‡ cá»§a ${buyer.username} (${orderCode})`,
-        time: 'Vá»«a xong',
+        title: `NhÃ¡ÂºÂ­n thÃ†Â°Ã¡Â»Å¸ng giÃ¡Â»â€ºi thiÃ¡Â»â€¡u +${rewardAmount.toLocaleString('vi-VN')}Ã„â€˜`,
+        description: `BÃ¡ÂºÂ¡n vÃ¡Â»Â«a nhÃ¡ÂºÂ­n ${rewardAmount.toLocaleString('vi-VN')}Ã„â€˜ hoa hÃ¡Â»â€œng tÃ¡Â»Â« Ã„â€˜Ã†Â¡n hÃƒÂ ng hÃ¡Â»Â£p lÃ¡Â»â€¡ cÃ¡Â»Â§a ${buyer.username} (${orderCode})`,
+        time: 'VÃ¡Â»Â«a xong',
         read: false,
         type: 'system',
       },
@@ -1248,12 +1248,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const checkoutCart = async (paymentMethod: Order['paymentMethod']): Promise<boolean> => {
     if (cart.length === 0) {
-      showToast('Giá» hÃ ng cá»§a báº¡n Ä‘ang trá»‘ng!', 'warning');
+      showToast('GiÃ¡Â»Â hÃƒÂ ng cÃ¡Â»Â§a bÃ¡ÂºÂ¡n Ã„â€˜ang trÃ¡Â»â€˜ng!', 'warning');
       return false;
     }
 
     if (!isAuthenticated) {
-      showToast('Vui lÃ²ng Ä‘Äƒng nháº­p tÃ i khoáº£n Ä‘á»ƒ thá»±c hiá»‡n thanh toÃ¡n!', 'warning');
+      showToast('Vui lÃƒÂ²ng Ã„â€˜Ã„Æ’ng nhÃ¡ÂºÂ­p tÃƒÂ i khoÃ¡ÂºÂ£n Ã„â€˜Ã¡Â»Æ’ thÃ¡Â»Â±c hiÃ¡Â»â€¡n thanh toÃƒÂ¡n!', 'warning');
       navigateToStorefront('login', '/cart');
       return false;
     }
@@ -1265,13 +1265,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, 0);
 
     if (paymentMethod === 'wallet' && buyer.balance < total) {
-      showToast(`Sá»‘ dÆ° vÃ­ khÃ´ng Ä‘á»§! Cáº§n thÃªm ${(total - buyer.balance).toLocaleString('vi-VN')} VNÄ`, 'error');
+      showToast(`SÃ¡Â»â€˜ dÃ†Â° vÃƒÂ­ khÃƒÂ´ng Ã„â€˜Ã¡Â»Â§! CÃ¡ÂºÂ§n thÃƒÂªm ${(total - buyer.balance).toLocaleString('vi-VN')} VNÃ„Â`, 'error');
       return false;
     }
 
-    // ===== SERVER-SIDE: tá»«ng item qua RPC create_order (kiá»ƒm giÃ¡/stock/vÃ­ á»Ÿ DB).
-    // createOrder tá»± fallback local náº¿u RPC chÆ°a Ã¡p. createOrder tá»± cáº­p nháº­t
-    // orders/balance tháº­t/notification/toast cho tá»«ng Ä‘Æ¡n. =====
+    // ===== SERVER-SIDE: tÃ¡Â»Â«ng item qua RPC create_order (kiÃ¡Â»Æ’m giÃƒÂ¡/stock/vÃƒÂ­ Ã¡Â»Å¸ DB).
+    // createOrder tÃ¡Â»Â± fallback local nÃ¡ÂºÂ¿u RPC chÃ†Â°a ÃƒÂ¡p. createOrder tÃ¡Â»Â± cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t
+    // orders/balance thÃ¡ÂºÂ­t/notification/toast cho tÃ¡Â»Â«ng Ã„â€˜Ã†Â¡n. =====
     let created = 0;
     for (const item of cart) {
       const ok = await createOrder(item.product.id, item.quantity, paymentMethod, item.selectedPackage);
@@ -1279,16 +1279,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     if (created === 0) {
-      showToast('KhÃ´ng thá»ƒ thanh toÃ¡n Ä‘Æ¡n nÃ o â€” vui lÃ²ng kiá»ƒm tra láº¡i giá» hÃ ng!', 'error');
+      showToast('KhÃƒÂ´ng thÃ¡Â»Æ’ thanh toÃƒÂ¡n Ã„â€˜Ã†Â¡n nÃƒÂ o Ã¢â‚¬â€ vui lÃƒÂ²ng kiÃ¡Â»Æ’m tra lÃ¡ÂºÂ¡i giÃ¡Â»Â hÃƒÂ ng!', 'error');
       return false;
     }
 
-    // Affiliate cho Ä‘Æ¡n Ä‘áº§u tiÃªn cá»§a láº§n checkout nÃ y
+    // Affiliate cho Ã„â€˜Ã†Â¡n Ã„â€˜Ã¡ÂºÂ§u tiÃƒÂªn cÃ¡Â»Â§a lÃ¡ÂºÂ§n checkout nÃƒÂ y
     processAffiliateRewardForOrder('ord-' + Date.now(), '#TX-' + Math.floor(10000 + Math.random() * 90000), total, buyer);
 
     clearCart();
     if (created < cart.length) {
-      showToast(`Thanh toÃ¡n thÃ nh cÃ´ng ${created}/${cart.length} sáº£n pháº©m (má»™t sá»‘ sáº£n pháº©m lá»—i/háº¿t hÃ ng)!`, 'warning');
+      showToast(`Thanh toÃƒÂ¡n thÃƒÂ nh cÃƒÂ´ng ${created}/${cart.length} sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m (mÃ¡Â»â„¢t sÃ¡Â»â€˜ sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m lÃ¡Â»â€”i/hÃ¡ÂºÂ¿t hÃƒÂ ng)!`, 'warning');
     }
     return true;
   };
@@ -1312,9 +1312,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   };
 
-  // Äá»“ng bá»™ gÃ³i dá»‹ch vá»¥ cá»§a sáº£n pháº©m lÃªn Cloud qua báº£ng store_settings
-  // (hoáº¡t Ä‘á»™ng ngay cáº£ khi chÆ°a cháº¡y migration thÃªm cá»™t packages).
-  // packages rá»—ng => xÃ³a key Ä‘á»ƒ má»i thiáº¿t bá»‹ nháº­n biáº¿t gÃ³i Ä‘Ã£ bá»‹ gá»¡.
+  // Ã„ÂÃ¡Â»â€œng bÃ¡Â»â„¢ gÃƒÂ³i dÃ¡Â»â€¹ch vÃ¡Â»Â¥ cÃ¡Â»Â§a sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m lÃƒÂªn Cloud qua bÃ¡ÂºÂ£ng store_settings
+  // (hoÃ¡ÂºÂ¡t Ã„â€˜Ã¡Â»â„¢ng ngay cÃ¡ÂºÂ£ khi chÃ†Â°a chÃ¡ÂºÂ¡y migration thÃƒÂªm cÃ¡Â»â„¢t packages).
+  // packages rÃ¡Â»â€”ng => xÃƒÂ³a key Ã„â€˜Ã¡Â»Æ’ mÃ¡Â»Âi thiÃ¡ÂºÂ¿t bÃ¡Â»â€¹ nhÃ¡ÂºÂ­n biÃ¡ÂºÂ¿t gÃƒÂ³i Ã„â€˜ÃƒÂ£ bÃ¡Â»â€¹ gÃ¡Â»Â¡.
   const syncProductPackagesToCloud = (productId: string, packages: ProductPackage[]) => {
     setSettings((prev) => {
       const map = { ...(prev.productPackages || {}) };
@@ -1324,15 +1324,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } else {
         delete map[productId];
       }
-      // Cáº­p nháº­t ngay ref Ä‘á»ƒ cÃ¡c láº§n táº£i sau khÃ´ng Ä‘Ã¨ máº¥t gÃ³i vá»«a lÆ°u
+      // CÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t ngay ref Ã„â€˜Ã¡Â»Æ’ cÃƒÂ¡c lÃ¡ÂºÂ§n tÃ¡ÂºÂ£i sau khÃƒÂ´ng Ã„â€˜ÃƒÂ¨ mÃ¡ÂºÂ¥t gÃƒÂ³i vÃ¡Â»Â«a lÃ†Â°u
       productPackagesRef.current = { ...productPackagesRef.current, ...map };
-      // Äá»“ng bá»™ LUÃ”N cá»™t products.packages â€” RPC create_order Ä‘á»c tá»« cá»™t nÃ y
+      // Ã„ÂÃ¡Â»â€œng bÃ¡Â»â„¢ LUÃƒâ€N cÃ¡Â»â„¢t products.packages Ã¢â‚¬â€ RPC create_order Ã„â€˜Ã¡Â»Âc tÃ¡Â»Â« cÃ¡Â»â„¢t nÃƒÂ y
       void supabase
         .from('products')
         .update({ packages: map[productId] || [] })
         .eq('id', productId)
         .then((res: { error: { message: string } | null }) => {
-          if (res.error) console.warn('[Packages] chÆ°a ghi Ä‘Æ°á»£c cá»™t products:', res.error.message);
+          if (res.error) console.warn('[Packages] chÃ†Â°a ghi Ã„â€˜Ã†Â°Ã¡Â»Â£c cÃ¡Â»â„¢t products:', res.error.message);
         });
       const updated = { ...prev, productPackages: map };
       try {
@@ -1402,18 +1402,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const extendedPayload = productsExtendedReady === true ? buildExtendedProductPayload(newProduct) : {};
 
       let { error } = await supabase.from('products').insert({ ...baseInsert, ...extendedPayload });
-      // Náº¿u DB chÆ°a cÃ³ cá»™t má»Ÿ rá»™ng (chÆ°a cháº¡y migration) â†’ thá»­ láº¡i khÃ´ng kÃ¨m cá»™t má»Ÿ rá»™ng
+      // NÃ¡ÂºÂ¿u DB chÃ†Â°a cÃƒÂ³ cÃ¡Â»â„¢t mÃ¡Â»Å¸ rÃ¡Â»â„¢ng (chÃ†Â°a chÃ¡ÂºÂ¡y migration) Ã¢â€ â€™ thÃ¡Â»Â­ lÃ¡ÂºÂ¡i khÃƒÂ´ng kÃƒÂ¨m cÃ¡Â»â„¢t mÃ¡Â»Å¸ rÃ¡Â»â„¢ng
       if (error && productsExtendedReady === true && isMissingColumnError(error)) {
         productsExtendedReady = false;
         ({ error } = await supabase.from('products').insert(baseInsert));
       }
       if (error) throw error;
-      // Äá»“ng bá»™ gÃ³i dá»‹ch vá»¥ lÃªn cloud (qua store_settings) cho má»i thiáº¿t bá»‹
+      // Ã„ÂÃ¡Â»â€œng bÃ¡Â»â„¢ gÃƒÂ³i dÃ¡Â»â€¹ch vÃ¡Â»Â¥ lÃƒÂªn cloud (qua store_settings) cho mÃ¡Â»Âi thiÃ¡ÂºÂ¿t bÃ¡Â»â€¹
       syncProductPackagesToCloud(newId, newProduct.packages || newProduct.plans || []);
-      showToast(`ÄÃ£ thÃªm sáº£n pháº©m "${newProduct.name}" lÃªn Cloud thÃ nh cÃ´ng!`, 'success');
+      showToast(`Ã„ÂÃƒÂ£ thÃƒÂªm sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m "${newProduct.name}" lÃƒÂªn Cloud thÃƒÂ nh cÃƒÂ´ng!`, 'success');
     } catch (e) {
-      console.error('Lá»—i khi lÆ°u Supabase:', e);
-      showToast('Lá»—i khi lÆ°u lÃªn Cloud, vui lÃ²ng thá»­ láº¡i', 'error');
+      console.error('LÃ¡Â»â€”i khi lÃ†Â°u Supabase:', e);
+      showToast('LÃ¡Â»â€”i khi lÃ†Â°u lÃƒÂªn Cloud, vui lÃƒÂ²ng thÃ¡Â»Â­ lÃ¡ÂºÂ¡i', 'error');
     }
   };
 
@@ -1453,18 +1453,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const extendedPayload = productsExtendedReady === true ? buildExtendedProductPayload(p) : {};
 
         let { error } = await supabase.from('products').update({ ...baseUpdate, ...extendedPayload }).eq('id', id);
-        // Náº¿u DB chÆ°a cÃ³ cá»™t má»Ÿ rá»™ng (chÆ°a cháº¡y migration) â†’ thá»­ láº¡i khÃ´ng kÃ¨m cá»™t má»Ÿ rá»™ng
+        // NÃ¡ÂºÂ¿u DB chÃ†Â°a cÃƒÂ³ cÃ¡Â»â„¢t mÃ¡Â»Å¸ rÃ¡Â»â„¢ng (chÃ†Â°a chÃ¡ÂºÂ¡y migration) Ã¢â€ â€™ thÃ¡Â»Â­ lÃ¡ÂºÂ¡i khÃƒÂ´ng kÃƒÂ¨m cÃ¡Â»â„¢t mÃ¡Â»Å¸ rÃ¡Â»â„¢ng
         if (error && productsExtendedReady === true && isMissingColumnError(error)) {
           productsExtendedReady = false;
           ({ error } = await supabase.from('products').update(baseUpdate).eq('id', id));
         }
         if (error) throw error;
-        // Äá»“ng bá»™ gÃ³i dá»‹ch vá»¥ lÃªn cloud (qua store_settings) cho má»i thiáº¿t bá»‹
+        // Ã„ÂÃ¡Â»â€œng bÃ¡Â»â„¢ gÃƒÂ³i dÃ¡Â»â€¹ch vÃ¡Â»Â¥ lÃƒÂªn cloud (qua store_settings) cho mÃ¡Â»Âi thiÃ¡ÂºÂ¿t bÃ¡Â»â€¹
         syncProductPackagesToCloud(id, p.packages || p.plans || []);
-        showToast('ÄÃ£ lÆ°u thÃ´ng tin sáº£n pháº©m vÃ  Ä‘á»“ng bá»™ cÆ¡ sá»Ÿ dá»¯ liá»‡u Cloud! ðŸ”’ (ÄÃ£ khÃ³a báº£o vá»‡)', 'success');
+        showToast('Ã„ÂÃƒÂ£ lÃ†Â°u thÃƒÂ´ng tin sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m vÃƒÂ  Ã„â€˜Ã¡Â»â€œng bÃ¡Â»â„¢ cÃ†Â¡ sÃ¡Â»Å¸ dÃ¡Â»Â¯ liÃ¡Â»â€¡u Cloud! Ã°Å¸â€â€™ (Ã„ÂÃƒÂ£ khÃƒÂ³a bÃ¡ÂºÂ£o vÃ¡Â»â€¡)', 'success');
       } catch (e) {
-        console.error('Lá»—i Update Supabase:', e);
-        showToast('Lá»—i cáº­p nháº­t trÃªn Cloud', 'error');
+        console.error('LÃ¡Â»â€”i Update Supabase:', e);
+        showToast('LÃ¡Â»â€”i cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t trÃƒÂªn Cloud', 'error');
       }
     }
   };
@@ -1487,9 +1487,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setProducts(updatedList);
     syncProductsToServer(updatedList); // Keep local sync as backup for lock state if you want
     if (nowLocked) {
-      showToast(`ðŸ”’ ÄÃƒ KHÃ“A "${targetName}"! Sáº£n pháº©m nÃ y sáº½ khÃ´ng bá»‹ thay Ä‘á»•i khi há»‡ thá»‘ng nÃ¢ng cáº¥p.`, 'success');
+      showToast(`Ã°Å¸â€â€™ Ã„ÂÃƒÆ’ KHÃƒâ€œA "${targetName}"! SÃ¡ÂºÂ£n phÃ¡ÂºÂ©m nÃƒÂ y sÃ¡ÂºÂ½ khÃƒÂ´ng bÃ¡Â»â€¹ thay Ã„â€˜Ã¡Â»â€¢i khi hÃ¡Â»â€¡ thÃ¡Â»â€˜ng nÃƒÂ¢ng cÃ¡ÂºÂ¥p.`, 'success');
     } else {
-      showToast(`ðŸ”“ ÄÃ£ Má»ž KHÃ“A "${targetName}".`, 'info');
+      showToast(`Ã°Å¸â€â€œ Ã„ÂÃƒÂ£ MÃ¡Â»Å¾ KHÃƒâ€œA "${targetName}".`, 'info');
     }
   };
 
@@ -1507,12 +1507,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const { error } = await supabase.from('products').delete().eq('id', id);
       if (error) throw error;
-      // Dá»n gÃ³i dá»‹ch vá»¥ cá»§a sáº£n pháº©m Ä‘Ã£ xÃ³a khá»i store_settings cloud
+      // DÃ¡Â»Ân gÃƒÂ³i dÃ¡Â»â€¹ch vÃ¡Â»Â¥ cÃ¡Â»Â§a sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m Ã„â€˜ÃƒÂ£ xÃƒÂ³a khÃ¡Â»Âi store_settings cloud
       syncProductPackagesToCloud(id, []);
-      showToast('ÄÃ£ xÃ³a sáº£n pháº©m trÃªn Cloud thÃ nh cÃ´ng', 'success'); // Changed to success instead of error style
+      showToast('Ã„ÂÃƒÂ£ xÃƒÂ³a sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m trÃƒÂªn Cloud thÃƒÂ nh cÃƒÂ´ng', 'success'); // Changed to success instead of error style
     } catch (e) {
-      console.error('Lá»—i XÃ³a Supabase:', e);
-      showToast('Lá»—i khi xÃ³a trÃªn Cloud', 'error');
+      console.error('LÃ¡Â»â€”i XÃƒÂ³a Supabase:', e);
+      showToast('LÃ¡Â»â€”i khi xÃƒÂ³a trÃƒÂªn Cloud', 'error');
     }
   };
 
@@ -1529,7 +1529,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       count: 0,
     };
     setCategories((prev) => [...prev, newCat]);
-    showToast(`ÄÃ£ thÃªm danh má»¥c "${newCat.name}"`, 'success');
+    showToast(`Ã„ÂÃƒÂ£ thÃƒÂªm danh mÃ¡Â»Â¥c "${newCat.name}"`, 'success');
   };
 
   const updateCategory = (id: string, updates: Partial<Category>) => {
@@ -1543,7 +1543,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       );
     }
 
-    showToast('ÄÃ£ cáº­p nháº­t danh má»¥c', 'success');
+    showToast('Ã„ÂÃƒÂ£ cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t danh mÃ¡Â»Â¥c', 'success');
   };
 
   const deleteCategory = (id: string) => {
@@ -1560,13 +1560,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     setCategories(remainingCats);
-    showToast(`ÄÃ£ xÃ³a danh má»¥c "${targetCat.name}"`, 'error');
+    showToast(`Ã„ÂÃƒÂ£ xÃƒÂ³a danh mÃ¡Â»Â¥c "${targetCat.name}"`, 'error');
   };
 
   // Orders CRUD
   const updateOrderStatus = (id: string, status: Order['status']) => {
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
-    showToast(`ÄÃ£ cáº­p nháº­t tráº¡ng thÃ¡i Ä‘Æ¡n hÃ ng sang "${status}"`, 'info');
+    showToast(`Ã„ÂÃƒÂ£ cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t trÃ¡ÂºÂ¡ng thÃƒÂ¡i Ã„â€˜Ã†Â¡n hÃƒÂ ng sang "${status}"`, 'info');
   };
 
   // Customer creates order in storefront
@@ -1580,7 +1580,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!product) return false;
 
     if (!isAuthenticated) {
-      showToast('Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ mua sáº£n pháº©m!', 'warning');
+      showToast('Vui lÃƒÂ²ng Ã„â€˜Ã„Æ’ng nhÃ¡ÂºÂ­p Ã„â€˜Ã¡Â»Æ’ mua sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m!', 'warning');
       navigateToStorefront('login', typeof window !== 'undefined' ? window.location.pathname : '/products');
       return false;
     }
@@ -1591,7 +1591,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const total = unitPrice * quantity;
 
     if (paymentMethod === 'wallet' && buyer.balance < total) {
-      showToast('Sá»‘ dÆ° vÃ­ khÃ´ng Ä‘á»§! Vui lÃ²ng náº¡p thÃªm tiá»n.', 'error');
+      showToast('SÃ¡Â»â€˜ dÃ†Â° vÃƒÂ­ khÃƒÂ´ng Ã„â€˜Ã¡Â»Â§! Vui lÃƒÂ²ng nÃ¡ÂºÂ¡p thÃƒÂªm tiÃ¡Â»Ân.', 'error');
       return false;
     }
 
@@ -1641,17 +1641,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         if (firstAcc.includes('|')) {
           const parts = firstAcc.split('|');
-          deliveredText = `ðŸŽ® TÃ€I KHOáº¢N: ${parts[0] || ''}\nðŸ”‘ Máº¬T KHáº¨U: ${parts[1] || ''}${parts[2] ? `\nðŸ›¡ï¸ 2FA / GHI CHÃš: ${parts[2]}` : ''}`;
+          deliveredText = `Ã°Å¸Å½Â® TÃƒâ‚¬I KHOÃ¡ÂºÂ¢N: ${parts[0] || ''}\nÃ°Å¸â€â€˜ MÃ¡ÂºÂ¬T KHÃ¡ÂºÂ¨U: ${parts[1] || ''}${parts[2] ? `\nÃ°Å¸â€ºÂ¡Ã¯Â¸Â 2FA / GHI CHÃƒÅ¡: ${parts[2]}` : ''}`;
           deliveredKey = `TK: ${parts[0]} | MK: ${parts[1]}`;
         } else {
           deliveredText = firstAcc;
           deliveredKey = firstAcc;
         }
       } else if (product.accountUsername || product.accountPassword) {
-        deliveredText = `ðŸŽ® TÃ€I KHOáº¢N: ${product.accountUsername || ''}\nðŸ”‘ Máº¬T KHáº¨U: ${product.accountPassword || ''}${product.account2FA ? `\nðŸ›¡ï¸ 2FA / GHI CHÃš: ${product.account2FA}` : ''}`;
+        deliveredText = `Ã°Å¸Å½Â® TÃƒâ‚¬I KHOÃ¡ÂºÂ¢N: ${product.accountUsername || ''}\nÃ°Å¸â€â€˜ MÃ¡ÂºÂ¬T KHÃ¡ÂºÂ¨U: ${product.accountPassword || ''}${product.account2FA ? `\nÃ°Å¸â€ºÂ¡Ã¯Â¸Â 2FA / GHI CHÃƒÅ¡: ${product.account2FA}` : ''}`;
         deliveredKey = `TK: ${product.accountUsername} | MK: ${product.accountPassword}`;
       } else {
-        deliveredText = product.downloadLinkOrKeys || 'Há»‡ thá»‘ng Ä‘Ã£ ghi nháº­n Ä‘Æ¡n hÃ ng tÃ i khoáº£n cá»§a báº¡n.';
+        deliveredText = product.downloadLinkOrKeys || 'HÃ¡Â»â€¡ thÃ¡Â»â€˜ng Ã„â€˜ÃƒÂ£ ghi nhÃ¡ÂºÂ­n Ã„â€˜Ã†Â¡n hÃƒÂ ng tÃƒÂ i khoÃ¡ÂºÂ£n cÃ¡Â»Â§a bÃ¡ÂºÂ¡n.';
         deliveredKey = product.downloadLinkOrKeys || 'ACC-DELIVERED';
       }
     } else {
@@ -1659,7 +1659,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         selectedPackage?.keys ||
         selectedPackage?.downloadUrl ||
         product.downloadLinkOrKeys ||
-        'Há»‡ thá»‘ng Ä‘Ã£ gá»­i link kÃ­ch hoáº¡t Ä‘áº¿n email cá»§a báº¡n.';
+        'HÃ¡Â»â€¡ thÃ¡Â»â€˜ng Ã„â€˜ÃƒÂ£ gÃ¡Â»Â­i link kÃƒÂ­ch hoÃ¡ÂºÂ¡t Ã„â€˜Ã¡ÂºÂ¿n email cÃ¡Â»Â§a bÃ¡ÂºÂ¡n.';
       deliveredKey = deliveredText.split('\n')[0] || 'KEY-TX-' + Math.floor(100000 + Math.random() * 900000);
     }
 
@@ -1702,7 +1702,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       type: 'purchase',
       userId: buyer.id,
       userName: buyer.username,
-      description: `Thanh toÃ¡n mua ${product.name}${selectedPackage ? ` [${selectedPackage.name}]` : ''} (x${quantity})`,
+      description: `Thanh toÃƒÂ¡n mua ${product.name}${selectedPackage ? ` [${selectedPackage.name}]` : ''} (x${quantity})`,
       amount: -total,
       balanceAfter: newBalance,
       createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
@@ -1717,23 +1717,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setNotifications((prev) => [
       {
         id: 'notif-' + Date.now(),
-        title: `ÄÆ¡n hÃ ng má»›i ${newOrderCode}`,
-        description: `${buyer.username} vá»«a mua ${product.name} (${total.toLocaleString('vi-VN')}Ä‘)`,
-        time: 'Vá»«a xong',
+        title: `Ã„ÂÃ†Â¡n hÃƒÂ ng mÃ¡Â»â€ºi ${newOrderCode}`,
+        description: `${buyer.username} vÃ¡Â»Â«a mua ${product.name} (${total.toLocaleString('vi-VN')}Ã„â€˜)`,
+        time: 'VÃ¡Â»Â«a xong',
         read: false,
         type: 'order',
       },
       ...prev,
     ]);
 
-    showToast(`ÄÃ£ thÃªm "${product.name}${selectedPackage ? ` [${selectedPackage.name}]` : ''}" vÃ o giá» hÃ ng!`, 'success');
+    showToast(`Ã„ÂÃƒÂ£ thÃƒÂªm "${product.name}${selectedPackage ? ` [${selectedPackage.name}]` : ''}" vÃƒÂ o giÃ¡Â»Â hÃƒÂ ng!`, 'success');
     return true;
   };
 
-  // ===== MUA HÃ€NG SERVER-SIDE (Má»‘c B): Æ°u tiÃªn RPC create_order trÃªn DB =====
-  // Server tá»± kiá»ƒm giÃ¡ (tá»« DB), stock, sá»‘ dÆ°; trá»« vÃ­; giao key/acc; ghi Ä‘Æ¡n +
-  // audit trong 1 transaction. Náº¿u RPC chÆ°a Ä‘Æ°á»£c Ã¡p (chÆ°a cháº¡y moc_b_core.sql)
-  // â†’ tá»± fallback vá» luá»“ng local cÅ©, web váº«n sá»‘ng.
+  // ===== MUA HÃƒâ‚¬NG SERVER-SIDE (MÃ¡Â»â€˜c B): Ã†Â°u tiÃƒÂªn RPC create_order trÃƒÂªn DB =====
+  // Server tÃ¡Â»Â± kiÃ¡Â»Æ’m giÃƒÂ¡ (tÃ¡Â»Â« DB), stock, sÃ¡Â»â€˜ dÃ†Â°; trÃ¡Â»Â« vÃƒÂ­; giao key/acc; ghi Ã„â€˜Ã†Â¡n +
+  // audit trong 1 transaction. NÃ¡ÂºÂ¿u RPC chÃ†Â°a Ã„â€˜Ã†Â°Ã¡Â»Â£c ÃƒÂ¡p (chÃ†Â°a chÃ¡ÂºÂ¡y moc_b_core.sql)
+  // Ã¢â€ â€™ tÃ¡Â»Â± fallback vÃ¡Â»Â luÃ¡Â»â€œng local cÃ…Â©, web vÃ¡ÂºÂ«n sÃ¡Â»â€˜ng.
   const createOrder = async (
     productId: string,
     quantity: number,
@@ -1741,12 +1741,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     selectedPackage?: ProductPackage
   ): Promise<boolean> => {
     if (!isAuthenticated) {
-      showToast('Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ mua sáº£n pháº©m!', 'warning');
+      showToast('Vui lÃƒÂ²ng Ã„â€˜Ã„Æ’ng nhÃ¡ÂºÂ­p Ã„â€˜Ã¡Â»Æ’ mua sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m!', 'warning');
       navigateToStorefront('login', typeof window !== 'undefined' ? window.location.pathname : '/products');
       return false;
     }
     if (settings.maintenanceMode) {
-      showToast('Há»‡ thá»‘ng Ä‘ang báº£o trÃ¬ táº¡m thá»i, vui lÃ²ng quay láº¡i sau!', 'warning');
+      showToast('HÃ¡Â»â€¡ thÃ¡Â»â€˜ng Ã„â€˜ang bÃ¡ÂºÂ£o trÃƒÂ¬ tÃ¡ÂºÂ¡m thÃ¡Â»Âi, vui lÃƒÂ²ng quay lÃ¡ÂºÂ¡i sau!', 'warning');
       return false;
     }
 
@@ -1764,35 +1764,35 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch (e) {
       const msg = String((e as { message?: string })?.message || '');
       if (/Could not find|does not exist|PGRST202|404/i.test(msg)) {
-        // RPC chÆ°a cÃ³ trÃªn DB (chÆ°a cháº¡y moc_b_core.sql) â†’ dÃ¹ng luá»“ng local cÅ©
+        // RPC chÃ†Â°a cÃƒÂ³ trÃƒÂªn DB (chÃ†Â°a chÃ¡ÂºÂ¡y moc_b_core.sql) Ã¢â€ â€™ dÃƒÂ¹ng luÃ¡Â»â€œng local cÃ…Â©
         return createOrderLocal(productId, quantity, paymentMethod, selectedPackage);
       }
-      showToast('Lá»—i há»‡ thá»‘ng khi táº¡o Ä‘Æ¡n, vui lÃ²ng thá»­ láº¡i!', 'error');
+      showToast('LÃ¡Â»â€”i hÃ¡Â»â€¡ thÃ¡Â»â€˜ng khi tÃ¡ÂºÂ¡o Ã„â€˜Ã†Â¡n, vui lÃƒÂ²ng thÃ¡Â»Â­ lÃ¡ÂºÂ¡i!', 'error');
       return false;
     }
 
     if (!result || result.status !== 'success' || !result.order) {
       const code = result?.code || 'UNKNOWN';
-      // PACKAGE_NOT_FOUND: DB chÆ°a cÃ³ packages (chÆ°a migration cá»™t packages)
-      // â†’ fallback vá» luá»“ng local Ä‘á»ƒ váº«n mua Ä‘Æ°á»£c bÃ¬nh thÆ°á»ng
+      // PACKAGE_NOT_FOUND: DB chÃ†Â°a cÃƒÂ³ packages (chÃ†Â°a migration cÃ¡Â»â„¢t packages)
+      // Ã¢â€ â€™ fallback vÃ¡Â»Â luÃ¡Â»â€œng local Ã„â€˜Ã¡Â»Æ’ vÃ¡ÂºÂ«n mua Ã„â€˜Ã†Â°Ã¡Â»Â£c bÃƒÂ¬nh thÃ†Â°Ã¡Â»Âng
       if (code === 'PACKAGE_NOT_FOUND') {
-        console.warn('[createOrder] Server tráº£ PACKAGE_NOT_FOUND â€” fallback local order flow');
+        console.warn('[createOrder] Server trÃ¡ÂºÂ£ PACKAGE_NOT_FOUND Ã¢â‚¬â€ fallback local order flow');
         return createOrderLocal(productId, quantity, paymentMethod, selectedPackage);
       }
       const map: Record<string, string> = {
-        INSUFFICIENT_BALANCE: 'Sá»‘ dÆ° vÃ­ khÃ´ng Ä‘á»§! Vui lÃ²ng náº¡p thÃªm tiá»n.',
-        OUT_OF_STOCK: 'Sáº£n pháº©m Ä‘Ã£ háº¿t hÃ ng!',
-        PRODUCT_NOT_FOUND: 'Sáº£n pháº©m khÃ´ng tá»“n táº¡i!',
-        PRODUCT_NOT_ACTIVE: 'Sáº£n pháº©m hiá»‡n khÃ´ng bÃ¡n!',
-        USER_BANNED: 'TÃ i khoáº£n cá»§a báº¡n Ä‘Ã£ bá»‹ khÃ³a!',
-        INVALID_QUANTITY: 'Sá»‘ lÆ°á»£ng khÃ´ng há»£p lá»‡!',
+        INSUFFICIENT_BALANCE: 'SÃ¡Â»â€˜ dÃ†Â° vÃƒÂ­ khÃƒÂ´ng Ã„â€˜Ã¡Â»Â§! Vui lÃƒÂ²ng nÃ¡ÂºÂ¡p thÃƒÂªm tiÃ¡Â»Ân.',
+        OUT_OF_STOCK: 'SÃ¡ÂºÂ£n phÃ¡ÂºÂ©m Ã„â€˜ÃƒÂ£ hÃ¡ÂºÂ¿t hÃƒÂ ng!',
+        PRODUCT_NOT_FOUND: 'SÃ¡ÂºÂ£n phÃ¡ÂºÂ©m khÃƒÂ´ng tÃ¡Â»â€œn tÃ¡ÂºÂ¡i!',
+        PRODUCT_NOT_ACTIVE: 'SÃ¡ÂºÂ£n phÃ¡ÂºÂ©m hiÃ¡Â»â€¡n khÃƒÂ´ng bÃƒÂ¡n!',
+        USER_BANNED: 'TÃƒÂ i khoÃ¡ÂºÂ£n cÃ¡Â»Â§a bÃ¡ÂºÂ¡n Ã„â€˜ÃƒÂ£ bÃ¡Â»â€¹ khÃƒÂ³a!',
+        INVALID_QUANTITY: 'SÃ¡Â»â€˜ lÃ†Â°Ã¡Â»Â£ng khÃƒÂ´ng hÃ¡Â»Â£p lÃ¡Â»â€¡!',
       };
-      showToast(map[code] || 'KhÃ´ng thá»ƒ táº¡o Ä‘Æ¡n hÃ ng lÃºc nÃ y!', 'error');
+      showToast(map[code] || 'KhÃƒÂ´ng thÃ¡Â»Æ’ tÃ¡ÂºÂ¡o Ã„â€˜Ã†Â¡n hÃƒÂ ng lÃƒÂºc nÃƒÂ y!', 'error');
       if (code === 'INSUFFICIENT_BALANCE') navigateToStorefront('account-wallet-deposit');
       return false;
     }
 
-    // ThÃ nh cÃ´ng trÃªn SERVER â€” cáº­p nháº­t UI theo nguá»“n tháº­t
+    // ThÃƒÂ nh cÃƒÂ´ng trÃƒÂªn SERVER Ã¢â‚¬â€ cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t UI theo nguÃ¡Â»â€œn thÃ¡ÂºÂ­t
     const o = result.order;
     const total = Number(o.totalPrice ?? 0);
     const buyer = currentUser;
@@ -1819,7 +1819,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
     setOrders((prev) => [newOrder, ...prev]);
 
-    // LÃ m má»›i sá»‘ dÆ° THáº¬T tá»« profiles (server Ä‘Ã£ trá»«)
+    // LÃƒÂ m mÃ¡Â»â€ºi sÃ¡Â»â€˜ dÃ†Â° THÃ¡ÂºÂ¬T tÃ¡Â»Â« profiles (server Ã„â€˜ÃƒÂ£ trÃ¡Â»Â«)
     try {
       const { data: prof } = await supabase.from('profiles').select('balance, total_spent').eq('id', buyer.id).maybeSingle();
       if (prof) {
@@ -1835,7 +1835,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       type: 'purchase',
       userId: buyer.id,
       userName: buyer.username,
-      description: `Thanh toÃ¡n mua ${newOrder.productName}${newOrder.packageName ? ` [${newOrder.packageName}]` : ''} (x${newOrder.quantity})`,
+      description: `Thanh toÃƒÂ¡n mua ${newOrder.productName}${newOrder.packageName ? ` [${newOrder.packageName}]` : ''} (x${newOrder.quantity})`,
       amount: -total,
       balanceAfter: currentUser.balance - total,
       createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
@@ -1845,15 +1845,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setNotifications((prev) => [
       {
         id: 'notif-' + Date.now(),
-        title: `ÄÆ¡n hÃ ng má»›i ${newOrder.orderCode}`,
-        description: `${buyer.username} vá»«a mua ${newOrder.productName} (${total.toLocaleString('vi-VN')}Ä‘)`,
-        time: 'Vá»«a xong',
+        title: `Ã„ÂÃ†Â¡n hÃƒÂ ng mÃ¡Â»â€ºi ${newOrder.orderCode}`,
+        description: `${buyer.username} vÃ¡Â»Â«a mua ${newOrder.productName} (${total.toLocaleString('vi-VN')}Ã„â€˜)`,
+        time: 'VÃ¡Â»Â«a xong',
         read: false,
         type: 'order',
       },
       ...prev,
     ]);
-    showToast(`ðŸŽ‰ Mua hÃ ng thÃ nh cÃ´ng! ÄÆ¡n ${newOrder.orderCode} â€” xem key trong ÄÆ¡n HÃ ng!`, 'success');
+    showToast(`Ã°Å¸Å½â€° Mua hÃƒÂ ng thÃƒÂ nh cÃƒÂ´ng! Ã„ÂÃ†Â¡n ${newOrder.orderCode} Ã¢â‚¬â€ xem key trong Ã„ÂÃ†Â¡n HÃƒÂ ng!`, 'success');
     return true;
   };
 
@@ -1861,14 +1861,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const approveTopup = async (id: string) => {
     const topup = topups.find((t) => t.id === id);
     if (!topup || topup.status !== 'pending') {
-      showToast('YÃªu cáº§u náº¡p nÃ y Ä‘Ã£ Ä‘Æ°á»£c xá»­ lÃ½ trÆ°á»›c Ä‘Ã³', 'warning');
+      showToast('YÃƒÂªu cÃ¡ÂºÂ§u nÃ¡ÂºÂ¡p nÃƒÂ y Ã„â€˜ÃƒÂ£ Ã„â€˜Ã†Â°Ã¡Â»Â£c xÃ¡Â»Â­ lÃƒÂ½ trÃ†Â°Ã¡Â»â€ºc Ã„â€˜ÃƒÂ³', 'warning');
       return;
     }
 
     const targetUser = users.find((u) => u.id === topup.userId);
     const newBalance = (targetUser ? targetUser.balance : 0) + topup.amount;
 
-    // 1. Cáº­p nháº­t local state ngay láº­p tá»©c
+    // 1. CÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t local state ngay lÃ¡ÂºÂ­p tÃ¡Â»Â©c
     setUsers((prev) =>
       prev.map((u) => (u.id === topup.userId ? { ...u, balance: newBalance } : u))
     );
@@ -1885,25 +1885,25 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       )
     );
 
-    // 2. Äá»’NG Bá»˜ CLOUD: Cá»™ng sá»‘ dÆ° tháº­t trÃªn profiles (Supabase)
+    // 2. Ã„ÂÃ¡Â»â€™NG BÃ¡Â»Ëœ CLOUD: CÃ¡Â»â„¢ng sÃ¡Â»â€˜ dÃ†Â° thÃ¡ÂºÂ­t trÃƒÂªn profiles (Supabase)
     try {
-      // Thá»­ RPC admin_adjust_balance trÆ°á»›c
+      // ThÃ¡Â»Â­ RPC admin_adjust_balance trÃ†Â°Ã¡Â»â€ºc
       const { data: rpcResult, error: rpcErr } = await supabase.rpc('admin_adjust_balance', {
         p_user_id: topup.userId,
         p_amount: Math.round(topup.amount),
-        p_note: `Admin duyá»‡t náº¡p tiá»n ${topup.transferNote || ''}`,
+        p_note: `Admin duyÃ¡Â»â€¡t nÃ¡ÂºÂ¡p tiÃ¡Â»Ân ${topup.transferNote || ''}`,
       });
       if (rpcErr) {
-        // RPC chÆ°a cÃ³ â†’ fallback update trá»±c tiáº¿p báº£ng profiles
+        // RPC chÃ†Â°a cÃƒÂ³ Ã¢â€ â€™ fallback update trÃ¡Â»Â±c tiÃ¡ÂºÂ¿p bÃ¡ÂºÂ£ng profiles
         const { error: updateErr } = await supabase
           .from('profiles')
           .update({ balance: newBalance })
           .eq('id', topup.userId);
         if (updateErr) {
-          console.warn('[approveTopup] KhÃ´ng thá»ƒ Ä‘á»“ng bá»™ sá»‘ dÆ° lÃªn Cloud:', updateErr.message);
+          console.warn('[approveTopup] KhÃƒÂ´ng thÃ¡Â»Æ’ Ã„â€˜Ã¡Â»â€œng bÃ¡Â»â„¢ sÃ¡Â»â€˜ dÃ†Â° lÃƒÂªn Cloud:', updateErr.message);
         }
       } else {
-        // RPC thÃ nh cÃ´ng â†’ láº¥y sá»‘ dÆ° tháº­t tá»« káº¿t quáº£
+        // RPC thÃƒÂ nh cÃƒÂ´ng Ã¢â€ â€™ lÃ¡ÂºÂ¥y sÃ¡Â»â€˜ dÃ†Â° thÃ¡ÂºÂ­t tÃ¡Â»Â« kÃ¡ÂºÂ¿t quÃ¡ÂºÂ£
         const r = rpcResult as { status?: string; balance?: number } | null;
         if (r?.status === 'success' && r.balance !== undefined) {
           setUsers((prev) =>
@@ -1911,7 +1911,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           );
         }
       }
-      // Cáº­p nháº­t topup status trÃªn cloud
+      // CÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t topup status trÃƒÂªn cloud
       await supabase
         .from('topups')
         .update({ status: 'approved' })
@@ -1928,7 +1928,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       type: 'deposit',
       userId: topup.userId,
       userName: topup.userName,
-      description: `Náº¡p tiá»n qua ${topup.method} (${topup.transferNote})`,
+      description: `NÃ¡ÂºÂ¡p tiÃ¡Â»Ân qua ${topup.method} (${topup.transferNote})`,
       amount: topup.amount,
       balanceAfter: newBalance,
       createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
@@ -1937,7 +1937,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setTransactions((prev) => [newTx, ...prev]);
 
     showToast(
-      `ÄÃ£ duyá»‡t náº¡p tiá»n ${topup.amount.toLocaleString('vi-VN')}Ä‘ cho ${topup.userName}!`,
+      `Ã„ÂÃƒÂ£ duyÃ¡Â»â€¡t nÃ¡ÂºÂ¡p tiÃ¡Â»Ân ${topup.amount.toLocaleString('vi-VN')}Ã„â€˜ cho ${topup.userName}!`,
       'success'
     );
   };
@@ -1945,7 +1945,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const rejectTopup = (id: string, reason: string) => {
     const topup = topups.find((t) => t.id === id);
     if (!topup || topup.status !== 'pending') {
-      showToast('YÃªu cáº§u náº¡p nÃ y Ä‘Ã£ Ä‘Æ°á»£c xá»­ lÃ½ trÆ°á»›c Ä‘Ã³', 'warning');
+      showToast('YÃƒÂªu cÃ¡ÂºÂ§u nÃ¡ÂºÂ¡p nÃƒÂ y Ã„â€˜ÃƒÂ£ Ã„â€˜Ã†Â°Ã¡Â»Â£c xÃ¡Â»Â­ lÃƒÂ½ trÃ†Â°Ã¡Â»â€ºc Ã„â€˜ÃƒÂ³', 'warning');
       return;
     }
 
@@ -1955,13 +1955,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           ? {
               ...t,
               status: 'rejected',
-              rejectReason: reason || 'Giao dá»‹ch khÃ´ng khá»›p sao kÃª',
+              rejectReason: reason || 'Giao dÃ¡Â»â€¹ch khÃƒÂ´ng khÃ¡Â»â€ºp sao kÃƒÂª',
               processedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
             }
           : t
       )
     );
     showToast('ÄÃ£ tá»« chá»‘i yÃªu cáº§u náº¡p tiá»n', 'error');
+
+    // Cáº­p nháº­t cloud
+    void supabase
+      .from('topups')
+      .update({ status: 'rejected' })
+      .eq('user_id', topup.userId)
+      .eq('transfer_note', topup.transferNote);
   };
 
   const createTopupRequest = (
@@ -1971,15 +1978,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     proofImage?: string
   ): string => {
     const buyer = currentUser;
-    // Kill switch: cháº¿ Ä‘á»™ báº£o trÃ¬ â†’ khÃ´ng nháº­n náº¡p má»›i
+    // Kill switch: chÃ¡ÂºÂ¿ Ã„â€˜Ã¡Â»â„¢ bÃ¡ÂºÂ£o trÃƒÂ¬ Ã¢â€ â€™ khÃƒÂ´ng nhÃ¡ÂºÂ­n nÃ¡ÂºÂ¡p mÃ¡Â»â€ºi
     if (settings.maintenanceMode) {
-      showToast('Há»‡ thá»‘ng Ä‘ang báº£o trÃ¬ táº¡m thá»i â€” chÆ°a nháº­n yÃªu cáº§u náº¡p má»›i!', 'warning');
+      showToast('HÃ¡Â»â€¡ thÃ¡Â»â€˜ng Ã„â€˜ang bÃ¡ÂºÂ£o trÃƒÂ¬ tÃ¡ÂºÂ¡m thÃ¡Â»Âi Ã¢â‚¬â€ chÃ†Â°a nhÃ¡ÂºÂ­n yÃƒÂªu cÃ¡ÂºÂ§u nÃ¡ÂºÂ¡p mÃ¡Â»â€ºi!', 'warning');
       return '';
     }
-    // Rate limit: tá»‘i Ä‘a 5 yÃªu cáº§u náº¡p Ä‘ang chá» / ngÆ°á»i dÃ¹ng (chá»‘ng spam)
+    // Rate limit: tÃ¡Â»â€˜i Ã„â€˜a 5 yÃƒÂªu cÃ¡ÂºÂ§u nÃ¡ÂºÂ¡p Ã„â€˜ang chÃ¡Â»Â / ngÃ†Â°Ã¡Â»Âi dÃƒÂ¹ng (chÃ¡Â»â€˜ng spam)
     const pendingCount = topups.filter((t) => t.userId === buyer.id && t.status === 'pending').length;
     if (pendingCount >= 1) {
-      showToast('Bạn đang có 1 yêu cầu nạp chưa hoàn tất. Vui lòng chờ Admin duyệt mã trước đó!', 'error');
+      showToast('Báº¡n Ä‘ang cÃ³ 1 yÃªu cáº§u náº¡p chÆ°a hoÃ n táº¥t. Vui lÃ²ng chá» Admin duyá»‡t mÃ£ trÆ°á»›c Ä‘Ã³!', 'error');
       return '';
     }
     const generatedCode = '#NAP-' + Math.floor(1000 + Math.random() * 9000);
@@ -2000,19 +2007,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setNotifications((prev) => [
       {
         id: 'notif-' + Date.now(),
-        title: `YÃªu cáº§u náº¡p tiá»n má»›i ${newTopup.requestCode}`,
-        description: `${buyer.username} gá»­i yÃªu cáº§u náº¡p ${amount.toLocaleString('vi-VN')}Ä‘ qua ${method}`,
-        time: 'Vá»«a xong',
+        title: `YÃƒÂªu cÃ¡ÂºÂ§u nÃ¡ÂºÂ¡p tiÃ¡Â»Ân mÃ¡Â»â€ºi ${newTopup.requestCode}`,
+        description: `${buyer.username} gÃ¡Â»Â­i yÃƒÂªu cÃ¡ÂºÂ§u nÃ¡ÂºÂ¡p ${amount.toLocaleString('vi-VN')}Ã„â€˜ qua ${method}`,
+        time: 'VÃ¡Â»Â«a xong',
         read: false,
         type: 'topup',
       },
       ...prev,
     ]);
 
-    // === ÄÆ¯á»œNG Náº P THáº¬T (THUEAPIBANK â€” MB Bank qua THUEAPI): ghi topup lÃªn Cloud
-    // Ä‘á»ƒ webhook /api/webhook/mbbank match transfer_note vÃ  duyá»‡t tá»± Ä‘á»™ng qua RPC
-    // process_bank_webhook. Cáº§n policy "topups_insert_own" trong security_fix_rls.sql;
-    // náº¿u chÆ°a cháº¡y SQL thÃ¬ bá» qua im láº·ng vÃ  váº«n giá»¯ luá»“ng local nhÆ° cÅ©. ===
+    // === Ã„ÂÃ†Â¯Ã¡Â»Å“NG NÃ¡ÂºÂ P THÃ¡ÂºÂ¬T (THUEAPIBANK Ã¢â‚¬â€ MB Bank qua THUEAPI): ghi topup lÃƒÂªn Cloud
+    // Ã„â€˜Ã¡Â»Æ’ webhook /api/webhook/mbbank match transfer_note vÃƒÂ  duyÃ¡Â»â€¡t tÃ¡Â»Â± Ã„â€˜Ã¡Â»â„¢ng qua RPC
+    // process_bank_webhook. CÃ¡ÂºÂ§n policy "topups_insert_own" trong security_fix_rls.sql;
+    // nÃ¡ÂºÂ¿u chÃ†Â°a chÃ¡ÂºÂ¡y SQL thÃƒÂ¬ bÃ¡Â»Â qua im lÃ¡ÂºÂ·ng vÃƒÂ  vÃ¡ÂºÂ«n giÃ¡Â»Â¯ luÃ¡Â»â€œng local nhÃ†Â° cÃ…Â©. ===
     void (async () => {
       try {
         const { data: cloudTopup, error: cloudErr } = await supabase
@@ -2028,10 +2035,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           .single();
 
         if (cloudErr || !cloudTopup) {
-          console.warn('[Topup] ChÆ°a Ä‘á»“ng bá»™ Cloud (cháº¡y security_fix_rls.sql Ä‘á»ƒ báº­t):', cloudErr?.message || 'no row');
+          console.warn('[Topup] ChÃ†Â°a Ã„â€˜Ã¡Â»â€œng bÃ¡Â»â„¢ Cloud (chÃ¡ÂºÂ¡y security_fix_rls.sql Ã„â€˜Ã¡Â»Æ’ bÃ¡ÂºÂ­t):', cloudErr?.message || 'no row');
           return;
         }
-        // Polling tráº¡ng thÃ¡i: khi webhook duyá»‡t THáº¬T trÃªn DB â†’ cá»™ng sá»‘ dÆ° theo nguá»“n tháº­t
+        // Polling trÃ¡ÂºÂ¡ng thÃƒÂ¡i: khi webhook duyÃ¡Â»â€¡t THÃ¡ÂºÂ¬T trÃƒÂªn DB Ã¢â€ â€™ cÃ¡Â»â„¢ng sÃ¡Â»â€˜ dÃ†Â° theo nguÃ¡Â»â€œn thÃ¡ÂºÂ­t
         const pollId = cloudTopup.id;
         let tries = 0;
         const timer = setInterval(async () => {
@@ -2040,7 +2047,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const { data: t } = await supabase.from('topups').select('status').eq('id', pollId).maybeSingle();
             if (t?.status === 'approved') {
               clearInterval(timer);
-              // Láº¥y sá»‘ dÆ° tháº­t tá»« profiles (webhook RPC Ä‘Ã£ cá»™ng trÃªn DB)
+              // LÃ¡ÂºÂ¥y sÃ¡Â»â€˜ dÃ†Â° thÃ¡ÂºÂ­t tÃ¡Â»Â« profiles (webhook RPC Ã„â€˜ÃƒÂ£ cÃ¡Â»â„¢ng trÃƒÂªn DB)
               const { data: prof } = await supabase.from('profiles').select('balance').eq('id', buyer.id).maybeSingle();
               if (prof) {
                 setUsers((prev) => prev.map((u) => (u.id === buyer.id ? { ...u, balance: Number(prof.balance) || 0 } : u)));
@@ -2052,26 +2059,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     : tp
                 )
               );
-              showToast(`ðŸŽ‰ Webhook ngÃ¢n hÃ ng xÃ¡c nháº­n: +${amount.toLocaleString('vi-VN')}Ä‘ vÃ o vÃ­!`, 'success');
+              showToast(`Ã°Å¸Å½â€° Webhook ngÃƒÂ¢n hÃƒÂ ng xÃƒÂ¡c nhÃ¡ÂºÂ­n: +${amount.toLocaleString('vi-VN')}Ã„â€˜ vÃƒÂ o vÃƒÂ­!`, 'success');
             }
           } catch {}
-          if (tries >= 30) clearInterval(timer); // dá»«ng sau ~5 phÃºt
+          if (tries >= 30) clearInterval(timer); // dÃ¡Â»Â«ng sau ~5 phÃƒÂºt
         }, 10000);
       } catch {}
     })();
 
-    // âš ï¸ KHÃ”NG cÃ²n "auto credit simulator" phÃ­a client â€” tiá»n chá»‰ Ä‘Æ°á»£c cá»™ng khi
-    // webhook/cron THUEAPIBANK xÃ¡c nháº­n giao dá»‹ch THáº¬T trÃªn server (RPC cá»™ng
-    // vÃ­ + ghi ledger trong 1 DB transaction). Polling phÃ­a trÃªn sáº½ tá»± cáº­p nháº­t
-    // sá»‘ dÆ° hiá»ƒn thá»‹ theo nguá»“n tháº­t khi topup Ä‘Æ°á»£c duyá»‡t.
+    // Ã¢Å¡Â Ã¯Â¸Â KHÃƒâ€NG cÃƒÂ²n "auto credit simulator" phÃƒÂ­a client Ã¢â‚¬â€ tiÃ¡Â»Ân chÃ¡Â»â€° Ã„â€˜Ã†Â°Ã¡Â»Â£c cÃ¡Â»â„¢ng khi
+    // webhook/cron THUEAPIBANK xÃƒÂ¡c nhÃ¡ÂºÂ­n giao dÃ¡Â»â€¹ch THÃ¡ÂºÂ¬T trÃƒÂªn server (RPC cÃ¡Â»â„¢ng
+    // vÃƒÂ­ + ghi ledger trong 1 DB transaction). Polling phÃƒÂ­a trÃƒÂªn sÃ¡ÂºÂ½ tÃ¡Â»Â± cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t
+    // sÃ¡Â»â€˜ dÃ†Â° hiÃ¡Â»Æ’n thÃ¡Â»â€¹ theo nguÃ¡Â»â€œn thÃ¡ÂºÂ­t khi topup Ã„â€˜Ã†Â°Ã¡Â»Â£c duyÃ¡Â»â€¡t.
     showToast(
-      `ÄÃ£ táº¡o yÃªu cáº§u náº¡p ${amount.toLocaleString('vi-VN')}Ä‘ (${newTopup.transferNote}). Chuyá»ƒn khoáº£n Ä‘Ãºng ná»™i dung â€” há»‡ thá»‘ng tá»± Ä‘á»™ng cá»™ng vÃ­ khi ngÃ¢n hÃ ng xÃ¡c nháº­n.`,
+      `Ã„ÂÃƒÂ£ tÃ¡ÂºÂ¡o yÃƒÂªu cÃ¡ÂºÂ§u nÃ¡ÂºÂ¡p ${amount.toLocaleString('vi-VN')}Ã„â€˜ (${newTopup.transferNote}). ChuyÃ¡Â»Æ’n khoÃ¡ÂºÂ£n Ã„â€˜ÃƒÂºng nÃ¡Â»â„¢i dung Ã¢â‚¬â€ hÃ¡Â»â€¡ thÃ¡Â»â€˜ng tÃ¡Â»Â± Ã„â€˜Ã¡Â»â„¢ng cÃ¡Â»â„¢ng vÃƒÂ­ khi ngÃƒÂ¢n hÃƒÂ ng xÃƒÂ¡c nhÃ¡ÂºÂ­n.`,
       'info'
     );
     return generatedCode;
   };
 
-  // Card Recharge (Náº¡p tháº» cÃ o) Actions
+  // Card Recharge (NÃ¡ÂºÂ¡p thÃ¡ÂºÂ» cÃƒÂ o) Actions
   const createCardRecharge = (
     network: CardNetwork,
     declaredAmount: number,
@@ -2079,11 +2086,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     pin: string
   ): { success: boolean; message: string } => {
     if (!isAuthenticated) {
-      return { success: false, message: 'Vui lÃ²ng Ä‘Äƒng nháº­p tÃ i khoáº£n trÆ°á»›c khi náº¡p tháº»!' };
+      return { success: false, message: 'Vui lÃƒÂ²ng Ã„â€˜Ã„Æ’ng nhÃ¡ÂºÂ­p tÃƒÂ i khoÃ¡ÂºÂ£n trÃ†Â°Ã¡Â»â€ºc khi nÃ¡ÂºÂ¡p thÃ¡ÂºÂ»!' };
     }
 
     if (!serial.trim() || !pin.trim()) {
-      return { success: false, message: 'Vui lÃ²ng nháº­p Ä‘áº§y Ä‘á»§ sá»‘ Serial vÃ  MÃ£ tháº» (PIN)!' };
+      return { success: false, message: 'Vui lÃƒÂ²ng nhÃ¡ÂºÂ­p Ã„â€˜Ã¡ÂºÂ§y Ã„â€˜Ã¡Â»Â§ sÃ¡Â»â€˜ Serial vÃƒÂ  MÃƒÂ£ thÃ¡ÂºÂ» (PIN)!' };
     }
 
     const fee = settings.cardSettings?.feePercentage ?? 15;
@@ -2110,17 +2117,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setNotifications((prev) => [
       {
         id: 'notif-' + Date.now(),
-        title: `Náº¡p tháº» cÃ o má»›i ${cardCode}`,
-        description: `${currentUser.username} náº¡p tháº» ${network} ${declaredAmount.toLocaleString('vi-VN')}Ä‘ (Thá»±c nháº­n: ${receivedAmount.toLocaleString('vi-VN')}Ä‘)`,
-        time: 'Vá»«a xong',
+        title: `NÃ¡ÂºÂ¡p thÃ¡ÂºÂ» cÃƒÂ o mÃ¡Â»â€ºi ${cardCode}`,
+        description: `${currentUser.username} nÃ¡ÂºÂ¡p thÃ¡ÂºÂ» ${network} ${declaredAmount.toLocaleString('vi-VN')}Ã„â€˜ (ThÃ¡Â»Â±c nhÃ¡ÂºÂ­n: ${receivedAmount.toLocaleString('vi-VN')}Ã„â€˜)`,
+        time: 'VÃ¡Â»Â«a xong',
         read: false,
         type: 'card',
       },
       ...prev,
     ]);
 
-    showToast(`ÄÃ£ gá»­i tháº» cÃ o ${network} ${declaredAmount.toLocaleString('vi-VN')}Ä‘ lÃªn há»‡ thá»‘ng xá»­ lÃ½!`, 'success');
-    return { success: true, message: `Tháº» cÃ o ${cardCode} Ä‘Ã£ Ä‘Æ°á»£c ghi nháº­n vÃ  Ä‘ang Ä‘Æ°á»£c kiá»ƒm tra.` };
+    showToast(`Ã„ÂÃƒÂ£ gÃ¡Â»Â­i thÃ¡ÂºÂ» cÃƒÂ o ${network} ${declaredAmount.toLocaleString('vi-VN')}Ã„â€˜ lÃƒÂªn hÃ¡Â»â€¡ thÃ¡Â»â€˜ng xÃ¡Â»Â­ lÃƒÂ½!`, 'success');
+    return { success: true, message: `ThÃ¡ÂºÂ» cÃƒÂ o ${cardCode} Ã„â€˜ÃƒÂ£ Ã„â€˜Ã†Â°Ã¡Â»Â£c ghi nhÃ¡ÂºÂ­n vÃƒÂ  Ã„â€˜ang Ã„â€˜Ã†Â°Ã¡Â»Â£c kiÃ¡Â»Æ’m tra.` };
   };
 
   const approveCardRecharge = (id: string) => {
@@ -2146,7 +2153,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       type: 'card_recharge',
       userId: card.userId,
       userName: card.userName,
-      description: `Náº¡p tháº» cÃ o ${card.network} ${card.declaredAmount.toLocaleString('vi-VN')}Ä‘ thÃ nh cÃ´ng (+${card.receivedAmount.toLocaleString('vi-VN')}Ä‘ vÃ o vÃ­)`,
+      description: `NÃ¡ÂºÂ¡p thÃ¡ÂºÂ» cÃƒÂ o ${card.network} ${card.declaredAmount.toLocaleString('vi-VN')}Ã„â€˜ thÃƒÂ nh cÃƒÂ´ng (+${card.receivedAmount.toLocaleString('vi-VN')}Ã„â€˜ vÃƒÂ o vÃƒÂ­)`,
       amount: card.receivedAmount,
       balanceAfter: newBalance,
       createdAt: nowStr,
@@ -2154,7 +2161,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
     setTransactions((prev) => [newTx, ...prev]);
 
-    showToast(`ÄÃ£ duyá»‡t tháº» cÃ o ${card.code} vÃ  cá»™ng ${card.receivedAmount.toLocaleString('vi-VN')}Ä‘ vÃ o vÃ­ khÃ¡ch hÃ ng ${card.userName}!`, 'success');
+    showToast(`Ã„ÂÃƒÂ£ duyÃ¡Â»â€¡t thÃ¡ÂºÂ» cÃƒÂ o ${card.code} vÃƒÂ  cÃ¡Â»â„¢ng ${card.receivedAmount.toLocaleString('vi-VN')}Ã„â€˜ vÃƒÂ o vÃƒÂ­ khÃƒÂ¡ch hÃƒÂ ng ${card.userName}!`, 'success');
   };
 
   const rejectCardRecharge = (id: string, reason: string) => {
@@ -2164,21 +2171,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         c.id === id ? { ...c, status: 'invalid', processedAt: nowStr, note: reason } : c
       )
     );
-    showToast('ÄÃ£ tá»« chá»‘i tháº» cÃ o khÃ´ng há»£p lá»‡', 'info');
+    showToast('Ã„ÂÃƒÂ£ tÃ¡Â»Â« chÃ¡Â»â€˜i thÃ¡ÂºÂ» cÃƒÂ o khÃƒÂ´ng hÃ¡Â»Â£p lÃ¡Â»â€¡', 'info');
   };
 
   // Seller Program Actions
   const applySeller = (note?: string): { success: boolean; message: string } => {
     if (!isAuthenticated) {
-      return { success: false, message: 'Vui lÃ²ng Ä‘Äƒng nháº­p Ä‘á»ƒ Ä‘Äƒng kÃ½ trá»Ÿ thÃ nh Äáº¡i LÃ½ / Seller!' };
+      return { success: false, message: 'Vui lÃƒÂ²ng Ã„â€˜Ã„Æ’ng nhÃ¡ÂºÂ­p Ã„â€˜Ã¡Â»Æ’ Ã„â€˜Ã„Æ’ng kÃƒÂ½ trÃ¡Â»Å¸ thÃƒÂ nh Ã„ÂÃ¡ÂºÂ¡i LÃƒÂ½ / Seller!' };
     }
 
     if (currentUser.sellerStatus === 'approved') {
-      return { success: false, message: 'Báº¡n Ä‘Ã£ lÃ  Äáº¡i LÃ½ / Seller cá»§a Thanox!' };
+      return { success: false, message: 'BÃ¡ÂºÂ¡n Ã„â€˜ÃƒÂ£ lÃƒÂ  Ã„ÂÃ¡ÂºÂ¡i LÃƒÂ½ / Seller cÃ¡Â»Â§a Thanox!' };
     }
 
     if (currentUser.sellerStatus === 'pending') {
-      return { success: false, message: 'YÃªu cáº§u Ä‘Äƒng kÃ½ Äáº¡i LÃ½ cá»§a báº¡n Ä‘ang chá» Admin phÃª duyá»‡t!' };
+      return { success: false, message: 'YÃƒÂªu cÃ¡ÂºÂ§u Ã„â€˜Ã„Æ’ng kÃƒÂ½ Ã„ÂÃ¡ÂºÂ¡i LÃƒÂ½ cÃ¡Â»Â§a bÃ¡ÂºÂ¡n Ã„â€˜ang chÃ¡Â»Â Admin phÃƒÂª duyÃ¡Â»â€¡t!' };
     }
 
     const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
@@ -2189,7 +2196,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           ? {
               ...u,
               sellerStatus: 'pending',
-              sellerNote: note || 'ÄÄƒng kÃ½ chÆ°Æ¡ng trÃ¬nh Äáº¡i LÃ½ Thanox',
+              sellerNote: note || 'Ã„ÂÃ„Æ’ng kÃƒÂ½ chÃ†Â°Ã†Â¡ng trÃƒÂ¬nh Ã„ÂÃ¡ÂºÂ¡i LÃƒÂ½ Thanox',
               sellerAppliedAt: nowStr,
             }
           : u
@@ -2199,17 +2206,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setNotifications((prev) => [
       {
         id: 'notif-' + Date.now(),
-        title: 'ÄÄƒng kÃ½ Äáº¡i LÃ½ / Seller má»›i',
-        description: `ThÃ nh viÃªn ${currentUser.username} vá»«a Ä‘Äƒng kÃ½ trá»Ÿ thÃ nh Äáº¡i LÃ½ / CTV`,
-        time: 'Vá»«a xong',
+        title: 'Ã„ÂÃ„Æ’ng kÃƒÂ½ Ã„ÂÃ¡ÂºÂ¡i LÃƒÂ½ / Seller mÃ¡Â»â€ºi',
+        description: `ThÃƒÂ nh viÃƒÂªn ${currentUser.username} vÃ¡Â»Â«a Ã„â€˜Ã„Æ’ng kÃƒÂ½ trÃ¡Â»Å¸ thÃƒÂ nh Ã„ÂÃ¡ÂºÂ¡i LÃƒÂ½ / CTV`,
+        time: 'VÃ¡Â»Â«a xong',
         read: false,
         type: 'seller',
       },
       ...prev,
     ]);
 
-    showToast('ÄÃ£ gá»­i yÃªu cáº§u Ä‘Äƒng kÃ½ Äáº¡i LÃ½! Admin sáº½ duyá»‡t tÃ i khoáº£n cá»§a báº¡n sá»›m nháº¥t.', 'success');
-    return { success: true, message: 'ÄÄƒng kÃ½ thÃ nh cÃ´ng, vui lÃ²ng chá» duyá»‡t!' };
+    showToast('Ã„ÂÃƒÂ£ gÃ¡Â»Â­i yÃƒÂªu cÃ¡ÂºÂ§u Ã„â€˜Ã„Æ’ng kÃƒÂ½ Ã„ÂÃ¡ÂºÂ¡i LÃƒÂ½! Admin sÃ¡ÂºÂ½ duyÃ¡Â»â€¡t tÃƒÂ i khoÃ¡ÂºÂ£n cÃ¡Â»Â§a bÃ¡ÂºÂ¡n sÃ¡Â»â€ºm nhÃ¡ÂºÂ¥t.', 'success');
+    return { success: true, message: 'Ã„ÂÃ„Æ’ng kÃƒÂ½ thÃƒÂ nh cÃƒÂ´ng, vui lÃƒÂ²ng chÃ¡Â»Â duyÃ¡Â»â€¡t!' };
   };
 
   const updateSellerStatus = (userId: string, status: SellerStatus, note?: string) => {
@@ -2227,22 +2234,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           : u
       )
     );
-    showToast(`ÄÃ£ cáº­p nháº­t tráº¡ng thÃ¡i Äáº¡i LÃ½ cá»§a tÃ i khoáº£n sang "${status}"`, 'info');
+    showToast(`Ã„ÂÃƒÂ£ cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t trÃ¡ÂºÂ¡ng thÃƒÂ¡i Ã„ÂÃ¡ÂºÂ¡i LÃƒÂ½ cÃ¡Â»Â§a tÃƒÂ i khoÃ¡ÂºÂ£n sang "${status}"`, 'info');
   };
 
   // Auth Operations
   const login = async (identifier: string, password: string, _rememberMe = true): Promise<{ success: boolean; message?: string }> => {
     const cleanId = identifier.trim().toLowerCase();
-    if (!cleanId) return { success: false, message: 'Vui lÃ²ng nháº­p tÃªn Ä‘Äƒng nháº­p hoáº·c email' };
+    if (!cleanId) return { success: false, message: 'Vui lÃƒÂ²ng nhÃ¡ÂºÂ­p tÃƒÂªn Ã„â€˜Ã„Æ’ng nhÃ¡ÂºÂ­p hoÃ¡ÂºÂ·c email' };
 
-    // === CHá»NG DÃ’ Máº¬T KHáº¨U (brute force): 5 láº§n sai liÃªn tiáº¿p => khÃ³a 5 phÃºt ===
+    // === CHÃ¡Â»ÂNG DÃƒâ€™ MÃ¡ÂºÂ¬T KHÃ¡ÂºÂ¨U (brute force): 5 lÃ¡ÂºÂ§n sai liÃƒÂªn tiÃ¡ÂºÂ¿p => khÃƒÂ³a 5 phÃƒÂºt ===
     try {
       const raw = localStorage.getItem('thanox_login_guard');
       if (raw) {
         const guard = JSON.parse(raw) as { fails: number; lockedUntil?: number };
         if (guard.lockedUntil && Date.now() < guard.lockedUntil) {
           const secs = Math.ceil((guard.lockedUntil - Date.now()) / 1000);
-          return { success: false, message: `Báº¡n Ä‘Ã£ nháº­p sai quÃ¡ nhiá»u láº§n. Vui lÃ²ng thá»­ láº¡i sau ${secs} giÃ¢y.` };
+          return { success: false, message: `BÃ¡ÂºÂ¡n Ã„â€˜ÃƒÂ£ nhÃ¡ÂºÂ­p sai quÃƒÂ¡ nhiÃ¡Â»Âu lÃ¡ÂºÂ§n. Vui lÃƒÂ²ng thÃ¡Â»Â­ lÃ¡ÂºÂ¡i sau ${secs} giÃƒÂ¢y.` };
         }
       }
     } catch {}
@@ -2268,7 +2275,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           targetEmail = profile.email;
         } else {
           const g = recordLoginFail();
-          return { success: false, message: g.lockedUntil ? 'Báº¡n Ä‘Ã£ nháº­p sai quÃ¡ nhiá»u láº§n. Vui lÃ²ng thá»­ láº¡i sau 5 phÃºt.' : `Sai tÃ i khoáº£n hoáº·c máº­t kháº©u. (CÃ²n ${5 - g.fails} láº§n thá»­)` };
+          return { success: false, message: g.lockedUntil ? 'BÃ¡ÂºÂ¡n Ã„â€˜ÃƒÂ£ nhÃ¡ÂºÂ­p sai quÃƒÂ¡ nhiÃ¡Â»Âu lÃ¡ÂºÂ§n. Vui lÃƒÂ²ng thÃ¡Â»Â­ lÃ¡ÂºÂ¡i sau 5 phÃƒÂºt.' : `Sai tÃƒÂ i khoÃ¡ÂºÂ£n hoÃ¡ÂºÂ·c mÃ¡ÂºÂ­t khÃ¡ÂºÂ©u. (CÃƒÂ²n ${5 - g.fails} lÃ¡ÂºÂ§n thÃ¡Â»Â­)` };
         }
       }
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -2278,16 +2285,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (authError || !authData.user) {
         const g = recordLoginFail();
         if (g.lockedUntil) {
-          return { success: false, message: 'Báº¡n Ä‘Ã£ nháº­p sai quÃ¡ nhiá»u láº§n. TÃ i khoáº£n bá»‹ khÃ³a táº¡m 5 phÃºt.' };
+          return { success: false, message: 'BÃ¡ÂºÂ¡n Ã„â€˜ÃƒÂ£ nhÃ¡ÂºÂ­p sai quÃƒÂ¡ nhiÃ¡Â»Âu lÃ¡ÂºÂ§n. TÃƒÂ i khoÃ¡ÂºÂ£n bÃ¡Â»â€¹ khÃƒÂ³a tÃ¡ÂºÂ¡m 5 phÃƒÂºt.' };
         }
         // Give users an actionable message for unconfirmed emails instead of a generic one
         if (authError?.message?.toLowerCase().includes('email not confirmed')) {
-          return { success: false, message: 'TÃ i khoáº£n chÆ°a xÃ¡c nháº­n email. Vui lÃ²ng kiá»ƒm tra há»™p thÆ° (cáº£ má»¥c Spam) vÃ  báº¥m link kÃ­ch hoáº¡t.' };
+          return { success: false, message: 'TÃƒÂ i khoÃ¡ÂºÂ£n chÃ†Â°a xÃƒÂ¡c nhÃ¡ÂºÂ­n email. Vui lÃƒÂ²ng kiÃ¡Â»Æ’m tra hÃ¡Â»â„¢p thÃ†Â° (cÃ¡ÂºÂ£ mÃ¡Â»Â¥c Spam) vÃƒÂ  bÃ¡ÂºÂ¥m link kÃƒÂ­ch hoÃ¡ÂºÂ¡t.' };
         }
-        return { success: false, message: `Sai tÃ i khoáº£n hoáº·c máº­t kháº©u. (CÃ²n ${5 - g.fails} láº§n thá»­)` };
+        return { success: false, message: `Sai tÃƒÂ i khoÃ¡ÂºÂ£n hoÃ¡ÂºÂ·c mÃ¡ÂºÂ­t khÃ¡ÂºÂ©u. (CÃƒÂ²n ${5 - g.fails} lÃ¡ÂºÂ§n thÃ¡Â»Â­)` };
       }
 
-      // ÄÄƒng nháº­p thÃ nh cÃ´ng => xÃ³a bá»™ Ä‘áº¿m sai
+      // Ã„ÂÃ„Æ’ng nhÃ¡ÂºÂ­p thÃƒÂ nh cÃƒÂ´ng => xÃƒÂ³a bÃ¡Â»â„¢ Ã„â€˜Ã¡ÂºÂ¿m sai
       try {
         localStorage.removeItem('thanox_login_guard');
       } catch {}
@@ -2318,20 +2325,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       return { success: true };
     } catch (err) {
-      return { success: false, message: 'Lá»—i mÃ¡y chá»§, vui lÃ²ng thá»­ láº¡i.' };
+      return { success: false, message: 'LÃ¡Â»â€”i mÃƒÂ¡y chÃ¡Â»Â§, vui lÃƒÂ²ng thÃ¡Â»Â­ lÃ¡ÂºÂ¡i.' };
     }
   };
 
   const register = async (username: string, email: string, password: string): Promise<{ success: boolean; message?: string }> => {
     const cleanUsername = username.trim();
     const cleanEmail = email.trim().toLowerCase();
-    if (!cleanUsername || cleanUsername.length < 3) return { success: false, message: 'TÃªn Ä‘Äƒng nháº­p pháº£i cÃ³ Ã­t nháº¥t 3 kÃ½ tá»±.' };
-    if (!/^[a-zA-Z0-9_]+$/.test(cleanUsername)) return { success: false, message: 'TÃªn Ä‘Äƒng nháº­p chá»‰ bao gá»“m chá»¯ cÃ¡i, sá»‘ vÃ  dáº¥u gáº¡ch dÆ°á»›i (_).' };
-    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) return { success: false, message: 'Äá»‹a chá»‰ email khÃ´ng há»£p lá»‡.' };
-    if (!password || password.length < 6) return { success: false, message: 'Máº­t kháº©u pháº£i cÃ³ Ã­t nháº¥t 6 kÃ½ tá»±.' };
+    if (!cleanUsername || cleanUsername.length < 3) return { success: false, message: 'TÃƒÂªn Ã„â€˜Ã„Æ’ng nhÃ¡ÂºÂ­p phÃ¡ÂºÂ£i cÃƒÂ³ ÃƒÂ­t nhÃ¡ÂºÂ¥t 3 kÃƒÂ½ tÃ¡Â»Â±.' };
+    if (!/^[a-zA-Z0-9_]+$/.test(cleanUsername)) return { success: false, message: 'TÃƒÂªn Ã„â€˜Ã„Æ’ng nhÃ¡ÂºÂ­p chÃ¡Â»â€° bao gÃ¡Â»â€œm chÃ¡Â»Â¯ cÃƒÂ¡i, sÃ¡Â»â€˜ vÃƒÂ  dÃ¡ÂºÂ¥u gÃ¡ÂºÂ¡ch dÃ†Â°Ã¡Â»â€ºi (_).' };
+    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) return { success: false, message: 'Ã„ÂÃ¡Â»â€¹a chÃ¡Â»â€° email khÃƒÂ´ng hÃ¡Â»Â£p lÃ¡Â»â€¡.' };
+    if (!password || password.length < 6) return { success: false, message: 'MÃ¡ÂºÂ­t khÃ¡ÂºÂ©u phÃ¡ÂºÂ£i cÃƒÂ³ ÃƒÂ­t nhÃ¡ÂºÂ¥t 6 kÃƒÂ½ tÃ¡Â»Â±.' };
     try {
       const { data: existingUser } = await supabase.from('profiles').select('username').eq('username', cleanUsername).single();
-      if (existingUser) return { success: false, message: 'TÃªn Ä‘Äƒng nháº­p Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng.' };
+      if (existingUser) return { success: false, message: 'TÃƒÂªn Ã„â€˜Ã„Æ’ng nhÃ¡ÂºÂ­p Ã„â€˜ÃƒÂ£ Ã„â€˜Ã†Â°Ã¡Â»Â£c sÃ¡Â»Â­ dÃ¡Â»Â¥ng.' };
       
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: cleanEmail,
@@ -2339,16 +2346,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         options: { data: { username: cleanUsername } }
       });
       if (authError) {
-        let msg = 'ÄÄƒng kÃ½ khÃ´ng thÃ nh cÃ´ng.';
+        let msg = 'Ã„ÂÃ„Æ’ng kÃƒÂ½ khÃƒÂ´ng thÃƒÂ nh cÃƒÂ´ng.';
         const m = authError.message.toLowerCase();
         if (m.includes('already registered') || m.includes('already been registered')) {
-          msg = 'Email nÃ y Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng.';
+          msg = 'Email nÃƒÂ y Ã„â€˜ÃƒÂ£ Ã„â€˜Ã†Â°Ã¡Â»Â£c sÃ¡Â»Â­ dÃ¡Â»Â¥ng.';
         } else if (m.includes('rate limit')) {
-          msg = 'Báº¡n Ä‘Ã£ Ä‘Äƒng kÃ½ quÃ¡ nhiá»u láº§n. Vui lÃ²ng thá»­ láº¡i sau Ã­t phÃºt.';
+          msg = 'BÃ¡ÂºÂ¡n Ã„â€˜ÃƒÂ£ Ã„â€˜Ã„Æ’ng kÃƒÂ½ quÃƒÂ¡ nhiÃ¡Â»Âu lÃ¡ÂºÂ§n. Vui lÃƒÂ²ng thÃ¡Â»Â­ lÃ¡ÂºÂ¡i sau ÃƒÂ­t phÃƒÂºt.';
         }
         return { success: false, message: msg };
       }
-      // ThÃªm user má»›i vÃ o local state ngay láº­p tá»©c Ä‘á»ƒ hiá»ƒn thá»‹ trong admin panel
+      // ThÃƒÂªm user mÃ¡Â»â€ºi vÃƒÂ o local state ngay lÃ¡ÂºÂ­p tÃ¡Â»Â©c Ã„â€˜Ã¡Â»Æ’ hiÃ¡Â»Æ’n thÃ¡Â»â€¹ trong admin panel
       if (authData.user) {
         const newUser: User = {
           id: authData.user.id,
@@ -2369,54 +2376,54 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           return [...prev, newUser];
         });
       }
-      showToast('ÄÄƒng kÃ½ tÃ i khoáº£n thÃ nh cÃ´ng! Vui lÃ²ng kiá»ƒm tra email Ä‘á»ƒ kÃ­ch hoáº¡t tÃ i khoáº£n trÆ°á»›c khi Ä‘Äƒng nháº­p.', 'success');
+      showToast('Ã„ÂÃ„Æ’ng kÃƒÂ½ tÃƒÂ i khoÃ¡ÂºÂ£n thÃƒÂ nh cÃƒÂ´ng! Vui lÃƒÂ²ng kiÃ¡Â»Æ’m tra email Ã„â€˜Ã¡Â»Æ’ kÃƒÂ­ch hoÃ¡ÂºÂ¡t tÃƒÂ i khoÃ¡ÂºÂ£n trÃ†Â°Ã¡Â»â€ºc khi Ã„â€˜Ã„Æ’ng nhÃ¡ÂºÂ­p.', 'success');
       return { success: true };
     } catch (err) {
-      return { success: false, message: 'ÄÃ£ xáº£y ra lá»—i káº¿t ná»‘i. Vui lÃ²ng thá»­ láº¡i sau.' };
+      return { success: false, message: 'Ã„ÂÃƒÂ£ xÃ¡ÂºÂ£y ra lÃ¡Â»â€”i kÃ¡ÂºÂ¿t nÃ¡Â»â€˜i. Vui lÃƒÂ²ng thÃ¡Â»Â­ lÃ¡ÂºÂ¡i sau.' };
     }
   };
 
   const logout = async () => {
     await supabase.auth.signOut();
     setCurrentUserId(null);
-    showToast('ÄÃ£ Ä‘Äƒng xuáº¥t khá»i há»‡ thá»‘ng', 'info');
+    showToast('Ã„ÂÃƒÂ£ Ã„â€˜Ã„Æ’ng xuÃ¡ÂºÂ¥t khÃ¡Â»Âi hÃ¡Â»â€¡ thÃ¡Â»â€˜ng', 'info');
   };
 
   // Forgot Password: Email normalization & OTP generation
   const requestPasswordReset = async (email: string): Promise<{ success: boolean; message?: string; otp?: string }> => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email);
-      if (error) return { success: false, message: 'Lá»—i khi gá»­i email xÃ¡c thá»±c.' };
-      return { success: true, message: 'ÄÃ£ gá»­i email khÃ´i phá»¥c máº­t kháº©u.' };
+      if (error) return { success: false, message: 'LÃ¡Â»â€”i khi gÃ¡Â»Â­i email xÃƒÂ¡c thÃ¡Â»Â±c.' };
+      return { success: true, message: 'Ã„ÂÃƒÂ£ gÃ¡Â»Â­i email khÃƒÂ´i phÃ¡Â»Â¥c mÃ¡ÂºÂ­t khÃ¡ÂºÂ©u.' };
     } catch (err) {
-      return { success: false, message: 'Lá»—i mÃ¡y chá»§.' };
+      return { success: false, message: 'LÃ¡Â»â€”i mÃƒÂ¡y chÃ¡Â»Â§.' };
     }
   };
 
   const resetPassword = async (email: string, otpOrToken: string, newPassword: string): Promise<{ success: boolean; message?: string }> => {
     try {
       const { error } = await supabase.auth.verifyOtp({ email, token: otpOrToken, type: 'recovery' });
-      if (error) return { success: false, message: 'MÃ£ xÃ¡c thá»±c khÃ´ng há»£p lá»‡.' };
+      if (error) return { success: false, message: 'MÃƒÂ£ xÃƒÂ¡c thÃ¡Â»Â±c khÃƒÂ´ng hÃ¡Â»Â£p lÃ¡Â»â€¡.' };
       const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
-      if (updateError) return { success: false, message: 'KhÃ´ng thá»ƒ cáº­p nháº­t máº­t kháº©u.' };
+      if (updateError) return { success: false, message: 'KhÃƒÂ´ng thÃ¡Â»Æ’ cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t mÃ¡ÂºÂ­t khÃ¡ÂºÂ©u.' };
       return { success: true };
     } catch (err) {
-      return { success: false, message: 'Lá»—i mÃ¡y chá»§.' };
+      return { success: false, message: 'LÃ¡Â»â€”i mÃƒÂ¡y chÃ¡Â»Â§.' };
     }
   };
 
   // Admin Direct Password Reset for Customer Assistance
   const adminResetPassword = async (userId: string, newPass: string): Promise<{ success: boolean; message: string }> => {
     if (!newPass || newPass.length < 6) {
-      return { success: false, message: 'Máº­t kháº©u má»›i pháº£i cÃ³ Ã­t nháº¥t 6 kÃ½ tá»±!' };
+      return { success: false, message: 'MÃ¡ÂºÂ­t khÃ¡ÂºÂ©u mÃ¡Â»â€ºi phÃ¡ÂºÂ£i cÃƒÂ³ ÃƒÂ­t nhÃ¡ÂºÂ¥t 6 kÃƒÂ½ tÃ¡Â»Â±!' };
     }
 
     setUsers((prev) =>
       prev.map((u) => (u.id === userId ? { ...u, password: newPass } : u))
     );
 
-    showToast('ÄÃ£ Ä‘áº·t láº¡i máº­t kháº©u má»›i cho tÃ i khoáº£n khÃ¡ch hÃ ng thÃ nh cÃ´ng!', 'success');
-    return { success: true, message: 'Máº­t kháº©u Ä‘Ã£ Ä‘Æ°á»£c cáº­p nháº­t.' };
+    showToast('Ã„ÂÃƒÂ£ Ã„â€˜Ã¡ÂºÂ·t lÃ¡ÂºÂ¡i mÃ¡ÂºÂ­t khÃ¡ÂºÂ©u mÃ¡Â»â€ºi cho tÃƒÂ i khoÃ¡ÂºÂ£n khÃƒÂ¡ch hÃƒÂ ng thÃƒÂ nh cÃƒÂ´ng!', 'success');
+    return { success: true, message: 'MÃ¡ÂºÂ­t khÃ¡ÂºÂ©u Ã„â€˜ÃƒÂ£ Ã„â€˜Ã†Â°Ã¡Â»Â£c cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t.' };
   };
 
   const updateUserProfile = (updates: Partial<User>) => {
@@ -2424,7 +2431,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setUsers((prev) =>
       prev.map((u) => (u.id === currentUser.id ? { ...u, ...updates } : u))
     );
-    showToast('ÄÃ£ cáº­p nháº­t há»“ sÆ¡ cÃ¡ nhÃ¢n thÃ nh cÃ´ng!', 'success');
+    showToast('Ã„ÂÃƒÂ£ cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t hÃ¡Â»â€œ sÃ†Â¡ cÃƒÂ¡ nhÃƒÂ¢n thÃƒÂ nh cÃƒÂ´ng!', 'success');
   };
 
   // User Actions
@@ -2448,10 +2455,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (legacyErr) throw legacyErr;
         }
       }
-      showToast('ÄÃ£ cáº­p nháº­t thÃ´ng tin ngÆ°á»i dÃ¹ng trÃªn Cloud', 'success');
+      showToast('Ã„ÂÃƒÂ£ cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t thÃƒÂ´ng tin ngÃ†Â°Ã¡Â»Âi dÃƒÂ¹ng trÃƒÂªn Cloud', 'success');
     } catch (e) {
       console.error(e);
-      showToast('Lá»—i khi cáº­p nháº­t trÃªn Cloud', 'error');
+      showToast('LÃ¡Â»â€”i khi cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t trÃƒÂªn Cloud', 'error');
     }
   };
 
@@ -2459,7 +2466,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const target = users.find((u) => u.id === id);
     if (!target) return;
     if (target.role === 'admin' || target.username === 'admin') {
-      showToast('KhÃ´ng thá»ƒ xÃ³a tÃ i khoáº£n Quáº£n trá»‹ viÃªn Master (Super Admin)', 'error');
+      showToast('KhÃƒÂ´ng thÃ¡Â»Æ’ xÃƒÂ³a tÃƒÂ i khoÃ¡ÂºÂ£n QuÃ¡ÂºÂ£n trÃ¡Â»â€¹ viÃƒÂªn Master (Super Admin)', 'error');
       return;
     }
     setUsers((prev) => prev.filter((u) => u.id !== id));
@@ -2471,10 +2478,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const { error: legacyErr } = await supabase.from('users').delete().eq('id', id);
         if (legacyErr) throw legacyErr;
       }
-      showToast(`ÄÃ£ xÃ³a tÃ i khoáº£n ${target.username} trÃªn Cloud thÃ nh cÃ´ng`, 'success');
+      showToast(`Ã„ÂÃƒÂ£ xÃƒÂ³a tÃƒÂ i khoÃ¡ÂºÂ£n ${target.username} trÃƒÂªn Cloud thÃƒÂ nh cÃƒÂ´ng`, 'success');
     } catch (e) {
       console.error(e);
-      showToast('Lá»—i khi xÃ³a tÃ i khoáº£n trÃªn Cloud', 'error');
+      showToast('LÃ¡Â»â€”i khi xÃƒÂ³a tÃƒÂ i khoÃ¡ÂºÂ£n trÃƒÂªn Cloud', 'error');
     }
   };
 
@@ -2482,8 +2489,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const targetUser = users.find((u) => u.id === userId);
     if (!targetUser) return;
 
-    // SERVER-SIDE: RPC admin_adjust_balance â€” cá»™ng Ä‘Ãºng báº£ng profiles (sá»‘ dÆ° tháº­t),
-    // khÃ³a dÃ²ng, ghi ledger + audit_log. KHÃ”NG sá»­a balance trá»±c tiáº¿p á»Ÿ client.
+    // SERVER-SIDE: RPC admin_adjust_balance Ã¢â‚¬â€ cÃ¡Â»â„¢ng Ã„â€˜ÃƒÂºng bÃ¡ÂºÂ£ng profiles (sÃ¡Â»â€˜ dÃ†Â° thÃ¡ÂºÂ­t),
+    // khÃƒÂ³a dÃƒÂ²ng, ghi ledger + audit_log. KHÃƒâ€NG sÃ¡Â»Â­a balance trÃ¡Â»Â±c tiÃ¡ÂºÂ¿p Ã¡Â»Å¸ client.
     try {
       const { data, error } = await supabase.rpc('admin_adjust_balance', {
         p_user_id: userId,
@@ -2493,7 +2500,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (error) throw error;
       const r = data as { status?: string; code?: string; balance?: number } | null;
       if (r?.status !== 'success') {
-        showToast(r?.code === 'FORBIDDEN' ? 'Báº¡n khÃ´ng cÃ³ quyá»n Ä‘iá»u chá»‰nh sá»‘ dÆ°!' : 'KhÃ´ng thá»ƒ Ä‘iá»u chá»‰nh sá»‘ dÆ° (' + (r?.code || 'lá»—i') + ')', 'error');
+        showToast(r?.code === 'FORBIDDEN' ? 'BÃ¡ÂºÂ¡n khÃƒÂ´ng cÃƒÂ³ quyÃ¡Â»Ân Ã„â€˜iÃ¡Â»Âu chÃ¡Â»â€°nh sÃ¡Â»â€˜ dÃ†Â°!' : 'KhÃƒÂ´ng thÃ¡Â»Æ’ Ã„â€˜iÃ¡Â»Âu chÃ¡Â»â€°nh sÃ¡Â»â€˜ dÃ†Â° (' + (r?.code || 'lÃ¡Â»â€”i') + ')', 'error');
         return;
       }
       const newBalance = Number(r.balance ?? 0);
@@ -2504,7 +2511,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         type: amount >= 0 ? 'deposit' : 'withdraw',
         userId: targetUser.id,
         userName: targetUser.username,
-        description: `Äiá»u chá»‰nh sá»‘ dÆ° bá»Ÿi Admin (${note || 'Thao tÃ¡c thá»§ cÃ´ng'})`,
+        description: `Ã„ÂiÃ¡Â»Âu chÃ¡Â»â€°nh sÃ¡Â»â€˜ dÃ†Â° bÃ¡Â»Å¸i Admin (${note || 'Thao tÃƒÂ¡c thÃ¡Â»Â§ cÃƒÂ´ng'})`,
         amount,
         balanceAfter: newBalance,
         createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
@@ -2512,17 +2519,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
       setTransactions((prev) => [newTx, ...prev]);
       showToast(
-        `ÄÃ£ ${amount >= 0 ? 'cá»™ng' : 'trá»«'} ${Math.abs(amount).toLocaleString('vi-VN')}Ä‘ vÃ o vÃ­ cá»§a ${targetUser.username} (sá»‘ dÆ° má»›i: ${newBalance.toLocaleString('vi-VN')}Ä‘)`,
+        `Ã„ÂÃƒÂ£ ${amount >= 0 ? 'cÃ¡Â»â„¢ng' : 'trÃ¡Â»Â«'} ${Math.abs(amount).toLocaleString('vi-VN')}Ã„â€˜ vÃƒÂ o vÃƒÂ­ cÃ¡Â»Â§a ${targetUser.username} (sÃ¡Â»â€˜ dÃ†Â° mÃ¡Â»â€ºi: ${newBalance.toLocaleString('vi-VN')}Ã„â€˜)`,
         'success'
       );
     } catch (e) {
       console.error(e);
-      showToast('Lá»—i Ä‘iá»u chá»‰nh sá»‘ dÆ° (server)', 'error');
+      showToast('LÃ¡Â»â€”i Ã„â€˜iÃ¡Â»Âu chÃ¡Â»â€°nh sÃ¡Â»â€˜ dÃ†Â° (server)', 'error');
     }
   };
 
-  // ADMIN HOÃ€N TIá»€N ÄÆ N CLOUD â€” RPC admin_refund_order: cá»™ng láº¡i vÃ­ Ä‘Ãºng 1 láº§n,
-  // Ä‘Æ¡n -> refunded, ledger REFUND + audit. KHÃ”NG sá»­a lá»‹ch sá»­ gá»‘c.
+  // ADMIN HOÃƒâ‚¬N TIÃ¡Â»â‚¬N Ã„ÂÃ†Â N CLOUD Ã¢â‚¬â€ RPC admin_refund_order: cÃ¡Â»â„¢ng lÃ¡ÂºÂ¡i vÃƒÂ­ Ã„â€˜ÃƒÂºng 1 lÃ¡ÂºÂ§n,
+  // Ã„â€˜Ã†Â¡n -> refunded, ledger REFUND + audit. KHÃƒâ€NG sÃ¡Â»Â­a lÃ¡Â»â€¹ch sÃ¡Â»Â­ gÃ¡Â»â€˜c.
   const refundOrder = async (orderId: string, reason: string): Promise<boolean> => {
     try {
       const { data, error } = await supabase.rpc('admin_refund_order', {
@@ -2533,19 +2540,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const r = data as { status?: string; code?: string; refunded?: number } | null;
       if (r?.status !== 'success') {
         showToast(
-          r?.code === 'ALREADY_REFUNDED' ? 'ÄÆ¡n nÃ y Ä‘Ã£ Ä‘Æ°á»£c hoÃ n tiá»n trÆ°á»›c Ä‘Ã³!' :
-          r?.code === 'NOT_REFUNDABLE' ? 'Chá»‰ hoÃ n tiá»n Ä‘Æ°á»£c Ä‘Æ¡n Ä‘Ã£ hoÃ n thÃ nh!' :
-          r?.code === 'FORBIDDEN' ? 'Báº¡n khÃ´ng cÃ³ quyá»n hoÃ n tiá»n!' : 'KhÃ´ng thá»ƒ hoÃ n tiá»n (' + (r?.code || 'lá»—i') + ')',
+          r?.code === 'ALREADY_REFUNDED' ? 'Ã„ÂÃ†Â¡n nÃƒÂ y Ã„â€˜ÃƒÂ£ Ã„â€˜Ã†Â°Ã¡Â»Â£c hoÃƒÂ n tiÃ¡Â»Ân trÃ†Â°Ã¡Â»â€ºc Ã„â€˜ÃƒÂ³!' :
+          r?.code === 'NOT_REFUNDABLE' ? 'ChÃ¡Â»â€° hoÃƒÂ n tiÃ¡Â»Ân Ã„â€˜Ã†Â°Ã¡Â»Â£c Ã„â€˜Ã†Â¡n Ã„â€˜ÃƒÂ£ hoÃƒÂ n thÃƒÂ nh!' :
+          r?.code === 'FORBIDDEN' ? 'BÃ¡ÂºÂ¡n khÃƒÂ´ng cÃƒÂ³ quyÃ¡Â»Ân hoÃƒÂ n tiÃ¡Â»Ân!' : 'KhÃƒÂ´ng thÃ¡Â»Æ’ hoÃƒÂ n tiÃ¡Â»Ân (' + (r?.code || 'lÃ¡Â»â€”i') + ')',
           'error'
         );
         return false;
       }
       setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: 'refunded' as const } : o)));
-      showToast(`âœ… ÄÃ£ hoÃ n ${(r.refunded ?? 0).toLocaleString('vi-VN')}Ä‘ vÃ o vÃ­ khÃ¡ch (ledger REFUND + audit Ä‘Ã£ ghi)`, 'success');
+      showToast(`Ã¢Å“â€¦ Ã„ÂÃƒÂ£ hoÃƒÂ n ${(r.refunded ?? 0).toLocaleString('vi-VN')}Ã„â€˜ vÃƒÂ o vÃƒÂ­ khÃƒÂ¡ch (ledger REFUND + audit Ã„â€˜ÃƒÂ£ ghi)`, 'success');
       return true;
     } catch (e) {
       console.error(e);
-      showToast('Lá»—i hoÃ n tiá»n (server)', 'error');
+      showToast('LÃ¡Â»â€”i hoÃƒÂ n tiÃ¡Â»Ân (server)', 'error');
       return false;
     }
   };
@@ -2563,10 +2570,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const { error: legacyErr } = await supabase.from('users').update({ status: newStatus }).eq('id', id);
         if (legacyErr) throw legacyErr;
       }
-      showToast(`ÄÃ£ ${newStatus === 'banned' ? 'khÃ³a' : 'má»Ÿ khÃ³a'} tÃ i khoáº£n ${user.username} trÃªn Cloud`, newStatus === 'banned' ? 'error' : 'success');
+      showToast(`Ã„ÂÃƒÂ£ ${newStatus === 'banned' ? 'khÃƒÂ³a' : 'mÃ¡Â»Å¸ khÃƒÂ³a'} tÃƒÂ i khoÃ¡ÂºÂ£n ${user.username} trÃƒÂªn Cloud`, newStatus === 'banned' ? 'error' : 'success');
     } catch (e) {
       console.error(e);
-      showToast('Lá»—i cáº­p nháº­t tráº¡ng thÃ¡i lÃªn Cloud', 'error');
+      showToast('LÃ¡Â»â€”i cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t trÃ¡ÂºÂ¡ng thÃƒÂ¡i lÃƒÂªn Cloud', 'error');
     }
   };
 
@@ -2576,7 +2583,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const newMsg = {
       id: 'm-' + Date.now(),
       sender,
-      senderName: sender === 'admin' ? 'Thanox Admin' : (currentUser?.username || 'KhÃ¡ch hÃ ng'),
+      senderName: sender === 'admin' ? 'Thanox Admin' : (currentUser?.username || 'KhÃƒÂ¡ch hÃƒÂ ng'),
       message,
       time: timeNow,
     };
@@ -2594,13 +2601,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     if (sender === 'admin') {
-      showToast('ÄÃ£ gá»­i pháº£n há»“i tá»›i khÃ¡ch hÃ ng', 'success');
+      showToast('Ã„ÂÃƒÂ£ gÃ¡Â»Â­i phÃ¡ÂºÂ£n hÃ¡Â»â€œi tÃ¡Â»â€ºi khÃƒÂ¡ch hÃƒÂ ng', 'success');
     }
   };
 
   const updateTicketStatus = (ticketId: string, status: SupportTicket['status']) => {
     setTickets((prev) => prev.map((t) => (t.id === ticketId ? { ...t, status } : t)));
-    showToast(`ÄÃ£ cáº­p nháº­t tráº¡ng thÃ¡i ticket sang "${status}"`, 'info');
+    showToast(`Ã„ÂÃƒÂ£ cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t trÃ¡ÂºÂ¡ng thÃƒÂ¡i ticket sang "${status}"`, 'info');
   };
 
   const createSupportTicket = (subject: string, category: string, message: string, relatedOrderCode?: string) => {
@@ -2634,21 +2641,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setNotifications((prev) => [
       {
         id: 'notif-' + Date.now(),
-        title: `Ticket má»›i ${newTicket.ticketNumber}`,
+        title: `Ticket mÃ¡Â»â€ºi ${newTicket.ticketNumber}`,
         description: `${buyer.username}: ${subject}`,
-        time: 'Vá»«a xong',
+        time: 'VÃ¡Â»Â«a xong',
         read: false,
         type: 'ticket',
       },
       ...prev,
     ]);
 
-    showToast(`ÄÃ£ gá»­i yÃªu cáº§u há»— trá»£ "${newTicket.ticketNumber}"`, 'success');
+    showToast(`Ã„ÂÃƒÂ£ gÃ¡Â»Â­i yÃƒÂªu cÃ¡ÂºÂ§u hÃ¡Â»â€” trÃ¡Â»Â£ "${newTicket.ticketNumber}"`, 'success');
     return newTicket.id;
   };
 
   const createTicket = (subject: string, message: string): string => {
-    return createSupportTicket(subject, 'Há»— trá»£ ká»¹ thuáº­t', message);
+    return createSupportTicket(subject, 'HÃ¡Â»â€” trÃ¡Â»Â£ kÃ¡Â»Â¹ thuÃ¡ÂºÂ­t', message);
   };
 
   const addTicketMessage = (ticketId: string, message: string) => {
@@ -2681,7 +2688,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         );
       return updated;
     });
-    showToast('ÄÃ£ lÆ°u cáº¥u hÃ¬nh há»‡ thá»‘ng thÃ nh cÃ´ng', 'success');
+    showToast('Ã„ÂÃƒÂ£ lÃ†Â°u cÃ¡ÂºÂ¥u hÃƒÂ¬nh hÃ¡Â»â€¡ thÃ¡Â»â€˜ng thÃƒÂ nh cÃƒÂ´ng', 'success');
   };
 
   const markNotificationRead = (id: string) => {
@@ -2690,7 +2697,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const markAllNotificationsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    showToast('ÄÃ£ Ä‘Ã¡nh dáº¥u Ä‘á»c táº¥t cáº£ thÃ´ng bÃ¡o', 'info');
+    showToast('Ã„ÂÃƒÂ£ Ã„â€˜ÃƒÂ¡nh dÃ¡ÂºÂ¥u Ã„â€˜Ã¡Â»Âc tÃ¡ÂºÂ¥t cÃ¡ÂºÂ£ thÃƒÂ´ng bÃƒÂ¡o', 'info');
   };
 
   const resetToDefaultData = () => {
@@ -2706,7 +2713,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setTickets(INITIAL_TICKETS);
     setSettings(INITIAL_SETTINGS);
     setNotifications([]);
-    showToast('ÄÃ£ Ä‘áº·t láº¡i dá»¯ liá»‡u máº«u (Ä‘Ã£ báº£o vá»‡ cÃ¡c sáº£n pháº©m Ä‘ang KHÃ“A)!', 'success');
+    showToast('Ã„ÂÃƒÂ£ Ã„â€˜Ã¡ÂºÂ·t lÃ¡ÂºÂ¡i dÃ¡Â»Â¯ liÃ¡Â»â€¡u mÃ¡ÂºÂ«u (Ã„â€˜ÃƒÂ£ bÃ¡ÂºÂ£o vÃ¡Â»â€¡ cÃƒÂ¡c sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m Ã„â€˜ang KHÃƒâ€œA)!', 'success');
   };
 
   const resetToZeroData = () => {
@@ -2721,8 +2728,33 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setAffiliateRewards([]);
     setTickets([]);
     setNotifications([]);
-    showToast('ÄÃ£ xÃ³a tráº¯ng toÃ n bá»™ dá»¯ liá»‡u máº«u!', 'warning');
+    showToast('Ã„ ÃƒÂ£ xÃƒÂ³a trÃ¡ÂºÂ¯ng toÃƒÂ n bÃ¡Â»â„¢ dÃ¡Â»Â¯ liÃ¡Â»â€¡u mÃ¡ÂºÂ«u!', 'warning');
   };
+
+  // Auto expire pending topups older than 5 minutes for current user
+  useEffect(() => {
+    if (!currentUser) return;
+    const timer = setInterval(() => {
+      setTopups((prev) => {
+        let changed = false;
+        const now = Date.now();
+        const newTopups = prev.map(t => {
+          if (t.userId === currentUser.id && t.status === 'pending') {
+             // Parse time. createdAt is like '2026-08-23 15:10'
+             const createdTime = new Date(t.createdAt.replace(' ', 'T') + ':00Z').getTime();
+             if (now - createdTime > 300000) {
+                changed = true;
+                void supabase.from('topups').update({ status: 'rejected' }).eq('id', t.id);
+                return { ...t, status: 'rejected', rejectReason: 'Háº¿t háº¡n (quÃ¡ 5 phÃºt)' };
+             }
+          }
+          return t;
+        });
+        return changed ? newTopups : prev;
+      });
+    }, 60000); // Check every minute
+    return () => clearInterval(timer);
+  }, [currentUser]);
 
   return (
     <StoreContext.Provider
@@ -2822,6 +2854,8 @@ export const useStore = () => {
   }
   return context;
 };
+
+
 
 
 
