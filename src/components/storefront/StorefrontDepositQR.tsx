@@ -230,10 +230,10 @@ export const StorefrontDepositQR: React.FC = () => {
           .from('topups')
           .select('id, status, amount, user_id')
           .ilike('transfer_note', '%' + transactionCode + '%')
-          .eq('status', 'approved')
+          .in('status', ['approved', 'paid'])
           .maybeSingle();
 
-        if (isSubscribed && topupRow && topupRow.status === 'approved') {
+        if (isSubscribed && topupRow && (topupRow.status === 'approved' || topupRow.status === 'paid')) {
           clearInterval(interval);
 
           // Lấy số dư mới nhất từ profiles table
