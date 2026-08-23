@@ -12,19 +12,19 @@ interface VercelResponse {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, error: 'METHOD_NOT_ALLOWED' });
+    return res.status(405).json({ success: false, code: 'METHOD_NOT_ALLOWED', error: 'Phương thức không được hỗ trợ' });
   }
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    return res.status(500).json({ success: false, error: 'DATABASE_CONFIG_MISSING' });
+    return res.status(500).json({ success: false, code: 'DATABASE_CONFIG_MISSING', error: 'Cấu hình máy chủ cơ sở dữ liệu bị thiếu' });
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } });
 
-  // 1. Xác thực danh tính User từ Authorization Bearer Token
+  // 1. Xác thực danh tính người dùng bảo mật từ Token
   const authHeader = req.headers['authorization'];
   const token = (Array.isArray(authHeader) ? authHeader[0] : authHeader)?.replace(/^Bearer\s+/i, '').trim();
 
@@ -37,240 +37,63 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  // Fallback lấy userId từ body nếu có phiên đăng nhập nội bộ
+  // Fallback userId từ body nếu có phiên nội bộ
   const { productId, packageId, quantity = 1, idempotencyKey, userId: bodyUserId } = req.body || {};
   const targetUserId = authenticatedUserId || bodyUserId;
 
   if (!targetUserId) {
-    return res.status(401).json({ success: false, code: 'UNAUTHORIZED', error: 'Vui lòng đăng nhập tài khoản để mua hàng' });
+    return res.status(401).json({ success: false, code: 'AUTH_FAILED', error: 'Vui lòng đăng nhập tài khoản để mua hàng' });
   }
 
   if (!productId) {
-    return res.status(400).json({ success: false, code: 'INVALID_INPUT', error: 'Thiếu thông tin sản phẩm' });
+    return res.status(400).json({ success: false, code: 'INVALID_INPUT', error: 'Thiếu mã sản phẩm cần mua' });
   }
 
   const qty = Math.max(1, Math.min(100, parseInt(String(quantity), 10) || 1));
 
   try {
-    // 2. Idempotency Check: nếu đã có đơn cùng (user, idempotencyKey) thì trả về đơn cũ (không trừ 2 lần)
-    if (idempotencyKey) {
-      const { data: existingOrders } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('user_id', targetUserId)
-        .eq('idem_key', idempotencyKey)
-        .limit(1);
+    // 2. Thực thi 01 Transaction nguyên tử duy nhất trên Database qua RPC create_order_atomic
+    const { data: rpcResult, error: rpcError } = await supabase.rpc('create_order_atomic', {
+      p_user_id: targetUserId,
+      p_product_id: productId,
+      p_package_id: packageId || null,
+      p_quantity: qty,
+      p_idem_key: idempotencyKey || null,
+    });
 
-      if (existingOrders && existingOrders.length > 0) {
-        const o = existingOrders[0];
-        return res.status(200).json({
-          success: true,
-          duplicate: true,
-          order: {
-            id: o.id,
-            orderCode: o.order_code || o.id,
-            productName: o.product_name,
-            packageName: o.package_name,
-            quantity: o.quantity,
-            unitPrice: o.unit_price,
-            totalPrice: o.total_price,
-            deliveredContent: o.delivered_content,
-            createdAt: o.created_at,
-          },
-        });
-      }
-    }
-
-    // 3 & 4. Đọc đồng thời Người Dùng & Sản Phẩm (Tối ưu độ trễ song song)
-    const [profileRes, productRes] = await Promise.all([
-      supabase
-        .from('profiles')
-        .select('id, username, email, role, balance, total_spent, status')
-        .eq('id', targetUserId)
-        .single(),
-      supabase
-        .from('products')
-        .select('id, name, price, seller_price, packages, product_type, stock, status, accounts_list, hidden_keys_or_links, download_url, instructions, sold_count')
-        .eq('id', productId)
-        .single(),
-    ]);
-
-    const { data: userProfile, error: profileErr } = profileRes;
-    const { data: product, error: productErr } = productRes;
-
-    if (profileErr || !userProfile) {
-      return res.status(404).json({ success: false, code: 'USER_NOT_FOUND', error: 'Không tìm thấy thông tin tài khoản người dùng' });
-    }
-
-    if (userProfile.status === 'banned') {
-      return res.status(403).json({ success: false, code: 'USER_BANNED', error: 'Tài khoản của bạn đã bị khóa' });
-    }
-
-    if (productErr || !product) {
-      return res.status(404).json({ success: false, code: 'PRODUCT_NOT_FOUND', error: 'Sản phẩm không tồn tại' });
-    }
-
-    if (product.status !== 'active') {
-      return res.status(400).json({ success: false, code: 'PRODUCT_NOT_ACTIVE', error: 'Sản phẩm hiện đang tạm ngừng bán' });
-    }
-
-    // 5. Tính giá Server-Authoritative
-    const isSeller = userProfile.role === 'seller';
-    let unitPrice = Number(product.price) || 0;
-    let selectedPackageObj: any = null;
-
-    if (packageId && product.packages) {
-      const pkgs = typeof product.packages === 'string' ? JSON.parse(product.packages) : product.packages;
-      if (Array.isArray(pkgs)) {
-        selectedPackageObj = pkgs.find((p: any) => p.id === packageId);
-        if (selectedPackageObj) {
-          unitPrice = Number(selectedPackageObj.price) || unitPrice;
-          if (isSeller && selectedPackageObj.sellerPrice) {
-            unitPrice = Number(selectedPackageObj.sellerPrice);
-          }
-        }
-      }
-    } else if (isSeller && product.seller_price) {
-      unitPrice = Number(product.seller_price);
-    }
-
-    const total = unitPrice * qty;
-    const currentBalance = Number(userProfile.balance) || 0;
-
-    // 6. Kiểm tra số dư trên Server
-    if (currentBalance < total) {
-      return res.status(200).json({
+    if (rpcError) {
+      console.error('[API Order] RPC Execution Error:', rpcError);
+      return res.status(500).json({
         success: false,
-        code: 'INSUFFICIENT_BALANCE',
-        error: `Số dư ví không đủ! Cần thêm ${(total - currentBalance).toLocaleString('vi-VN')}đ`,
-        balance: currentBalance,
-        total,
+        code: 'DATABASE_ERROR',
+        error: rpcError.message || 'Lỗi xử lý giao dịch máy chủ',
       });
     }
 
-    // 7. Cấp phát kho tự động (Inventory Allocation)
-    let deliveredContent = '';
-    let updatedAccountsList = product.accounts_list;
-    let updatedHiddenKeys = product.hidden_keys_or_links;
-    let currentStockNum = product.stock ? parseInt(String(product.stock).replace(/\D/g, ''), 10) : null;
-
-    if (product.accounts_list && product.accounts_list.trim()) {
-      const lines = product.accounts_list.split('\n').map((l: string) => l.trim()).filter(Boolean);
-      if (lines.length < qty) {
-        return res.status(200).json({ success: false, code: 'OUT_OF_STOCK', error: 'Sản phẩm trong kho đã hết' });
-      }
-      const allocated = lines.slice(0, qty);
-      const remaining = lines.slice(qty).join('\n');
-      updatedAccountsList = remaining;
-
-      const firstItem = allocated[0];
-      if (firstItem.includes('|')) {
-        const parts = firstItem.split('|');
-        deliveredContent = `🎮 TÀI KHOẢN: ${parts[0] || ''}\n🔑 MẬT KHẨU: ${parts[1] || ''}${parts[2] ? `\n🛡️ 2FA / GHI CHÚ: ${parts[2]}` : ''}`;
-      } else {
-        deliveredContent = allocated.join('\n');
-      }
-
-      if (currentStockNum !== null && !isNaN(currentStockNum)) {
-        currentStockNum = Math.max(0, currentStockNum - qty);
-      }
-    } else if (product.hidden_keys_or_links && product.hidden_keys_or_links.trim()) {
-      const lines = product.hidden_keys_or_links.split('\n').map((l: string) => l.trim()).filter(Boolean);
-      if (lines.length >= qty) {
-        deliveredContent = lines.slice(0, qty).join('\n');
-        updatedHiddenKeys = lines.slice(qty).join('\n');
-        if (currentStockNum !== null && !isNaN(currentStockNum)) {
-          currentStockNum = Math.max(0, currentStockNum - qty);
-        }
-      } else {
-        deliveredContent = product.hidden_keys_or_links;
-      }
-    } else {
-      deliveredContent = product.download_url || product.instructions || selectedPackageObj?.downloadUrl || 'Đã kích hoạt tự động';
+    if (!rpcResult || rpcResult.status !== 'success') {
+      const code = rpcResult?.code || 'PURCHASE_FAILED';
+      const msg = rpcResult?.error || 'Không thể tạo đơn hàng';
+      return res.status(200).json({
+        success: false,
+        code,
+        error: msg,
+        balance: rpcResult?.balance,
+        total: rpcResult?.total,
+      });
     }
 
-    // 8 & 9. Trừ ví & Cập nhật kho song song (Parallel Financial & Inventory Execution)
-    const newBalance = currentBalance - total;
-    const [debitRes, stockRes] = await Promise.all([
-      supabase
-        .from('profiles')
-        .update({
-          balance: newBalance,
-          total_spent: (Number(userProfile.total_spent) || 0) + total,
-        })
-        .eq('id', targetUserId),
-      supabase
-        .from('products')
-        .update({
-          accounts_list: updatedAccountsList,
-          hidden_keys_or_links: updatedHiddenKeys,
-          stock: currentStockNum !== null ? String(currentStockNum) : product.stock,
-          sold_count: (Number(product.sold_count) || 0) + qty,
-        })
-        .eq('id', productId),
-    ]);
-
-    if (debitRes.error) {
-      console.error('[API Order] Debit error:', debitRes.error);
-      return res.status(500).json({ success: false, code: 'DEBIT_FAILED', error: 'Không thể trừ tiền trong ví' });
-    }
-
-    // 10 & 11. Tạo đơn hàng và ghi sổ cái song song
-    const orderNum = Math.floor(10000 + Math.random() * 90000);
-    const orderCode = `#TX-${orderNum}`;
-
-    const [orderRes, txRes] = await Promise.all([
-      supabase
-        .from('orders')
-        .insert({
-          user_id: targetUserId,
-          user_name: userProfile.username,
-          product_id: product.id,
-          product_name: product.name,
-          package_id: packageId || null,
-          package_name: selectedPackageObj?.name || null,
-          quantity: qty,
-          unit_price: unitPrice,
-          total_price: total,
-          status: 'completed',
-          payment_method: 'wallet',
-          delivered_content: deliveredContent,
-          idem_key: idempotencyKey || `api-${Date.now()}`,
-        })
-        .select()
-        .single(),
-      supabase
-        .from('transactions')
-        .insert({
-          user_id: targetUserId,
-          user_name: userProfile.username,
-          type: 'purchase',
-          amount: -total,
-          balance_after: newBalance,
-          description: `Thanh toán mua ${product.name}${selectedPackageObj?.name ? ` [${selectedPackageObj.name}]` : ''} (x${qty})`,
-          status: 'completed',
-        }),
-    ]);
-
-    const createdOrder = orderRes.data;
-
+    // 3. Hoàn tất thành công — trả kết quả đơn hàng cho frontend
     return res.status(200).json({
       success: true,
-      order: {
-        id: createdOrder?.id || `ord-${Date.now()}`,
-        orderCode: createdOrder?.order_code || orderCode,
-        productName: product.name,
-        packageName: selectedPackageObj?.name || null,
-        quantity: qty,
-        unitPrice,
-        totalPrice: total,
-        deliveredContent,
-        newBalance,
-        createdAt: new Date().toISOString(),
-      },
+      duplicate: Boolean(rpcResult.duplicate),
+      order: rpcResult.order,
     });
   } catch (err) {
-    console.error('[API Order] Server exception:', err);
-    return res.status(500).json({ success: false, code: 'INTERNAL_ERROR', error: 'Lỗi xử lý đơn hàng trên máy chủ' });
+    console.error('[API Order] Server Exception:', err);
+    return res.status(500).json({
+      success: false,
+      code: 'INTERNAL_ERROR',
+      error: 'Lỗi ngoại lệ hệ thống trong quá trình mua hàng',
+    });
   }
 }
