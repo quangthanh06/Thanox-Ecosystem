@@ -490,7 +490,7 @@ const file = e.target.files?.[0];
                                   blur: 0,
                                   overlayOpacity: 45,
                                   glowEffect: true,
-                                  hotlineZalo: '0916396901',
+                                  hotlineZalo: '0889696810',
                                 }),
                                 backgroundImage: url,
                               },
@@ -527,7 +527,7 @@ const file = e.target.files?.[0];
                                   blur: 0,
                                   overlayOpacity: 45,
                                   glowEffect: true,
-                                  hotlineZalo: '0916396901',
+                                  hotlineZalo: '0889696810',
                                 }),
                                 backgroundImage: '/thanox-master-banner.jpg',
                               },
@@ -558,7 +558,7 @@ const file = e.target.files?.[0];
                               blur: 0,
                               overlayOpacity: 45,
                               glowEffect: true,
-                              hotlineZalo: '0916396901',
+                              hotlineZalo: '0889696810',
                             }),
                             backgroundImage: e.target.value,
                           },
@@ -601,7 +601,7 @@ const file = e.target.files?.[0];
                                   blur: 0,
                                   overlayOpacity: 45,
                                   glowEffect: true,
-                                  hotlineZalo: '0916396901',
+                                  hotlineZalo: '0889696810',
                                 }),
                                 backgroundImage: preset.url,
                               },
@@ -654,7 +654,7 @@ const file = e.target.files?.[0];
                               blur: 0,
                               overlayOpacity: 45,
                               glowEffect: true,
-                              hotlineZalo: '0916396901',
+                              hotlineZalo: '0889696810',
                             }),
                             brightness: Number(e.target.value),
                           },
@@ -694,7 +694,7 @@ const file = e.target.files?.[0];
                               brightness: 65,
                               overlayOpacity: 45,
                               glowEffect: true,
-                              hotlineZalo: '0916396901',
+                              hotlineZalo: '0889696810',
                             }),
                             blur: Number(e.target.value),
                           },
@@ -734,7 +734,7 @@ const file = e.target.files?.[0];
                               brightness: 65,
                               blur: 0,
                               glowEffect: true,
-                              hotlineZalo: '0916396901',
+                              hotlineZalo: '0889696810',
                             }),
                             overlayOpacity: Number(e.target.value),
                           },
@@ -756,7 +756,7 @@ const file = e.target.files?.[0];
                     </label>
                     <input
                       type="text"
-                      value={formData.heroBanner?.hotlineZalo ?? formData.zaloHotline ?? '0916396901'}
+                      value={formData.heroBanner?.hotlineZalo ?? formData.zaloHotline ?? '0889696810'}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
@@ -772,7 +772,7 @@ const file = e.target.files?.[0];
                           },
                         }))
                       }
-                      placeholder="0916396901"
+                      placeholder="0889696810"
                       className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
                     />
                   </div>
@@ -1437,7 +1437,7 @@ const file = e.target.files?.[0];
                       type="text"
                       value={formData.zaloHotline}
                       onChange={(e) => setFormData({ ...formData, zaloHotline: e.target.value })}
-                      placeholder="0916396901"
+                      placeholder="0889696810"
                       className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
                     />
                   </div>
@@ -1967,13 +1967,13 @@ const file = e.target.files?.[0];
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      value={formData.adminZalo || formData.zaloHotline || '0916396901'}
+                      value={formData.adminZalo || formData.zaloHotline || '0889696810'}
                       onChange={(e) => setFormData({ ...formData, adminZalo: e.target.value, zaloHotline: e.target.value })}
-                      placeholder="0916396901"
+                      placeholder="0889696810"
                       className="w-full bg-[#161626] border border-emerald-500/30 rounded-xl px-3.5 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-emerald-400"
                     />
                     <a
-                      href={`https://zalo.me/${formData.adminZalo || '0916396901'}`}
+                      href={`https://zalo.me/${formData.adminZalo || '0889696810'}`}
                       target="_blank"
                       rel="noreferrer"
                       className="px-3 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded-xl border border-emerald-500/30 flex items-center justify-center shrink-0"
@@ -1990,9 +1990,9 @@ const file = e.target.files?.[0];
                   </label>
                   <input
                     type="text"
-                    value={formData.adminHotline || '0916396901'}
+                    value={formData.adminHotline || '0889696810'}
                     onChange={(e) => setFormData({ ...formData, adminHotline: e.target.value })}
-                    placeholder="0916396901"
+                    placeholder="0889696810"
                     className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
                   />
                 </div>
@@ -2047,13 +2047,13 @@ const file = e.target.files?.[0];
                     <Sparkles className="w-3.5 h-3.5" /> Mua hàng trực tiếp qua Zalo Admin:
                   </div>
                   <a
-                    href={`https://zalo.me/${formData.adminZalo || '0916396901'}`}
+                    href={`https://zalo.me/${formData.adminZalo || '0889696810'}`}
                     target="_blank"
                     rel="noreferrer"
                     className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-extrabold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20"
                   >
                     <PhoneCall className="w-4 h-4 text-black" />
-                    <span>💬 NHẮN TIN ZALO ADMIN: {formData.adminZalo || '0916396901'}</span>
+                    <span>💬 NHẮN TIN ZALO ADMIN: {formData.adminZalo || '0889696810'}</span>
                   </a>
                 </div>
               </div>

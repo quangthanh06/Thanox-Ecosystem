@@ -51,7 +51,7 @@ export const StorefrontHome: React.FC = () => {
   const bannerBrightness = (settings.heroBanner?.brightness ?? 65) / 100;
   const bannerBlur = settings.heroBanner?.blur ?? 0;
   const bannerOverlayOpacity = (settings.heroBanner?.overlayOpacity ?? 45) / 100;
-  const bannerHotline = settings.heroBanner?.hotlineZalo || settings.zaloHotline || '0916396901';
+  const bannerHotline = settings.heroBanner?.hotlineZalo || settings.zaloHotline || '0889696810';
 
   // Active public products (filter out hidden status)
   const activeProducts = products.filter((p) => p.status !== 'hidden');

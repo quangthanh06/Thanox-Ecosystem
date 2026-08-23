@@ -41,7 +41,7 @@ export const StorefrontAIAssistant: React.FC = () => {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const shopName = settings.storeName || 'THANOX STORE';
-  const adminZalo = settings.adminZalo || settings.zaloHotline || '0916396901';
+  const adminZalo = settings.adminZalo || settings.zaloHotline || '0889696810';
 
   // Initial greeting
   useEffect(() => {
@@ -285,7 +285,7 @@ export const StorefrontAIAssistant: React.FC = () => {
         reply = `Dạ nếu bạn cần hỗ trợ cài đặt hoặc giải quyết lỗi khẩn cấp, hãy liên hệ trực tiếp với Admin qua Zalo: **${adminZalo}** hoặc Telegram: **@quangthank** để được xử lý ngay trong 1 phút ạ!`;
         options = [
           {
-            label: '💬 Mở Zalo Admin Ngay (0916396901)',
+            label: '💬 Mở Zalo Admin Ngay (0889696810)',
             action: () => window.open(`https://zalo.me/${adminZalo}`, '_blank'),
             isPrimary: true,
           },

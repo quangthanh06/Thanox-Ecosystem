@@ -138,12 +138,12 @@ export const StorefrontForgotPassword: React.FC = () => {
                 </div>
                 <div className="pt-1 flex flex-wrap items-center gap-2">
                   <a
-                    href={`https://zalo.me/0916396901`}
+                    href={`https://zalo.me/0889696810`}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold text-xs shadow-md shadow-blue-500/30 transition-all hover:scale-105"
                   >
-                    <span>💬 Nhắn Tin Zalo Admin Reset Mật Khẩu (0916396901)</span>
+                    <span>💬 Nhắn Tin Zalo Admin Reset Mật Khẩu (0889696810)</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </a>
                 </div>
@@ -290,12 +290,12 @@ export const StorefrontForgotPassword: React.FC = () => {
                   Telegram: @quangthank
                 </a>
                 <a
-                  href="https://zalo.me/0916396901"
+                  href="https://zalo.me/0889696810"
                   target="_blank"
                   rel="noreferrer"
                   className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 text-center font-bold text-[11px] transition-colors"
                 >
-                  Zalo: 0916396901
+                  Zalo: 0889696810
                 </a>
               </div>
             </div>

@@ -82,7 +82,7 @@ export const AuthVisualSide: React.FC = () => {
             </div>
             <div>
               <div className="text-xs font-bold text-[#F0EDFF]">Hỗ Trợ Kỹ Thuật Zalo 24/7</div>
-              <div className="text-[11px] text-[#8B84A8]">Đội ngũ hỗ trợ cài đặt, fix lỗi và hướng dẫn sử dụng nhiệt tình qua Hotline 0916396901.</div>
+              <div className="text-[11px] text-[#8B84A8]">Đội ngũ hỗ trợ cài đặt, fix lỗi và hướng dẫn sử dụng nhiệt tình qua Hotline 0889696810.</div>
             </div>
           </div>
         </div>

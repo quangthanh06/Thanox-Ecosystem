@@ -1410,7 +1410,7 @@ export const ProductsView: React.FC = () => {
                                   licenseKeys: `🎮 TÀI KHOẢN: ${val}\n🔑 MẬT KHẨU: ${prev.accountPassword || ''}${prev.account2FA ? `\n🛡️ 2FA / GHI CHÚ: ${prev.account2FA}` : ''}`,
                                 }));
                               }}
-                              placeholder="VD: thanhgame.ff01@gmail.com hoặc 0916396901"
+                              placeholder="VD: thanhgame.ff01@gmail.com hoặc 0889696810"
                               className="w-full bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-cyan-300 font-mono focus:outline-none focus:border-[#7C3AED]"
                             />
                           </div>

@@ -169,7 +169,7 @@ const getInitialDB = () => {
       telegramBotToken: '',
       telegramAdminId: 'quangthank',
       telegramLink: '@quangthank',
-      zaloHotline: '0916396901',
+      zaloHotline: '0889696810',
       maintenanceMode: false,
       autoApprovalEnabled: true,
       announcementEnabled: true,
@@ -290,7 +290,7 @@ const getInitialDB = () => {
         blur: 0,
         overlayOpacity: 45,
         glowEffect: true,
-        hotlineZalo: '0916396901',
+        hotlineZalo: '0889696810',
         telegramContact: '@quangthank'
       }
     }

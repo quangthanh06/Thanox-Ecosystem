@@ -8,8 +8,8 @@ export const StorefrontMaintenanceScreen: React.FC = () => {
   const { settings, navigateToStorefront, navigateToAdmin } = useStore();
   const themeTypo = getThemeTypography(settings);
 
-  const adminZalo = settings?.adminZalo || settings?.zaloHotline || '0916396901';
-  const adminHotline = settings?.adminHotline || settings?.zaloHotline || '0916396901';
+  const adminZalo = settings?.adminZalo || settings?.zaloHotline || '0889696810';
+  const adminHotline = settings?.adminHotline || settings?.zaloHotline || '0889696810';
   const adminTelegram = settings?.adminTelegram || settings?.telegramAdminId || 'quangthank';
   const maintenanceMessage =
     settings?.maintenanceMessage ||

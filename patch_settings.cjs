@@ -12,10 +12,10 @@ content = content.replace(oldAudio, `
         setNewTrackUrl(url);
         setPreviewAudioUrl(url);
         setIsUploadingAudio(false);
-        showToast(\`Ðã t?i file "\${file.name}" lên Cloud thành công! B?m nghe th? ho?c Thêm vào danh sách.\`, 'success');
+        showToast(\`ï¿½ï¿½ t?i file "\${file.name}" lï¿½n Cloud thï¿½nh cï¿½ng! B?m nghe th? ho?c Thï¿½m vï¿½o danh sï¿½ch.\`, 'success');
       } catch (e) {
         setIsUploadingAudio(false);
-        showToast('L?i khi t?i file âm thanh lên Cloud', 'error');
+        showToast('L?i khi t?i file ï¿½m thanh lï¿½n Cloud', 'error');
       }`);
       
 content = content.replace(/const handleAudioFileUpload = \(e: React\.ChangeEvent<HTMLInputElement>\) => \{/g, "const handleAudioFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {");
@@ -23,7 +23,7 @@ content = content.replace(/const handleAudioFileUpload = \(e: React\.ChangeEvent
 // Hero Banner upload (it's inline)
 const oldHero = /const reader = new FileReader\(\);[\s\S]*?reader\.readAsDataURL\(file\);/;
 content = content.replace(oldHero, `
-                          showToast('Ðang t?i ?nh lên Cloud, vui lòng d?i...', 'info');
+                          showToast('ï¿½ang t?i ?nh lï¿½n Cloud, vui lï¿½ng d?i...', 'info');
                           try {
                             const url = await uploadMediaToSupabase(file, 'banners');
                             setFormData((prev) => ({
@@ -34,14 +34,14 @@ content = content.replace(oldHero, `
                                   blur: 0,
                                   overlayOpacity: 45,
                                   glowEffect: true,
-                                  hotlineZalo: '0916396901',
+                                  hotlineZalo: '0889696810',
                                 }),
                                 backgroundImage: url,
                               },
                             }));
-                            showToast('Ðã t?i ?nh n?n Banner lên Cloud thành công!', 'success');
+                            showToast('ï¿½ï¿½ t?i ?nh n?n Banner lï¿½n Cloud thï¿½nh cï¿½ng!', 'success');
                           } catch (e) {
-                            showToast('L?i t?i ?nh lên Cloud', 'error');
+                            showToast('L?i t?i ?nh lï¿½n Cloud', 'error');
                           }`);
                           
 content = content.replace("if (file) {", "if (file) { (async () => {");

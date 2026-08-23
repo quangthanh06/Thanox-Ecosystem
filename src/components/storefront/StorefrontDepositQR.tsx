@@ -617,13 +617,13 @@ export const StorefrontDepositQR: React.FC = () => {
                     <span className="truncate">Telegram: @quangthank</span>
                   </a>
                   <a
-                    href="https://zalo.me/0916396901"
+                    href="https://zalo.me/0889696810"
                     target="_blank"
                     rel="noreferrer"
                     className="p-2.5 rounded-xl bg-[#161626]/80 border border-white/5 hover:border-emerald-400/40 flex items-center gap-1.5 text-[11px] text-emerald-400 font-semibold transition-colors"
                   >
                     <PhoneCall className="w-3.5 h-3.5" />
-                    <span className="truncate">Zalo: 0916396901</span>
+                    <span className="truncate">Zalo: 0889696810</span>
                   </a>
                 </div>
               </div>

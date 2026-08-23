@@ -740,7 +740,7 @@ export const StorefrontLayout: React.FC = () => {
               <div className="space-y-2 text-xs text-[#8B84A8]">
                 <div className="flex items-center gap-2">
                   <MessageCircle className="w-4 h-4 text-emerald-400" />
-                  <span>Zalo: <strong className="text-[#CBC7E0]">{settings.zaloHotline || '0916396901'}</strong></span>
+                  <span>Zalo: <strong className="text-[#CBC7E0]">{settings.zaloHotline || '0889696810'}</strong></span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Send className="w-4 h-4 text-[#06B6D4]" />
