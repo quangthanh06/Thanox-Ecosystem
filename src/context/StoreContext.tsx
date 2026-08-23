@@ -240,8 +240,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const { error: probeError } = await supabase.from('products').select('packages').limit(1);
         productsExtendedReady = !probeError;
 
+        // Đọc qua VIEW công khai (không chứa cột key/acc bí mật — moc_b_core.sql)
         const { data, error } = await supabase
-          .from('products')
+          .from('products_public')
           .select('*')
           .order('created_at', { ascending: false });
 

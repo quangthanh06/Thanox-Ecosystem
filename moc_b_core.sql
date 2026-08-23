@@ -22,6 +22,24 @@ CREATE TABLE IF NOT EXISTS public.orders (
   idem_key          TEXT,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+-- Tương thích bảng orders cũ (schema gốc: id uuid/user_id/product_id/amount/...) — bổ sung cột mới
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS order_code        TEXT NOT NULL DEFAULT ('DH-' || upper(substr(md5(random()::text),1,8)));
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS user_name         TEXT;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS product_name      TEXT;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS package_id        TEXT;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS package_name      TEXT;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS quantity          INT  NOT NULL DEFAULT 1;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS unit_price        BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS total_price       BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS payment_method    TEXT NOT NULL DEFAULT 'wallet';
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS delivered_content TEXT;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS idem_key          TEXT;
+-- Đồng bộ kiểu user_id/product_id về TEXT cho nhất quán với topups & client
+-- (phải DROP policy đang tham chiếu user_id trước, tạo lại ở mục RLS bên dưới)
+DROP POLICY IF EXISTS "orders_select_own" ON public.orders;
+ALTER TABLE public.orders ALTER COLUMN user_id TYPE TEXT;
+ALTER TABLE public.orders ALTER COLUMN product_id TYPE TEXT;
+
 CREATE UNIQUE INDEX IF NOT EXISTS orders_idem_uniq ON public.orders (user_id, idem_key)
   WHERE idem_key IS NOT NULL;
 CREATE INDEX IF NOT EXISTS orders_user_idx ON public.orders (user_id, created_at DESC);
@@ -230,3 +248,33 @@ $$;
 REVOKE EXECUTE ON FUNCTION public.get_public_settings() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_public_settings() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_public_settings() TO anon;
+
+-- ============================ 7) VIEW PRODUCTS PUBLIC (che key triệt để) =====
+-- Column-level REVOKE không thắng table-level GRANT qua PostgREST → dùng VIEW
+-- chỉ chứa cột an toàn; bảng gốc chỉ admin đọc/ghi (RLS), service_role bypass.
+DROP VIEW IF EXISTS public.products_public;
+CREATE VIEW public.products_public AS
+  SELECT id, name, category, price, seller_price, original_price, stock, status,
+         description, image_url, packages, product_type, is_sale, sale_price,
+         instructions, images, featured, sold_count, updated_at, created_at
+  FROM public.products;
+GRANT SELECT ON public.products_public TO anon, authenticated;
+
+ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "products_admin_read" ON public.products;
+CREATE POLICY "products_admin_read" ON public.products
+  FOR SELECT TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.profiles pr WHERE pr.id = auth.uid() AND pr.role = 'admin'));
+DROP POLICY IF EXISTS "products_admin_insert" ON public.products;
+CREATE POLICY "products_admin_insert" ON public.products
+  FOR INSERT TO authenticated
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles pr WHERE pr.id = auth.uid() AND pr.role = 'admin'));
+DROP POLICY IF EXISTS "products_admin_update" ON public.products;
+CREATE POLICY "products_admin_update" ON public.products
+  FOR UPDATE TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.profiles pr WHERE pr.id = auth.uid() AND pr.role = 'admin'))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles pr WHERE pr.id = auth.uid() AND pr.role = 'admin'));
+DROP POLICY IF EXISTS "products_admin_delete" ON public.products;
+CREATE POLICY "products_admin_delete" ON public.products
+  FOR DELETE TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.profiles pr WHERE pr.id = auth.uid() AND pr.role = 'admin'));
