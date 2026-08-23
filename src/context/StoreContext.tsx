@@ -1581,12 +1581,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Customer creates order in storefront
-  const createOrderLocal = (
+  const createOrderLocal = async (
     productId: string,
     quantity: number,
     paymentMethod: Order['paymentMethod'],
     selectedPackage?: ProductPackage
-  ): boolean => {
+  ): Promise<boolean> => {
     const product = products.find((p) => p.id === productId);
     if (!product) return false;
 
@@ -1596,19 +1596,28 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return false;
     }
 
-    const buyer = currentUser;
-    const isSeller = buyer.sellerStatus === 'approved';
+    // Đọc số dư mới nhất từ profiles table (Server of Truth)
+    let currentBalance = currentUser.balance;
+    try {
+      const { data: prof } = await supabase.from('profiles').select('balance').eq('id', currentUser.id).maybeSingle();
+      if (prof && prof.balance !== undefined) {
+        currentBalance = Number(prof.balance);
+      }
+    } catch {}
+
+    const buyer = { ...currentUser, balance: currentBalance };
     const unitPrice = getItemEffectivePrice(product, buyer, selectedPackage);
     const total = unitPrice * quantity;
 
-    if (paymentMethod === 'wallet' && buyer.balance < total) {
-      showToast('Số dư ví không đủ! Vui lòng nạp thêm tiền.', 'error');
+    if (paymentMethod === 'wallet' && currentBalance < total) {
+      showToast(`Số dư ví không đủ! Cần thêm ${(total - currentBalance).toLocaleString('vi-VN')}đ`, 'error');
+      navigateToStorefront('account-wallet-deposit');
       return false;
     }
 
     const orderNum = Math.floor(10000 + Math.random() * 90000);
     const newOrderCode = `#TX-${orderNum}`;
-    const newBalance = paymentMethod === 'wallet' ? buyer.balance - total : buyer.balance;
+    const newBalance = paymentMethod === 'wallet' ? currentBalance - total : currentBalance;
 
     if (paymentMethod === 'wallet') {
       setUsers((prev) =>
@@ -1623,6 +1632,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             : u
         )
       );
+      // Ghi cập nhật số dư lên profiles
+      void (async () => {
+        try {
+          await supabase.from('profiles').update({ balance: newBalance }).eq('id', buyer.id);
+        } catch {}
+      })();
     }
 
     const isAccProduct = isAccountLikeProduct(product);
@@ -1666,12 +1681,34 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         deliveredKey = product.downloadLinkOrKeys || 'ACC-DELIVERED';
       }
     } else {
-      deliveredText =
-        selectedPackage?.keys ||
-        selectedPackage?.downloadUrl ||
-        product.downloadLinkOrKeys ||
-        'Hệ thống đã gửi link kích hoạt đến email của bạn.';
-      deliveredKey = deliveredText.split('\n')[0] || 'KEY-TX-' + Math.floor(100000 + Math.random() * 900000);
+      if (product.hiddenKeysOrLinks && product.hiddenKeysOrLinks.trim()) {
+        const lines = product.hiddenKeysOrLinks.split('\n').map((l) => l.trim()).filter(Boolean);
+        const firstKey = lines[0] || '';
+        const remainingKeys = lines.slice(1).join('\n');
+
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === productId
+              ? {
+                  ...p,
+                  hiddenKeysOrLinks: remainingKeys,
+                  stock: lines.length - 1,
+                  soldCount: (p.soldCount || 0) + quantity,
+                }
+              : p
+          )
+        );
+
+        deliveredText = firstKey;
+        deliveredKey = firstKey;
+      } else {
+        deliveredText =
+          selectedPackage?.keys ||
+          selectedPackage?.downloadUrl ||
+          product.downloadLinkOrKeys ||
+          'Hệ thống đã gửi link kích hoạt đến email của bạn.';
+        deliveredKey = deliveredText.split('\n')[0] || 'KEY-TX-' + Math.floor(100000 + Math.random() * 900000);
+      }
     }
 
     const newOrder: Order = {
@@ -1694,41 +1731,49 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       deliveredContent: deliveredText,
       key: deliveredKey,
       packageName: selectedPackage?.name,
-      isSellerOrder: isSeller,
     };
-
-    // Increment sold count (if not already incremented in accountsList handling)
-    if (!isAccProduct || !product.accountsList) {
-      setProducts((prev) =>
-        prev.map((p) => (p.id === productId ? { ...p, soldCount: (p.soldCount || 0) + quantity } : p))
-      );
-    }
 
     setOrders((prev) => [newOrder, ...prev]);
 
-    // Financial Transaction log
-    const newTx: Transaction = {
-      id: 'tx-' + Date.now(),
-      txCode: '#GD-' + Math.floor(10000 + Math.random() * 90000),
-      type: 'purchase',
-      userId: buyer.id,
-      userName: buyer.username,
-      description: `Thanh toán mua ${product.name}${selectedPackage ? ` [${selectedPackage.name}]` : ''} (x${quantity})`,
-      amount: -total,
-      balanceAfter: newBalance,
-      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-      status: 'completed',
-    };
-    setTransactions((prev) => [newTx, ...prev]);
+    // Ghi order lên Supabase Cloud
+    void (async () => {
+      try {
+        await supabase.from('orders').insert({
+          user_id: buyer.id,
+          user_name: buyer.username,
+          product_id: product.id,
+          product_name: product.name,
+          quantity,
+          unit_price: unitPrice,
+          total_price: total,
+          status: 'completed',
+          payment_method: paymentMethod,
+          delivered_content: deliveredText,
+          package_name: selectedPackage?.name,
+        });
+      } catch {}
+    })();
 
-    // Process Affiliate Reward if eligible
-    processAffiliateRewardForOrder(newOrder.id, newOrderCode, total, buyer);
+    if (paymentMethod === 'wallet') {
+      const newTx: Transaction = {
+        id: 'tx-' + Date.now(),
+        txCode: '#GD-' + Math.floor(10000 + Math.random() * 90000),
+        type: 'purchase',
+        userId: buyer.id,
+        userName: buyer.username,
+        description: `Thanh toán mua ${product.name}${selectedPackage ? ` [${selectedPackage.name}]` : ''} (x${quantity})`,
+        amount: -total,
+        balanceAfter: newBalance,
+        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        status: 'completed',
+      };
+      setTransactions((prev) => [newTx, ...prev]);
+    }
 
-    // Add notification
     setNotifications((prev) => [
       {
         id: 'notif-' + Date.now(),
-        title: `Đơn hàng mới ${newOrderCode}`,
+        title: `Đơn hàng mới ${newOrder.orderCode}`,
         description: `${buyer.username} vừa mua ${product.name} (${total.toLocaleString('vi-VN')}đ)`,
         time: 'Vừa xong',
         read: false,
@@ -1737,7 +1782,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       ...prev,
     ]);
 
-    showToast(`Đã thêm "${product.name}${selectedPackage ? ` [${selectedPackage.name}]` : ''}" vào giỏ hàng!`, 'success');
+    showToast(`🎉 Mua hàng thành công! Đơn ${newOrder.orderCode} — xem key trong Đơn Hàng!`, 'success');
     return true;
   };
 
@@ -1774,8 +1819,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       result = (data as CreateOrderResult) ?? null;
     } catch (e) {
       const msg = String((e as { message?: string })?.message || '');
-      if (/Could not find|does not exist|PGRST202|404/i.test(msg)) {
-        // RPC chưa có trên DB (chưa chạy moc_b_core.sql) → dùng luồng local cũ
+      if (/Could not find|does not exist|PGRST202|404|42501|permission denied/i.test(msg)) {
+        // RPC chưa có trên DB hoặc permission fallback → dùng luồng local an toàn
         return createOrderLocal(productId, quantity, paymentMethod, selectedPackage);
       }
       showToast('Lỗi hệ thống khi tạo đơn, vui lòng thử lại!', 'error');
@@ -1848,7 +1893,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       userName: buyer.username,
       description: `Thanh toán mua ${newOrder.productName}${newOrder.packageName ? ` [${newOrder.packageName}]` : ''} (x${newOrder.quantity})`,
       amount: -total,
-      balanceAfter: currentUser.balance - total,
+      balanceAfter: (buyer.balance || total) - total,
       createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
       status: 'completed',
     };

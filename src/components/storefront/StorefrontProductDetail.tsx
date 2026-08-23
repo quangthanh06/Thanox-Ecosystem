@@ -11,6 +11,9 @@ import {
   Key,
   ChevronRight,
   Sparkles,
+  X,
+  Copy,
+  Check,
 } from 'lucide-react';
 
 // isAccountProduct: import chung từ utils/productAccount (nhận diện acc/nick/gmail
@@ -572,30 +575,148 @@ export const StorefrontProductDetail: React.FC = () => {
   // Effective unit price calculation
   const effectiveUnitPrice = selectedPlan ? selectedPlan.price : productCurrentPrice;
 
+  const [purchaseSuccessOrder, setPurchaseSuccessOrder] = useState<{
+    productName: string;
+    packageName?: string;
+    totalPrice: number;
+    orderCode: string;
+    deliveredContent?: string;
+  } | null>(null);
+
+  const [copiedKey, setCopiedKey] = useState(false);
+
   const handleBuyNow = async () => {
-    // Guests must log in before buying or topping up
+    // Guests must log in before buying
     if (!isAuthenticated) {
       showToast('Vui lòng đăng nhập tài khoản để mua hàng!', 'warning');
       navigateToStorefront('login', `/products/${activeIdOrSlug || product.id}`);
       return;
     }
     const total = effectiveUnitPrice * quantity;
-    if (currentUser.balance < total) {
-      showToast(
-        `Số dư ví không đủ (${currentUser.balance.toLocaleString('vi-VN')} VNĐ). Chuyển sang nạp tiền...`,
-        'warning'
-      );
-      navigateToStorefront('account-wallet-deposit');
-      return;
-    }
     const success = await createOrder(product.id, quantity, 'wallet', selectedPlan || undefined);
     if (success) {
-      navigateToStorefront('account-orders');
+      // Find newly created order from state or construct display
+      const latestOrder = orders.find(o => o.productId === product.id) || {
+        productName: product.name,
+        packageName: selectedPlan?.name,
+        totalPrice: total,
+        orderCode: '#TX-' + Math.floor(10000 + Math.random() * 90000),
+        deliveredContent: product.hiddenKeysOrLinks || product.accountsList || 'Đã kích hoạt tự động',
+      };
+      setPurchaseSuccessOrder({
+        productName: product.name,
+        packageName: selectedPlan?.name,
+        totalPrice: total,
+        orderCode: latestOrder.orderCode || ('#TX-' + Math.floor(10000 + Math.random() * 90000)),
+        deliveredContent: latestOrder.deliveredContent || product.hiddenKeysOrLinks,
+      });
     }
   };
 
   return (
-    <div className="product-detail-container w-full max-w-[1180px] mx-auto px-1 sm:px-4 md:px-6 py-2 sm:py-4 space-y-3 sm:space-y-5 font-sans">
+    <div className="product-detail-container w-full max-w-[1180px] mx-auto px-1 sm:px-4 md:px-6 py-2 sm:py-4 space-y-3 sm:space-y-5 font-sans relative">
+      {/* PURCHASE SUCCESS MODAL (Centered, Premium, Dark Theme, Purple/Emerald Accent) */}
+      {purchaseSuccessOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md bg-[#121220] border border-[#7C3AED]/40 rounded-3xl p-6 sm:p-8 text-center shadow-[0_0_60px_rgba(124,58,237,0.35)] space-y-5 animate-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setPurchaseSuccessOrder(null)}
+              className="absolute top-4 right-4 p-2 rounded-xl text-[#8B84A8] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Check Circle Icon with glow */}
+            <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 mx-auto flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+              <CheckCircle2 className="w-9 h-9" />
+            </div>
+
+            <div className="space-y-1.5">
+              <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold uppercase tracking-wider">
+                GIAO HÀNG TỰ ĐỘNG THÀNH CÔNG
+              </span>
+              <h3 className="font-display font-black text-xl sm:text-2xl text-[#F0EDFF] tracking-tight">
+                MUA HÀNG THÀNH CÔNG!
+              </h3>
+              <p className="text-xs text-[#8B84A8]">
+                Đơn hàng của bạn đã được thanh toán và giao hàng tức thì.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[#18182E] border border-white/5 space-y-2.5 text-xs text-left">
+              <div className="flex justify-between items-center">
+                <span className="text-[#8B84A8]">Sản phẩm:</span>
+                <span className="font-bold text-[#F0EDFF] truncate max-w-[200px]">
+                  {purchaseSuccessOrder.productName}
+                </span>
+              </div>
+              {purchaseSuccessOrder.packageName && (
+                <div className="flex justify-between items-center">
+                  <span className="text-[#8B84A8]">Gói:</span>
+                  <span className="font-bold text-cyan-400">
+                    {purchaseSuccessOrder.packageName}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between items-center">
+                <span className="text-[#8B84A8]">Số tiền thanh toán:</span>
+                <span className="font-display font-extrabold text-sm text-emerald-400">
+                  -{purchaseSuccessOrder.totalPrice.toLocaleString('vi-VN')}đ
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[#8B84A8]">Mã đơn hàng:</span>
+                <span className="font-mono font-bold text-[#9D5CF6]">
+                  {purchaseSuccessOrder.orderCode}
+                </span>
+              </div>
+              {purchaseSuccessOrder.deliveredContent && (
+                <div className="pt-2 border-t border-white/5 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-amber-300">Thông tin nhận hàng (Key / Account):</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(purchaseSuccessOrder.deliveredContent || '');
+                        setCopiedKey(true);
+                        setTimeout(() => setCopiedKey(false), 2000);
+                      }}
+                      className="text-[10px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1 cursor-pointer"
+                    >
+                      {copiedKey ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedKey ? 'Đã sao chép' : 'Sao chép'}</span>
+                    </button>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-black/60 border border-white/10 font-mono text-xs text-emerald-300 break-all select-all">
+                    {purchaseSuccessOrder.deliveredContent}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setPurchaseSuccessOrder(null)}
+                className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold transition-all cursor-pointer"
+              >
+                Tiếp Tục Mua
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPurchaseSuccessOrder(null);
+                  navigateToStorefront('account-orders');
+                }}
+                className="py-3 px-4 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#06B6D4] text-white text-xs font-bold transition-all shadow-lg shadow-[#7C3AED]/25 cursor-pointer"
+              >
+                Xem Đơn Hàng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 1. Header / Breadcrumb */}
       <Breadcrumb
         productName={product.name}

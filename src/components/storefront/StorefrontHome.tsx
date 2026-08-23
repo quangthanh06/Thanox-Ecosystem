@@ -77,9 +77,9 @@ export const StorefrontHome: React.FC = () => {
   const featuredProducts = activeProducts.filter((p) => p.featured);
 
   const handleQuickBuy = async (productId: string, price: number) => {
-    if (currentUser.balance < price) {
-      showToast(`Số dư ví không đủ (${currentUser.balance.toLocaleString('vi-VN')}đ). Chuyển sang nạp tiền...`, 'warning');
-      navigateToStorefront('account-wallet-deposit');
+    if (!isAuthenticated) {
+      showToast('Vui lòng đăng nhập tài khoản để mua hàng!', 'warning');
+      navigateToStorefront('login', '/');
       return;
     }
     const success = await createOrder(productId, 1, 'wallet');
