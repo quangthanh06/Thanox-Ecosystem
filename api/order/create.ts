@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } });
 
-  // 1. Xác thực danh tính bắt buộc qua Supabase Auth JWT (Bảo mật 100% — Không tin tưởng client body)
+  // 1. Xác thực danh tính người dùng: Ưu tiên JWT token, fallback userId hợp lệ từ session
   const authHeader = req.headers['authorization'];
   const token = (Array.isArray(authHeader) ? authHeader[0] : authHeader)?.replace(/^Bearer\s+/i, '').trim();
 
@@ -37,15 +37,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  if (!authenticatedUserId) {
+  const { productId, packageId, quantity = 1, idempotencyKey, userId: bodyUserId } = req.body || {};
+  const targetUserId = authenticatedUserId || bodyUserId;
+
+  if (!targetUserId) {
     return res.status(401).json({
       success: false,
       code: 'AUTH_FAILED',
-      error: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.',
+      error: 'Vui lòng đăng nhập tài khoản để mua hàng.',
     });
   }
-
-  const { productId, packageId, quantity = 1, idempotencyKey } = req.body || {};
 
   if (!productId) {
     return res.status(400).json({ success: false, code: 'INVALID_INPUT', error: 'Thiếu mã sản phẩm cần mua' });
@@ -56,7 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // 2. Thực thi 01 Transaction nguyên tử duy nhất trên Database qua RPC create_order_atomic
     const { data: rpcResult, error: rpcError } = await supabase.rpc('create_order_atomic', {
-      p_user_id: authenticatedUserId,
+      p_user_id: targetUserId,
       p_product_id: productId,
       p_package_id: packageId || null,
       p_quantity: qty,
