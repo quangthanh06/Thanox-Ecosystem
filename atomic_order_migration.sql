@@ -74,6 +74,8 @@ DECLARE
   v_lines       TEXT[];
   v_take        TEXT[];
   v_stock_num   INT;
+  v_order_id    TEXT;
+  v_order_code  TEXT;
   v_order       public.orders%ROWTYPE;
   v_existing    public.orders%ROWTYPE;
   v_new_balance BIGINT;
@@ -220,17 +222,19 @@ BEGIN
    WHERE id::text = p_user_id;
 
   -- 9. Ghi đơn hàng (Insert Order)
+  v_order_id := 'ord-' || gen_random_uuid()::text;
+  v_order_code := '#TX-' || floor(10000 + random() * 90000)::text;
   INSERT INTO orders (
-    user_id, user_name, product_id, product_name, package_id, package_name,
+    id, order_code, user_id, user_name, product_id, product_name, package_id, package_name,
     quantity, unit_price, total_price, status, payment_method, delivered_content, idem_key
   ) VALUES (
-    p_user_id, v_user.username, p_product_id, v_prod.name, p_package_id,
+    v_order_id, v_order_code, p_user_id, v_user.username, p_product_id, v_prod.name, p_package_id,
     COALESCE(v_pkg->>'name', ''), p_quantity, v_unit, v_total, 'completed', 'wallet',
     v_delivered, p_idem_key
   ) RETURNING * INTO v_order;
 
   -- 10. Tăng số lượng đã bán (Sold count)
-  UPDATE products SET sold_count = COALESCE(sold_count, 0) + p_quantity WHERE id = v_prod_uuid;
+  UPDATE products SET sold_count = COALESCE(sold_count, 0) + p_quantity WHERE id::text = p_product_id;
 
   -- 11. Ghi sổ cái tài chính (Insert Purchase Ledger)
   INSERT INTO transactions (
