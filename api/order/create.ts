@@ -193,7 +193,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .update({
         balance: newBalance,
         total_spent: (Number(userProfile.total_spent) || 0) + total,
-        total_orders: (Number(userProfile.total_orders) || 0) + 1,
       })
       .eq('id', targetUserId);
 
