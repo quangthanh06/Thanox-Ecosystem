@@ -22,6 +22,7 @@ import {
   CreditCard,
   User,
   Image as ImageIcon,
+  Trash2,
 } from 'lucide-react';
 
 export const WalletView: React.FC = () => {
@@ -92,6 +93,18 @@ export const WalletView: React.FC = () => {
     setIsSimulateTopupOpen(false);
   };
 
+  const handleCleanAllPending = async () => {
+    try {
+      await fetch('/api/topup/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'clean_all_pending' }),
+      });
+    } catch {}
+    pendingTopups.forEach((t) => rejectTopup(t.id, 'Hết hạn chờ'));
+    showToast('Đã dọn dẹp và từ chối toàn bộ đơn chờ cũ!', 'success');
+  };
+
   return (
     <div className="space-y-6">
       {/* Header Banner */}
@@ -116,6 +129,17 @@ export const WalletView: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2.5">
+          {pendingTopups.length > 0 && (
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleCleanAllPending}
+              leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+            >
+              Dọn Dẹp {pendingTopups.length} Đơn Cũ
+            </Button>
+          )}
+
           <Button
             variant="secondary"
             size="sm"

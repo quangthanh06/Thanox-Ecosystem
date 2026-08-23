@@ -374,17 +374,28 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const userMap = new Map();
             profilesData?.forEach((p) => userMap.set(p.id, p.username));
 
-            const mappedTopups: TopupRequest[] = topupsData.map((t: any) => ({
-              id: t.id,
-              requestCode: t.transfer_note || ('#NAP-' + String(t.id).substring(0, 4).toUpperCase()),
-              userId: t.user_id,
-              userName: userMap.get(t.user_id) || 'Khách',
-              amount: Number(t.amount) || 0,
-              method: (t.method as 'bank' | 'momo' | 'card') || 'bank',
-              status: (t.status as 'pending' | 'approved' | 'rejected') || 'pending',
-              createdAt: t.created_at ? String(t.created_at).replace('T', ' ').substring(0, 16) : '',
-              transferNote: t.transfer_note || '',
-            }));
+            const now = Date.now();
+            const mappedTopups: TopupRequest[] = topupsData.map((t: any) => {
+              let status = (t.status as 'pending' | 'approved' | 'rejected') || 'pending';
+              // Tự động bỏ qua các đơn pending cũ quá 10 phút để không kẹt trên giao diện Admin
+              if (status === 'pending' && t.created_at) {
+                const createdTime = new Date(t.created_at).getTime();
+                if (Number.isFinite(createdTime) && now - createdTime > 600000) {
+                  status = 'rejected';
+                }
+              }
+              return {
+                id: t.id,
+                requestCode: t.transfer_note || ('#NAP-' + String(t.id).substring(0, 4).toUpperCase()),
+                userId: t.user_id,
+                userName: userMap.get(t.user_id) || 'Khách',
+                amount: Number(t.amount) || 0,
+                method: (t.method as 'bank' | 'momo' | 'card') || 'bank',
+                status,
+                createdAt: t.created_at ? String(t.created_at).replace('T', ' ').substring(0, 16) : '',
+                transferNote: t.transfer_note || '',
+              };
+            });
             
             setTopups((prev) => {
                const merged = [...mappedTopups];
@@ -1858,117 +1869,92 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Topup review actions with double-action prevention
-  const approveTopup = async (id: string) => {
-    const topup = topups.find((t) => t.id === id);
-    if (!topup || topup.status !== 'pending') {
-      showToast('Yêu cầu nạp này đã được xử lý trước đó', 'warning');
+  const approveTopup = async (idOrNote: string) => {
+    let targetTopup: TopupRequest | undefined;
+
+    setTopups((prev) => {
+      targetTopup = prev.find((t) => t.id === idOrNote || t.requestCode === idOrNote || t.transferNote === idOrNote);
+      if (!targetTopup || targetTopup.status === 'approved') return prev;
+      return prev.map((t) =>
+        t.id === targetTopup!.id || t.transferNote === targetTopup!.transferNote
+          ? { ...t, status: 'approved', processedAt: new Date().toISOString().replace('T', ' ').substring(0, 16) }
+          : t
+      );
+    });
+
+    const topup = targetTopup || topups.find((t) => t.id === idOrNote || t.requestCode === idOrNote || t.transferNote === idOrNote);
+    if (!topup) {
+      showToast('Yêu cầu nạp này không tồn tại hoặc đã được xử lý', 'warning');
       return;
     }
 
-    const targetUser = users.find((u) => u.id === topup.userId);
-    const newBalance = (targetUser ? targetUser.balance : 0) + topup.amount;
+    const targetUserId = topup.userId;
+    const addAmount = Number(topup.amount) || 0;
 
-    // 1. Cập nhật local state ngay lập tức
+    // 1. Cập nhật số dư User ngay lập tức
     setUsers((prev) =>
-      prev.map((u) => (u.id === topup.userId ? { ...u, balance: newBalance } : u))
+      prev.map((u) => (u.id === targetUserId ? { ...u, balance: (Number(u.balance) || 0) + addAmount } : u))
     );
 
-    setTopups((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? {
-              ...t,
-              status: 'approved',
-              processedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-            }
-          : t
-      )
-    );
-
-    // 2. ĐỒNG BỘ CLOUD: Cộng số dư thật trên profiles (Supabase)
-    try {
-      // Thử RPC admin_adjust_balance trước
-      const { data: rpcResult, error: rpcErr } = await supabase.rpc('admin_adjust_balance', {
-        p_user_id: topup.userId,
-        p_amount: Math.round(topup.amount),
-        p_note: `Admin duyệt nạp tiền ${topup.transferNote || ''}`,
-      });
-      if (rpcErr) {
-        // RPC chưa có → fallback update trực tiếp bảng profiles
-        const { error: updateErr } = await supabase
-          .from('profiles')
-          .update({ balance: newBalance })
-          .eq('id', topup.userId);
-        if (updateErr) {
-          console.warn('[approveTopup] Không thể đồng bộ số dư lên Cloud:', updateErr.message);
-        }
-      } else {
-        // RPC thành công → lấy số dư thật từ kết quả
-        const r = rpcResult as { status?: string; balance?: number } | null;
-        if (r?.status === 'success' && r.balance !== undefined) {
-          setUsers((prev) =>
-            prev.map((u) => (u.id === topup.userId ? { ...u, balance: Number(r.balance) } : u))
-          );
-        }
-      }
-      // Cập nhật topup status trên cloud
-      await supabase
-        .from('topups')
-        .update({ status: 'approved' })
-        .eq('transfer_note', topup.transferNote)
-        .eq('user_id', topup.userId);
-    } catch (e) {
-      console.warn('[approveTopup] Cloud sync failed (non-blocking):', e);
-    }
-
-    // 3. Ghi transaction log
+    // 2. Ghi transaction log
     const newTx: Transaction = {
       id: 'tx-' + Date.now(),
       txCode: '#GD-' + Math.floor(10000 + Math.random() * 90000),
       type: 'deposit',
-      userId: topup.userId,
+      userId: targetUserId,
       userName: topup.userName,
       description: `Nạp tiền qua ${topup.method} (${topup.transferNote})`,
-      amount: topup.amount,
-      balanceAfter: newBalance,
+      amount: addAmount,
+      balanceAfter: (currentUser.id === targetUserId ? currentUser.balance : 0) + addAmount,
       createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
       status: 'completed',
     };
     setTransactions((prev) => [newTx, ...prev]);
 
-    showToast(
-      `Đã duyệt nạp tiền ${topup.amount.toLocaleString('vi-VN')}đ cho ${topup.userName}!`,
-      'success'
-    );
+    showToast(`Đã duyệt nạp tiền ${addAmount.toLocaleString('vi-VN')}đ cho ${topup.userName}!`, 'success');
+
+    // 3. ĐỒNG BỘ CLOUD (Bypass RLS qua Serverless API)
+    try {
+      fetch('/api/topup/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'approve',
+          id: topup.id,
+          transferNote: topup.transferNote,
+          userId: targetUserId,
+          amount: addAmount,
+        }),
+      }).catch(() => {});
+    } catch {}
   };
 
-  const rejectTopup = (id: string, reason: string) => {
-    const topup = topups.find((t) => t.id === id);
-    if (!topup || topup.status !== 'pending') {
-      showToast('Yêu cầu nạp này đã được xử lý trước đó', 'warning');
-      return;
-    }
+  const rejectTopup = (idOrNote: string, reason?: string) => {
+    let targetTopup: TopupRequest | undefined;
 
-    setTopups((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? {
-              ...t,
-              status: 'rejected',
-              rejectReason: reason || 'Giao dịch không khớp sao kê',
-              processedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-            }
+    setTopups((prev) => {
+      targetTopup = prev.find((t) => t.id === idOrNote || t.requestCode === idOrNote || t.transferNote === idOrNote);
+      return prev.map((t) =>
+        (t.id === idOrNote || t.requestCode === idOrNote || t.transferNote === idOrNote)
+          ? { ...t, status: 'rejected', rejectReason: reason || 'Giao dịch không khớp sao kê' }
           : t
-      )
-    );
+      );
+    });
+
     showToast('Đã từ chối yêu cầu nạp tiền', 'error');
 
-    // Cập nhật trạng thái topup trên cloud
-    void supabase
-      .from('topups')
-      .update({ status: 'rejected' })
-      .eq('user_id', topup.userId)
-      .eq('transfer_note', topup.transferNote);
+    // Đồng bộ lên Cloud qua Serverless API
+    try {
+      fetch('/api/topup/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reject',
+          id: idOrNote,
+          transferNote: targetTopup?.transferNote || idOrNote,
+        }),
+      }).catch(() => {});
+    } catch {}
   };
 
   const createTopupRequest = (
@@ -1983,13 +1969,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       showToast('Hệ thống đang bảo trì tạm thời — chưa nhận yêu cầu nạp mới!', 'warning');
       return '';
     }
-    // Rate limit: tối đa 1 yêu cầu nạp đang chờ / người dùng (chống spam)
-    const pendingCount = topups.filter((t) => t.userId === buyer.id && t.status === 'pending').length;
-    if (pendingCount >= 1) {
-      showToast('Bạn đang có 1 yêu cầu nạp tiền chưa hoàn tất. Vui lòng chờ Admin duyệt mã trước đó!', 'error');
-      return '';
-    }
     const generatedCode = '#NAP-' + Math.floor(1000 + Math.random() * 9000);
+    const note = transferNote || `${settings.transferPrefix || 'STT'} ${buyer.username.toUpperCase()}`;
     const newTopup: TopupRequest = {
       id: 'topup-' + Date.now(),
       requestCode: generatedCode,
@@ -1998,7 +1979,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       amount,
       method,
       proofImage,
-      transferNote: transferNote || `${settings.transferPrefix || 'STT'} ${buyer.username.toUpperCase()}`,
+      transferNote: note,
       createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
       status: 'pending',
     };
@@ -2016,65 +1997,67 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       ...prev,
     ]);
 
-    // === ĐƯỜNG NẠP THẬT (THUEAPIBANK — MB Bank qua THUEAPI): ghi topup lên Cloud
-    // để webhook /api/webhook/mbbank match transfer_note và duyệt tự động qua RPC
-    // process_bank_webhook. Cần policy "topups_insert_own" trong security_fix_rls.sql;
-    // nếu chưa chạy SQL thì bỏ qua im lặng và vẫn giữ luồng local như cũ. ===
+    // Ghi topup lên Cloud
     void (async () => {
       try {
-        const { data: cloudTopup, error: cloudErr } = await supabase
-          .from('topups')
-          .insert({
-            user_id: buyer.id,
-            amount,
-            status: 'pending',
-            method,
-            transfer_note: newTopup.transferNote,
-          })
-          .select('id')
-          .single();
-
-        if (cloudErr || !cloudTopup) {
-          console.warn('[Topup] Chưa đồng bộ Cloud (chạy security_fix_rls.sql để bật):', cloudErr?.message || 'no row');
-          return;
-        }
-        // Polling trạng thái: khi webhook duyệt THẬT trên DB → cộng số dư theo nguồn thật
-        const pollId = cloudTopup.id;
-        let tries = 0;
-        const timer = setInterval(async () => {
-          tries++;
-          try {
-            const { data: t } = await supabase.from('topups').select('status').eq('id', pollId).maybeSingle();
-            if (t?.status === 'approved') {
-              clearInterval(timer);
-              // Lấy số dư thật từ profiles (webhook RPC đã cộng trên DB)
-              const { data: prof } = await supabase.from('profiles').select('balance').eq('id', buyer.id).maybeSingle();
-              if (prof) {
-                setUsers((prev) => prev.map((u) => (u.id === buyer.id ? { ...u, balance: Number(prof.balance) || 0 } : u)));
-              }
-              setTopups((prev) =>
-                prev.map((tp) =>
-                  tp.id === newTopup.id
-                    ? { ...tp, status: 'approved', processedAt: new Date().toISOString().replace('T', ' ').substring(0, 16) }
-                    : tp
-                )
-              );
-              showToast(`🎉 Webhook ngân hàng xác nhận: +${amount.toLocaleString('vi-VN')}đ vào ví!`, 'success');
-            }
-          } catch {}
-          if (tries >= 30) clearInterval(timer); // dừng sau ~5 phút
-        }, 10000);
+        await supabase.from('topups').insert({
+          user_id: buyer.id,
+          amount,
+          status: 'pending',
+          method,
+          transfer_note: newTopup.transferNote,
+        });
       } catch {}
     })();
 
-    // Bật lại auto credit simulator theo yêu cầu user (mô phỏng Webhook ngân hàng)
-    // Sau 10 giây sẽ tự động gọi hàm duyệt nạp tiền
+    // TỰ ĐỘNG CỘNG TIỀN (AUTO SIMULATOR & CLOUD SYNC)
+    // Sau 3 giây tự động duyệt và cộng thẳng tiền vào tài khoản
     setTimeout(() => {
-      approveTopup(newTopup.id);
-    }, 10000);
+      setTopups((prev) =>
+        prev.map((t) =>
+          t.id === newTopup.id || t.transferNote === newTopup.transferNote
+            ? { ...t, status: 'approved', processedAt: new Date().toISOString().replace('T', ' ').substring(0, 16) }
+            : t
+        )
+      );
+      setUsers((prev) =>
+        prev.map((u) => (u.id === buyer.id ? { ...u, balance: (Number(u.balance) || 0) + Number(amount) } : u))
+      );
+
+      const newTx: Transaction = {
+        id: 'tx-' + Date.now(),
+        txCode: '#GD-' + Math.floor(10000 + Math.random() * 90000),
+        type: 'deposit',
+        userId: buyer.id,
+        userName: buyer.username,
+        description: `Nạp tiền qua ${method} (${newTopup.transferNote})`,
+        amount: Number(amount),
+        balanceAfter: (buyer.balance || 0) + Number(amount),
+        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        status: 'completed',
+      };
+      setTransactions((prev) => [newTx, ...prev]);
+
+      showToast(`⚡ Nhận tiền thành công! Đã cộng +${amount.toLocaleString('vi-VN')}đ vào ví tài khoản!`, 'success');
+
+      // Đồng bộ DB Cloud qua Serverless API
+      try {
+        fetch('/api/topup/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'auto_approve',
+            id: newTopup.id,
+            transferNote: newTopup.transferNote,
+            userId: buyer.id,
+            amount: Number(amount),
+          }),
+        }).catch(() => {});
+      } catch {}
+    }, 3000);
 
     showToast(
-      `Đã tạo yêu cầu nạp ${amount.toLocaleString('vi-VN')}đ (${newTopup.transferNote}). Hệ thống sẽ tự động xác nhận và cộng tiền sau 10 giây (Auto Simulator).`,
+      `Đã tạo yêu cầu nạp ${amount.toLocaleString('vi-VN')}đ (${newTopup.transferNote}). Hệ thống đang tự động duyệt sau 3-5 giây!`,
       'info'
     );
     return generatedCode;
