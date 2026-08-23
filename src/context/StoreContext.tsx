@@ -2067,12 +2067,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } catch {}
     })();
 
-    // ⚠️ KHÔNG còn "auto credit simulator" phía client — tiền chỉ được cộng khi
-    // webhook/cron THUEAPIBANK xác nhận giao dịch THẬT trên server (RPC cộng
-    // ví + ghi ledger trong 1 DB transaction). Polling phía trên sẽ tự cập nhật
-    // số dư hiển thị theo nguồn thật khi topup được duyệt.
+    // Bật lại auto credit simulator theo yêu cầu user (mô phỏng Webhook ngân hàng)
+    // Sau 10 giây sẽ tự động gọi hàm duyệt nạp tiền
+    setTimeout(() => {
+      approveTopup(newTopup.id);
+    }, 10000);
+
     showToast(
-      `Đã tạo yêu cầu nạp ${amount.toLocaleString('vi-VN')}đ (${newTopup.transferNote}). Chuyển khoản đúng nội dung — hệ thống tự động cộng ví khi ngân hàng xác nhận.`,
+      `Đã tạo yêu cầu nạp ${amount.toLocaleString('vi-VN')}đ (${newTopup.transferNote}). Hệ thống sẽ tự động xác nhận và cộng tiền sau 10 giây (Auto Simulator).`,
       'info'
     );
     return generatedCode;
