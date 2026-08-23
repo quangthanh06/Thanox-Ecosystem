@@ -340,9 +340,9 @@ export const StorefrontAIAssistant: React.FC = () => {
     <>
       {/* 1. FLOATING MASCOT TRIGGER BUTTON (Cố định bên TRÁI, đứng im — giống nhau trên PC & Mobile) */}
       <div
-        className="fixed bottom-24 sm:bottom-28 left-0 sm:left-6 z-[999999] flex flex-col items-center pointer-events-auto select-none"
+        className="fixed bottom-24 sm:bottom-28 left-0 sm:left-6 z-[999999] pointer-events-auto select-none"
       >
-        {/* Compact Animated Speech Bubble */}
+        {/* Bong bóng đặt ABSOLUTE để không làm nút bị đẩy lệch khỏi rìa trái */}
         {!isOpen && !isBubbleDismissed && (
           <div
             onClick={(e) => {
@@ -350,7 +350,7 @@ export const StorefrontAIAssistant: React.FC = () => {
               setIsOpen(true);
               setIsBubbleDismissed(true);
             }}
-            className="relative mb-1.5 animate-bounce flex items-center gap-1.5 bg-gradient-to-r from-[#161626]/95 via-[#1E1B4B]/95 to-[#0E1726]/95 border border-cyan-400/50 text-white text-[11px] font-extrabold py-1.5 px-3 rounded-2xl shadow-xl shadow-cyan-500/20 backdrop-blur-xl cursor-pointer hover:scale-105 transition-all"
+            className="absolute bottom-full left-0 mb-1.5 animate-bounce flex items-center gap-1.5 bg-gradient-to-r from-[#161626]/95 via-[#1E1B4B]/95 to-[#0E1726]/95 border border-cyan-400/50 text-white text-[11px] font-extrabold py-1.5 px-3 rounded-2xl shadow-xl shadow-cyan-500/20 backdrop-blur-xl cursor-pointer hover:scale-105 transition-all whitespace-nowrap"
           >
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
             <span className="text-cyan-300 flex items-center gap-1 drop-shadow-[0_0_6px_rgba(6,182,212,0.8)]">
@@ -368,8 +368,8 @@ export const StorefrontAIAssistant: React.FC = () => {
             >
               <X className="w-3 h-3" />
             </button>
-            {/* Tooltip Arrow */}
-            <div className="absolute -bottom-1.5 right-1/2 translate-x-1/2 w-2.5 h-2.5 bg-[#161626] border-b border-r border-cyan-400/50 transform rotate-45" />
+            {/* Tooltip Arrow — dưới bong bóng, ngay trên nút */}
+            <div className="absolute -bottom-1.5 left-3 w-2.5 h-2.5 bg-[#161626] border-b border-r border-cyan-400/50 transform rotate-45" />
           </div>
         )}
 

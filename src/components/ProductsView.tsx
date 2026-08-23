@@ -1644,6 +1644,10 @@ export const ProductsView: React.FC = () => {
                               showToast('Vui lòng nhập tên gói', 'error');
                               return;
                             }
+                            if ((formData.packages || []).some((g) => g.name.toUpperCase() === pkgNameInput.trim().toUpperCase())) {
+                              showToast('Đã có gói trùng tên này — hãy dùng tên khác hoặc xóa gói cũ!', 'error');
+                              return;
+                            }
                             if (pkgPriceInput <= 0) {
                               showToast('Giá bán phải lớn hơn 0', 'error');
                               return;

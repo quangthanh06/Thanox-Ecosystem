@@ -1262,6 +1262,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
       // Cập nhật ngay ref để các lần tải sau không đè mất gói vừa lưu
       productPackagesRef.current = { ...productPackagesRef.current, ...map };
+      // Đồng bộ LUÔN cột products.packages — RPC create_order đọc từ cột này
+      void supabase
+        .from('products')
+        .update({ packages: map[productId] || [] })
+        .eq('id', productId)
+        .then((res: { error: { message: string } | null }) => {
+          if (res.error) console.warn('[Packages] chưa ghi được cột products:', res.error.message);
+        });
       const updated = { ...prev, productPackages: map };
       try {
         localStorage.setItem('thanox_settings', JSON.stringify(updated));
