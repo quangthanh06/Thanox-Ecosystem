@@ -17,6 +17,19 @@ ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS payment_method    TEXT NOT NU
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS delivered_content TEXT;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS idem_key          TEXT;
 
+-- BẢNG PRODUCTS: Đảm bảo đầy đủ các cột packages, hidden_keys, accounts_list
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS packages JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS hidden_keys_or_links TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS accounts_list TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS download_url TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS instructions TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS seller_price BIGINT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS is_locked BOOLEAN DEFAULT true;
+
+-- Cấp quyền truy cập SELECT cho người dùng đọc sản phẩm
+GRANT SELECT ON public.products TO anon, authenticated;
+GRANT SELECT ON public.categories TO anon, authenticated;
+
 -- Đảm bảo tương thích schema legacy nếu có cột amount
 DO $$
 BEGIN
@@ -170,16 +183,22 @@ BEGIN
   END IF;
 
   -- 4. Tính toán giá Server-Authoritative (từ Database)
-  v_unit := v_prod.price;
-  IF p_package_id IS NOT NULL AND v_prod.packages IS NOT NULL THEN
+  v_unit := COALESCE(v_prod.price, 0);
+
+  IF p_package_id IS NOT NULL AND v_prod.packages IS NOT NULL AND jsonb_typeof(v_prod.packages) = 'array' THEN
     SELECT value INTO v_pkg FROM jsonb_array_elements(v_prod.packages)
      WHERE value->>'id' = p_package_id LIMIT 1;
-    IF v_pkg IS NULL THEN
-      RETURN jsonb_build_object('status','error','code','VARIANT_NOT_FOUND','error','Gói sản phẩm không tồn tại');
-    END IF;
-    v_unit := COALESCE(NULLIF((v_pkg->>'price')::BIGINT, 0), v_prod.price);
-    IF v_is_seller AND COALESCE((v_pkg->>'sellerPrice')::BIGINT, 0) > 0 THEN
-      v_unit := (v_pkg->>'sellerPrice')::BIGINT;
+    
+    IF v_pkg IS NOT NULL THEN
+      v_unit := COALESCE(NULLIF(regexp_replace(COALESCE(v_pkg->>'price', '0'), '[^\d]', '', 'g'), '')::BIGINT, v_unit);
+      IF v_is_seller AND COALESCE(NULLIF(regexp_replace(COALESCE(v_pkg->>'sellerPrice', '0'), '[^\d]', '', 'g'), '')::BIGINT, 0) > 0 THEN
+        v_unit := (regexp_replace(v_pkg->>'sellerPrice', '[^\d]', '', 'g'))::BIGINT;
+      END IF;
+    ELSE
+      -- Nếu truyền package_id nhưng không tìm thấy trong packages JSON → thử tìm theo vị trí hoặc báo lỗi
+      IF v_unit <= 0 THEN
+        RETURN jsonb_build_object('status','error','code','VARIANT_NOT_FOUND','error','Gói sản phẩm không tồn tại hoặc chưa được cập nhật giá');
+      END IF;
     END IF;
   ELSE
     v_pkg := NULL;
@@ -210,7 +229,32 @@ BEGIN
   END IF;
 
   -- 7. Cấp phát kho hàng (Inventory Allocation)
-  IF COALESCE(v_prod.accounts_list, '') <> '' THEN
+  IF p_package_id IS NOT NULL AND v_pkg IS NOT NULL AND COALESCE(v_pkg->>'keys', '') <> '' THEN
+    v_lines := ARRAY(SELECT line FROM unnest(string_to_array(v_pkg->>'keys', E'\n')) AS line WHERE btrim(line) <> '');
+    IF array_length(v_lines, 1) < p_quantity THEN
+      RETURN jsonb_build_object('status','error','code','INVENTORY_EMPTY','error','Gói sản phẩm này đã hết Key trong kho');
+    END IF;
+    v_take := v_lines[1:p_quantity];
+    v_delivered := array_to_string(v_take, E'\n');
+    
+    UPDATE products 
+    SET packages = (
+      SELECT jsonb_agg(
+        CASE 
+          WHEN elem->>'id' = p_package_id THEN 
+            jsonb_set(elem, '{keys}', to_jsonb(CASE WHEN array_length(v_lines, 1) > p_quantity THEN array_to_string(v_lines[p_quantity+1:], E'\n') ELSE '' END))
+          ELSE elem
+        END
+      )
+      FROM jsonb_array_elements(packages) AS elem
+    )
+    WHERE id::text = p_product_id;
+    
+    IF v_prod.stock IS NOT NULL AND v_prod.stock <> 'unlimited' AND v_stock_num IS NOT NULL THEN
+      UPDATE products SET stock = greatest(v_stock_num - p_quantity, 0)::text WHERE id::text = p_product_id;
+    END IF;
+
+  ELSIF COALESCE(v_prod.accounts_list, '') <> '' THEN
     v_lines := ARRAY(SELECT line FROM unnest(string_to_array(v_prod.accounts_list, E'\n')) AS line WHERE btrim(line) <> '');
     IF array_length(v_lines, 1) < p_quantity THEN
       RETURN jsonb_build_object('status','error','code','INVENTORY_EMPTY','error','Kho tài khoản đã hết');
@@ -227,7 +271,14 @@ BEGIN
     v_lines := ARRAY(SELECT line FROM unnest(string_to_array(COALESCE(v_prod.hidden_keys_or_links, ''), E'\n')) AS line WHERE btrim(line) <> '');
     v_take := CASE WHEN array_length(v_lines, 1) >= p_quantity THEN v_lines[1:p_quantity] ELSE ARRAY[]::TEXT[] END;
     v_delivered := CASE WHEN array_length(v_take, 1) > 0 THEN array_to_string(v_take, E'\n')
-                        ELSE COALESCE(v_prod.hidden_keys_or_links, v_prod.download_url, v_prod.instructions, 'Đã kích hoạt tự động') END;
+                        ELSE COALESCE(v_pkg->>'downloadUrl', v_prod.download_url, v_prod.instructions, 'Đã kích hoạt tự động') END;
+    
+    IF array_length(v_take, 1) > 0 THEN
+      UPDATE products SET hidden_keys_or_links = CASE WHEN array_length(v_lines, 1) > p_quantity
+            THEN array_to_string(v_lines[p_quantity+1:], E'\n') ELSE '' END
+       WHERE id::text = p_product_id;
+    END IF;
+
     IF v_prod.stock IS NOT NULL AND v_prod.stock <> 'unlimited' AND v_stock_num IS NOT NULL THEN
       UPDATE products SET stock = greatest(v_stock_num - p_quantity, 0)::text WHERE id::text = p_product_id;
     END IF;
