@@ -216,6 +216,15 @@ BEGIN
 
   v_total := v_unit * p_quantity;
 
+  -- 4.5. Ngăn chặn đơn hàng 0đ nếu sản phẩm không phải là đồ miễn phí
+  IF v_total <= 0 AND (COALESCE(v_prod.price, 0) > 0 OR COALESCE(v_prod.original_price, 0) > 0) THEN
+    RETURN jsonb_build_object(
+      'status','error',
+      'code','INVALID_PRICE',
+      'error','Giá sản phẩm không hợp lệ (0đ). Vui lòng báo Admin kiểm tra lại Gói.'
+    );
+  END IF;
+
   -- 5. Kiểm tra số dư ví (Balance Verification)
   IF COALESCE(v_user.balance, 0) < v_total THEN
     RETURN jsonb_build_object(
@@ -292,11 +301,12 @@ BEGIN
   END IF;
 
   -- 8. Trừ ví profiles (Debit Profile)
+  v_new_balance := v_user.balance - v_total;
+    
   UPDATE profiles
-     SET balance = balance - v_total,
+     SET balance = v_new_balance,
          total_spent = COALESCE(total_spent, 0) + v_total
-   WHERE id::text = p_user_id
-  RETURNING balance INTO v_new_balance;
+   WHERE id = v_user_uuid;
 
   -- 9. Ghi đơn hàng (Insert Order)
   v_order_id := 'ord-' || gen_random_uuid()::text;

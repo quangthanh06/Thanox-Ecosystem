@@ -119,7 +119,7 @@ interface StoreContextType {
   deleteCategory: (id: string) => void;
 
   updateOrderStatus: (id: string, status: Order['status']) => void;
-  createOrder: (productId: string, quantity: number, paymentMethod: Order['paymentMethod'], selectedPackage?: ProductPackage) => Promise<boolean>;
+  createOrder: (productId: string, quantity: number, paymentMethod: Order['paymentMethod'], selectedPackage?: ProductPackage) => Promise<{ success: boolean; order?: Order; error?: string }>;
 
   approveTopup: (id: string) => void;
   rejectTopup: (id: string, reason: string) => void;
@@ -1285,13 +1285,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // orders/balance thật/notification/toast cho từng đơn. =====
     let created = 0;
     for (const item of cart) {
-      const ok = await createOrder(item.product.id, item.quantity, paymentMethod, item.selectedPackage);
-      if (ok) created++;
+      const res = await createOrder(item.product.id, item.quantity, paymentMethod, item.selectedPackage);
+      if (res?.success) {
+        created++;
+      } else if (res?.error) {
+        showToast(res.error, 'error');
+      }
     }
 
     if (created === 0) {
       showToast('Không thể thanh toán đơn nào — vui lòng kiểm tra lại giỏ hàng!', 'error');
-      return false;
+      return false; // Do not navigate or clear cart
     }
 
     // Affiliate cho đơn đầu tiên của lần checkout này
@@ -1588,15 +1592,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     quantity: number,
     paymentMethod: Order['paymentMethod'],
     selectedPackage?: ProductPackage
-  ): Promise<boolean> => {
+  ): Promise<{ success: boolean; order?: Order; error?: string }> => {
     if (!isAuthenticated) {
       showToast('Vui lòng đăng nhập để mua sản phẩm!', 'warning');
       navigateToStorefront('login', typeof window !== 'undefined' ? window.location.pathname : '/products');
-      return false;
+      return { success: false, error: 'Chưa đăng nhập' };
     }
     if (settings.maintenanceMode) {
       showToast('Hệ thống đang bảo trì tạm thời, vui lòng quay lại sau!', 'warning');
-      return false;
+      return { success: false, error: 'Hệ thống bảo trì' };
     }
 
     try {
@@ -1628,21 +1632,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       if (!res.ok || !data.success || !data.order) {
         const code = data.code || 'UNKNOWN';
-        if (code === 'INSUFFICIENT_BALANCE') {
-          showToast(data.error || 'Số dư ví không đủ! Vui lòng nạp thêm tiền.', 'error');
-          navigateToStorefront('account-wallet-deposit');
-          return false;
+        if (code === 'INSUFFICIENT_FUNDS' || code === 'INSUFFICIENT_BALANCE') {
+          return { success: false, error: data.error || 'Số dư ví không đủ! Vui lòng nạp thêm tiền.' };
         }
         if (code === 'OUT_OF_STOCK') {
-          showToast(data.error || 'Sản phẩm trong kho đã hết!', 'error');
-          return false;
+          return { success: false, error: data.error || 'Sản phẩm trong kho đã hết!' };
         }
         if (code === 'USER_BANNED') {
-          showToast('Tài khoản của bạn đã bị khóa!', 'error');
-          return false;
+          return { success: false, error: 'Tài khoản của bạn đã bị khóa!' };
         }
-        showToast(data.error || 'Không thể tạo đơn hàng lúc này!', 'error');
-        return false;
+        if (code === 'INVALID_PRICE') {
+          return { success: false, error: data.error || 'Không thể mua sản phẩm này với giá 0đ' };
+        }
+        return { success: false, error: data.error || 'Không thể tạo đơn hàng lúc này!' };
       }
 
       // Thành công trên SERVER — cập nhật UI từ kết quả máy chủ
@@ -1680,6 +1682,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         prev.map((u) => (u.id === buyer.id ? { ...u, balance: newBal, totalOrders: (u.totalOrders || 0) + 1, totalSpent: (u.totalSpent || 0) + total } : u))
       );
 
+      // Refresh profile từ DB
+      void supabase
+        .from('profiles')
+        .select('balance, total_spent')
+        .eq('id', buyer.id)
+        .maybeSingle()
+        .then(({ data: profile }) => {
+          if (profile) {
+            setUsers(prev => prev.map(u => u.id === buyer.id
+              ? { ...u, balance: Number(profile.balance), totalSpent: Number(profile.total_spent) || u.totalSpent }
+              : u));
+          }
+        });
+
       // Cập nhật transactions
       const newTx: Transaction = {
         id: 'tx-' + Date.now(),
@@ -1707,12 +1723,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         ...prev,
       ]);
 
-      showToast(`🎉 Mua hàng thành công! Đơn ${newOrder.orderCode} — xem key trong Đơn Hàng!`, 'success');
-      return true;
+      // We will no longer show the toast here because the component will redirect directly
+      return { success: true, order: newOrder };
     } catch (err) {
       console.error('[createOrder] Network / API error:', err);
-      showToast('Lỗi kết nối máy chủ khi tạo đơn, vui lòng thử lại!', 'error');
-      return false;
+      return { success: false, error: 'Lỗi kết nối máy chủ khi tạo đơn, vui lòng thử lại!' };
     }
   };
 

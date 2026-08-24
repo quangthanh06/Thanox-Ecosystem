@@ -76,9 +76,13 @@ export const StorefrontProducts: React.FC = () => {
     }
     setPurchasingId(productId);
     try {
-      const success = await createOrder(productId, 1, 'wallet');
-      if (success) {
+      const res = await createOrder(productId, 1, 'wallet');
+      if (res?.success && res?.order) {
+        showToast('🎉 Mua hàng thành công!', 'success');
+        setSelectedOrderId(res.order.id);
         navigateToStorefront('account-orders');
+      } else {
+        showToast(res?.error || 'Có lỗi xảy ra, vui lòng thử lại', 'error');
       }
     } finally {
       setPurchasingId(null);

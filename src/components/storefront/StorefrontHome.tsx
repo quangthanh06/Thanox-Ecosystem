@@ -87,9 +87,13 @@ export const StorefrontHome: React.FC = () => {
     }
     setPurchasingId(productId);
     try {
-      const success = await createOrder(productId, 1, 'wallet');
-      if (success) {
+      const res = await createOrder(productId, 1, 'wallet');
+      if (res?.success && res?.order) {
+        showToast('🎉 Mua hàng thành công!', 'success');
+        setSelectedOrderId(res.order.id);
         navigateToStorefront('account-orders');
+      } else {
+        showToast(res?.error || 'Có lỗi xảy ra, vui lòng thử lại', 'error');
       }
     } finally {
       setPurchasingId(null);
@@ -590,9 +594,7 @@ export const StorefrontHome: React.FC = () => {
                           <Button
                             variant="primary"
                             size="xs"
-                            isLoading={purchasingId === prod.id}
-                            disabled={purchasingId !== null}
-                            onClick={() => handleQuickBuy(prod.id, displayPrice)}
+                            onClick={() => navigateToStorefront('product-detail', prod.id)}
                             className="justify-center font-bold"
                           >
                             Mua Ngay
