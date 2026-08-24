@@ -94,7 +94,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         );
         keyRole = payload.role || 'missing';
         keyRef = payload.ref || 'missing';
-      } catch (_) {}
+      } catch (_) { }
 
       console.error('[API Order] RPC error:', rpcError.message, { keyRole, keyRef });
 
@@ -103,18 +103,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         code: 'DATABASE_ERROR',
         error: rpcError.message,
         debug: { keyRole, keyRef },
-      });
-    }
-
-    if (!rpcResult || rpcResult.status !== 'success') {
-      const code = rpcResult?.code || 'PURCHASE_FAILED';
-      const msg = rpcResult?.error || 'Không thể tạo đơn hàng';
-      return res.status(200).json({
-        success: false,
-        code,
-        error: msg,
-        balance: rpcResult?.balance,
-        total: rpcResult?.total,
       });
     }
 

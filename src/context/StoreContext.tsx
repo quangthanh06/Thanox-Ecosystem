@@ -425,22 +425,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return Array.isArray(loaded) ? loaded : INITIAL_ORDERS;
   });
 
-  const [users, setUsers] = useState<User[]>(() => {
-    const loaded = safeGetItem<User[]>('thanox_users', INITIAL_USERS);
-    const validArray = Array.isArray(loaded) && loaded.length > 0 ? loaded : INITIAL_USERS;
-    const cleaned = validArray.filter((u: User) => u && u.username !== 'admin_thanox' && u.id !== 'u-1');
-    let hasAdmin = false;
-    return cleaned.map((u: User) => {
-      if (u.role === 'admin') {
-        if (!hasAdmin && u.username === 'admin') {
-          hasAdmin = true;
-          return u;
-        }
-        return { ...u, role: 'user' as const };
-      }
-      return u;
-    });
-  });
+  // KHÔNG đọc users từ localStorage — balance phải luôn đến từ Supabase DB
+  const [users, setUsers] = useState<User[]>(INITIAL_USERS);
 
   const [topups, setTopups] = useState<TopupRequest[]>(() => {
     const loaded = safeGetItem<TopupRequest[]>('thanox_topups', INITIAL_TOPUPS);
@@ -671,13 +657,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [orders]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('thanox_users', JSON.stringify(users));
-    } catch (e) {
-      console.error('Failed to save users to localStorage:', e);
-    }
-  }, [users]);
+  // KHÔNG lưu users vào localStorage — tránh cache balance cũ ghi đè số dư mới từ DB
+  // (users/balance luôn được load fresh từ Supabase profiles khi mount)
 
   useEffect(() => {
     try {
