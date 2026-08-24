@@ -218,31 +218,62 @@ export const StorefrontDepositQR: React.FC = () => {
   const isAboveMax = isAmountEntered && activeAmount > maxDeposit;
   const isValidAmount = isAmountEntered && !isBelowMin && !isAboveMax;
 
-  // Real-time Bank Reconciliation Polling (Checks every 3s via both API check & Supabase)
+  // Real-time Bank Reconciliation: Supabase WebSockets (50ms) + Fast Polling (1.5s)
   useEffect(() => {
     if (!transactionCode || !isValidAmount) return;
 
     let isSubscribed = true;
+
+    const handleSuccess = (amount: number, newBal?: number) => {
+      if (!isSubscribed) return;
+      setSuccessData({
+        amount,
+        code: transactionCode,
+        balance: newBal ?? (currentUser.balance + amount),
+      });
+      setShowSuccessModal(true);
+    };
+
+    // 1. SUPABASE REALTIME WEBSOCKET: Nhận thông báo duyệt tiền ngay lập tức (<50ms)
+    const realtimeChannel = supabase
+      .channel(`topup-realtime-${transactionCode}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'topups',
+          filter: `status=eq.approved`,
+        },
+        async (payload: any) => {
+          if (payload?.new && payload.new.transfer_note?.includes(transactionCode)) {
+            let updatedBal: number | undefined;
+            try {
+              const { data: prof } = await supabase.from('profiles').select('balance').eq('id', currentUser.id).maybeSingle();
+              if (prof?.balance !== undefined) updatedBal = Number(prof.balance);
+            } catch {}
+            handleSuccess(Number(payload.new.amount) || activeAmount, updatedBal);
+          }
+        }
+      )
+      .subscribe();
+
+    // 2. FAST SCANNER FALLBACK (Quét mỗi 1.5s)
     const checkDepositStatus = async () => {
       try {
-        // 1. Gọi API server chủ động quét lịch sử giao dịch từ ThueApiBank
+        // Quét trực tiếp SePay API
         try {
           const res = await fetch(`/api/topup/check-bank?note=${encodeURIComponent(transactionCode)}`);
           if (res.ok) {
             const data = await res.json();
             if (isSubscribed && data.matched) {
-              setSuccessData({
-                amount: activeAmount,
-                code: transactionCode,
-                balance: data.newBalance ?? (currentUser.balance + activeAmount),
-              });
-              setShowSuccessModal(true);
+              handleSuccess(activeAmount, data.newBalance);
               return true;
             }
           }
         } catch {}
 
-        // 2. Poll song song bảng topups trên Supabase
+        // Kiểm tra Supabase
         const { data: topupRow } = await supabase
           .from('topups')
           .select('id, status, amount, user_id')
@@ -253,37 +284,29 @@ export const StorefrontDepositQR: React.FC = () => {
         if (isSubscribed && topupRow && (topupRow.status === 'approved' || topupRow.status === 'paid')) {
           let updatedBal: number | undefined;
           try {
-            const { data: prof } = await supabase
-              .from('profiles')
-              .select('balance')
-              .eq('id', currentUser.id)
-              .maybeSingle();
-            if (prof && prof.balance !== undefined) {
-              updatedBal = Number(prof.balance);
-            }
+            const { data: prof } = await supabase.from('profiles').select('balance').eq('id', currentUser.id).maybeSingle();
+            if (prof?.balance !== undefined) updatedBal = Number(prof.balance);
           } catch {}
-
-          setSuccessData({
-            amount: topupRow.amount || activeAmount,
-            code: transactionCode,
-            balance: updatedBal ?? (currentUser.balance + (topupRow.amount || activeAmount)),
-          });
-          setShowSuccessModal(true);
+          handleSuccess(topupRow.amount || activeAmount, updatedBal);
           return true;
         }
       } catch {}
       return false;
     };
 
-    // Chạy kiểm tra định kỳ mỗi 3s
+    // Chạy kiểm tra ngay lập tức
+    checkDepositStatus();
+
+    // Quét định kỳ mỗi 1.5 giây
     const interval = setInterval(async () => {
       const isDone = await checkDepositStatus();
       if (isDone) clearInterval(interval);
-    }, 3000);
+    }, 1500);
 
     return () => {
       isSubscribed = false;
       clearInterval(interval);
+      supabase.removeChannel(realtimeChannel);
     };
   }, [transactionCode, isValidAmount, activeAmount, currentUser.id, currentUser.balance]);
 
