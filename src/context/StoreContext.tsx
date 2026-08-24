@@ -506,13 +506,66 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setCurrentUserId(session.user.id);
-        // fetchSupabaseUsers(); // Removed to prevent TDZ error
       } else {
         setCurrentUserId(null);
       }
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // Tự động load và sync profile mới nhất từ Supabase profiles khi đăng nhập (không giữ balance cũ ở localStorage)
+  useEffect(() => {
+    if (!currentUserId) return;
+    const syncProfile = async () => {
+      try {
+        const { data: p, error } = await supabase
+          .from('profiles')
+          .select('id, username, email, balance, total_spent, role, status, created_at, total_orders')
+          .eq('id', currentUserId)
+          .maybeSingle();
+
+        if (p && !error) {
+          setUsers((prev) => {
+            const exists = prev.some((u) => u.id === currentUserId);
+            if (exists) {
+              return prev.map((u) =>
+                u.id === currentUserId
+                  ? {
+                      ...u,
+                      username: p.username || u.username,
+                      email: p.email || u.email,
+                      balance: Number(p.balance) || 0,
+                      totalSpent: Number(p.total_spent) || 0,
+                      role: (p.role as 'admin' | 'user') || u.role,
+                      status: (p.status as 'active' | 'banned') || u.status,
+                    }
+                  : u
+              );
+            }
+            return [
+              ...prev,
+              {
+                id: p.id,
+                username: p.username || 'User',
+                email: p.email || '',
+                password: '***',
+                role: (p.role as 'admin' | 'user') || 'user',
+                balance: Number(p.balance) || 0,
+                totalSpent: Number(p.total_spent) || 0,
+                status: (p.status as 'active' | 'banned') || 'active',
+                createdAt: p.created_at,
+                joinDate: new Date(p.created_at || Date.now()).toISOString().replace('T', ' ').substring(0, 16),
+                totalOrders: Number(p.total_orders) || 0,
+              },
+            ];
+          });
+        }
+      } catch (err) {
+        console.error('[StoreContext] Lỗi đồng bộ profile:', err);
+      }
+    };
+    syncProfile();
+  }, [currentUserId]);
 
   const fallbackUser: User = {
     id: 'guest',
@@ -1676,23 +1729,59 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       setOrders((prev) => [newOrder, ...prev]);
 
-      // Cập nhật số dư mới nhất từ server trả về
-      const newBal = o.newBalance !== undefined ? Number(o.newBalance) : (buyer.balance - total);
-      setUsers((prev) =>
-        prev.map((u) => (u.id === buyer.id ? { ...u, balance: newBal, totalOrders: (u.totalOrders || 0) + 1, totalSpent: (u.totalSpent || 0) + total } : u))
-      );
+      // 1. Cập nhật số dư mới nhất từ server trả về ngay lập tức
+      const targetId = currentUserId || buyer.id;
+      const newBal = (o.newBalance !== undefined && o.newBalance !== null)
+        ? Number(o.newBalance)
+        : Math.max(0, buyer.balance - total);
 
-      // Refresh profile từ DB
+      setUsers((prev) => {
+        const exists = prev.some((u) => u.id === targetId || u.id === buyer.id);
+        if (exists) {
+          return prev.map((u) =>
+            u.id === targetId || u.id === buyer.id
+              ? {
+                  ...u,
+                  balance: newBal,
+                  totalOrders: (u.totalOrders || 0) + 1,
+                  totalSpent: (u.totalSpent || 0) + total,
+                }
+              : u
+          );
+        }
+        return [
+          ...prev,
+          {
+            ...buyer,
+            id: targetId,
+            balance: newBal,
+            totalOrders: (buyer.totalOrders || 0) + 1,
+            totalSpent: (buyer.totalSpent || 0) + total,
+          },
+        ];
+      });
+
+      // 2. Re-fetch profiles.balance từ Supabase để ghi đè chắc chắn 100% khớp database
       void supabase
         .from('profiles')
-        .select('balance, total_spent')
-        .eq('id', buyer.id)
+        .select('id, username, balance, total_spent')
+        .eq('id', targetId)
         .maybeSingle()
         .then(({ data: profile }) => {
           if (profile) {
-            setUsers(prev => prev.map(u => u.id === buyer.id
-              ? { ...u, balance: Number(profile.balance), totalSpent: Number(profile.total_spent) || u.totalSpent }
-              : u));
+            const dbBal = Number(profile.balance) || 0;
+            const dbSpent = Number(profile.total_spent) || 0;
+            setUsers((prev) =>
+              prev.map((u) =>
+                u.id === targetId || u.id === buyer.id
+                  ? {
+                      ...u,
+                      balance: dbBal,
+                      totalSpent: dbSpent || u.totalSpent,
+                    }
+                  : u
+              )
+            );
           }
         });
 
