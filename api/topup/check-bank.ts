@@ -49,7 +49,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     process.env.THUEAPIBANK_SECRET_KEY ||
     process.env.THUEAPI_MB_TOKEN ||
     process.env.MBBANK_SECRET_KEY ||
-    'af8cf61952466df0d38c02c5bfbccc5b'; // Khóa chuẩn từ ThueApiBank MBBank V4
+    'ba8c2fdccf71d724f83956ede0261fc6'; // Khóa chuẩn từ ThueApiBank MBBank V4 (Merchant L4VH2S)
 
   const targetNote = (req.query?.note || req.body?.note || '') as string;
 
