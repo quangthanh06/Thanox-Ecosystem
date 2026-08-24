@@ -35,6 +35,9 @@ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'categories') THEN
     EXECUTE 'GRANT SELECT ON public.categories TO anon, authenticated';
   END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'profiles') THEN
+    EXECUTE 'GRANT SELECT ON public.profiles TO anon, authenticated';
+  END IF;
 END $$;
 
 -- Đảm bảo tương thích schema legacy nếu có cột amount
@@ -303,10 +306,18 @@ BEGIN
   -- 8. Trừ ví profiles (Debit Profile)
   v_new_balance := v_user.balance - v_total;
     
-  UPDATE profiles
+  UPDATE public.profiles
      SET balance = v_new_balance,
          total_spent = COALESCE(total_spent, 0) + v_total
-   WHERE id = v_user_uuid;
+   WHERE id = v_user.id OR id::text = p_user_id;
+
+  BEGIN
+    UPDATE public.users
+       SET balance = v_new_balance,
+           total_spent = COALESCE(total_spent, 0) + v_total
+     WHERE id::text = p_user_id;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
 
   -- 9. Ghi đơn hàng (Insert Order)
   v_order_id := 'ord-' || gen_random_uuid()::text;
