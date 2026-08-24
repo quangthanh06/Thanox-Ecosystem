@@ -232,6 +232,8 @@ export const StorefrontDepositQR: React.FC = () => {
         balance: newBal ?? (currentUser.balance + amount),
       });
       setShowSuccessModal(true);
+      // Bắn sự kiện cập nhật số dư cho toàn bộ giao diện Header
+      window.dispatchEvent(new CustomEvent('thanox:balance_updated'));
     };
 
     // 1. SUPABASE REALTIME WEBSOCKET: Nhận thông báo duyệt tiền ngay lập tức (<50ms)

@@ -583,7 +583,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       )
       .subscribe();
 
+    // Background sync định kỳ mỗi 2s để đảm bảo số dư Header luôn mới nhất
+    const syncInterval = setInterval(syncProfile, 2000);
+
+    // Lắng nghe sự kiện nạp tiền xong để refresh số dư tức thì
+    const onBalanceUpdateEvent = () => syncProfile();
+    window.addEventListener('thanox:balance_updated', onBalanceUpdateEvent);
+
     return () => {
+      clearInterval(syncInterval);
+      window.removeEventListener('thanox:balance_updated', onBalanceUpdateEvent);
       supabase.removeChannel(channel);
     };
   }, [currentUserId]);
