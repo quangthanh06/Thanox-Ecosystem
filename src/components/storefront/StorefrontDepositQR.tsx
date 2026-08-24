@@ -303,11 +303,11 @@ export const StorefrontDepositQR: React.FC = () => {
     // Chạy kiểm tra ngay lập tức
     checkDepositStatus();
 
-    // Quét định kỳ mỗi 1.5 giây
+    // Quét định kỳ mỗi 1 giây siêu tốc
     const interval = setInterval(async () => {
       const isDone = await checkDepositStatus();
       if (isDone) clearInterval(interval);
-    }, 1500);
+    }, 1000);
 
     return () => {
       isSubscribed = false;

@@ -38,17 +38,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     },
   });
 
-  const sepayApiKey =
-    process.env.SEPAY_API_KEY || 'NIWF2SUUD9L0AO3CUIJFY4FFPBJJTJTGLCVCHCLVZRBWMKSWVB31QKGNX5SQVERO';
-
-  const targetNote = (req.query?.note || req.body?.note || '') as string;
+  const targetNote = ((req.query?.note || req.body?.note || '') as string).trim();
 
   try {
-    // 1. Quét trực tiếp lịch sử giao dịch từ SePay API
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 6000);
+    // 1. TỐC ĐỘ CAO NHẤT (< 15ms): Kiểm tra ngay trong Supabase xem đơn đã approved qua Webhook chưa
+    if (targetNote) {
+      const { data: topupRow } = await supabase
+        .from('topups')
+        .select('id, status, amount, user_id')
+        .ilike('transfer_note', '%' + targetNote + '%')
+        .maybeSingle();
 
-    const apiRes = await fetch('https://my.sepay.vn/userapi/transactions/list', {
+      if (topupRow && (topupRow.status === 'approved' || topupRow.status === 'paid')) {
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('balance')
+          .eq('id', topupRow.user_id)
+          .maybeSingle();
+
+        return res.status(200).json({
+          success: true,
+          matched: true,
+          status: topupRow.status,
+          newBalance: prof ? Number(prof.balance) : undefined,
+          source: 'instant_db_hit',
+        });
+      }
+    }
+
+    // 2. Nếu DB chưa duyệt, gọi API SePay lấy 5 giao dịch MỚI NHẤT
+    const sepayApiKey =
+      process.env.SEPAY_API_KEY || 'NIWF2SUUD9L0AO3CUIJFY4FFPBJJTJTGLCVCHCLVZRBWMKSWVB31QKGNX5SQVERO';
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3500);
+
+    const apiRes = await fetch('https://my.sepay.vn/userapi/transactions/list?limit=5', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${sepayApiKey}`,
@@ -61,43 +86,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (apiRes.ok) {
       const payload: any = await apiRes.json();
       if (Array.isArray(payload?.transactions)) {
-        transactions = payload.transactions;
+        // Chỉ lấy tối đa 5 giao dịch mới nhất để xử lý song song siêu tốc
+        transactions = payload.transactions.slice(0, 5);
       }
     }
 
     let isTargetMatched = false;
-    const processedResults = [];
 
-    // 2. Duyệt qua các giao dịch và đẩy vào RPC process_bank_webhook
-    for (const tx of transactions) {
-      const rawAmount = tx.amount_in !== undefined ? tx.amount_in : (tx.amountIn ?? tx.amount ?? 0);
-      const amountNum = typeof rawAmount === 'number' ? rawAmount : Number(String(rawAmount).replace(/[,\s]/g, ''));
-      const desc = String(tx.transaction_content || tx.transactionContent || tx.content || tx.description || '').trim();
-      const txId = String(tx.id || tx.reference_number || tx.referenceNumber || '').trim();
-      const time = parseDate(tx.transaction_date || tx.transactionDate);
+    // 3. Xử lý song song (Parallel execution) các giao dịch tiền vào
+    await Promise.all(
+      transactions.map(async (tx) => {
+        const rawAmount = tx.amount_in !== undefined ? tx.amount_in : (tx.amountIn ?? tx.amount ?? 0);
+        const amountNum = typeof rawAmount === 'number' ? rawAmount : Number(String(rawAmount).replace(/[,\s]/g, ''));
+        const desc = String(tx.transaction_content || tx.transactionContent || tx.content || tx.description || '').trim();
+        const txId = String(tx.id || tx.reference_number || tx.referenceNumber || '').trim();
+        const time = parseDate(tx.transaction_date || tx.transactionDate);
 
-      // Bỏ qua giao dịch tiền ra hoặc 0đ
-      if (!txId || amountNum <= 0 || !desc) continue;
+        if (!txId || amountNum <= 0 || !desc) return;
 
-      const { data, error } = await supabase.rpc('process_bank_webhook', {
-        p_provider: 'sepay',
-        p_transaction_id: txId,
-        p_amount: Math.round(amountNum),
-        p_content: desc,
-        p_transfer_time: time,
-      });
+        const { data, error } = await supabase.rpc('process_bank_webhook', {
+          p_provider: 'sepay',
+          p_transaction_id: txId,
+          p_amount: Math.round(amountNum),
+          p_content: desc,
+          p_transfer_time: time,
+        });
 
-      if (!error && data) {
-        processedResults.push({ txId, result: data });
-        if (data.status === 'success') {
+        if (!error && data?.status === 'success') {
           if (targetNote && desc.toLowerCase().includes(targetNote.toLowerCase())) {
             isTargetMatched = true;
           }
         }
-      }
-    }
+      })
+    );
 
-    // 3. Kiểm tra xem đơn topup hiện tại đã approved chưa
+    // 4. Kiểm tra lại trạng thái sau khi quét
     let topupStatus = 'pending';
     let newBalance: number | undefined;
 
@@ -127,11 +150,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       matched: isTargetMatched,
       status: topupStatus,
       newBalance,
-      processedCount: processedResults.length,
       ranAt: new Date().toISOString(),
     });
   } catch (err: any) {
-    console.error('[CheckBank SePay API] Error:', err);
     return res.status(200).json({ success: false, error: err?.message });
   }
 }
