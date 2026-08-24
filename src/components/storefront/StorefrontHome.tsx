@@ -408,9 +408,7 @@ export const StorefrontHome: React.FC = () => {
                             <Button
                               variant="primary"
                               size="sm"
-                              isLoading={purchasingId === product.id}
-                              disabled={purchasingId !== null}
-                              onClick={() => handleQuickBuy(product.id, displayPrice)}
+                              onClick={() => navigateToStorefront('product-detail', product.id)}
                             >
                               Mua Ngay
                             </Button>

@@ -334,9 +334,8 @@ export const StorefrontProducts: React.FC = () => {
                   </button>
                   <button
                     type="button"
-                    disabled={purchasingId !== null}
-                    onClick={() => handleQuickBuy(product.id, effectivePrice)}
-                    className={`py-2 px-2.5 rounded-xl ${purchasingId === product.id ? 'bg-[#7C3AED]/60 cursor-not-allowed opacity-80' : 'bg-[#7C3AED] hover:bg-[#6D28D9] cursor-pointer shadow-md shadow-[#7C3AED]/25'} text-white text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5`}
+                    onClick={() => navigateToStorefront('product-detail', product.id)}
+                    className="py-2 px-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] cursor-pointer shadow-md shadow-[#7C3AED]/25 text-white text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5"
                   >
                     {purchasingId === product.id ? (
                       <>
