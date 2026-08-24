@@ -3,22 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 /**
  * SEPAY WEBHOOK (sepay.vn)
  * POST /api/webhook/sepay
- *
- * Payload từ SePay:
- * {
- *   "id": 123456,
- *   "gateway": "MBBank",
- *   "transactionDate": "2024-08-24 17:15:00",
- *   "accountNumber": "0326884292",
- *   "subAccount": null,
- *   "amountIn": 10000,
- *   "amountOut": 0,
- *   "accumulated": 100000,
- *   "code": null,
- *   "transactionContent": "SHOPTHANOX123456 ...",
- *   "referenceNumber": "FT240...",
- *   "body": "..."
- * }
  */
 
 interface VercelRequest {
@@ -49,33 +33,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ success: false, error: 'Method Not Allowed' });
   }
 
-  // 1. Xác thực API Key nếu có cấu hình SEPAY_API_KEY
-  const expectedKey = process.env.SEPAY_API_KEY || 'NIWF2SUUD9L0AO3CUIJFY4FFPBJJTJTGLCVCHCLVZRBWMKSWVB31QKGNX5SQVERO';
-  if (expectedKey) {
-    const authHeader = req.headers['authorization'] || req.headers['apikey'] || req.headers['x-api-key'];
-    const provided = (Array.isArray(authHeader) ? authHeader[0] : authHeader)?.replace(/^Bearer\s+/i, '').replace(/^Apikey\s+/i, '').trim() || '';
-    if (!safeEqual(provided, expectedKey)) {
-      console.warn('[SEPAY] Unauthorized webhook request');
-      return res.status(401).json({ success: false, error: 'Unauthorized' });
-    }
+  // 1. Kiểm tra xác thực (Nếu SePay có gửi Header thì xác thực, nếu SePay cài "Không xác thực" thì cho qua luôn)
+  const authHeader = req.headers['authorization'] || req.headers['apikey'] || req.headers['x-api-key'];
+  const provided = (Array.isArray(authHeader) ? authHeader[0] : authHeader)?.replace(/^Bearer\s+/i, '').replace(/^Apikey\s+/i, '').trim() || '';
+  const expectedKey = process.env.SEPAY_API_KEY;
+
+  if (expectedKey && provided && !safeEqual(provided, expectedKey)) {
+    console.warn('[SEPAY] Unauthorized webhook request with invalid key');
+    return res.status(401).json({ success: false, error: 'Unauthorized' });
   }
 
   try {
     const body = req.body || {};
-    console.log('[SEPAY Webhook] Incoming payload:', JSON.stringify(body));
+    console.log('[SEPAY Webhook] Received:', JSON.stringify(body));
 
-    // Xử lý cả payload đơn hoặc danh sách
+    // Hỗ trợ cả payload đơn hoặc danh sách mảng
     const rawList = Array.isArray(body) ? body : (body.transactions || [body]);
     const validTxs: Array<{ id: string; amount: number; content: string; time: string }> = [];
 
     for (const item of rawList) {
       if (!item || typeof item !== 'object') continue;
 
-      const rawAmount = item.amountIn !== undefined ? item.amountIn : (item.amount ?? 0);
+      const rawAmount = item.amountIn !== undefined ? item.amountIn : (item.amount_in !== undefined ? item.amount_in : (item.amount ?? 0));
       const amountNum = typeof rawAmount === 'number' ? rawAmount : Number(String(rawAmount).replace(/[,\s]/g, ''));
-      const content = String(item.transactionContent || item.content || item.description || '').trim();
-      const txId = String(item.id || item.referenceNumber || item.code || '').trim();
-      const time = parseDate(item.transactionDate || item.transferTime);
+      const content = String(item.transactionContent || item.transaction_content || item.content || item.description || '').trim();
+      const txId = String(item.id || item.referenceNumber || item.reference_number || item.code || '').trim();
+      const time = parseDate(item.transactionDate || item.transaction_date || item.transferTime);
 
       if (amountNum > 0 && content && txId) {
         validTxs.push({ id: txId, amount: Math.round(amountNum), content, time });
