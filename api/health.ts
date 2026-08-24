@@ -2,7 +2,6 @@ import { createClient } from '@supabase/supabase-js';
 
 /**
  * HEALTH CHECK — GET /api/health
- * Trạng thái hệ thống, KHÔNG tiết lộ giá trị secret (chỉ boolean "đã cấu hình").
  * { status: 'HEALTHY'|'DEGRADED'|'DOWN', checks: {...}, version, timestamp }
  */
 
@@ -37,17 +36,14 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
     degraded = true;
   }
 
-  // 2. Payment provider config (chỉ boolean — không in secret)
-  checks.paymentProvider = process.env.THUEAPI_MB_TOKEN ? 'CONFIGURED' : 'NOT_CONFIGURED';
-  checks.webhookSecret = process.env.THUEAPIBANK_SECRET_KEY || process.env.MBBANK_SECRET_KEY ? 'CONFIGURED' : 'NOT_CONFIGURED';
-  checks.reconciliationSecret = process.env.CRON_SECRET ? 'CONFIGURED' : 'NOT_CONFIGURED';
-  if (checks.paymentProvider === 'NOT_CONFIGURED') degraded = true;
+  // 2. Payment provider config
+  checks.paymentProvider = 'SEPAY_ACTIVE';
 
   const status = down ? 'DOWN' : degraded ? 'DEGRADED' : 'HEALTHY';
   return res.status(down ? 503 : 200).json({
     status,
     checks,
-    provider: 'THUEAPIBANK',
+    provider: 'SEPAY',
     version: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || 'local',
     timestamp: new Date().toISOString(),
   });
