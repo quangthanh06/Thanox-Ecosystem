@@ -139,7 +139,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       else skipped++;
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: {
+        headers: {
+          Authorization: `Bearer ${supabaseKey}`,
+          apikey: supabaseKey,
+        },
+      },
+    });
     let credited = 0;
     let duplicate = 0;
     let review = 0;
