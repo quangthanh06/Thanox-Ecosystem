@@ -243,13 +243,16 @@ export const StorefrontDepositQR: React.FC = () => {
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'topups',
-          filter: `status=eq.approved`,
         },
         async (payload: any) => {
-          if (payload?.new && payload.new.transfer_note?.includes(transactionCode)) {
+          if (
+            payload?.new &&
+            (payload.new.status === 'approved' || payload.new.status === 'paid') &&
+            payload.new.transfer_note?.includes(transactionCode)
+          ) {
             let updatedBal: number | undefined;
             try {
               const { data: prof } = await supabase.from('profiles').select('balance').eq('id', currentUser.id).maybeSingle();
@@ -269,7 +272,7 @@ export const StorefrontDepositQR: React.FC = () => {
           const res = await fetch(`/api/topup/check-bank?note=${encodeURIComponent(transactionCode)}`);
           if (res.ok) {
             const data = await res.json();
-            if (isSubscribed && data.matched) {
+            if (isSubscribed && (data.matched || data.status === 'approved')) {
               handleSuccess(activeAmount, data.newBalance);
               return true;
             }
@@ -311,9 +314,24 @@ export const StorefrontDepositQR: React.FC = () => {
       clearInterval(interval);
       supabase.removeChannel(realtimeChannel);
     };
-  }, [transactionCode, isValidAmount, activeAmount, currentUser.id, currentUser.balance]);
+  }, [transactionCode, isValidAmount, activeAmount, currentUser.id]);
 
-  // Auto-close Success Modal after 4 seconds
+  // 3. BALANCE INCREASE WATCHER: Vừa thấy số dư ví nhảy lên là bật Popup chúc mừng tức thì
+  const prevBalanceRef = useRef(currentUser.balance);
+  useEffect(() => {
+    if (transactionCode && isValidAmount && currentUser.balance > prevBalanceRef.current) {
+      const added = currentUser.balance - prevBalanceRef.current;
+      setSuccessData({
+        amount: activeAmount || added,
+        code: transactionCode,
+        balance: currentUser.balance,
+      });
+      setShowSuccessModal(true);
+    }
+    prevBalanceRef.current = currentUser.balance;
+  }, [currentUser.balance, transactionCode, isValidAmount, activeAmount]);
+
+  // Auto-close Success Modal after 15 seconds
   useEffect(() => {
     if (!showSuccessModal) return;
     const timer = setTimeout(() => {
@@ -321,7 +339,7 @@ export const StorefrontDepositQR: React.FC = () => {
       setTransactionCode('');
       setActiveAmount(0);
       setSelectedPreset(null);
-    }, 4500);
+    }, 15000);
     return () => clearTimeout(timer);
   }, [showSuccessModal]);
 
