@@ -565,6 +565,41 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     };
     syncProfile();
+
+    // Lắng nghe Realtime từ Supabase: Bất kỳ thay đổi balance nào dưới DB sẽ lập tức nhảy số trên Header
+    const channel = supabase
+      .channel(`profile-realtime-${currentUserId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${currentUserId}`,
+        },
+        (payload: any) => {
+          if (payload?.new) {
+            const liveBal = Number(payload.new.balance) || 0;
+            const liveSpent = Number(payload.new.total_spent) || 0;
+            setUsers((prev) =>
+              prev.map((u) =>
+                u.id === currentUserId
+                  ? {
+                      ...u,
+                      balance: liveBal,
+                      totalSpent: liveSpent || u.totalSpent,
+                    }
+                  : u
+              )
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [currentUserId]);
 
   const fallbackUser: User = {
