@@ -88,7 +88,7 @@ const extractTransactions = (raw: any): ThueTx[] => {
 };
 
 const getWebhookSecret = (): string | null =>
-  process.env.THUEAPIBANK_SECRET_KEY || process.env.MBBANK_SECRET_KEY || process.env.SEPAY_API_KEY || 'ba8c2fdccf71d724f83956ede0261fc6';
+  process.env.THUEAPIBANK_SECRET_KEY || process.env.MBBANK_SECRET_KEY || process.env.SEPAY_API_KEY || '6435ea8da5e1895782b53bc099d2e43e';
 
 const verifyWebhookAuth = (req: VercelRequest, expectedSecret: string | null): boolean => {
   if (!expectedSecret) return true; // Nếu chưa cấu hình secret thì cho phép qua để test không bị chặn 401

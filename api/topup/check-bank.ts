@@ -12,17 +12,17 @@ interface VercelResponse {
 
 const parseVietnamDate = (raw?: string): string => {
   if (!raw) return new Date().toISOString();
-  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(raw.trim());
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(raw.trim());
   if (!m) {
     const asIso = new Date(raw).getTime();
     return Number.isFinite(asIso) ? new Date(asIso).toISOString() : new Date().toISOString();
   }
-  const date = new Date(Date.UTC(Number(m[3]), Number(m[2]) - 1, Number(m[1]), 7, 0, 0));
+  const [, dd, mm, yyyy] = m;
+  const date = new Date(Date.UTC(Number(yyyy), Number(mm) - 1, Number(dd), 7, 0, 0));
   return Number.isFinite(date.getTime()) ? date.toISOString() : new Date().toISOString();
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Cho phép cả GET và POST
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ success: false, error: 'Method Not Allowed' });
   }
@@ -44,43 +44,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     },
   });
 
-  // Secret Key từ env hoặc settings
-  const secretKey =
+  // Token MBBank trực tiếp từ ThueApiBank
+  const token =
     process.env.THUEAPIBANK_SECRET_KEY ||
     process.env.THUEAPI_MB_TOKEN ||
     process.env.MBBANK_SECRET_KEY ||
-    'ba8c2fdccf71d724f83956ede0261fc6'; // Khóa chuẩn từ ThueApiBank MBBank V4 (Merchant L4VH2S)
+    '6435ea8da5e1895782b53bc099d2e43e';
 
   const targetNote = (req.query?.note || req.body?.note || '') as string;
 
   try {
-    // 1. Gọi trực tiếp API ThueApiBank V4/V2 lấy lịch sử giao dịch mới nhất
-    const historyUrl = `https://thueapibank.vn/historyapimbv2/${secretKey}`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    // 1. Quét đồng thời cả API MBBank V1/V2 (historyapimbbank) và V4
+    const endpoints = [
+      `https://thueapibank.vn/historyapimbbank/${token}`,
+      `https://thueapibank.vn/historyapimbbankv2/${token}`,
+    ];
 
-    const apiRes = await fetch(historyUrl, {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-      signal: controller.signal,
-    }).finally(() => clearTimeout(timeout));
+    let transactions: any[] = [];
+    for (const url of endpoints) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 6000);
+        const apiRes = await fetch(url, {
+          method: 'GET',
+          headers: { Accept: 'application/json' },
+          signal: controller.signal,
+        }).finally(() => clearTimeout(timeout));
 
-    if (!apiRes.ok) {
-      return res.status(200).json({
-        success: false,
-        warning: `ThueApiBank API returned ${apiRes.status}`,
-      });
-    }
-
-    const payload: any = await apiRes.json();
-    const transactions = payload?.transactions || payload?.data || [];
-
-    if (!Array.isArray(transactions) || transactions.length === 0) {
-      return res.status(200).json({
-        success: true,
-        matched: false,
-        message: 'Chưa có giao dịch mới trên ngân hàng',
-      });
+        if (apiRes.ok) {
+          const payload: any = await apiRes.json();
+          const list = payload?.TranList || payload?.transactions || payload?.data;
+          if (Array.isArray(list) && list.length > 0) {
+            transactions = list;
+            break;
+          }
+        }
+      } catch {}
     }
 
     let isTargetMatched = false;
@@ -88,15 +87,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // 2. Duyệt qua các giao dịch và đẩy vào RPC process_bank_webhook để khớp lệnh tự động
     for (const tx of transactions) {
-      // Chỉ xét giao dịch tiền vào (IN)
-      if (tx.type !== undefined && tx.type !== 'IN' && tx.type !== 'in' && tx.type !== '+') continue;
-
-      const txId = String(tx.transactionID || tx.id || '').trim();
-      const amountNum = typeof tx.amount === 'number' ? tx.amount : Number(String(tx.amount || '').replace(/[,\s]/g, ''));
+      const txId = String(tx.refNo || tx.tranId || tx.transactionID || tx.id || '').trim();
+      const rawAmount = tx.creditAmount !== undefined ? tx.creditAmount : (tx.amount ?? 0);
+      const amountNum = typeof rawAmount === 'number' ? rawAmount : Number(String(rawAmount).replace(/[,\s]/g, ''));
       const desc = String(tx.description || tx.content || '').trim();
-      const transferTime = parseVietnamDate(tx.transactionDate || tx.date);
+      const transferTime = parseVietnamDate(tx.transactionDate || tx.postingDate || tx.date);
 
+      // Bỏ qua giao dịch tiền ra hoặc số tiền không hợp lệ
       if (!txId || amountNum <= 0 || !desc) continue;
+      if (tx.debitAmount && Number(tx.debitAmount) > 0 && Number(tx.creditAmount || 0) === 0) continue;
 
       // Gọi RPC nguyên tử
       const { data, error } = await supabase.rpc('process_bank_webhook', {
@@ -117,7 +116,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // 3. Nếu có targetNote, kiểm tra xem đơn topup đó đã được approved chưa
+    // 3. Kiểm tra xem đơn topup hiện tại đã approved chưa
     let topupStatus = 'pending';
     let newBalance: number | undefined;
 
