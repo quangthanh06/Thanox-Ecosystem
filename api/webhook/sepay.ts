@@ -50,7 +50,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // 1. Xác thực API Key nếu có cấu hình SEPAY_API_KEY
-  const expectedKey = process.env.SEPAY_API_KEY;
+  const expectedKey = process.env.SEPAY_API_KEY || 'NIWF2SUUD9L0AO3CUIJFY4FFPBJJTJTGLCVCHCLVZRBWMKSWVB31QKGNX5SQVERO';
   if (expectedKey) {
     const authHeader = req.headers['authorization'] || req.headers['apikey'] || req.headers['x-api-key'];
     const provided = (Array.isArray(authHeader) ? authHeader[0] : authHeader)?.replace(/^Bearer\s+/i, '').replace(/^Apikey\s+/i, '').trim() || '';
