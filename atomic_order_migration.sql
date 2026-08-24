@@ -26,9 +26,16 @@ ALTER TABLE public.products ADD COLUMN IF NOT EXISTS instructions TEXT;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS seller_price BIGINT;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS is_locked BOOLEAN DEFAULT true;
 
--- Cấp quyền truy cập SELECT cho người dùng đọc sản phẩm
-GRANT SELECT ON public.products TO anon, authenticated;
-GRANT SELECT ON public.categories TO anon, authenticated;
+-- Cấp quyền truy cập SELECT an toàn (kiểm tra bảng tồn tại trước khi cấp)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'products') THEN
+    EXECUTE 'GRANT SELECT ON public.products TO anon, authenticated';
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'categories') THEN
+    EXECUTE 'GRANT SELECT ON public.categories TO anon, authenticated';
+  END IF;
+END $$;
 
 -- Đảm bảo tương thích schema legacy nếu có cột amount
 DO $$
