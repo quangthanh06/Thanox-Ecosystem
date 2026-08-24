@@ -86,12 +86,17 @@ CREATE POLICY "topups_update_own_pending" ON public.topups
   WITH CHECK (user_id = auth.uid()::text AND status = 'pending');
 
 -- ─── BƯỚC 3: STORED PROCEDURE PROCESS_BANK_WEBHOOK (CHÍNH THỨC) ───
+DROP FUNCTION IF EXISTS public.process_bank_webhook(TEXT, TEXT, BIGINT, TEXT, TIMESTAMP WITH TIME ZONE);
+DROP FUNCTION IF EXISTS public.process_bank_webhook(TEXT, TEXT, NUMERIC, TEXT, TIMESTAMP WITH TIME ZONE);
+DROP FUNCTION IF EXISTS public.process_bank_webhook(TEXT, TEXT, BIGINT, TEXT, TEXT);
+DROP FUNCTION IF EXISTS public.process_bank_webhook(TEXT, TEXT, NUMERIC, TEXT, TEXT);
+
 CREATE OR REPLACE FUNCTION public.process_bank_webhook(
     p_provider TEXT,
     p_transaction_id TEXT,
     p_amount BIGINT,
     p_content TEXT,
-    p_transfer_time TIMESTAMP WITH TIME ZONE
+    p_transfer_time TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 )
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -191,6 +196,14 @@ BEGIN
     SET balance = COALESCE(balance, 0) + p_amount
     WHERE id::text = v_user_id
     RETURNING balance INTO v_new_balance;
+
+    -- Cập nhật bảng legacy users nếu có
+    BEGIN
+      UPDATE public.users
+      SET balance = COALESCE(balance, 0) + p_amount
+      WHERE id::text = v_user_id;
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
 
     -- Kiểm tra nếu profile không tìm thấy
     IF v_new_balance IS NULL THEN
