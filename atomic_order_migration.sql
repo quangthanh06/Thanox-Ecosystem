@@ -26,6 +26,10 @@ ALTER TABLE public.products ADD COLUMN IF NOT EXISTS instructions TEXT;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS seller_price BIGINT;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS is_locked BOOLEAN DEFAULT true;
 
+-- Xóa trigger chặn cập nhật balance nếu tồn tại
+DROP TRIGGER IF EXISTS trg_prevent_balance_tampering ON public.profiles;
+DROP FUNCTION IF EXISTS prevent_balance_tampering();
+
 -- Cấp quyền truy cập SELECT an toàn (kiểm tra bảng tồn tại trước khi cấp)
 DO $$
 BEGIN
@@ -36,6 +40,7 @@ BEGIN
     EXECUTE 'GRANT SELECT ON public.categories TO anon, authenticated';
   END IF;
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'profiles') THEN
+    EXECUTE 'REVOKE INSERT, UPDATE, DELETE ON public.profiles FROM anon, authenticated';
     EXECUTE 'GRANT SELECT ON public.profiles TO anon, authenticated';
   END IF;
 END $$;
