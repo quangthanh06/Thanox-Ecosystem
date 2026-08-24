@@ -24,6 +24,7 @@ import {
   Smartphone,
   Loader2,
   X,
+  ShoppingBag,
 } from 'lucide-react';
 
 const PRESET_AMOUNTS = [
@@ -460,11 +461,27 @@ export const StorefrontDepositQR: React.FC = () => {
               )}
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 space-y-2.5">
               <Button
                 variant="primary"
                 size="md"
-                className="w-full justify-center font-bold shadow-lg shadow-[#7C3AED]/25"
+                className="w-full justify-center font-bold text-sm bg-gradient-to-r from-[#7C3AED] to-[#06B6D4] hover:from-[#6D28D9] hover:to-[#0891B2] shadow-xl shadow-[#7C3AED]/30 gap-2 cursor-pointer py-3.5"
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  setTransactionCode('');
+                  setActiveAmount(0);
+                  setSelectedPreset(null);
+                  navigateToStorefront('products');
+                }}
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>Vào Shop Chọn Sản Phẩm Ngay</span>
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+
+              <button
+                type="button"
+                className="w-full py-2 text-xs font-semibold text-[#8B84A8] hover:text-white transition-colors cursor-pointer"
                 onClick={() => {
                   setShowSuccessModal(false);
                   setTransactionCode('');
@@ -472,8 +489,8 @@ export const StorefrontDepositQR: React.FC = () => {
                   setSelectedPreset(null);
                 }}
               >
-                Đóng & Tiếp Tục Mua Hàng
-              </Button>
+                Ở lại trang Nạp Tiền
+              </button>
             </div>
           </div>
         </div>
