@@ -107,7 +107,9 @@ interface StoreContextType {
 
   // Card Recharge Actions
   createCardRecharge: (network: CardNetwork, declaredAmount: number, serial: string, pin: string) => { success: boolean; message: string };
+  createBulkCardRecharge: (cards: Array<{ network: CardNetwork; declaredAmount: number; serial: string; pin: string }>) => { success: boolean; count: number; message: string };
   approveCardRecharge: (id: string) => void;
+  approveAllPendingCards: () => void;
   rejectCardRecharge: (id: string, reason: string) => void;
 
   // Actions
@@ -2291,6 +2293,54 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return { success: true, message: `Thẻ cào ${cardCode} đã được ghi nhận và đang được kiểm tra.` };
   };
 
+  const createBulkCardRecharge = (
+    cards: Array<{ network: CardNetwork; declaredAmount: number; serial: string; pin: string }>
+  ): { success: boolean; count: number; message: string } => {
+    if (!isAuthenticated || !currentUser) {
+      return { success: false, count: 0, message: 'Vui lòng đăng nhập để nạp thẻ cào!' };
+    }
+
+    if (!cards || cards.length === 0) {
+      return { success: false, count: 0, message: 'Danh sách thẻ cào trống!' };
+    }
+
+    const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
+    const newCards: CardRechargeRequest[] = cards.map((c, idx) => {
+      const discount = (settings.cardDiscountRate ?? 20) / 100;
+      const receivedAmount = Math.round(c.declaredAmount * (1 - discount));
+      return {
+        id: 'card-bulk-' + Date.now() + '-' + idx,
+        code: `THE${Math.floor(100000 + Math.random() * 900000)}`,
+        userId: currentUser.id,
+        userName: currentUser.username,
+        network: c.network,
+        declaredAmount: c.declaredAmount,
+        receivedAmount,
+        serial: c.serial.trim(),
+        pin: c.pin.trim(),
+        status: 'pending',
+        createdAt: nowStr,
+      };
+    });
+
+    setCardRecharges((prev) => [...newCards, ...prev]);
+
+    setNotifications((prev) => [
+      {
+        id: 'notif-' + Date.now(),
+        title: `Nạp ${cards.length} thẻ cào hàng loạt`,
+        description: `${currentUser.username} đã gửi hàng loạt ${cards.length} thẻ cào chờ Admin kiểm tra và duyệt.`,
+        time: 'Vừa xong',
+        read: false,
+        type: 'card',
+      },
+      ...prev,
+    ]);
+
+    showToast(`Đã gửi ${cards.length} thẻ cào lên hệ thống thành công! Chờ Admin kiểm tra và cộng tiền.`, 'success');
+    return { success: true, count: cards.length, message: `Đã gửi ${cards.length} thẻ cào thành công.` };
+  };
+
   const approveCardRecharge = (id: string) => {
     const card = cardRecharges.find((c) => c.id === id);
     if (!card || card.status === 'success') return;
@@ -2323,6 +2373,53 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setTransactions((prev) => [newTx, ...prev]);
 
     showToast(`Đã duyệt thẻ cào ${card.code} và cộng ${card.receivedAmount.toLocaleString('vi-VN')}đ vào ví khách hàng ${card.userName}!`, 'success');
+  };
+
+  const approveAllPendingCards = () => {
+    const pendings = cardRecharges.filter((c) => c.status === 'pending');
+    if (pendings.length === 0) {
+      showToast('Không có thẻ cào nào đang chờ duyệt!', 'info');
+      return;
+    }
+
+    const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
+    let totalAdded = 0;
+
+    const userIncrements: Record<string, number> = {};
+    pendings.forEach((c) => {
+      userIncrements[c.userId] = (userIncrements[c.userId] || 0) + c.receivedAmount;
+      totalAdded += c.receivedAmount;
+    });
+
+    setUsers((prev) =>
+      prev.map((u) =>
+        userIncrements[u.id] ? { ...u, balance: u.balance + userIncrements[u.id] } : u
+      )
+    );
+
+    setCardRecharges((prev) =>
+      prev.map((c) => (c.status === 'pending' ? { ...c, status: 'success', processedAt: nowStr } : c))
+    );
+
+    const newTransactions: Transaction[] = Object.entries(userIncrements).map(([uId, amt]) => {
+      const uObj = users.find((u) => u.id === uId);
+      return {
+        id: 'tx-bulk-' + Date.now() + '-' + uId,
+        txCode: '#GD-' + Math.floor(10000 + Math.random() * 90000),
+        type: 'card_recharge',
+        userId: uId,
+        userName: uObj?.username || 'Khách hàng',
+        description: `Duyệt hàng loạt thẻ cào thành công (+${amt.toLocaleString('vi-VN')}đ vào ví)`,
+        amount: amt,
+        balanceAfter: (uObj?.balance || 0) + amt,
+        createdAt: nowStr,
+        status: 'completed',
+      };
+    });
+
+    setTransactions((prev) => [...newTransactions, ...prev]);
+
+    showToast(`Đã duyệt toàn bộ ${pendings.length} thẻ cào và tự động cộng tổng ${totalAdded.toLocaleString('vi-VN')}đ vào ví khách hàng!`, 'success');
   };
 
   const rejectCardRecharge = (id: string, reason: string) => {
@@ -3009,7 +3106,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         applySeller,
         updateSellerStatus,
         createCardRecharge,
+        createBulkCardRecharge,
         approveCardRecharge,
+        approveAllPendingCards,
         rejectCardRecharge,
         showToast,
         addProduct,

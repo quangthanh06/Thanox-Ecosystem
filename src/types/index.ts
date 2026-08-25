@@ -150,7 +150,7 @@ export interface TopupRequest {
   rejectReason?: string;
 }
 
-export type CardNetwork = 'Viettel' | 'Vinaphone' | 'Mobifone' | 'Vietnamobile' | 'Zing' | 'Garena';
+export type CardNetwork = 'Viettel' | 'Vinaphone' | 'Mobifone' | 'Vietnamobile' | 'Zing' | 'Garena' | 'Gate';
 export type CardStatus = 'pending' | 'processing' | 'success' | 'failed' | 'invalid';
 
 export interface CardRechargeRequest {
@@ -382,6 +382,7 @@ export interface StoreSettings {
   // Card Recharge Config
   scratchCardEnabled: boolean;
   cardSettings: CardSettings;
+  cardDiscountRate?: number;
 
   // Announcement bar
   announcementText: string;

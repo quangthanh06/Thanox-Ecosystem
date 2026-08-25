@@ -60,6 +60,7 @@ export const StorefrontDepositQR: React.FC = () => {
     cardRecharges,
     createTopupRequest,
     createCardRecharge,
+    createBulkCardRecharge,
     showToast,
     navigateToStorefront,
   } = useStore();
@@ -68,11 +69,16 @@ export const StorefrontDepositQR: React.FC = () => {
   const [depositChannel, setDepositChannel] = useState<'vietqr' | 'card'>('vietqr');
 
   // Card Recharge State
+  const [cardMode, setCardMode] = useState<'single' | 'bulk'>('single');
   const [cardNetwork, setCardNetwork] = useState<CardNetwork>('Viettel');
   const [cardAmount, setCardAmount] = useState<number>(50000);
   const [cardSerial, setCardSerial] = useState<string>('');
   const [cardPin, setCardPin] = useState<string>('');
   const [isSubmittingCard, setIsSubmittingCard] = useState<boolean>(false);
+
+  // Bulk Cards State
+  const [bulkCardsText, setBulkCardsText] = useState<string>('');
+  const [bulkDefaultNetwork, setBulkDefaultNetwork] = useState<CardNetwork>('Viettel');
 
   const minDeposit = settings.minDeposit || 10000;
   const maxDeposit = settings.maxDeposit || 10000000;
@@ -504,6 +510,112 @@ export const StorefrontDepositQR: React.FC = () => {
     }, 500);
   };
 
+  // Parse bulk card entries
+  const parsedBulkCards = useMemo(() => {
+    if (!bulkCardsText.trim()) return [];
+    const lines = bulkCardsText.split('\n');
+    const results: Array<{
+      network: CardNetwork;
+      declaredAmount: number;
+      serial: string;
+      pin: string;
+      isValid: boolean;
+      error?: string;
+    }> = [];
+
+    const supportedNetworks: Record<string, CardNetwork> = {
+      viettel: 'Viettel',
+      vina: 'Vinaphone',
+      vinaphone: 'Vinaphone',
+      mobi: 'Mobifone',
+      mobifone: 'Mobifone',
+      zing: 'Zing',
+      garena: 'Garena',
+      gate: 'Gate',
+    };
+
+    lines.forEach((line) => {
+      const clean = line.trim();
+      if (!clean) return;
+
+      const parts = clean.split(/[|,/ \t]+/).filter(Boolean);
+      if (parts.length < 2) {
+        results.push({
+          network: bulkDefaultNetwork,
+          declaredAmount: 50000,
+          serial: clean,
+          pin: '',
+          isValid: false,
+          error: 'Thiếu mã PIN hoặc Mệnh giá',
+        });
+        return;
+      }
+
+      let net: CardNetwork = bulkDefaultNetwork;
+      let pin = '';
+      let serial = '';
+      let amt = 50000;
+
+      const firstLower = parts[0].toLowerCase();
+      let startIndex = 0;
+      if (supportedNetworks[firstLower]) {
+        net = supportedNetworks[firstLower];
+        startIndex = 1;
+      }
+
+      const remaining = parts.slice(startIndex);
+      if (remaining.length >= 3) {
+        pin = remaining[0];
+        serial = remaining[1];
+        const numAmt = parseInt(remaining[2].replace(/\D/g, ''), 10);
+        if (!isNaN(numAmt) && numAmt >= 10000) amt = numAmt;
+      } else if (remaining.length === 2) {
+        pin = remaining[0];
+        serial = remaining[1];
+      }
+
+      const isValid = pin.length >= 6 && serial.length >= 6;
+      results.push({
+        network: net,
+        declaredAmount: amt,
+        serial,
+        pin,
+        isValid,
+        error: !isValid ? 'PIN/Serial quá ngắn (< 6 ký tự)' : undefined,
+      });
+    });
+
+    return results;
+  }, [bulkCardsText, bulkDefaultNetwork]);
+
+  const validBulkCards = useMemo(() => parsedBulkCards.filter((c) => c.isValid), [parsedBulkCards]);
+  const totalBulkFaceValue = useMemo(() => validBulkCards.reduce((s, c) => s + c.declaredAmount, 0), [validBulkCards]);
+  const totalBulkReceivedValue = useMemo(() => {
+    const discount = (settings.cardDiscountRate ?? 20) / 100;
+    return Math.round(totalBulkFaceValue * (1 - discount));
+  }, [totalBulkFaceValue, settings.cardDiscountRate]);
+
+  const handleBulkCardRechargeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      showToast('Vui lòng đăng nhập tài khoản trước khi nạp thẻ cào.', 'warning');
+      navigateToStorefront('login', DEPOSIT_REDIRECT);
+      return;
+    }
+
+    if (validBulkCards.length === 0) {
+      showToast('Vui lòng nhập ít nhất 1 thẻ cào hợp lệ!', 'error');
+      return;
+    }
+
+    setIsSubmittingCard(true);
+    setTimeout(() => {
+      createBulkCardRecharge(validBulkCards);
+      setBulkCardsText('');
+      setIsSubmittingCard(false);
+    }, 600);
+  };
+
   const userTopups = useMemo(() => {
     return topups.filter(
       (t) => t.userId === currentUser.id && t.status === 'approved'
@@ -740,40 +852,29 @@ export const StorefrontDepositQR: React.FC = () => {
                   })}
                 </div>
 
-                {/* Custom Amount Field */}
+                {/* Custom Amount Field - Instant Auto QR */}
                 <div className="space-y-2 pt-3 border-t border-white/5">
-                  <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">
-                    Hoặc nhập số tiền khác
-                  </label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={customAmountText}
-                        onChange={handleCustomAmountChange}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && isValidAmount) {
-                            e.preventDefault();
-                            handleGenerateCustomQR();
-                          }
-                        }}
-                        placeholder={`Tối thiểu ${minDeposit.toLocaleString('vi-VN')}đ`}
-                        className="w-full glass-input rounded-2xl px-3.5 py-2.5 text-xs text-[#F4F2FF] font-bold"
-                      />
-                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#938EB5]">
-                        VND
-                      </span>
-                    </div>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={handleGenerateCustomQR}
-                      disabled={!isValidAmount}
-                      className="font-bold whitespace-nowrap text-xs"
-                    >
-                      Tạo QR
-                    </Button>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">
+                      Hoặc nhập số tiền tùy chọn
+                    </label>
+                    <span className="text-[10.5px] text-emerald-400 font-bold flex items-center gap-1">
+                      <Zap className="w-3 h-3 text-cyan-400" />
+                      <span>Tự động tạo QR ngay khi gõ</span>
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={customAmountText}
+                      onChange={handleCustomAmountChange}
+                      placeholder={`Tối thiểu ${minDeposit.toLocaleString('vi-VN')}đ`}
+                      className="w-full glass-input rounded-2xl pl-4 pr-12 py-3 text-xs text-[#F4F2FF] font-bold border-white/15 focus:border-[#7C3AED]"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-[#C084FC]">
+                      VND
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1090,91 +1191,218 @@ export const StorefrontDepositQR: React.FC = () => {
 
       {depositChannel === 'card' && (
         <div className="space-y-6">
-          <form onSubmit={handleCardRechargeSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-7 glass-standard border border-white/10 shadow-xl rounded-3xl p-6 sm:p-8 space-y-5">
-              <div className="flex items-center gap-2 border-b border-white/6 pb-3 font-bold text-sm text-[#F4F2FF]">
-                <CreditCard className="w-4 h-4 text-[#22D3EE]" />
-                <span>Nhập Thông Tin Thẻ Cào</span>
-              </div>
+          {/* Card Recharge Mode Toggle */}
+          <div className="flex items-center gap-2 p-1.5 rounded-2xl glass-standard border border-white/10 max-w-md">
+            <button
+              type="button"
+              onClick={() => setCardMode('single')}
+              className={`flex-1 py-2.5 px-4 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                cardMode === 'single'
+                  ? 'btn-liquid-primary shadow-md'
+                  : 'text-[#938EB5] hover:text-white'
+              }`}
+            >
+              <CreditCard className="w-3.5 h-3.5" />
+              <span>Nạp Từng Thẻ</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setCardMode('bulk')}
+              className={`flex-1 py-2.5 px-4 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                cardMode === 'bulk'
+                  ? 'bg-[#06B6D4] text-white border border-cyan-300 shadow-md shadow-[#06B6D4]/30'
+                  : 'text-[#938EB5] hover:text-white'
+              }`}
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-300" />
+              <span>⚡ Nạp Hàng Loạt (Nhiều Thẻ)</span>
+            </button>
+          </div>
 
-              <div className="space-y-2">
-                <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
-                  1. Chọn Loại Thẻ / Nhà Mạng
-                </label>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                  {(['Viettel', 'Vinaphone', 'Mobifone', 'Zing', 'Garena', 'Gate'] as CardNetwork[]).map(
-                    (net) => {
-                      const active = cardNetwork === net;
+          {/* SINGLE CARD RECHARGE FORM */}
+          {cardMode === 'single' ? (
+            <form onSubmit={handleCardRechargeSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-7 glass-standard border border-white/10 shadow-xl rounded-3xl p-6 sm:p-8 space-y-5">
+                <div className="flex items-center gap-2 border-b border-white/6 pb-3 font-bold text-sm text-[#F4F2FF]">
+                  <CreditCard className="w-4 h-4 text-[#22D3EE]" />
+                  <span>Nhập Thông Tin 1 Thẻ Cào</span>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                    1. Chọn Loại Thẻ / Nhà Mạng
+                  </label>
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                    {(['Viettel', 'Vinaphone', 'Mobifone', 'Zing', 'Garena', 'Gate'] as CardNetwork[]).map(
+                      (net) => {
+                        const active = cardNetwork === net;
+                        return (
+                          <button
+                            key={net}
+                            type="button"
+                            onClick={() => setCardNetwork(net)}
+                            className={`py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border ${
+                              active
+                                ? 'bg-[#06B6D4] text-white border-cyan-300 shadow-md shadow-[#06B6D4]/30'
+                                : 'bg-[#161626] text-[#8B84A8] border-white/5 hover:text-white hover:border-white/15'
+                            }`}
+                          >
+                            {net}
+                          </button>
+                        );
+                      }
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                    2. Chọn Mệnh Giá Thẻ
+                  </label>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {CARD_DENOMINATIONS.map((amt) => {
+                      const active = cardAmount === amt;
                       return (
                         <button
-                          key={net}
+                          key={amt}
                           type="button"
-                          onClick={() => setCardNetwork(net)}
-                          className={`py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border ${
+                          onClick={() => setCardAmount(amt)}
+                          className={`py-2.5 px-2 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border ${
                             active
-                              ? 'bg-[#06B6D4] text-white border-cyan-300 shadow-md shadow-[#06B6D4]/30'
+                              ? 'bg-[#7C3AED] text-white border-[#9D5CF6] shadow-md shadow-[#7C3AED]/30'
                               : 'bg-[#161626] text-[#8B84A8] border-white/5 hover:text-white hover:border-white/15'
                           }`}
                         >
-                          {net}
+                          {amt.toLocaleString('vi-VN')}đ
                         </button>
                       );
-                    }
-                  )}
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-2 border-t border-white/5">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                      3. Số Serial Thẻ
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={cardSerial}
+                      onChange={(e) => setCardSerial(e.target.value)}
+                      placeholder="Nhập mã serial in trên thẻ..."
+                      className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] font-mono outline-none focus:border-[#06B6D4]"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                      4. Mã Thẻ (PIN / Sau lớp cào)
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={cardPin}
+                      onChange={(e) => setCardPin(e.target.value)}
+                      placeholder="Nhập mã cào PIN..."
+                      className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] font-mono outline-none focus:border-[#06B6D4]"
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="md"
+                    className="w-full justify-center font-bold mt-2"
+                    isLoading={isSubmittingCard}
+                  >
+                    Gửi Thẻ & Nạp Tiền
+                  </Button>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
-                  2. Chọn Mệnh Giá Thẻ
-                </label>
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                  {CARD_DENOMINATIONS.map((amt) => {
-                    const active = cardAmount === amt;
-                    return (
-                      <button
-                        key={amt}
-                        type="button"
-                        onClick={() => setCardAmount(amt)}
-                        className={`py-2.5 px-2 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border ${
-                          active
-                            ? 'bg-[#7C3AED] text-white border-[#9D5CF6] shadow-md shadow-[#7C3AED]/30'
-                            : 'bg-[#161626] text-[#8B84A8] border-white/5 hover:text-white hover:border-white/15'
-                        }`}
-                      >
-                        {amt.toLocaleString('vi-VN')}đ
-                      </button>
-                    );
-                  })}
+              {/* Card Calculation Summary */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="glass-standard border border-white/10 rounded-3xl p-6 space-y-4 shadow-xl">
+                  <h3 className="font-bold text-xs text-[#F4F2FF] uppercase tracking-wider">Tóm Tắt Nạp Thẻ</h3>
+                  <div className="space-y-2.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-[#938EB5]">Loại thẻ:</span>
+                      <span className="font-bold text-[#C084FC]">{cardNetwork}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#938EB5]">Mệnh giá:</span>
+                      <span className="font-bold text-white">{cardAmount.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#938EB5]">Chiết khấu:</span>
+                      <span className="font-bold text-amber-400">{cardFeePercent}%</span>
+                    </div>
+                    <div className="pt-2 border-t border-white/6 flex justify-between items-baseline">
+                      <span className="text-[#938EB5] font-semibold">Thực nhận vào ví:</span>
+                      <span className="font-display font-black text-lg text-emerald-400">
+                        {Math.round(cardAmount * (1 - cardFeePercent / 100)).toLocaleString('vi-VN')}đ
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-
-              <div className="space-y-4 pt-2 border-t border-white/5">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
-                    3. Số Serial Thẻ
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={cardSerial}
-                    onChange={(e) => setCardSerial(e.target.value)}
-                    placeholder="Nhập mã serial in trên thẻ..."
-                    className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] font-mono outline-none focus:border-[#06B6D4]"
-                  />
+            </form>
+          ) : (
+            /* BULK CARD RECHARGE FORM */
+            <form onSubmit={handleBulkCardRechargeSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-7 glass-standard border border-white/10 shadow-xl rounded-3xl p-6 sm:p-8 space-y-5">
+                <div className="flex items-center justify-between border-b border-white/6 pb-3">
+                  <div className="flex items-center gap-2 font-bold text-sm text-[#F4F2FF]">
+                    <Zap className="w-4 h-4 text-amber-300" />
+                    <span>Nạp Hàng Loạt Nhiều Thẻ Cào</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-cyan-300">
+                    {validBulkCards.length} thẻ hợp lệ
+                  </span>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
-                    4. Mã Thẻ (PIN / Sau lớp cào)
+                <div className="space-y-2">
+                  <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">
+                    Nhà Mạng Mặc Định (Nếu dòng không ghi tên mạng)
                   </label>
-                  <input
-                    type="text"
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                    {(['Viettel', 'Vinaphone', 'Mobifone', 'Zing', 'Garena', 'Gate'] as CardNetwork[]).map(
+                      (net) => {
+                        const active = bulkDefaultNetwork === net;
+                        return (
+                          <button
+                            key={net}
+                            type="button"
+                            onClick={() => setBulkDefaultNetwork(net)}
+                            className={`py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border ${
+                              active
+                                ? 'bg-[#06B6D4] text-white border-cyan-300 shadow-md shadow-[#06B6D4]/30'
+                                : 'bg-[#161626] text-[#8B84A8] border-white/5 hover:text-white hover:border-white/15'
+                            }`}
+                          >
+                            {net}
+                          </button>
+                        );
+                      }
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">
+                      Danh Sách Thẻ Cào (Mỗi dòng 1 thẻ)
+                    </label>
+                    <span className="text-[10px] text-[#938EB5]">Cú pháp: Mã_PIN | Serial | Mệnh_Giá</span>
+                  </div>
+                  <textarea
+                    rows={8}
                     required
-                    value={cardPin}
-                    onChange={(e) => setCardPin(e.target.value)}
-                    placeholder="Nhập mã cào PIN..."
-                    className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] font-mono outline-none focus:border-[#06B6D4]"
+                    value={bulkCardsText}
+                    onChange={(e) => setBulkCardsText(e.target.value)}
+                    placeholder={`Ví dụ nhập mỗi dòng 1 thẻ:\n100029384918 | 100038472918 | 50000\n882910394821 | 992810482910 | 100000\nViettel 773829103847 662810482910 200000`}
+                    className="w-full bg-[#161626] border border-white/10 rounded-2xl p-4 text-xs font-mono text-[#F0EDFF] outline-none focus:border-cyan-400 leading-relaxed resize-y"
                   />
                 </div>
 
@@ -1182,14 +1410,69 @@ export const StorefrontDepositQR: React.FC = () => {
                   type="submit"
                   variant="primary"
                   size="md"
-                  className="w-full justify-center font-bold mt-2"
+                  className="w-full justify-center font-bold"
                   isLoading={isSubmittingCard}
+                  disabled={validBulkCards.length === 0}
                 >
-                  Gửi Thẻ & Nạp Tiền
+                  ⚡ Gửi {validBulkCards.length} Thẻ Cào Lên Hệ Thống
                 </Button>
               </div>
-            </div>
-          </form>
+
+              {/* Bulk Calculation & Live Parser Preview */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="glass-standard border border-white/10 rounded-3xl p-6 space-y-4 shadow-xl">
+                  <h3 className="font-bold text-xs text-[#F4F2FF] uppercase tracking-wider">Tổng Kết Nạp Hàng Loạt</h3>
+                  <div className="space-y-2.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-[#938EB5]">Số lượng thẻ hợp lệ:</span>
+                      <span className="font-bold text-[#C084FC]">{validBulkCards.length} thẻ</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#938EB5]">Tổng mệnh giá gửi:</span>
+                      <span className="font-bold text-white">{totalBulkFaceValue.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                    <div className="pt-2 border-t border-white/6 flex justify-between items-baseline">
+                      <span className="text-[#938EB5] font-semibold">Ước tính thực nhận:</span>
+                      <span className="font-display font-black text-lg text-emerald-400">
+                        {totalBulkReceivedValue.toLocaleString('vi-VN')}đ
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Live Parsed Cards Table */}
+                {parsedBulkCards.length > 0 && (
+                  <div className="glass-subtle border border-white/8 rounded-2xl p-4 space-y-2 max-h-[300px] overflow-y-auto">
+                    <div className="text-[11px] font-bold text-white uppercase tracking-wider">
+                      Xem Trước Danh Sách ({parsedBulkCards.length} dòng)
+                    </div>
+                    <div className="space-y-1.5">
+                      {parsedBulkCards.map((c, i) => (
+                        <div
+                          key={i}
+                          className={`p-2.5 rounded-xl border text-[11px] font-mono flex items-center justify-between ${
+                            c.isValid
+                              ? 'bg-white/5 border-white/8 text-white'
+                              : 'bg-red-500/10 border-red-500/30 text-red-300'
+                          }`}
+                        >
+                          <div className="truncate">
+                            <span className="font-bold text-[#C084FC] mr-1.5">[{c.network}]</span>
+                            <span>{c.pin}</span>
+                            <span className="text-zinc-500 mx-1">|</span>
+                            <span>{c.serial}</span>
+                          </div>
+                          <span className="font-bold text-emerald-400 shrink-0 ml-2">
+                            {c.declaredAmount.toLocaleString('vi-VN')}đ
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </form>
+          )}
         </div>
       )}
     </div>

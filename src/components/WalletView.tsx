@@ -28,6 +28,7 @@ export const WalletView: React.FC = () => {
     approveTopup,
     rejectTopup,
     approveCardRecharge,
+    approveAllPendingCards,
     rejectCardRecharge,
     adjustUserBalance,
     createTopupRequest,
@@ -337,7 +338,37 @@ export const WalletView: React.FC = () => {
             description="Khi khách hàng thực hiện nạp thẻ cào trên Storefront, yêu cầu sẽ xuất hiện tại đây."
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-4">
+            {/* Bulk Action Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl glass-standard border border-cyan-500/20 bg-cyan-500/5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-300">
+                  <CreditCard className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">
+                    Quản Lý & Duyệt Thẻ Cào ({pendingCards.length} thẻ đang chờ)
+                  </div>
+                  <div className="text-[11px] text-[#938EB5]">
+                    Tổng tiền thực nhận cần duyệt: <span className="font-bold text-emerald-400 font-mono">{pendingCards.reduce((s, c) => s + c.receivedAmount, 0).toLocaleString('vi-VN')}đ</span>
+                  </div>
+                </div>
+              </div>
+
+              {pendingCards.length > 0 && (
+                <Button
+                  variant="success"
+                  size="sm"
+                  onClick={approveAllPendingCards}
+                  leftIcon={<CheckCircle2 className="w-4 h-4" />}
+                  className="font-bold whitespace-nowrap shadow-lg shadow-emerald-500/20"
+                >
+                  ⚡ Duyệt Toàn Bộ Thẻ Pending (Done)
+                </Button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {cardRecharges.map((card) => (
               <Card
                 key={card.id}
@@ -437,6 +468,7 @@ export const WalletView: React.FC = () => {
                 )}
               </Card>
             ))}
+            </div>
           </div>
         )
       ) : (
