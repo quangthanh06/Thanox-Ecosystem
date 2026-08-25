@@ -310,6 +310,15 @@ export const DEFAULT_CARD_MATRIX: Record<string, CardDenominationConfig[]> = {
 export const INITIAL_SETTINGS: StoreSettings = {
   storeName: 'THANOX STORE',
   storeDescription: 'Hệ thống cung cấp dịch vụ kĩ thuật số tự động 24/7',
+  logoSettings: {
+    logoUrl: '/thanox-logo.png',
+    showBorder: false,
+    borderStyle: 'purple_cyan',
+    borderGlow: false,
+    shape: 'squircle',
+    size: 'md',
+    scale: 110,
+  },
   bankEnabled: true,
   bankName: 'MBBank (Quân Đội)',
   bankCode: 'MB',

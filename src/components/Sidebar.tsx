@@ -20,9 +20,9 @@ import {
   Sparkles,
   X,
   Music,
-  QrCode,
   Wrench,
 } from 'lucide-react';
+import { BrandLogo } from './ui/BrandLogo';
 
 interface NavItem {
   id: PageId;
@@ -158,9 +158,7 @@ export const Sidebar: React.FC = () => {
             onClick={() => navigateToAdmin('dashboard')}
             className="flex items-center gap-3 cursor-pointer select-none overflow-hidden group"
           >
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#7C3AED] via-[#9D5CF6] to-[#06B6D4] p-[1.5px] flex items-center justify-center text-white shadow-[0_0_16px_rgba(124,58,237,0.45)] shrink-0 transform group-hover:scale-105 transition-transform overflow-hidden">
-              <img src="/thanox-logo.png" alt="Thanox Admin" className="w-full h-full object-cover object-center rounded-[14px] transform scale-110" />
-            </div>
+            <BrandLogo sizeOverride="sm" />
 
             {!isCollapsed && (
               <div className="flex flex-col min-w-0">

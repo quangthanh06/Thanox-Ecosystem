@@ -325,6 +325,16 @@ export interface HeroBannerSettings {
   telegramContact?: string;
 }
 
+export interface LogoSettings {
+  logoUrl?: string; // Tùy chỉnh URL ảnh logo
+  showBorder?: boolean; // Bật / Tắt viền phát sáng (true/false)
+  borderStyle?: 'purple_cyan' | 'cyan' | 'purple' | 'gold' | 'emerald' | 'crimson' | 'none';
+  borderGlow?: boolean; // Hiệu ứng tỏa sáng neon
+  shape?: 'squircle' | 'circle' | 'rounded' | 'square'; // Hình dáng bo góc
+  size?: 'sm' | 'md' | 'lg' | 'xl'; // Kích thước: 36px, 44px, 52px, 64px
+  scale?: number; // Độ thu phóng ảnh trong khung (100 - 150%)
+}
+
 export interface StoreSettings {
   storeName: string;
   storeDescription: string;
@@ -333,6 +343,7 @@ export interface StoreSettings {
   botUsername?: string;
   facebookFanpage: string;
   typography?: TypographySettings;
+  logoSettings?: LogoSettings;
   aiBotSize?: 'small' | 'medium' | 'large';
   
   // Banking / VietQR Config

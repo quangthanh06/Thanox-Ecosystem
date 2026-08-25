@@ -164,6 +164,42 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
     showToast(`Đã gỡ chặn IP ${ipToRemove}`, 'info');
   };
 
+  // Logo upload state
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+
+  const handleLogoUpload = async (file: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('Vui lòng chọn file hình ảnh (PNG, JPG, SVG, WebP)', 'error');
+      return;
+    }
+
+    setIsUploadingLogo(true);
+    try {
+      const url = await uploadMediaToSupabase(file, 'banners');
+      setFormData((prev) => ({
+        ...prev,
+        logoSettings: {
+          ...(prev.logoSettings || {
+            logoUrl: '/thanox-logo.png',
+            showBorder: false,
+            borderStyle: 'purple_cyan',
+            borderGlow: false,
+            shape: 'squircle',
+            size: 'md',
+            scale: 110,
+          }),
+          logoUrl: url,
+        },
+      }));
+      setIsUploadingLogo(false);
+      showToast('Tải ảnh Logo lên Cloud thành công! Hãy bấm Lưu Cấu Hình.', 'success');
+    } catch (e) {
+      setIsUploadingLogo(false);
+      showToast('Lỗi khi tải ảnh Logo lên Cloud', 'error');
+    }
+  };
+
   // Music form state
   const [newTrackTitle, setNewTrackTitle] = useState('');
   const [newTrackArtist, setNewTrackArtist] = useState('');
@@ -1476,12 +1512,370 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                 </div>
               </div>
             </Card>
+
+            {/* Option 3: Trình Quản Lý Logo & Viền Phát Sáng (Logo & Border Glow Manager) */}
+            <Card className="p-5 space-y-5 lg:col-span-2" variant="default">
+              <CardHeader
+                title="Quản Lý Logo Thương Hiệu & Viền Phát Sáng"
+                subtitle="Tùy chỉnh ảnh logo, hình dáng, kích thước và bật/tắt viền phát sáng neon"
+                icon={<Palette className="w-4 h-4 text-cyan-400" />}
+              />
+
+              {/* Live Preview Container */}
+              <div className="p-5 rounded-2xl bg-[#0F0F1A]/90 border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-5">
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`
+                      ${
+                        (formData.logoSettings?.size || 'md') === 'sm'
+                          ? 'w-9 h-9'
+                          : (formData.logoSettings?.size || 'md') === 'lg'
+                          ? 'w-14 h-14'
+                          : (formData.logoSettings?.size || 'md') === 'xl'
+                          ? 'w-20 h-20'
+                          : 'w-12 h-12'
+                      }
+                      ${
+                        (formData.logoSettings?.shape || 'squircle') === 'circle'
+                          ? 'rounded-full'
+                          : (formData.logoSettings?.shape || 'squircle') === 'rounded'
+                          ? 'rounded-xl'
+                          : (formData.logoSettings?.shape || 'squircle') === 'square'
+                          ? 'rounded-lg'
+                          : 'rounded-2xl'
+                      }
+                      ${
+                        formData.logoSettings?.showBorder && (formData.logoSettings?.borderStyle || 'purple_cyan') !== 'none'
+                          ? (formData.logoSettings?.borderStyle === 'cyan'
+                              ? 'bg-gradient-to-br from-[#06B6D4] via-[#22D3EE] to-[#38BDF8]'
+                              : formData.logoSettings?.borderStyle === 'purple'
+                              ? 'bg-gradient-to-br from-[#7C3AED] via-[#8B5CF6] to-[#C084FC]'
+                              : formData.logoSettings?.borderStyle === 'gold'
+                              ? 'bg-gradient-to-br from-[#F59E0B] via-[#FBBF24] to-[#FDE68A]'
+                              : formData.logoSettings?.borderStyle === 'emerald'
+                              ? 'bg-gradient-to-br from-[#10B981] via-[#34D399] to-[#6EE7B7]'
+                              : formData.logoSettings?.borderStyle === 'crimson'
+                              ? 'bg-gradient-to-br from-[#EF4444] via-[#F43F5E] to-[#FB7185]'
+                              : 'bg-gradient-to-br from-[#7C3AED] via-[#9D5CF6] to-[#06B6D4]') +
+                            ' p-[1.5px] ' +
+                            (formData.logoSettings?.borderGlow ? 'shadow-[0_0_20px_rgba(124,58,237,0.6)]' : 'shadow-md')
+                          : 'overflow-hidden bg-[#080811] shadow-md'
+                      }
+                      shrink-0 transition-all
+                    `}
+                  >
+                    <div
+                      className={`w-full h-full bg-[#080811] ${
+                        (formData.logoSettings?.shape || 'squircle') === 'circle'
+                          ? 'rounded-full'
+                          : (formData.logoSettings?.shape || 'squircle') === 'rounded'
+                          ? 'rounded-[10px]'
+                          : (formData.logoSettings?.shape || 'squircle') === 'square'
+                          ? 'rounded-[6px]'
+                          : 'rounded-[14px]'
+                      } flex items-center justify-center overflow-hidden`}
+                    >
+                      <img
+                        src={formData.logoSettings?.logoUrl || '/thanox-logo.png'}
+                        alt="Preview Logo"
+                        style={{ transform: `scale(${(formData.logoSettings?.scale || 110) / 100})` }}
+                        className="w-full h-full object-cover object-center"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="text-xs font-bold text-[#F0EDFF] flex items-center gap-2">
+                      <span>Xem trước hiển thị:</span>
+                      <span className="text-xs font-black uppercase text-cyan-300">THANOX.VN</span>
+                    </div>
+                    <div className="text-[11px] text-[#8B84A8]">
+                      Trạng thái viền: {formData.logoSettings?.showBorder ? '🟣 Đang Bật Viền' : '⚪ Không Viền (Tràn Khung Thuần Túy)'}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData({
+                      ...formData,
+                      logoSettings: {
+                        logoUrl: '/thanox-logo.png',
+                        showBorder: false,
+                        borderStyle: 'purple_cyan',
+                        borderGlow: false,
+                        shape: 'squircle',
+                        size: 'md',
+                        scale: 110,
+                      },
+                    })
+                  }
+                  className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold text-[#CBC7E0] hover:text-white border border-white/10 transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Đặt Lại Logo Robot 3D Gốc</span>
+                </button>
+              </div>
+
+              {/* Settings Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                {/* 1. Bật / Tắt Viền Phát Sáng */}
+                <div className="p-4 rounded-xl bg-[#161626]/70 border border-white/5 flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div className="text-xs font-bold text-[#F0EDFF]">Bật / Tắt Viền Màu Phát Sáng</div>
+                    <div className="text-[11px] text-[#8B84A8]">
+                      {formData.logoSettings?.showBorder
+                        ? 'Đang bật viền màu xung quanh icon logo'
+                        : 'Tắt viền ngoài hoàn toàn (Ảnh tràn khung sạch đẹp)'}
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.logoSettings?.showBorder || false}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          logoSettings: {
+                            ...(formData.logoSettings || {
+                              logoUrl: '/thanox-logo.png',
+                              showBorder: false,
+                              borderStyle: 'purple_cyan',
+                              borderGlow: false,
+                              shape: 'squircle',
+                              size: 'md',
+                              scale: 110,
+                            }),
+                            showBorder: e.target.checked,
+                          },
+                        })
+                      }
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-[#0E0E18] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#7C3AED] border border-white/10"></div>
+                  </label>
+                </div>
+
+                {/* 2. Hiệu ứng Tỏa Sáng Neon (Glow) */}
+                <div className="p-4 rounded-xl bg-[#161626]/70 border border-white/5 flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div className="text-xs font-bold text-[#F0EDFF]">Hào Quang Neon Tỏa Sáng (Border Glow)</div>
+                    <div className="text-[11px] text-[#8B84A8]">Phát sáng bóng màu xung quanh viền logo</div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      disabled={!formData.logoSettings?.showBorder}
+                      checked={formData.logoSettings?.borderGlow || false}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          logoSettings: {
+                            ...(formData.logoSettings || {
+                              logoUrl: '/thanox-logo.png',
+                              showBorder: false,
+                              borderStyle: 'purple_cyan',
+                              borderGlow: false,
+                              shape: 'squircle',
+                              size: 'md',
+                              scale: 110,
+                            }),
+                            borderGlow: e.target.checked,
+                          },
+                        })
+                      }
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-[#0E0E18] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#06B6D4] border border-white/10 disabled:opacity-40"></div>
+                  </label>
+                </div>
+
+                {/* 3. Màu sắc viền */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                    Màu Sắc Viền Logo (Khi Bật Viền):
+                  </label>
+                  <select
+                    disabled={!formData.logoSettings?.showBorder}
+                    value={formData.logoSettings?.borderStyle || 'purple_cyan'}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        logoSettings: {
+                          ...(formData.logoSettings || {
+                            logoUrl: '/thanox-logo.png',
+                            showBorder: false,
+                            borderStyle: 'purple_cyan',
+                            borderGlow: false,
+                            shape: 'squircle',
+                            size: 'md',
+                            scale: 110,
+                          }),
+                          borderStyle: e.target.value as any,
+                        },
+                      })
+                    }
+                    className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED] disabled:opacity-40"
+                  >
+                    <option value="purple_cyan">Tím - Cyan Cực Quang (Neon Aurora - Mặc Định)</option>
+                    <option value="cyan">Cyan Cyberpunk (Xanh Neon)</option>
+                    <option value="purple">Tím Hoàng Gia (Royal Purple)</option>
+                    <option value="gold">Vàng Kim VIP (Luxury Gold)</option>
+                    <option value="emerald">Xanh Ngọc (Emerald Shield)</option>
+                    <option value="crimson">Đỏ Hồng Rực Rỡ (Crimson Fire)</option>
+                  </select>
+                </div>
+
+                {/* 4. Hình Dáng Bo Góc (Shape) */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                    Hình Dáng Khung Logo (Shape):
+                  </label>
+                  <select
+                    value={formData.logoSettings?.shape || 'squircle'}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        logoSettings: {
+                          ...(formData.logoSettings || {
+                            logoUrl: '/thanox-logo.png',
+                            showBorder: false,
+                            borderStyle: 'purple_cyan',
+                            borderGlow: false,
+                            shape: 'squircle',
+                            size: 'md',
+                            scale: 110,
+                          }),
+                          shape: e.target.value as any,
+                        },
+                      })
+                    }
+                    className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                  >
+                    <option value="squircle">Bo Tròn Squircle Chuẩn iOS (Mặc Định)</option>
+                    <option value="circle">Hình Tròn Hoàn Hảo (Circle)</option>
+                    <option value="rounded">Bo Góc Nhẹ (Soft Rounded)</option>
+                    <option value="square">Hình Vuông Góc (Square)</option>
+                  </select>
+                </div>
+
+                {/* 5. Kích thước Logo */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                    Kích Thước Logo Trên Header:
+                  </label>
+                  <select
+                    value={formData.logoSettings?.size || 'md'}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        logoSettings: {
+                          ...(formData.logoSettings || {
+                            logoUrl: '/thanox-logo.png',
+                            showBorder: false,
+                            borderStyle: 'purple_cyan',
+                            borderGlow: false,
+                            shape: 'squircle',
+                            size: 'md',
+                            scale: 110,
+                          }),
+                          size: e.target.value as any,
+                        },
+                      })
+                    }
+                    className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                  >
+                    <option value="sm">Nhỏ (36px)</option>
+                    <option value="md">Vừa Vặn (44px - Khuyên dùng)</option>
+                    <option value="lg">Lớn Nổi Bật (52px)</option>
+                    <option value="xl">Siêu To (64px)</option>
+                  </select>
+                </div>
+
+                {/* 6. Độ Thu Phóng Ảnh (Scale Zoom %) */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                    <span>Độ Phóng To Ảnh Trong Khung:</span>
+                    <span className="text-cyan-400 font-bold">{formData.logoSettings?.scale || 110}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={80}
+                    max={160}
+                    step={5}
+                    value={formData.logoSettings?.scale || 110}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        logoSettings: {
+                          ...(formData.logoSettings || {
+                            logoUrl: '/thanox-logo.png',
+                            showBorder: false,
+                            borderStyle: 'purple_cyan',
+                            borderGlow: false,
+                            shape: 'squircle',
+                            size: 'md',
+                            scale: 110,
+                          }),
+                          scale: Number(e.target.value),
+                        },
+                      })
+                    }
+                    className="w-full accent-cyan-400 cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              {/* 7. Thay Đổi Ảnh Logo (Upload File hoặc Nhập URL) */}
+              <div className="space-y-2 pt-2 border-t border-white/5">
+                <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                  Tải Ảnh Logo Mới Hoặc Dán Link Ảnh:
+                </label>
+                <div className="flex flex-col sm:flex-row gap-2.5">
+                  <input
+                    type="text"
+                    value={formData.logoSettings?.logoUrl || '/thanox-logo.png'}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        logoSettings: {
+                          ...(formData.logoSettings || {
+                            logoUrl: '/thanox-logo.png',
+                            showBorder: false,
+                            borderStyle: 'purple_cyan',
+                            borderGlow: false,
+                            shape: 'squircle',
+                            size: 'md',
+                            scale: 110,
+                          }),
+                          logoUrl: e.target.value,
+                        },
+                      })
+                    }
+                    placeholder="/thanox-logo.png hoặc https://..."
+                    className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                  />
+
+                  <label className="px-4 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#8B5CF6] text-white text-xs font-bold transition-all shrink-0 cursor-pointer shadow-md flex items-center justify-center gap-1.5 active:scale-95">
+                    {isUploadingLogo ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                    <span>{isUploadingLogo ? 'Đang tải...' : 'Tải Ảnh Lên'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleLogoUpload(e.target.files?.[0] || null)}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+            </Card>
             </div>
 
             {/* Save Button */}
             <div className="flex justify-end pt-2">
               <Button type="submit" variant="primary" size="md" leftIcon={<Save className="w-4 h-4" />}>
-                💾 Lưu Cài Đặt Phông Chữ & Hiệu Ứng Màu
+                💾 Lưu Cài Đặt Phông Chữ & Logo Hệ Thống
               </Button>
             </div>
           </div>
