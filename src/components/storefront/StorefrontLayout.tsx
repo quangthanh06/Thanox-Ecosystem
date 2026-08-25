@@ -127,8 +127,8 @@ export const StorefrontLayout: React.FC = () => {
               className="flex items-center gap-2.5 cursor-pointer text-left group select-none"
             >
               <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#7C3AED] via-[#9D5CF6] to-[#06B6D4] p-0.5 shadow-lg shadow-[#7C3AED]/25 group-hover:shadow-[0_0_20px_rgba(124,58,237,0.5)] transition-all shrink-0">
-                <div className="w-full h-full bg-[#0B0B14] rounded-[14px] flex items-center justify-center text-[#C084FC] group-hover:text-white transition-colors">
-                  <Flame className="w-4.5 h-4.5 text-[#C084FC] group-hover:text-[#22D3EE] transition-colors" />
+                <div className="w-full h-full bg-[#0B0B14] rounded-[14px] flex items-center justify-center p-1 overflow-hidden">
+                  <img src="/favicon.svg" alt="Thanox Flame 3D" className="w-full h-full object-contain" />
                 </div>
               </div>
               <div className="flex flex-col justify-center">

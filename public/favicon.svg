@@ -1,54 +1,182 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
   <defs>
-    <!-- Background Gradient -->
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#14142B" />
-      <stop offset="100%" stop-color="#07070D" />
+    <!-- Background 3D Pill Gradients -->
+    <radialGradient id="bgSphere" cx="40%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#1E1A38" />
+      <stop offset="40%" stop-color="#0E0C1C" />
+      <stop offset="100%" stop-color="#040308" />
+    </radialGradient>
+
+    <!-- 3D Bevel Rim Gradient -->
+    <linearGradient id="rimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A855F7" stop-opacity="0.9" />
+      <stop offset="30%" stop-color="#06B6D4" stop-opacity="0.7" />
+      <stop offset="70%" stop-color="#7C3AED" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#22D3EE" stop-opacity="0.9" />
     </linearGradient>
 
-    <!-- Cyber Neon Flame Gradient -->
-    <linearGradient id="flameGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#7C3AED" />
-      <stop offset="50%" stop-color="#A855F7" />
-      <stop offset="100%" stop-color="#06B6D4" />
+    <!-- Animated 3D Flame Base Gradient -->
+    <linearGradient id="flame3DGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#4C1D95">
+        <animate attributeName="stop-color" values="#4C1D95;#6D28D9;#4C1D95" dur="3s" repeatCount="indefinite" />
+      </stop>
+      <stop offset="45%" stop-color="#7C3AED">
+        <animate attributeName="stop-color" values="#7C3AED;#A855F7;#7C3AED" dur="3s" repeatCount="indefinite" />
+      </stop>
+      <stop offset="85%" stop-color="#06B6D4">
+        <animate attributeName="stop-color" values="#06B6D4;#22D3EE;#06B6D4" dur="2s" repeatCount="indefinite" />
+      </stop>
+      <stop offset="100%" stop-color="#FFFFFF">
+        <animate attributeName="stop-color" values="#FFFFFF;#67E8F9;#FFFFFF" dur="1.5s" repeatCount="indefinite" />
+      </stop>
     </linearGradient>
 
-    <!-- Inner Core Cyan Glow -->
-    <linearGradient id="coreGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#06B6D4" />
-      <stop offset="100%" stop-color="#22D3EE" />
+    <!-- Inner Core Plasma Gradient -->
+    <linearGradient id="corePlasmaGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#0891B2" />
+      <stop offset="60%" stop-color="#22D3EE" />
+      <stop offset="100%" stop-color="#FFFFFF" />
     </linearGradient>
 
-    <!-- Border Neon Gradient -->
-    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#A855F7" stop-opacity="0.8" />
-      <stop offset="50%" stop-color="#06B6D4" stop-opacity="0.5" />
-      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0.8" />
+    <!-- Specular 3D Highlight Gradient -->
+    <linearGradient id="specularGrad" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.75" />
+      <stop offset="40%" stop-color="#67E8F9" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
     </linearGradient>
 
-    <!-- Glow Filter -->
-    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="12" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    <!-- Dynamic Glow Filter -->
+    <filter id="hyperGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="16" result="blur1" />
+      <feGaussianBlur stdDeviation="6" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur1" />
+        <feMergeNode in="blur2" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
     </filter>
+
+    <style>
+      @keyframes flameFlicker {
+        0% {
+          transform: scale(1) translateY(0px) rotate(0deg);
+        }
+        25% {
+          transform: scale(1.03, 0.97) translateY(-3px) rotate(-1.5deg);
+        }
+        50% {
+          transform: scale(0.98, 1.04) translateY(-6px) rotate(1.2deg);
+        }
+        75% {
+          transform: scale(1.02, 0.98) translateY(-2px) rotate(-0.8deg);
+        }
+        100% {
+          transform: scale(1) translateY(0px) rotate(0deg);
+        }
+      }
+
+      @keyframes innerCorePulse {
+        0%, 100% {
+          transform: scale(1) translateY(0);
+          opacity: 0.92;
+        }
+        50% {
+          transform: scale(1.08, 1.12) translateY(-4px);
+          opacity: 1;
+        }
+      }
+
+      @keyframes sparkFloat1 {
+        0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+        30% { opacity: 0.9; }
+        80% { opacity: 0.9; }
+        100% { transform: translate(-18px, -55px) scale(0); opacity: 0; }
+      }
+
+      @keyframes sparkFloat2 {
+        0% { transform: translate(0, 0) scale(0.7); opacity: 0; }
+        25% { opacity: 1; }
+        75% { opacity: 0.8; }
+        100% { transform: translate(22px, -60px) scale(0); opacity: 0; }
+      }
+
+      @keyframes sparkFloat3 {
+        0% { transform: translate(0, 0) scale(0.5); opacity: 0; }
+        40% { opacity: 1; }
+        100% { transform: translate(-8px, -45px) scale(0); opacity: 0; }
+      }
+
+      @keyframes auraBreath {
+        0%, 100% { opacity: 0.25; transform: scale(1); }
+        50% { opacity: 0.45; transform: scale(1.1); }
+      }
+
+      .flame-body-motion {
+        transform-origin: 256px 390px;
+        animation: flameFlicker 2.4s ease-in-out infinite;
+      }
+
+      .flame-core-motion {
+        transform-origin: 256px 360px;
+        animation: innerCorePulse 1.8s ease-in-out infinite;
+      }
+
+      .spark-1 { animation: sparkFloat1 2.2s cubic-bezier(0.2, 0.8, 0.4, 1) infinite; }
+      .spark-2 { animation: sparkFloat2 2.8s cubic-bezier(0.2, 0.8, 0.4, 1) infinite 0.9s; }
+      .spark-3 { animation: sparkFloat3 2s cubic-bezier(0.2, 0.8, 0.4, 1) infinite 0.4s; }
+      .aura-glow { transform-origin: 256px 270px; animation: auraBreath 3s ease-in-out infinite; }
+    </style>
   </defs>
 
-  <!-- Squircle Base -->
-  <rect x="24" y="24" width="464" height="464" rx="128" fill="url(#bgGrad)" stroke="url(#borderGrad)" stroke-width="12" />
+  <!-- 3D Glass Squircle Chassis Background -->
+  <rect x="24" y="24" width="464" height="464" rx="136" fill="url(#bgSphere)" stroke="url(#rimGrad)" stroke-width="12" />
+  
+  <!-- 3D Glass Surface Glare Arc -->
+  <path d="M 48 160 C 48 80, 100 40, 180 40 L 332 40 C 412 40, 464 80, 464 160 C 420 180, 92 180, 48 160 Z" fill="url(#specularGrad)" opacity="0.4" />
 
-  <!-- Ambient Glow -->
-  <circle cx="256" cy="270" r="140" fill="#7C3AED" opacity="0.25" filter="url(#neonGlow)" />
-  <circle cx="256" cy="230" r="100" fill="#06B6D4" opacity="0.3" filter="url(#neonGlow)" />
+  <!-- 3D Deep Energy Atmosphere Aura -->
+  <g class="aura-glow">
+    <circle cx="256" cy="280" r="140" fill="#7C3AED" filter="url(#hyperGlow)" />
+    <circle cx="256" cy="230" r="100" fill="#06B6D4" filter="url(#hyperGlow)" />
+  </g>
 
-  <!-- Outer Cyber Flame Icon -->
-  <path d="M256 96 C256 96 312 168 312 232 C312 254 304 274 290 288 C290 256 270 236 256 220 C242 236 222 256 222 288 C208 274 200 254 200 232 C200 168 256 96 256 96 Z" fill="url(#flameGrad)" filter="url(#neonGlow)" />
+  <!-- Animated 3D Flame Main Group -->
+  <g class="flame-body-motion">
+    <!-- Back Flame 3D Depth Shadow Layer -->
+    <path d="M256 90 C290 150 360 220 360 310 C360 380 306 424 256 424 C206 424 152 380 152 310 C152 220 222 150 256 90 Z" fill="#3B0764" opacity="0.75" transform="translate(0, 8) scale(1.02)" />
 
-  <!-- Main Flame Body -->
-  <path d="M256 128 C280 180 344 240 344 316 C344 374 298 416 256 416 C214 416 168 374 168 316 C168 240 232 180 256 128 Z" fill="url(#flameGrad)" />
+    <!-- Main 3D Glossy Flame Outer Shell -->
+    <path d="M256 92 C290 150 354 220 354 308 C354 374 304 416 256 416 C208 416 158 374 158 308 C158 220 222 150 256 92 Z" fill="url(#flame3DGrad)" filter="url(#hyperGlow)" />
 
-  <!-- Inner Cyan Core Flame -->
-  <path d="M256 230 C274 270 300 300 300 340 C300 370 278 392 256 392 C234 392 212 370 212 340 C212 300 238 270 256 230 Z" fill="url(#coreGrad)" />
+    <!-- Left Outer Flame Tongue 3D Fold -->
+    <path d="M190 280 C170 230 196 170 234 130 C210 170 200 220 224 260 C234 278 220 310 190 280 Z" fill="#9333EA" opacity="0.9" />
 
-  <!-- Center Lightning Spark -->
-  <path d="M256 260 L244 320 L264 320 L250 376 L274 310 L254 310 Z" fill="#FFFFFF" opacity="0.95" />
+    <!-- Right Outer Flame Tongue 3D Fold -->
+    <path d="M322 280 C342 230 316 170 278 130 C302 170 312 220 288 260 C278 278 292 310 322 280 Z" fill="#06B6D4" opacity="0.9" />
+
+    <!-- 3D Specular Highlight Ridge (Left Crest) -->
+    <path d="M256 105 C240 160 178 230 178 308 C178 350 196 384 226 404 C200 376 190 340 194 300 C198 250 244 180 256 105 Z" fill="#FFFFFF" opacity="0.55" />
+
+    <!-- Animated Inner Cyan 3D Core Flame -->
+    <g class="flame-core-motion">
+      <path d="M256 190 C280 238 316 280 316 338 C316 382 286 406 256 406 C226 406 196 382 196 338 C196 280 232 238 256 190 Z" fill="url(#corePlasmaGrad)" />
+
+      <!-- Center White Diamond Core -->
+      <path d="M256 240 C270 274 290 304 290 342 C290 370 272 388 256 388 C240 388 222 370 222 342 C222 304 242 274 256 240 Z" fill="#FFFFFF" opacity="0.95" />
+
+      <!-- 3D Cyber Bolt Sparks -->
+      <path d="M256 270 L248 318 L262 318 L250 366 L268 310 L254 310 Z" fill="#06B6D4" opacity="0.9" />
+    </g>
+
+    <!-- Floating 3D Sparks & Embers -->
+    <g class="spark-1">
+      <circle cx="200" cy="220" r="7" fill="#67E8F9" filter="url(#hyperGlow)" />
+    </g>
+    <g class="spark-2">
+      <circle cx="310" cy="200" r="9" fill="#C084FC" filter="url(#hyperGlow)" />
+    </g>
+    <g class="spark-3">
+      <circle cx="240" cy="140" r="6" fill="#FFFFFF" filter="url(#hyperGlow)" />
+    </g>
+  </g>
 </svg>
