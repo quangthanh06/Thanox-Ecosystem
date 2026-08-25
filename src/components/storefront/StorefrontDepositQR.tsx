@@ -711,6 +711,12 @@ export const StorefrontDepositQR: React.FC = () => {
                         inputMode="numeric"
                         value={customAmountText}
                         onChange={handleCustomAmountChange}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && isValidAmount) {
+                            e.preventDefault();
+                            handleGenerateCustomQR();
+                          }
+                        }}
                         placeholder={`Tối thiểu ${minDeposit.toLocaleString('vi-VN')}đ`}
                         className="w-full glass-input rounded-2xl px-3.5 py-2.5 text-xs text-[#F4F2FF] font-bold"
                       />

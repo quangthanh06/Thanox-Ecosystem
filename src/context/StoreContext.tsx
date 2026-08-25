@@ -1736,7 +1736,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Categories CRUD
-  const addCategory = (catData: Omit<Category, 'id' | 'count'>) => {
+  const addCategory = async (catData: Omit<Category, 'id' | 'count'>) => {
     const sanitizedName = catData.name.trim();
     const sanitizedSlug = (catData.slug || sanitizedName.toLowerCase().replace(/\s+/g, '-')).trim();
 
@@ -1749,11 +1749,31 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
     setCategories((prev) => [...prev, newCat]);
     showToast(`Đã thêm danh mục "${newCat.name}"`, 'success');
+
+    // Đồng bộ lên Supabase Cloud Database để điện thoại và các thiết bị khác nhận ngay
+    try {
+      await supabase.from('categories').upsert({
+        id: newCat.id,
+        name: newCat.name,
+        slug: newCat.slug,
+        icon: newCat.icon || '📱',
+        image: newCat.image || '',
+        count: newCat.count || 0,
+        status: newCat.status || 'active',
+      });
+    } catch (err) {
+      console.warn('[Categories] Supabase sync error:', err);
+    }
   };
 
-  const updateCategory = (id: string, updates: Partial<Category>) => {
+  const updateCategory = async (id: string, updates: Partial<Category>) => {
     const oldCat = categories.find((c) => c.id === id);
-    setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
+    const updatedCat: Category = {
+      ...(oldCat || { id, name: '', slug: '', icon: '📱', count: 0, status: 'active' as const }),
+      ...updates,
+    };
+
+    setCategories((prev) => prev.map((c) => (c.id === id ? updatedCat : c)));
 
     // If category name was updated, keep products category name synced
     if (oldCat && updates.name && updates.name !== oldCat.name) {
@@ -1763,9 +1783,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     showToast('Đã cập nhật danh mục', 'success');
+
+    // Đồng bộ lên Supabase Cloud Database để điện thoại và các thiết bị khác nhận ngay
+    try {
+      await supabase.from('categories').upsert({
+        id: id,
+        name: updatedCat.name,
+        slug: updatedCat.slug || (updatedCat.name ? updatedCat.name.toLowerCase().replace(/\s+/g, '-') : id),
+        icon: updatedCat.icon || '📱',
+        image: updatedCat.image || '',
+        count: updatedCat.count || 0,
+        status: updatedCat.status || 'active',
+      });
+    } catch (err) {
+      console.warn('[Categories] Supabase update error:', err);
+    }
   };
 
-  const deleteCategory = (id: string) => {
+  const deleteCategory = async (id: string) => {
     const targetCat = categories.find((c) => c.id === id);
     if (!targetCat) return;
 
@@ -1780,6 +1815,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setCategories(remainingCats);
     showToast(`Đã xóa danh mục "${targetCat.name}"`, 'error');
+
+    // Xóa khỏi Supabase Cloud Database
+    try {
+      await supabase.from('categories').delete().eq('id', id);
+    } catch (err) {
+      console.warn('[Categories] Supabase delete error:', err);
+    }
   };
 
   // Orders CRUD
