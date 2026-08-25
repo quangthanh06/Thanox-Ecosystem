@@ -10,18 +10,19 @@ export const GlobalVisualEffects: React.FC = () => {
   const hasCanvasEffect =
     effects.snow ||
     effects.cherryBlossom ||
+    effects.autumnLeaves ||
+    effects.rosePetals ||
+    effects.angelFeathers ||
+    effects.diamondShards ||
+    effects.fairyStardust ||
+    effects.floatingHearts ||
     effects.neonParticles ||
     effects.sparkles ||
     effects.shootingStars ||
     effects.matrixRain ||
     effects.glowCursor ||
-    effects.autumnLeaves ||
     effects.fireflies ||
     effects.plexus ||
-    effects.volcanoEmbers ||
-    effects.cyberRain ||
-    effects.bubbles ||
-    effects.goldCoins ||
     effects.fireworks ||
     effects.lightning ||
     effects.butterflies;
@@ -61,9 +62,8 @@ export const GlobalVisualEffects: React.FC = () => {
     window.addEventListener('resize', resizeCanvas, { passive: true });
     window.addEventListener('orientationchange', resizeCanvas, { passive: true });
 
-    // Smooth Mouse tracking in memory
+    // Smooth Mouse tracking in memory (Zero click ripples as requested)
     const mousePos = { x: -500, y: -500, targetX: -500, targetY: -500, isOver: false };
-    const ripples: Array<{ x: number; y: number; radius: number; opacity: number }> = [];
 
     const handleMouseMove = (e: MouseEvent) => {
       mousePos.targetX = e.clientX;
@@ -75,24 +75,12 @@ export const GlobalVisualEffects: React.FC = () => {
       mousePos.isOver = false;
     };
 
-    const handleClick = (e: MouseEvent) => {
-      if (effects.glowCursor) {
-        ripples.push({
-          x: e.clientX,
-          y: e.clientY,
-          radius: 2,
-          opacity: 1,
-        });
-      }
-    };
-
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
     window.addEventListener('mouseleave', handleMouseLeave, { passive: true });
-    window.addEventListener('click', handleClick, { passive: true });
 
-    // --- VECTOR SHAPE DRAWING UTILITIES ---
+    // --- REALISTIC VECTOR DRAWING UTILITIES ---
 
-    // 1. Realistic 5-Pointed Serrated Maple Autumn Leaf (Lá Phong Thật)
+    // 1. Realistic 5-Pointed Serrated Maple Autumn Leaf (Lá Phong 5 Cánh)
     const drawMapleLeaf = (
       c: CanvasRenderingContext2D,
       size: number,
@@ -104,7 +92,6 @@ export const GlobalVisualEffects: React.FC = () => {
       c.fillStyle = color;
       c.beginPath();
 
-      // Stem at bottom
       c.moveTo(0, size * 0.9);
       c.lineTo(0, size * 0.4);
 
@@ -113,19 +100,19 @@ export const GlobalVisualEffects: React.FC = () => {
       c.lineTo(-size * 0.5, size * 0.2);
       c.lineTo(-size * 0.35, size * 0.1);
 
-      // Left middle main lobe (3 sharp serrated tips)
+      // Left middle main lobe
       c.lineTo(-size * 0.65, 0);
       c.lineTo(-size * 0.85, -size * 0.25);
       c.lineTo(-size * 0.6, -size * 0.25);
       c.lineTo(-size * 0.7, -size * 0.55);
       c.lineTo(-size * 0.45, -size * 0.4);
 
-      // Top main central lobe (3 sharp serrated tips)
+      // Top main lobe
       c.lineTo(-size * 0.25, -size * 0.75);
-      c.lineTo(0, -size * 1.05); // Topmost sharp tip
+      c.lineTo(0, -size * 1.05);
       c.lineTo(size * 0.25, -size * 0.75);
 
-      // Right middle main lobe (3 sharp serrated tips)
+      // Right middle main lobe
       c.lineTo(size * 0.45, -size * 0.4);
       c.lineTo(size * 0.7, -size * 0.55);
       c.lineTo(size * 0.6, -size * 0.25);
@@ -144,7 +131,7 @@ export const GlobalVisualEffects: React.FC = () => {
       c.fill();
       c.shadowBlur = 0;
 
-      // Leaf veins
+      // Veins
       c.strokeStyle = 'rgba(255, 255, 255, 0.25)';
       c.lineWidth = 1;
       c.beginPath();
@@ -176,7 +163,105 @@ export const GlobalVisualEffects: React.FC = () => {
       c.restore();
     };
 
-    // 3. Realistic Glowing Butterfly (Bướm phát sáng vỗ cánh)
+    // 3. Velvet Red Rose Petals (Cánh Hoa Hồng Đỏ Nhung 3D)
+    const drawRosePetal = (c: CanvasRenderingContext2D, size: number, opacity: number) => {
+      c.save();
+      c.globalAlpha = opacity;
+      c.beginPath();
+      c.moveTo(0, size * 0.8);
+      c.bezierCurveTo(-size * 0.9, size * 0.5, -size * 1.1, -size * 0.4, -size * 0.4, -size * 0.9);
+      c.bezierCurveTo(0, -size * 1.05, size * 0.4, -size * 0.9, size * 0.4, -size * 0.9);
+      c.bezierCurveTo(size * 1.1, -size * 0.4, size * 0.9, size * 0.5, 0, size * 0.8);
+      c.closePath();
+
+      const grad = c.createRadialGradient(0, -size * 0.2, size * 0.1, 0, 0, size);
+      grad.addColorStop(0, '#F43F5E');
+      grad.addColorStop(0.6, '#BE123C');
+      grad.addColorStop(1, '#881337');
+      c.fillStyle = grad;
+      c.shadowColor = '#BE123C';
+      c.shadowBlur = 6;
+      c.fill();
+      c.restore();
+    };
+
+    // 4. Angel White Feather (Lông Vũ Thiên Thần Siêu Mượt)
+    const drawAngelFeather = (c: CanvasRenderingContext2D, size: number, opacity: number) => {
+      c.save();
+      c.globalAlpha = opacity;
+
+      // Feather Body
+      c.beginPath();
+      c.moveTo(0, size);
+      c.bezierCurveTo(-size * 0.4, size * 0.5, -size * 0.5, -size * 0.4, 0, -size * 1.1);
+      c.bezierCurveTo(size * 0.5, -size * 0.4, size * 0.4, size * 0.5, 0, size);
+      c.closePath();
+      c.fillStyle = 'rgba(255, 255, 255, 0.85)';
+      c.shadowColor = '#FFFFFF';
+      c.shadowBlur = 6;
+      c.fill();
+
+      // Feather Quill Spine (Sống lông)
+      c.beginPath();
+      c.moveTo(0, size * 1.1);
+      c.lineTo(0, -size * 1.05);
+      c.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+      c.lineWidth = 1;
+      c.stroke();
+
+      c.restore();
+    };
+
+    // 5. Faceted Diamond Crystal Shard (Tinh Thể Kim Cương Pha Lê)
+    const drawDiamondShard = (c: CanvasRenderingContext2D, size: number, opacity: number) => {
+      c.save();
+      c.globalAlpha = opacity;
+
+      c.beginPath();
+      c.moveTo(0, -size);
+      c.lineTo(size * 0.8, -size * 0.3);
+      c.lineTo(size * 0.5, size * 0.9);
+      c.lineTo(-size * 0.5, size * 0.9);
+      c.lineTo(-size * 0.8, -size * 0.3);
+      c.closePath();
+
+      const grad = c.createLinearGradient(-size, -size, size, size);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+      grad.addColorStop(0.5, 'rgba(56, 189, 248, 0.7)');
+      grad.addColorStop(1, 'rgba(192, 132, 252, 0.85)');
+      c.fillStyle = grad;
+      c.shadowColor = '#38BDF8';
+      c.shadowBlur = 8;
+      c.fill();
+      c.strokeStyle = '#FFFFFF';
+      c.lineWidth = 1;
+      c.stroke();
+
+      c.restore();
+    };
+
+    // 6. Floating 3D Heart (Trái Tim Tình Yêu Dạ Quang)
+    const drawFloatingHeart = (c: CanvasRenderingContext2D, size: number, opacity: number) => {
+      c.save();
+      c.globalAlpha = opacity;
+
+      c.beginPath();
+      c.moveTo(0, size * 0.6);
+      c.bezierCurveTo(-size * 0.8, size * 0.1, -size, -size * 0.5, -size * 0.4, -size * 0.8);
+      c.bezierCurveTo(-size * 0.1, -size * 0.9, 0, -size * 0.6, 0, -size * 0.4);
+      c.bezierCurveTo(0, -size * 0.6, size * 0.1, -size * 0.9, size * 0.4, -size * 0.8);
+      c.bezierCurveTo(size, -size * 0.5, size * 0.8, size * 0.1, 0, size * 0.6);
+      c.closePath();
+
+      c.fillStyle = '#EC4899';
+      c.shadowColor = '#F43F5E';
+      c.shadowBlur = 8;
+      c.fill();
+
+      c.restore();
+    };
+
+    // 7. Glowing Butterfly (Bướm Dạ Quang Vỗ Cánh)
     const drawButterfly = (
       c: CanvasRenderingContext2D,
       size: number,
@@ -222,64 +307,6 @@ export const GlobalVisualEffects: React.FC = () => {
       c.restore();
     };
 
-    // 4. Realistic 3D Rotating Gold Coin
-    const drawGoldCoin = (
-      c: CanvasRenderingContext2D,
-      size: number,
-      rotationY: number,
-      opacity: number
-    ) => {
-      c.save();
-      c.globalAlpha = opacity;
-      c.scale(Math.cos(rotationY), 1);
-
-      c.beginPath();
-      c.arc(0, 0, size, 0, Math.PI * 2);
-      c.fillStyle = '#FACC15';
-      c.fill();
-      c.strokeStyle = '#CA8A04';
-      c.lineWidth = size * 0.18;
-      c.stroke();
-
-      // Inner rim
-      c.beginPath();
-      c.arc(0, 0, size * 0.65, 0, Math.PI * 2);
-      c.strokeStyle = '#EAB308';
-      c.lineWidth = 1;
-      c.stroke();
-
-      // Symbol
-      c.fillStyle = '#92400E';
-      c.font = `bold ${Math.round(size * 0.9)}px sans-serif`;
-      c.textAlign = 'center';
-      c.textBaseline = 'middle';
-      c.fillText('$', 0, 1);
-
-      c.restore();
-    };
-
-    // 5. Realistic Translucent Water Bubble
-    const drawBubble = (c: CanvasRenderingContext2D, size: number, opacity: number) => {
-      c.save();
-      c.globalAlpha = opacity;
-
-      c.beginPath();
-      c.arc(0, 0, size, 0, Math.PI * 2);
-      c.strokeStyle = 'rgba(56, 189, 248, 0.7)';
-      c.fillStyle = 'rgba(56, 189, 248, 0.12)';
-      c.lineWidth = 1.2;
-      c.fill();
-      c.stroke();
-
-      c.beginPath();
-      c.arc(-size * 0.35, -size * 0.35, size * 0.3, 0, Math.PI * 1.5);
-      c.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-      c.lineWidth = 1.5;
-      c.stroke();
-
-      c.restore();
-    };
-
     // --- PARTICLE MODEL & GENERATION ---
 
     interface NaturalParticle {
@@ -303,56 +330,177 @@ export const GlobalVisualEffects: React.FC = () => {
 
     const particles: NaturalParticle[] = [];
 
-    // Initialize Sakura
+    // Sakura Petals
     if (effects.cherryBlossom) {
       const count = Math.floor(30 * densityMultiplier);
       for (let i = 0; i < count; i++) {
         particles.push({
           type: 'sakura',
-          baseX: Math.random() * (width + 100) - 50,
+          baseX: Math.random() * width,
           y: Math.random() * (height + 160) - 80,
           size: Math.random() * 5 + 6,
-          speedX: Math.random() * 0.4 + 0.2,
-          speedY: Math.random() * 0.8 + 0.6,
+          speedX: Math.random() * 0.3 + 0.1,
+          speedY: Math.random() * 0.8 + 0.5,
           swayRadius: Math.random() * 25 + 15,
-          swayFreq: Math.random() * 0.008 + 0.004,
+          swayFreq: 0.005,
           phase: Math.random() * Math.PI * 2,
           rotation: Math.random() * 360,
           rotationSpeed: (Math.random() - 0.5) * 1.2,
           flipPhase: Math.random() * Math.PI * 2,
-          flipSpeed: Math.random() * 0.02 + 0.01,
+          flipSpeed: 0.015,
           opacity: Math.random() * 0.35 + 0.55,
           color: '#FFB7C5',
         });
       }
     }
 
-    // Initialize Autumn Leaves (Lá Phong Rơi Mùa Thu 5 Cánh)
+    // Autumn Leaves (Lá Phong Rơi Mùa Thu 5 Cánh)
     if (effects.autumnLeaves) {
       const count = Math.floor(25 * densityMultiplier);
       const leafColors = ['#EA580C', '#DC2626', '#F59E0B', '#B45309', '#EF4444'];
       for (let i = 0; i < count; i++) {
         particles.push({
           type: 'autumn_leaf',
-          baseX: Math.random() * (width + 150) - 75,
+          baseX: Math.random() * width,
           y: Math.random() * (height + 160) - 80,
           size: Math.random() * 7 + 9,
-          speedX: Math.random() * 0.5 + 0.3,
-          speedY: Math.random() * 1.0 + 0.7,
+          speedX: Math.random() * 0.4 + 0.2,
+          speedY: Math.random() * 1.0 + 0.6,
           swayRadius: Math.random() * 35 + 20,
-          swayFreq: Math.random() * 0.007 + 0.003,
+          swayFreq: 0.004,
           phase: Math.random() * Math.PI * 2,
           rotation: Math.random() * 360,
           rotationSpeed: (Math.random() - 0.5) * 1.5,
           flipPhase: Math.random() * Math.PI * 2,
-          flipSpeed: Math.random() * 0.02 + 0.01,
+          flipSpeed: 0.015,
           opacity: Math.random() * 0.3 + 0.7,
           color: leafColors[Math.floor(Math.random() * leafColors.length)],
         });
       }
     }
 
-    // Initialize Fireflies (Đom Đóm)
+    // Rose Petals (Cánh Hoa Hồng Đỏ)
+    if (effects.rosePetals) {
+      const count = Math.floor(25 * densityMultiplier);
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          type: 'rose_petal',
+          baseX: Math.random() * width,
+          y: Math.random() * (height + 160) - 80,
+          size: Math.random() * 6 + 8,
+          speedX: Math.random() * 0.3 + 0.15,
+          speedY: Math.random() * 0.9 + 0.5,
+          swayRadius: Math.random() * 25 + 15,
+          swayFreq: 0.005,
+          phase: Math.random() * Math.PI * 2,
+          rotation: Math.random() * 360,
+          rotationSpeed: (Math.random() - 0.5) * 1.2,
+          flipPhase: Math.random() * Math.PI * 2,
+          flipSpeed: 0.015,
+          opacity: Math.random() * 0.3 + 0.7,
+          color: '#E11D48',
+        });
+      }
+    }
+
+    // Angel Feathers (Lông Vũ Thiên Thần)
+    if (effects.angelFeathers) {
+      const count = Math.floor(20 * densityMultiplier);
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          type: 'angel_feather',
+          baseX: Math.random() * width,
+          y: Math.random() * (height + 160) - 80,
+          size: Math.random() * 6 + 9,
+          speedX: Math.random() * 0.2 + 0.1,
+          speedY: Math.random() * 0.6 + 0.3, // Ultra slow floating
+          swayRadius: Math.random() * 40 + 25,
+          swayFreq: 0.0035,
+          phase: Math.random() * Math.PI * 2,
+          rotation: Math.random() * 360,
+          rotationSpeed: (Math.random() - 0.5) * 0.8,
+          flipPhase: Math.random() * Math.PI * 2,
+          flipSpeed: 0.01,
+          opacity: Math.random() * 0.25 + 0.75,
+          color: '#FFFFFF',
+        });
+      }
+    }
+
+    // Diamond Shards (Kim Cương Pha Lê)
+    if (effects.diamondShards) {
+      const count = Math.floor(25 * densityMultiplier);
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          type: 'diamond_shard',
+          baseX: Math.random() * width,
+          y: Math.random() * (height + 160) - 80,
+          size: Math.random() * 5 + 6,
+          speedX: (Math.random() - 0.5) * 0.2,
+          speedY: Math.random() * 0.9 + 0.5,
+          swayRadius: Math.random() * 15 + 5,
+          swayFreq: 0.006,
+          phase: Math.random() * Math.PI * 2,
+          rotation: Math.random() * 360,
+          rotationSpeed: Math.random() * 2 + 1,
+          flipPhase: Math.random() * Math.PI * 2,
+          flipSpeed: 0.03,
+          opacity: Math.random() * 0.3 + 0.7,
+          color: '#38BDF8',
+        });
+      }
+    }
+
+    // Fairy Magic Stardust (Bụi Ma Thuật Tiên Tộc)
+    if (effects.fairyStardust) {
+      const count = Math.floor(40 * densityMultiplier);
+      const stardustColors = ['#FACC15', '#C084FC', '#38BDF8', '#F472B6'];
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          type: 'fairy_stardust',
+          baseX: Math.random() * width,
+          y: Math.random() * (height + 160) - 80,
+          size: Math.random() * 2.5 + 1.2,
+          speedX: (Math.random() - 0.5) * 0.3,
+          speedY: -(Math.random() * 0.7 + 0.3), // Float gently up
+          swayRadius: Math.random() * 18 + 6,
+          swayFreq: 0.006,
+          phase: Math.random() * Math.PI * 2,
+          rotation: 0,
+          rotationSpeed: 0,
+          flipPhase: 0,
+          flipSpeed: 0,
+          opacity: Math.random() * 0.6 + 0.4,
+          color: stardustColors[Math.floor(Math.random() * stardustColors.length)],
+        });
+      }
+    }
+
+    // Floating Hearts (Trái Tim Tình Yêu)
+    if (effects.floatingHearts) {
+      const count = Math.floor(20 * densityMultiplier);
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          type: 'floating_heart',
+          baseX: Math.random() * width,
+          y: Math.random() * (height + 160) - 80,
+          size: Math.random() * 5 + 7,
+          speedX: (Math.random() - 0.5) * 0.2,
+          speedY: -(Math.random() * 0.8 + 0.4), // Float up
+          swayRadius: Math.random() * 20 + 8,
+          swayFreq: 0.005,
+          phase: Math.random() * Math.PI * 2,
+          rotation: 0,
+          rotationSpeed: 0,
+          flipPhase: Math.random() * Math.PI * 2,
+          flipSpeed: 0.02,
+          opacity: Math.random() * 0.3 + 0.7,
+          color: '#EC4899',
+        });
+      }
+    }
+
+    // Fireflies (Đom Đóm)
     if (effects.fireflies) {
       const count = Math.floor(35 * densityMultiplier);
       const colors = ['#A3E635', '#FACC15', '#4ADE80', '#38BDF8'];
@@ -362,10 +510,10 @@ export const GlobalVisualEffects: React.FC = () => {
           baseX: Math.random() * width,
           y: Math.random() * height,
           size: Math.random() * 2.5 + 1.8,
-          speedX: (Math.random() - 0.5) * 0.4,
-          speedY: (Math.random() - 0.5) * 0.4,
+          speedX: (Math.random() - 0.5) * 0.3,
+          speedY: (Math.random() - 0.5) * 0.3,
           swayRadius: Math.random() * 20 + 10,
-          swayFreq: Math.random() * 0.01 + 0.005,
+          swayFreq: 0.006,
           phase: Math.random() * Math.PI * 2,
           rotation: 0,
           rotationSpeed: 0,
@@ -377,129 +525,7 @@ export const GlobalVisualEffects: React.FC = () => {
       }
     }
 
-    // Initialize Plexus Nodes
-    if (effects.plexus) {
-      const count = Math.floor(45 * densityMultiplier);
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'plexus',
-          baseX: Math.random() * width,
-          y: Math.random() * height,
-          size: Math.random() * 2 + 1.5,
-          speedX: (Math.random() - 0.5) * 0.5,
-          speedY: (Math.random() - 0.5) * 0.5,
-          swayRadius: 0,
-          swayFreq: 0,
-          phase: 0,
-          rotation: 0,
-          rotationSpeed: 0,
-          flipPhase: 0,
-          flipSpeed: 0,
-          opacity: Math.random() * 0.5 + 0.4,
-          color: '#22D3EE',
-        });
-      }
-    }
-
-    // Initialize Volcano Embers
-    if (effects.volcanoEmbers) {
-      const count = Math.floor(45 * densityMultiplier);
-      const emberColors = ['#FF4500', '#FFA500', '#FF6347', '#FFD700', '#EF4444'];
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'volcano_ember',
-          baseX: Math.random() * width,
-          y: Math.random() * (height + 160) - 80,
-          size: Math.random() * 2.5 + 1.2,
-          speedX: (Math.random() - 0.5) * 0.3,
-          speedY: -(Math.random() * 1.2 + 0.6),
-          swayRadius: Math.random() * 15 + 5,
-          swayFreq: Math.random() * 0.01 + 0.005,
-          phase: Math.random() * Math.PI * 2,
-          rotation: 0,
-          rotationSpeed: 0,
-          flipPhase: 0,
-          flipSpeed: 0,
-          opacity: Math.random() * 0.7 + 0.3,
-          color: emberColors[Math.floor(Math.random() * emberColors.length)],
-        });
-      }
-    }
-
-    // Initialize Cyber Rain
-    if (effects.cyberRain) {
-      const count = Math.floor(65 * densityMultiplier);
-      const rainColors = ['#06B6D4', '#7C3AED', '#38BDF8', '#C084FC'];
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'cyber_rain',
-          baseX: Math.random() * width,
-          y: Math.random() * (height + 160) - 80,
-          size: Math.random() * 22 + 16,
-          speedX: -0.4,
-          speedY: Math.random() * 6 + 10,
-          swayRadius: 0,
-          swayFreq: 0,
-          phase: 0,
-          rotation: 0,
-          rotationSpeed: 0,
-          flipPhase: 0,
-          flipSpeed: 0,
-          opacity: Math.random() * 0.45 + 0.35,
-          color: rainColors[Math.floor(Math.random() * rainColors.length)],
-        });
-      }
-    }
-
-    // Initialize Bubbles
-    if (effects.bubbles) {
-      const count = Math.floor(35 * densityMultiplier);
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'bubble',
-          baseX: Math.random() * width,
-          y: Math.random() * (height + 160) - 80,
-          size: Math.random() * 5 + 3.5,
-          speedX: 0,
-          speedY: -(Math.random() * 0.8 + 0.5),
-          swayRadius: Math.random() * 18 + 8,
-          swayFreq: Math.random() * 0.008 + 0.003,
-          phase: Math.random() * Math.PI * 2,
-          rotation: 0,
-          rotationSpeed: 0,
-          flipPhase: 0,
-          flipSpeed: 0,
-          opacity: Math.random() * 0.4 + 0.4,
-          color: '#38BDF8',
-        });
-      }
-    }
-
-    // Initialize Gold Coins
-    if (effects.goldCoins) {
-      const count = Math.floor(25 * densityMultiplier);
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'gold_coin',
-          baseX: Math.random() * width,
-          y: Math.random() * (height + 160) - 80,
-          size: Math.random() * 5 + 7,
-          speedX: (Math.random() - 0.5) * 0.3,
-          speedY: Math.random() * 1.3 + 0.8,
-          swayRadius: Math.random() * 15 + 5,
-          swayFreq: 0.005,
-          phase: Math.random() * Math.PI * 2,
-          rotation: Math.random() * 360,
-          rotationSpeed: Math.random() * 1.5 + 0.5,
-          flipPhase: Math.random() * Math.PI * 2,
-          flipSpeed: Math.random() * 0.03 + 0.02,
-          opacity: Math.random() * 0.3 + 0.7,
-          color: '#FACC15',
-        });
-      }
-    }
-
-    // Initialize Glowing Butterflies
+    // Glowing Butterflies (Bướm Dạ Quang)
     if (effects.butterflies) {
       const count = Math.floor(16 * densityMultiplier);
       const bColors = ['#06B6D4', '#EC4899', '#A855F7', '#38BDF8'];
@@ -509,31 +535,31 @@ export const GlobalVisualEffects: React.FC = () => {
           baseX: Math.random() * width,
           y: Math.random() * height,
           size: Math.random() * 4 + 7,
-          speedX: Math.random() * 0.6 + 0.4,
-          speedY: (Math.random() - 0.5) * 0.3,
+          speedX: Math.random() * 0.5 + 0.3,
+          speedY: (Math.random() - 0.5) * 0.2,
           swayRadius: Math.random() * 30 + 15,
-          swayFreq: Math.random() * 0.008 + 0.004,
+          swayFreq: 0.005,
           phase: Math.random() * Math.PI * 2,
           rotation: Math.random() * 360,
           rotationSpeed: 0,
           flipPhase: Math.random() * Math.PI * 2,
-          flipSpeed: Math.random() * 0.08 + 0.06,
+          flipSpeed: 0.07,
           opacity: Math.random() * 0.3 + 0.7,
           color: bColors[Math.floor(Math.random() * bColors.length)],
         });
       }
     }
 
-    // Initialize Snow
+    // Snow (Tuyết Mùa Đông)
     if (effects.snow) {
       const count = Math.floor(55 * densityMultiplier);
       for (let i = 0; i < count; i++) {
         particles.push({
           type: 'snow',
-          baseX: Math.random() * (width + 80) - 40,
+          baseX: Math.random() * width,
           y: Math.random() * (height + 160) - 80,
           size: Math.random() * 2.2 + 1.2,
-          speedX: (Math.random() - 0.5) * 0.3,
+          speedX: (Math.random() - 0.5) * 0.2,
           speedY: Math.random() * 0.7 + 0.4,
           swayRadius: Math.random() * 15 + 5,
           swayFreq: 0.005,
@@ -548,7 +574,7 @@ export const GlobalVisualEffects: React.FC = () => {
       }
     }
 
-    // Initialize Neon Particles
+    // Neon Particles
     if (effects.neonParticles) {
       const count = Math.floor(40 * densityMultiplier);
       const colors = ['#06B6D4', '#7C3AED', '#C084FC', '#22D3EE', '#F43F5E'];
@@ -573,7 +599,7 @@ export const GlobalVisualEffects: React.FC = () => {
       }
     }
 
-    // Initialize Sparkles
+    // Sparkles
     if (effects.sparkles) {
       const count = Math.floor(35 * densityMultiplier);
       for (let i = 0; i < count; i++) {
@@ -597,7 +623,7 @@ export const GlobalVisualEffects: React.FC = () => {
       }
     }
 
-    // Initialize Matrix Rain
+    // Matrix Rain
     const matrixChars = '0123456789ABCDEFTHAN0XVIP';
     if (effects.matrixRain) {
       const count = Math.floor(35 * densityMultiplier);
@@ -619,6 +645,30 @@ export const GlobalVisualEffects: React.FC = () => {
           opacity: Math.random() * 0.6 + 0.3,
           color: '#10B981',
           char: matrixChars[Math.floor(Math.random() * matrixChars.length)],
+        });
+      }
+    }
+
+    // Plexus Nodes
+    if (effects.plexus) {
+      const count = Math.floor(45 * densityMultiplier);
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          type: 'plexus',
+          baseX: Math.random() * width,
+          y: Math.random() * height,
+          size: Math.random() * 2 + 1.5,
+          speedX: (Math.random() - 0.5) * 0.5,
+          speedY: (Math.random() - 0.5) * 0.5,
+          swayRadius: 0,
+          swayFreq: 0,
+          phase: 0,
+          rotation: 0,
+          rotationSpeed: 0,
+          flipPhase: 0,
+          flipSpeed: 0,
+          opacity: Math.random() * 0.5 + 0.4,
+          color: '#22D3EE',
         });
       }
     }
@@ -698,7 +748,7 @@ export const GlobalVisualEffects: React.FC = () => {
 
       ctx.clearRect(0, 0, width, height);
 
-      // A. Smooth Mouse Aura & Ripple Waves
+      // A. Smooth Mouse Aura (Glow Cursor)
       if (effects.glowCursor && mousePos.isOver) {
         mousePos.x += (mousePos.targetX - mousePos.x) * 0.25 * delta;
         mousePos.y += (mousePos.targetY - mousePos.y) * 0.25 * delta;
@@ -727,28 +777,6 @@ export const GlobalVisualEffects: React.FC = () => {
         ctx.shadowBlur = 8;
         ctx.fill();
         ctx.shadowBlur = 0;
-      }
-
-      if (effects.glowCursor && ripples.length > 0) {
-        for (let i = ripples.length - 1; i >= 0; i--) {
-          const r = ripples[i];
-          r.radius += 2.5 * delta;
-          r.opacity -= 0.03 * delta;
-
-          if (r.opacity <= 0 || r.radius > 50) {
-            ripples.splice(i, 1);
-            continue;
-          }
-
-          ctx.beginPath();
-          ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(192, 132, 252, ${r.opacity})`;
-          ctx.lineWidth = 1.5;
-          ctx.shadowColor = '#7C3AED';
-          ctx.shadowBlur = 6;
-          ctx.stroke();
-          ctx.shadowBlur = 0;
-        }
       }
 
       // B. Plexus Constellation Line Network
@@ -894,9 +922,9 @@ export const GlobalVisualEffects: React.FC = () => {
         }
       }
 
-      // F. Smooth Continuous Particle Flow (Falls all the way through bottom of viewport)
-      const bottomPadding = 90; // Fall deep beyond the bottom of the screen
-      const topPadding = 90;
+      // F. Smooth Continuous Particle Flow (Zero Horizontal Mid-Air Jumping)
+      const bottomPadding = 100;
+      const topPadding = 100;
 
       for (const p of particles) {
         p.baseX += p.speedX * delta;
@@ -908,30 +936,24 @@ export const GlobalVisualEffects: React.FC = () => {
           p.rotation += p.rotationSpeed * delta;
         }
 
-        // Natural Sinusoidal Sway
+        // Natural Continuous S-Curve Sway
         const renderX = p.swayRadius ? p.baseX + Math.sin(p.phase) * p.swayRadius : p.baseX;
         const renderY = p.y;
 
-        // Fall all the way down past the bottom of the screen before re-entering at the top
+        // Falling particles ONLY reset when reaching 100px past bottom of screen
         if (p.speedY > 0 && p.y > height + bottomPadding) {
           p.y = -topPadding - Math.random() * 80;
-          p.baseX = Math.random() * (width + 120) - 60;
+          p.baseX = Math.random() * width;
         } else if (p.speedY < 0 && p.y < -topPadding) {
           p.y = height + bottomPadding + Math.random() * 80;
-          p.baseX = Math.random() * (width + 120) - 60;
-        }
-
-        if (p.baseX > width + 100) {
-          p.baseX = -80;
-        } else if (p.baseX < -100) {
-          p.baseX = width + 80;
+          p.baseX = Math.random() * width;
         }
 
         // Draw particle based on authentic vector shaders
         if (p.type === 'autumn_leaf') {
           ctx.save();
           ctx.translate(renderX, renderY);
-          const leafTilt = Math.sin(p.phase) * 0.4;
+          const leafTilt = Math.sin(p.phase) * 0.35;
           const leaf3DFlip = Math.cos(p.flipPhase);
           ctx.rotate(((p.rotation + leafTilt * 45) * Math.PI) / 180);
           ctx.scale(leaf3DFlip, 1);
@@ -945,6 +967,48 @@ export const GlobalVisualEffects: React.FC = () => {
           ctx.scale(petal3DFlip, 1);
           drawSakuraPetal(ctx, p.size, p.opacity);
           ctx.restore();
+        } else if (p.type === 'rose_petal') {
+          ctx.save();
+          ctx.translate(renderX, renderY);
+          const petal3DFlip = Math.cos(p.flipPhase);
+          ctx.rotate(((p.rotation + Math.sin(p.phase) * 25) * Math.PI) / 180);
+          ctx.scale(petal3DFlip, 1);
+          drawRosePetal(ctx, p.size, p.opacity);
+          ctx.restore();
+        } else if (p.type === 'angel_feather') {
+          ctx.save();
+          ctx.translate(renderX, renderY);
+          const featherTilt = Math.sin(p.phase) * 0.45;
+          const feather3D = Math.cos(p.flipPhase);
+          ctx.rotate(((p.rotation + featherTilt * 40) * Math.PI) / 180);
+          ctx.scale(feather3D, 1);
+          drawAngelFeather(ctx, p.size, p.opacity);
+          ctx.restore();
+        } else if (p.type === 'diamond_shard') {
+          ctx.save();
+          ctx.translate(renderX, renderY);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.scale(Math.cos(p.flipPhase), 1);
+          drawDiamondShard(ctx, p.size, p.opacity);
+          ctx.restore();
+        } else if (p.type === 'floating_heart') {
+          ctx.save();
+          ctx.translate(renderX, renderY);
+          const heartPulse = Math.sin(p.phase * 2) * 0.15 + 0.85;
+          ctx.scale(heartPulse, heartPulse);
+          drawFloatingHeart(ctx, p.size, p.opacity);
+          ctx.restore();
+        } else if (p.type === 'fairy_stardust') {
+          const pulse = Math.sin(p.phase * 3) * 0.35 + 0.65;
+          ctx.beginPath();
+          ctx.arc(renderX, renderY, p.size * pulse, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.opacity * pulse;
+          ctx.shadowColor = p.color;
+          ctx.shadowBlur = 8;
+          ctx.fill();
+          ctx.globalAlpha = 1.0;
+          ctx.shadowBlur = 0;
         } else if (p.type === 'butterfly') {
           ctx.save();
           ctx.translate(renderX, renderY);
@@ -952,17 +1016,6 @@ export const GlobalVisualEffects: React.FC = () => {
           const flightAngle = Math.atan2(p.speedY, p.speedX);
           ctx.rotate(flightAngle);
           drawButterfly(ctx, p.size, p.color, flap, p.opacity);
-          ctx.restore();
-        } else if (p.type === 'gold_coin') {
-          ctx.save();
-          ctx.translate(renderX, renderY);
-          ctx.rotate((p.rotation * Math.PI) / 180);
-          drawGoldCoin(ctx, p.size, p.flipPhase, p.opacity);
-          ctx.restore();
-        } else if (p.type === 'bubble') {
-          ctx.save();
-          ctx.translate(renderX, renderY);
-          drawBubble(ctx, p.size, p.opacity);
           ctx.restore();
         } else if (p.type === 'firefly') {
           const breathingPulse = Math.sin(p.phase * 3) * 0.35 + 0.65;
@@ -975,15 +1028,6 @@ export const GlobalVisualEffects: React.FC = () => {
           ctx.fill();
           ctx.globalAlpha = 1.0;
           ctx.shadowBlur = 0;
-        } else if (p.type === 'cyber_rain') {
-          ctx.beginPath();
-          ctx.moveTo(renderX, renderY);
-          ctx.lineTo(renderX - 1.5, renderY + p.size);
-          ctx.strokeStyle = p.color;
-          ctx.lineWidth = 1.3;
-          ctx.globalAlpha = p.opacity;
-          ctx.stroke();
-          ctx.globalAlpha = 1.0;
         } else if (p.type === 'matrix') {
           ctx.font = `${p.size}px monospace`;
           ctx.fillStyle = `rgba(16, 185, 129, ${p.opacity})`;
@@ -997,7 +1041,7 @@ export const GlobalVisualEffects: React.FC = () => {
           ctx.fillStyle = p.color;
           ctx.globalAlpha = p.opacity;
 
-          if (p.type === 'neon' || p.type === 'volcano_ember') {
+          if (p.type === 'neon') {
             ctx.shadowColor = p.color;
             ctx.shadowBlur = 7;
           }
@@ -1019,7 +1063,6 @@ export const GlobalVisualEffects: React.FC = () => {
       window.removeEventListener('orientationchange', resizeCanvas);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseleave', handleMouseLeave);
-      window.removeEventListener('click', handleClick);
     };
   }, [hasCanvasEffect, effects, densityMultiplier]);
 

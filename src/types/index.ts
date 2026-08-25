@@ -288,21 +288,22 @@ export interface StoreEffects {
   autoMusic?: boolean;
   snow?: boolean;
   cherryBlossom?: boolean;
+  autumnLeaves?: boolean;
+  rosePetals?: boolean;
+  angelFeathers?: boolean;
+  diamondShards?: boolean;
+  fairyStardust?: boolean;
+  floatingHearts?: boolean;
+  fireflies?: boolean;
+  butterflies?: boolean;
+  plexus?: boolean;
   neonParticles?: boolean;
   sparkles?: boolean;
   shootingStars?: boolean;
   matrixRain?: boolean;
-  glowCursor?: boolean;
-  autumnLeaves?: boolean;
-  fireflies?: boolean;
-  plexus?: boolean;
-  volcanoEmbers?: boolean;
-  cyberRain?: boolean;
-  bubbles?: boolean;
-  goldCoins?: boolean;
   fireworks?: boolean;
   lightning?: boolean;
-  butterflies?: boolean;
+  glowCursor?: boolean;
   particleDensity?: 'low' | 'medium' | 'high';
 }
 
