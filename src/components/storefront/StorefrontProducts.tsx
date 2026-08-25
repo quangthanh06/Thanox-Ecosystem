@@ -279,10 +279,10 @@ export const StorefrontProducts: React.FC = () => {
                           e.stopPropagation();
                           navigateToStorefront('product-detail', product.id);
                         }}
-                        className="pointer-events-auto px-3.5 py-1.5 rounded-xl btn-liquid-primary text-white text-[11px] font-bold uppercase tracking-wide shadow-lg border border-white/20 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+                        className="pointer-events-auto px-4 py-2 rounded-xl bg-white hover:bg-white/90 text-black font-extrabold text-xs uppercase tracking-wide shadow-2xl border border-white/80 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1.5 backdrop-blur-md"
                       >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>Xem Chi Tiết</span>
+                        <Eye className="w-3.5 h-3.5 text-black stroke-[2.5]" />
+                        <span className="text-black font-extrabold">Xem Chi Tiết</span>
                       </button>
                     </div>
                   </div>

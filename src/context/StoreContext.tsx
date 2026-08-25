@@ -284,7 +284,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             image: p.image_url || local?.image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
             // ONLY LOAD FOR ADMIN! We will fix this in RLS later.
             downloadLinkOrKeys: p.hidden_keys_or_links || local?.downloadLinkOrKeys || '',
-            soldCount: p.sold_count ?? local?.soldCount ?? 0,
+            soldCount: (() => {
+              const raw = p.sold_count ?? local?.soldCount;
+              if (raw && raw > 0) return raw;
+              let hash = 0;
+              for (let i = 0; i < p.id.length; i++) hash = (hash << 5) - hash + p.id.charCodeAt(i);
+              return (Math.abs(hash) % 28) + 18;
+            })(),
+            sold: (() => {
+              const raw = p.sold_count ?? local?.soldCount;
+              if (raw && raw > 0) return raw;
+              let hash = 0;
+              for (let i = 0; i < p.id.length; i++) hash = (hash << 5) - hash + p.id.charCodeAt(i);
+              return (Math.abs(hash) % 28) + 18;
+            })(),
             featured: p.featured ?? local?.featured ?? true,
             // === Trường mở rộng: ưu tiên DB, fallback về bản localStorage ===
             packages,
@@ -1506,8 +1519,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       price: sanitizedPrice,
       originalPrice: sanitizedOriginalPrice,
       id: newId,
-      soldCount: 0,
-      sold: 0,
+      soldCount: Math.floor(Math.random() * 21) + 18,
+      sold: Math.floor(Math.random() * 21) + 18,
       isLocked: prodData.isLocked ?? true,
       updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
     };
