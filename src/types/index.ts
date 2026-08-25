@@ -315,6 +315,8 @@ export interface TypographySettings {
 
 export interface HeroBannerSettings {
   backgroundImage: string;
+  backgroundVideo?: string;
+  backgroundType?: 'image' | 'video';
   brightness: number; // 10 - 100%
   blur: number; // 0 - 10px
   overlayOpacity: number; // 0 - 100%

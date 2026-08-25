@@ -59,7 +59,7 @@ export const ProductsView: React.FC = () => {
 
   const { dragProps: drawerDragProps, scrollLeft: drawerScrollLeft, scrollRight: drawerScrollRight } = useDragScroll<HTMLDivElement>();
 
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -568,28 +568,6 @@ export const ProductsView: React.FC = () => {
               <option value="price_asc" className="bg-[#121220] text-white">Giá: Thấp đến Cao</option>
               <option value="price_desc" className="bg-[#121220] text-white">Giá: Cao đến Thấp</option>
             </select>
-
-            {/* View Mode Toggle */}
-            <div className="flex items-center glass-subtle p-0.5 rounded-2xl border border-white/8">
-              <button
-                onClick={() => setViewMode('table')}
-                className={`p-1.5 rounded-xl transition-all cursor-pointer ${
-                  viewMode === 'table' ? 'btn-liquid-primary shadow-sm text-white' : 'text-[#938EB5] hover:text-white'
-                }`}
-                title="Dạng bảng"
-              >
-                <List className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-xl transition-all cursor-pointer ${
-                  viewMode === 'grid' ? 'btn-liquid-primary shadow-sm text-white' : 'text-[#938EB5] hover:text-white'
-                }`}
-                title="Dạng lưới"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-              </button>
-            </div>
           </div>
         </div>
       </Card>

@@ -49,6 +49,9 @@ import {
   Smartphone,
   KeyRound,
   Copy,
+  Video,
+  Film,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { generateTotpUri, generateGoogleAuthQrUrl, verifyTotpCode } from '../utils/totp';
 
@@ -405,16 +408,31 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
 
               {/* Simulated Hero Banner Preview */}
               <div className="relative overflow-hidden rounded-2xl border border-[#7C3AED]/40 p-6 min-h-[220px] flex flex-col justify-between shadow-2xl">
-                {/* Dynamic Background Image */}
-                <div className="absolute inset-0 z-0 overflow-hidden">
-                  <img
-                    src={formData.heroBanner?.backgroundImage || '/thanox-master-banner.jpg'}
-                    alt="Preview Background"
-                    className="w-full h-full object-cover object-center contrast-125 transition-all duration-300"
-                    style={{
-                      filter: `brightness(${(formData.heroBanner?.brightness ?? 65) / 100}) blur(${formData.heroBanner?.blur ?? 0}px)`,
-                    }}
-                  />
+                {/* Dynamic Background Image or Video */}
+                <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                  {((formData.heroBanner?.backgroundType === 'video' || (formData.heroBanner?.backgroundImage && (formData.heroBanner.backgroundImage.endsWith('.mp4') || formData.heroBanner.backgroundImage.endsWith('.webm')))) && (formData.heroBanner?.backgroundVideo || formData.heroBanner?.backgroundImage)) ? (
+                    <video
+                      key={formData.heroBanner?.backgroundVideo || formData.heroBanner?.backgroundImage}
+                      src={formData.heroBanner?.backgroundVideo || formData.heroBanner?.backgroundImage}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover object-center contrast-125 transition-all duration-300"
+                      style={{
+                        filter: `brightness(${(formData.heroBanner?.brightness ?? 65) / 100}) blur(${formData.heroBanner?.blur ?? 0}px)`,
+                      }}
+                    />
+                  ) : (
+                    <img
+                      src={formData.heroBanner?.backgroundImage || '/thanox-master-banner.jpg'}
+                      alt="Preview Background"
+                      className="w-full h-full object-cover object-center contrast-125 transition-all duration-300"
+                      style={{
+                        filter: `brightness(${(formData.heroBanner?.brightness ?? 65) / 100}) blur(${formData.heroBanner?.blur ?? 0}px)`,
+                      }}
+                    />
+                  )}
                   {/* Dynamic Dark Gradient Overlay */}
                   <div
                     className="absolute inset-0 bg-gradient-to-r from-[#070714] via-[#0A0A1E] to-[#070714] transition-opacity duration-300"
@@ -453,103 +471,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
 
             {/* Controls Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              {/* Left Column: Background Image Picker */}
+              {/* Left Column: Background Image / Video Picker */}
               <Card className="p-5 space-y-4" variant="default">
-                <CardHeader
-                  title="Hình Ảnh Nền Banner"
-                  subtitle="Tải ảnh từ máy tính hoặc dán đường dẫn ảnh URL"
-                />
-
-                <div className="space-y-4 text-xs">
-                  {/* File Upload from PC */}
-                  <div className="space-y-2 p-3.5 rounded-2xl bg-[#161626] border border-white/5">
-                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">
-                      Tải file ảnh từ máy tính (JPG, PNG, WEBP)
-                    </label>
-                    <input
-                      type="file"
-                      id="hero-bg-upload"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={async (e) => {
-const file = e.target.files?.[0];
-                        if (!file) return;
-                        if (!file.type.startsWith('image/')) {
-                          showToast('Vui lòng chọn file hình ảnh', 'error');
-                          return;
-                        }
-                        
-                          showToast('Đã tải ảnh lên Cloud thành công!', 'success');
-                          try {
-                            const url = await uploadMediaToSupabase(file, 'banners');
-                            setFormData((prev) => ({
-                              ...prev,
-                              heroBanner: {
-                                ...(prev.heroBanner || {
-                                  brightness: 65,
-                                  blur: 0,
-                                  overlayOpacity: 45,
-                                  glowEffect: true,
-                                  hotlineZalo: '0889696810',
-                                }),
-                                backgroundImage: url,
-                              },
-                            }));
-                            showToast('Đã tải ảnh nền Banner lên Cloud thành công!', 'success');
-                          } catch (e) {
-                            showToast('Đã tải ảnh lên Cloud thành công!', 'success');
-                          }
-                      }}
-                    />
-
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => document.getElementById('hero-bg-upload')?.click()}
-                        leftIcon={<Upload className="w-3.5 h-3.5 text-cyan-400" />}
-                        className="font-bold border-white/10 hover:border-cyan-400"
-                      >
-                        Chọn ảnh từ máy tính
-                      </Button>
-                      {formData.heroBanner?.backgroundImage && formData.heroBanner.backgroundImage !== '/thanox-master-banner.jpg' && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              heroBanner: {
-                                ...(prev.heroBanner || {
-                                  brightness: 65,
-                                  blur: 0,
-                                  overlayOpacity: 45,
-                                  glowEffect: true,
-                                  hotlineZalo: '0889696810',
-                                }),
-                                backgroundImage: '/thanox-master-banner.jpg',
-                              },
-                            }))
-                          }
-                          className="text-red-400 hover:text-red-300"
-                        >
-                          Khôi phục ảnh gốc
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Direct URL Input */}
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
-                      Hoặc dán Link URL ảnh trực tiếp
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.heroBanner?.backgroundImage || ''}
-                      onChange={(e) =>
+                <div className="flex items-center justify-between">
+                  <CardHeader
+                    title="Nền Banner Trang Chủ"
+                    subtitle="Hỗ trợ tải Video MP4/WebM hoặc Ảnh Nền sắc nét"
+                  />
+                  
+                  {/* Media Type Switcher: Image vs Video */}
+                  <div className="flex items-center glass-subtle p-0.5 rounded-xl border border-white/10">
+                    <button
+                      type="button"
+                      onClick={() =>
                         setFormData((prev) => ({
                           ...prev,
                           heroBanner: {
@@ -560,39 +494,144 @@ const file = e.target.files?.[0];
                               glowEffect: true,
                               hotlineZalo: '0889696810',
                             }),
-                            backgroundImage: e.target.value,
+                            backgroundType: 'image',
                           },
                         }))
                       }
-                      placeholder="https://images.unsplash.com/..."
-                      className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
-                    />
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                        (formData.heroBanner?.backgroundType ?? 'image') === 'image'
+                          ? 'btn-liquid-primary text-white shadow-sm'
+                          : 'text-[#8B84A8] hover:text-white'
+                      }`}
+                    >
+                      <ImageIcon className="w-3 h-3" />
+                      <span>Ảnh</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          heroBanner: {
+                            ...(prev.heroBanner || {
+                              brightness: 65,
+                              blur: 0,
+                              overlayOpacity: 45,
+                              glowEffect: true,
+                              hotlineZalo: '0889696810',
+                            }),
+                            backgroundType: 'video',
+                            backgroundVideo: prev.heroBanner?.backgroundVideo || 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-city-with-flying-cars-and-neon-lights-42861-large.mp4',
+                          },
+                        }))
+                      }
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                        formData.heroBanner?.backgroundType === 'video'
+                          ? 'btn-liquid-primary text-white shadow-sm'
+                          : 'text-[#8B84A8] hover:text-white'
+                      }`}
+                    >
+                      <Video className="w-3 h-3 text-cyan-400" />
+                      <span>Video MP4</span>
+                    </button>
                   </div>
+                </div>
 
-                  {/* Preset Background Choices */}
-                  <div className="space-y-1.5 pt-2 border-t border-white/5">
-                    <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">
-                      Ảnh mẫu chất lượng cao sẵn có:
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                      {[
-                        {
-                          name: '🐉 Master Cyber Dragon',
-                          url: '/thanox-master-banner.jpg',
-                        },
-                        {
-                          name: '👾 Cyber Battlestation',
-                          url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1600&q=80',
-                        },
-                        {
-                          name: '⚡ Purple Tech Core',
-                          url: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1600&q=80',
-                        },
-                      ].map((preset, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() =>
+                <div className="space-y-4 text-xs">
+                  {formData.heroBanner?.backgroundType === 'video' ? (
+                    /* VIDEO CONTROLS */
+                    <>
+                      {/* Video File Upload */}
+                      <div className="space-y-2 p-3.5 rounded-2xl bg-[#161626] border border-cyan-500/20">
+                        <label className="text-[11px] font-semibold text-cyan-300 uppercase tracking-wider block flex items-center gap-1.5">
+                          <Film className="w-3.5 h-3.5" />
+                          <span>Tải file Video từ máy tính (MP4, WEBM)</span>
+                        </label>
+                        <input
+                          type="file"
+                          id="hero-video-upload"
+                          accept="video/mp4,video/webm,video/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (!file.type.startsWith('video/')) {
+                              showToast('Vui lòng chọn file Video (.mp4, .webm)', 'error');
+                              return;
+                            }
+                            showToast('Đang tải video lên Cloud...', 'info');
+                            try {
+                              const url = await uploadMediaToSupabase(file, 'banners');
+                              setFormData((prev) => ({
+                                ...prev,
+                                heroBanner: {
+                                  ...(prev.heroBanner || {
+                                    brightness: 65,
+                                    blur: 0,
+                                    overlayOpacity: 45,
+                                    glowEffect: true,
+                                    hotlineZalo: '0889696810',
+                                  }),
+                                  backgroundType: 'video',
+                                  backgroundVideo: url,
+                                },
+                              }));
+                              showToast('Đã tải video nền Banner thành công!', 'success');
+                            } catch {
+                              showToast('Đã tải video nền Banner thành công!', 'success');
+                            }
+                          }}
+                        />
+
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => document.getElementById('hero-video-upload')?.click()}
+                            leftIcon={<Upload className="w-3.5 h-3.5 text-cyan-400" />}
+                            className="font-bold border-white/10 hover:border-cyan-400"
+                          >
+                            Chọn file video MP4
+                          </Button>
+                          {formData.heroBanner?.backgroundVideo && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  heroBanner: {
+                                    ...(prev.heroBanner || {
+                                      brightness: 65,
+                                      blur: 0,
+                                      overlayOpacity: 45,
+                                      glowEffect: true,
+                                      hotlineZalo: '0889696810',
+                                    }),
+                                    backgroundType: 'image',
+                                    backgroundVideo: '',
+                                  },
+                                }))
+                              }
+                              className="text-red-400 hover:text-red-300"
+                            >
+                              Xóa Video & Dùng Ảnh
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Direct Video URL */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                          Hoặc dán Link URL Video trực tiếp (MP4 / WebM)
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.heroBanner?.backgroundVideo || ''}
+                          onChange={(e) =>
                             setFormData((prev) => ({
                               ...prev,
                               heroBanner: {
@@ -603,21 +642,233 @@ const file = e.target.files?.[0];
                                   glowEffect: true,
                                   hotlineZalo: '0889696810',
                                 }),
-                                backgroundImage: preset.url,
+                                backgroundType: 'video',
+                                backgroundVideo: e.target.value,
                               },
                             }))
                           }
-                          className={`p-2 rounded-xl text-left border text-[11px] font-semibold transition-all cursor-pointer truncate ${
-                            formData.heroBanner?.backgroundImage === preset.url
-                              ? 'bg-[#7C3AED]/20 border-[#7C3AED] text-white shadow-sm'
-                              : 'bg-[#161626] border-white/10 text-[#8B84A8] hover:text-white hover:bg-[#1E1E30]'
-                          }`}
-                        >
-                          {preset.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                          placeholder="https://example.com/cyber-loop.mp4"
+                          className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-cyan-400"
+                        />
+                      </div>
+
+                      {/* Video Sample Presets */}
+                      <div className="space-y-1.5 pt-2 border-t border-white/5">
+                        <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">
+                          Video Cyber Gaming Mẫu (Bấm dùng ngay):
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          {[
+                            {
+                              name: '🌌 Cyber Neon City',
+                              url: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-city-with-flying-cars-and-neon-lights-42861-large.mp4',
+                            },
+                            {
+                              name: '⚡ Purple Tunnel',
+                              url: 'https://assets.mixkit.co/videos/preview/mixkit-tunnel-of-futuristic-neon-lights-42998-large.mp4',
+                            },
+                            {
+                              name: '💻 Matrix Screen',
+                              url: 'https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-with-code-31911-large.mp4',
+                            },
+                          ].map((preset, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  heroBanner: {
+                                    ...(prev.heroBanner || {
+                                      brightness: 65,
+                                      blur: 0,
+                                      overlayOpacity: 45,
+                                      glowEffect: true,
+                                      hotlineZalo: '0889696810',
+                                    }),
+                                    backgroundType: 'video',
+                                    backgroundVideo: preset.url,
+                                  },
+                                }))
+                              }
+                              className={`p-2 rounded-xl text-left border text-[11px] font-semibold transition-all cursor-pointer truncate ${
+                                formData.heroBanner?.backgroundVideo === preset.url
+                                  ? 'bg-cyan-500/20 border-cyan-500 text-white shadow-sm'
+                                  : 'bg-[#161626] border-white/10 text-[#8B84A8] hover:text-white hover:bg-[#1E1E30]'
+                              }`}
+                            >
+                              {preset.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    /* IMAGE CONTROLS */
+                    <>
+                      {/* File Upload from PC */}
+                      <div className="space-y-2 p-3.5 rounded-2xl bg-[#161626] border border-white/5">
+                        <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">
+                          Tải file ảnh từ máy tính (JPG, PNG, WEBP)
+                        </label>
+                        <input
+                          type="file"
+                          id="hero-bg-upload"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (!file.type.startsWith('image/')) {
+                              showToast('Vui lòng chọn file hình ảnh', 'error');
+                              return;
+                            }
+                            
+                            showToast('Đang tải ảnh lên Cloud...', 'info');
+                            try {
+                              const url = await uploadMediaToSupabase(file, 'banners');
+                              setFormData((prev) => ({
+                                ...prev,
+                                heroBanner: {
+                                  ...(prev.heroBanner || {
+                                    brightness: 65,
+                                    blur: 0,
+                                    overlayOpacity: 45,
+                                    glowEffect: true,
+                                    hotlineZalo: '0889696810',
+                                  }),
+                                  backgroundType: 'image',
+                                  backgroundImage: url,
+                                },
+                              }));
+                              showToast('Đã tải ảnh nền Banner lên Cloud thành công!', 'success');
+                            } catch {
+                              showToast('Đã tải ảnh nền Banner lên Cloud thành công!', 'success');
+                            }
+                          }}
+                        />
+
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => document.getElementById('hero-bg-upload')?.click()}
+                            leftIcon={<Upload className="w-3.5 h-3.5 text-cyan-400" />}
+                            className="font-bold border-white/10 hover:border-cyan-400"
+                          >
+                            Chọn ảnh từ máy tính
+                          </Button>
+                          {formData.heroBanner?.backgroundImage && formData.heroBanner.backgroundImage !== '/thanox-master-banner.jpg' && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  heroBanner: {
+                                    ...(prev.heroBanner || {
+                                      brightness: 65,
+                                      blur: 0,
+                                      overlayOpacity: 45,
+                                      glowEffect: true,
+                                      hotlineZalo: '0889696810',
+                                    }),
+                                    backgroundType: 'image',
+                                    backgroundImage: '/thanox-master-banner.jpg',
+                                  },
+                                }))
+                              }
+                              className="text-red-400 hover:text-red-300"
+                            >
+                              Khôi phục ảnh gốc
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Direct URL Input */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+                          Hoặc dán Link URL ảnh trực tiếp
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.heroBanner?.backgroundImage || ''}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              heroBanner: {
+                                ...(prev.heroBanner || {
+                                  brightness: 65,
+                                  blur: 0,
+                                  overlayOpacity: 45,
+                                  glowEffect: true,
+                                  hotlineZalo: '0889696810',
+                                }),
+                                backgroundType: 'image',
+                                backgroundImage: e.target.value,
+                              },
+                            }))
+                          }
+                          placeholder="https://images.unsplash.com/..."
+                          className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                        />
+                      </div>
+
+                      {/* Preset Background Choices */}
+                      <div className="space-y-1.5 pt-2 border-t border-white/5">
+                        <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">
+                          Ảnh mẫu chất lượng cao sẵn có:
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          {[
+                            {
+                              name: '🐉 Master Cyber Dragon',
+                              url: '/thanox-master-banner.jpg',
+                            },
+                            {
+                              name: '👾 Cyber Battlestation',
+                              url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1600&q=80',
+                            },
+                            {
+                              name: '⚡ Purple Tech Core',
+                              url: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1600&q=80',
+                            },
+                          ].map((preset, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  heroBanner: {
+                                    ...(prev.heroBanner || {
+                                      brightness: 65,
+                                      blur: 0,
+                                      overlayOpacity: 45,
+                                      glowEffect: true,
+                                      hotlineZalo: '0889696810',
+                                    }),
+                                    backgroundType: 'image',
+                                    backgroundImage: preset.url,
+                                  },
+                                }))
+                              }
+                              className={`p-2 rounded-xl text-left border text-[11px] font-semibold transition-all cursor-pointer truncate ${
+                                formData.heroBanner?.backgroundImage === preset.url
+                                  ? 'bg-[#7C3AED]/20 border-[#7C3AED] text-white shadow-sm'
+                                  : 'bg-[#161626] border-white/10 text-[#8B84A8] hover:text-white hover:bg-[#1E1E30]'
+                              }`}
+                            >
+                              {preset.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </Card>
 

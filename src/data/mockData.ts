@@ -392,6 +392,8 @@ export const INITIAL_SETTINGS: StoreSettings = {
   },
   heroBanner: {
     backgroundImage: '/thanox-master-banner.jpg',
+    backgroundVideo: '',
+    backgroundType: 'image',
     brightness: 65,
     blur: 0,
     overlayOpacity: 45,

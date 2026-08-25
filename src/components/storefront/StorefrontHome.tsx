@@ -42,6 +42,9 @@ export const StorefrontHome: React.FC = () => {
 
   // Dynamic Banner Customizer Settings from Admin Panel
   const bannerBg = settings.heroBanner?.backgroundImage || '/thanox-master-banner.jpg';
+  const bannerVideo = settings.heroBanner?.backgroundVideo || '';
+  const isVideoBanner = (settings.heroBanner?.backgroundType === 'video' || (bannerBg && (bannerBg.endsWith('.mp4') || bannerBg.endsWith('.webm')))) && (bannerVideo || bannerBg);
+  const activeVideoSrc = bannerVideo || bannerBg;
   const bannerBrightness = (settings.heroBanner?.brightness ?? 65) / 100;
   const bannerBlur = settings.heroBanner?.blur ?? 0;
   const bannerOverlayOpacity = (settings.heroBanner?.overlayOpacity ?? 45) / 100;
@@ -75,16 +78,31 @@ export const StorefrontHome: React.FC = () => {
       {/* 1. iOS 27 LIQUID GLASS HERO PRODUCT SLIDER */}
       {currentSlide && (
         <section className="relative overflow-hidden rounded-3xl glass-prominent border border-white/14 shadow-[0_30px_70px_rgba(0,0,0,0.85)] p-6 sm:p-10 lg:p-12 min-h-[340px] sm:min-h-[400px] flex flex-col justify-between group">
-          {/* Master Backdrop Image & Atmospheric Diffusion */}
-          <div className="absolute inset-0 z-0 overflow-hidden">
-            <img
-              src={bannerBg}
-              alt="Thanox Master Background"
-              className="w-full h-full object-cover object-center contrast-125 scale-105 group-hover:scale-100 transition-transform duration-1000 opacity-60"
-              style={{
-                filter: `brightness(${bannerBrightness}) blur(${bannerBlur}px)`,
-              }}
-            />
+          {/* Master Backdrop Image/Video & Atmospheric Diffusion */}
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            {isVideoBanner ? (
+              <video
+                key={activeVideoSrc}
+                src={activeVideoSrc}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover object-center contrast-125 scale-105 group-hover:scale-100 transition-transform duration-1000 opacity-60"
+                style={{
+                  filter: `brightness(${bannerBrightness}) blur(${bannerBlur}px)`,
+                }}
+              />
+            ) : (
+              <img
+                src={bannerBg}
+                alt="Thanox Master Background"
+                className="w-full h-full object-cover object-center contrast-125 scale-105 group-hover:scale-100 transition-transform duration-1000 opacity-60"
+                style={{
+                  filter: `brightness(${bannerBrightness}) blur(${bannerBlur}px)`,
+                }}
+              />
+            )}
             {/* Darkened Gradient Overlays for Readability */}
             <div
               className="absolute inset-0 bg-gradient-to-r from-[#07070D] via-[#0D0D1A] to-[#07070D]"
