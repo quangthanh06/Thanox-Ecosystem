@@ -21,6 +21,7 @@ import { getThemeTypography } from '../../utils/themeStyles';
 import { useDragScroll } from '../../hooks/useDragScroll';
 import { ThanoxMascot } from '../ui/ThanoxMascot';
 import { LiveDepositAndFeedback } from './LiveDepositAndFeedback';
+import { preloadProductImageList } from '../../utils/imageOptimizer';
 
 export const StorefrontHome: React.FC = () => {
   const {
@@ -34,6 +35,13 @@ export const StorefrontHome: React.FC = () => {
     setSelectedOrderId,
     showToast,
   } = useStore();
+
+  // Instant Image Pre-caching to eliminate mobile network latency
+  useEffect(() => {
+    if (products && products.length > 0) {
+      preloadProductImageList(products.map((p) => p.image));
+    }
+  }, [products]);
 
   const themeTypo = getThemeTypography(settings);
   const { dragProps: homeCatDragProps } = useDragScroll<HTMLDivElement>();

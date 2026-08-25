@@ -315,20 +315,64 @@ export const LiveDepositAndFeedback: React.FC = () => {
     return [...realApproved, ...liveTopups].slice(0, 15);
   }, [topups, liveTopups]);
 
-  // Periodic continuous live topup trigger (every ~8-12 seconds)
+const TOXIC_OR_NEGATIVE_KEYWORDS = [
+  'lừa đảo', 'scam', 'chán', 'dở', 'tệ', 'ko dùng dc', 'không dùng được', 'vứt', 'ko ra gì', 'không ra gì',
+  'đm', 'đcm', 'dcm', 'cl', 'sv', 'cc', 'loz', 'lol', 'vcl', 'vcln', 'chó', 'suc vat', 'súc vật', 'rác',
+  'lỗi', 'lag', 'hoàn tiền', 'trả tiền', 'bị ban', 'bị khóa', 'chửi', 'cút', 'đĩ', 'mẹ mày', 'bố mày'
+];
+
+const isNegativeOrToxic = (text: string, rating: number) => {
+  if (rating <= 3) return true;
+  const lower = text.toLowerCase();
+  return TOXIC_OR_NEGATIVE_KEYWORDS.some((kw) => lower.includes(kw));
+};
+
+  // Ultra-Diverse User Generator Pool: Emails, Special Gaming Symbols, Phones, Gamertags
   useEffect(() => {
-    const sampleNames = ['096***214', '032***884', 'than***06', 'duy***ff', '089***771', 'tuan***9x', '091***443', 'quang***k', '097***552', 'phuc***99', 'long***ff', 'bao***pro'];
+    const emailPool = [
+      'nguyenvan***@gmail.com', 'hoangff2k***@gmail.com', 'trunggaming***@gmail.com',
+      'phamkhac***@gmail.com', 'thanhvip***@gmail.com', 'duyanh99***@gmail.com',
+      'lebaoff***@gmail.com', 'minhtri***@gmail.com', 'tuancan***@gmail.com',
+      'quockhanh***@gmail.com', 'phucpro***@gmail.com', 'dangkiet***@gmail.com',
+      'vuduy***@gmail.com', 'tuananh***@gmail.com', 'hoangnam***@gmail.com',
+      'thanoxfan***@gmail.com', 'nguyentrang***@gmail.com', 'anhquan***@gmail.com'
+    ];
+
+    const symbolPool = [
+      '꧁༺Thần•Thanos༻꧂', 'KAY•Vũ***', 'Sát•Thủ***', '⚡GiaBảo⚡', '🔥ĐứcHuy🔥',
+      '❄️Băng•Giá❄️', 'ヅTùng•Gaming', '亗Trần•Quang亗', '★Văn•Đạt★', '✿Hải•Đăng✿',
+      '꧁Gaming•Pro꧂', '⚔️Chiến•Binh⚔️', '👑Vua•Rank👑', '🎯Kéo•Tâm🎯', '🛡️Bảo•Vệ🛡️'
+    ];
+
+    const phonePool = [
+      '098***482', '037***915', '090***338', '086***119', '091***772', '093***105',
+      '096***881', '039***664', '077***221', '088***610', '033***991', '085***443',
+      '094***118', '079***552', '081***779', '092***663'
+    ];
+
+    const nicknamePool = [
+      'quockhanh_09', 'duyanh.pro', 'thanhff_vip', 'boy_lanhlung_9x', 'minhtri_2k6',
+      'lebao.gaming', 'khiem_ff_99', 'nguyenhuu_thang', 'trung_pro_2k', 'vietanh_gamer',
+      'phuongnam_99', 'ductuan_vip', 'hai_dang_ff', 'longpro_freefire'
+    ];
+
+    const allPools = [emailPool, symbolPool, phonePool, nicknamePool];
     const sampleAmounts = [10000, 20000, 50000, 100000, 200000, 500000];
-    const sampleMethods = ['VietQR MBBank', 'VietQR Techcombank', 'VietQR Vietcombank', 'Thẻ Viettel', 'Thẻ Zing', 'VietQR 24/7'];
+    const sampleMethods = [
+      'VietQR MBBank', 'VietQR Techcombank', 'VietQR Vietcombank', 'VietQR ACB',
+      'Thẻ Viettel', 'Thẻ Zing', 'VietQR 24/7', 'Thẻ Garena', 'VietQR TPBank'
+    ];
 
     const topupInterval = setInterval(() => {
-      const randomUser = sampleNames[Math.floor(Math.random() * sampleNames.length)];
+      // Pick random pool
+      const selectedPool = allPools[Math.floor(Math.random() * allPools.length)];
+      const baseName = selectedPool[Math.floor(Math.random() * selectedPool.length)];
       const randomAmt = sampleAmounts[Math.floor(Math.random() * sampleAmounts.length)];
       const randomMethod = sampleMethods[Math.floor(Math.random() * sampleMethods.length)];
 
       const newTx = {
         id: 'dyn-' + Date.now(),
-        user: randomUser,
+        user: baseName,
         amount: randomAmt,
         method: randomMethod,
         time: 'Vừa xong',
@@ -387,6 +431,29 @@ export const LiveDepositAndFeedback: React.FC = () => {
 
     const nameToUse = reviewerName.trim() || (currentUser?.username ? currentUser.username : 'Game Thủ');
     const avatarLetters = nameToUse.substring(0, 2).toUpperCase();
+
+    // SILENT AUTO-MODERATION: If user leaves negative / toxic / bad words / <= 3 stars, silently discard without alerting
+    if (isNegativeOrToxic(reviewComment.trim(), reviewRating)) {
+      try {
+        const toxicLog = JSON.parse(localStorage.getItem('thanox_moderated_toxic_feedbacks') || '[]');
+        toxicLog.unshift({
+          id: 'toxic-' + Date.now(),
+          authorName: nameToUse,
+          rating: reviewRating,
+          comment: reviewComment.trim(),
+          productTag: reviewTag,
+          createdAt: new Date().toISOString(),
+          reason: reviewRating <= 3 ? 'Rating thấp (<=3 sao)' : 'Chứa từ ngữ tiêu cực / chửi bậy',
+        });
+        localStorage.setItem('thanox_moderated_toxic_feedbacks', JSON.stringify(toxicLog.slice(0, 50)));
+      } catch {}
+
+      setReviewComment('');
+      setIsReviewModalOpen(false);
+      // Show normal message so user doesn't realize it was filtered
+      showToast('Cảm ơn bạn đã gửi đánh giá! Đánh giá đã được ghi nhận.', 'success');
+      return;
+    }
 
     const newFb: CustomerFeedback = {
       id: 'fb-' + Date.now(),

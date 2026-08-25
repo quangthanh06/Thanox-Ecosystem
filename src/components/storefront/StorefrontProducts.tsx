@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { getThemeTypography } from '../../utils/themeStyles';
 import { useDragScroll } from '../../hooks/useDragScroll';
+import { preloadProductImageList } from '../../utils/imageOptimizer';
 
 const SORT_OPTIONS = [
   { value: 'popular', label: 'Bán Chạy Nhất', icon: '🔥' },
@@ -34,6 +35,12 @@ export const StorefrontProducts: React.FC = () => {
     showToast,
     settings,
   } = useStore();
+
+  React.useEffect(() => {
+    if (products && products.length > 0) {
+      preloadProductImageList(products.map((p) => p.image));
+    }
+  }, [products]);
 
   const themeTypo = getThemeTypography(settings);
   const { dragProps: catDragProps } = useDragScroll<HTMLDivElement>();
