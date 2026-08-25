@@ -81,7 +81,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
 
       const handleVerifyTotpTest = () => {
       if (!totpTestCode.trim()) {
-        showToast('Vui l�ng nh?p m� 6 s? t? Google Authenticator tr�n di?n tho?i', 'error');
+        showToast('Vui lòng nhập mã 6 số từ Google Authenticator trên điện thoại', 'error');
         return;
       }
       const secret = formData.twoFactorSecret || 'JBSWY3DPEHPK3PXP';
@@ -91,9 +91,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
       if (res.valid) {
         // IMPORTANT: Instantly save it so they don't have to click the big "Save" button
         updateSettings({ ...formData });
-        showToast('? M� OTP ch�nh x�c! �� t? d?ng luu c?u h�nh 2FA mới.', 'success');
+        showToast('🔐 Mã OTP chính xác! Đã tự động lưu cấu hình 2FA mới.', 'success');
       } else {
-        showToast(res.reason || 'M� OTP kh�ng d�ng ho?c d� h?t h?n', 'error');
+        showToast(res.reason || 'Mã OTP không đúng hoặc đã hết hạn', 'error');
       }
     };
 
@@ -195,10 +195,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
         setNewTrackUrl(url);
         setPreviewAudioUrl(url);
         setIsUploadingAudio(false);
-        showToast(`�� t?i file "${file.name}" l�n Cloud thành công! B?m nghe th? ho?c Th�m v�o danh s�ch.`, 'success');
+        showToast(`Đã tải file "${file.name}" lên Cloud thành công! Bấm nghe thử hoặc Thêm vào danh sách.`, 'success');
       } catch (e) {
         setIsUploadingAudio(false);
-        showToast('Lỗi khi tải �m thanh l�n Cloud', 'error');
+        showToast('Lỗi khi tải âm thanh lên Cloud', 'error');
       }
   };
 
@@ -222,10 +222,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#0F0F1A] border border-white/5 rounded-2xl p-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-prominent border border-white/10 rounded-3xl p-5 sm:p-6 shadow-xl">
         <div>
-          <h2 className="font-display text-lg font-bold text-[#F0EDFF]">Cài Đặt Hệ Thống & Cổng Thanh Toán</h2>
-          <p className="text-xs text-[#6B658E] mt-0.5">
+          <h2 className="font-display text-lg sm:text-xl font-black text-[#F4F2FF] tracking-tight">Cài Đặt Hệ Thống & Cổng Thanh Toán</h2>
+          <p className="text-xs text-[#938EB5] mt-0.5">
             Cấu hình cổng VietQR động, chế độ bảo trì & Zalo Admin, tường lửa chống hack toàn diện
           </p>
         </div>
@@ -240,7 +240,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
         <button
           type="button"
           onClick={scrollLeft}
-          className="p-2 rounded-xl bg-[#161626] border border-white/10 text-[#CBC7E0] hover:text-white hover:border-[#7C3AED]/40 transition-colors shrink-0 cursor-pointer shadow-md"
+          className="p-2 rounded-xl glass-subtle border border-white/10 text-[#CBC7E0] hover:text-white hover:border-[#7C3AED]/40 transition-colors shrink-0 cursor-pointer shadow-md"
           title="Cuộn sang trái (hoặc giữ chuột kéo)"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -248,15 +248,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
 
         <div
           {...dragProps}
-          className="flex items-center gap-2 border-b border-white/5 pb-2 overflow-x-auto scrollbar-none no-scrollbar flex-1"
+          className="flex items-center gap-2 border-b border-white/6 pb-2 overflow-x-auto scrollbar-none no-scrollbar flex-1"
         >
           <button
             type="button"
             onClick={() => setActiveTab('banner')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
+            className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 active:scale-95 ${
               activeTab === 'banner'
-                ? 'bg-[#7C3AED]/20 text-white border border-[#7C3AED]/40 shadow-sm'
-                : 'text-[#8B84A8] hover:text-white bg-[#161626]'
+                ? 'btn-liquid-primary shadow-sm'
+                : 'glass-subtle text-[#938EB5] hover:text-white border border-white/8'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-[#C084FC]" />
@@ -266,10 +266,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
           <button
             type="button"
             onClick={() => setActiveTab('typography')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
+            className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 active:scale-95 ${
               activeTab === 'typography'
-                ? 'bg-gradient-to-r from-[#7C3AED]/30 to-[#06B6D4]/30 text-white border border-[#22D3EE]/50 shadow-md shadow-[#22D3EE]/10'
-                : 'text-[#8B84A8] hover:text-white bg-[#161626]'
+                ? 'btn-liquid-primary shadow-sm'
+                : 'glass-subtle text-[#938EB5] hover:text-white border border-white/8'
             }`}
           >
             <Type className="w-3.5 h-3.5 text-[#22D3EE]" />
@@ -279,10 +279,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
           <button
             type="button"
             onClick={() => setActiveTab('payments')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
+            className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 active:scale-95 ${
               activeTab === 'payments'
-                ? 'bg-[#7C3AED]/15 text-white border border-[#7C3AED]/30 shadow-sm'
-                : 'text-[#8B84A8] hover:text-white bg-[#161626]'
+                ? 'btn-liquid-primary shadow-sm'
+                : 'glass-subtle text-[#938EB5] hover:text-white border border-white/8'
             }`}
           >
             <CreditCard className="w-3.5 h-3.5 text-[#06B6D4]" />
@@ -292,10 +292,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
           <button
             type="button"
             onClick={() => setActiveTab('maintenance')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
+            className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 active:scale-95 ${
               activeTab === 'maintenance'
                 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                : 'text-[#8B84A8] hover:text-white bg-[#161626]'
+                : 'glass-subtle text-[#938EB5] hover:text-white border border-white/8'
             }`}
           >
             <Wrench className="w-3.5 h-3.5 text-amber-400" />
@@ -308,10 +308,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
           <button
             type="button"
             onClick={() => setActiveTab('security')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
+            className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 active:scale-95 ${
               activeTab === 'security'
                 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
-                : 'text-[#8B84A8] hover:text-white bg-[#161626]'
+                : 'glass-subtle text-[#938EB5] hover:text-white border border-white/8'
             }`}
           >
             <Shield className="w-3.5 h-3.5 text-emerald-400" />
@@ -321,10 +321,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
           <button
             type="button"
             onClick={() => setActiveTab('general')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
+            className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 active:scale-95 ${
               activeTab === 'general'
-                ? 'bg-[#7C3AED]/15 text-white border border-[#7C3AED]/30 shadow-sm'
-                : 'text-[#8B84A8] hover:text-white bg-[#161626]'
+                ? 'btn-liquid-primary shadow-sm'
+                : 'glass-subtle text-[#938EB5] hover:text-white border border-white/8'
             }`}
           >
             <Store className="w-3.5 h-3.5 text-[#9D5CF6]" />
@@ -334,10 +334,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
           <button
             type="button"
             onClick={() => setActiveTab('affiliate')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
+            className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 active:scale-95 ${
               activeTab === 'affiliate'
-                ? 'bg-[#7C3AED]/15 text-white border border-[#7C3AED]/30 shadow-sm'
-                : 'text-[#8B84A8] hover:text-white bg-[#161626]'
+                ? 'btn-liquid-primary shadow-sm'
+                : 'glass-subtle text-[#938EB5] hover:text-white border border-white/8'
             }`}
           >
             <Share2 className="w-3.5 h-3.5 text-amber-400" />
@@ -347,10 +347,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
           <button
             type="button"
             onClick={() => setActiveTab('music')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
+            className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 active:scale-95 ${
               activeTab === 'music'
-                ? 'bg-[#7C3AED]/15 text-white border border-[#7C3AED]/30 shadow-sm'
-                : 'text-[#8B84A8] hover:text-white bg-[#161626]'
+                ? 'btn-liquid-primary shadow-sm'
+                : 'glass-subtle text-[#938EB5] hover:text-white border border-white/8'
             }`}
           >
             <Music className="w-3.5 h-3.5 text-[#9D5CF6]" />
@@ -360,14 +360,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
           <button
             type="button"
             onClick={() => setActiveTab('data')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
+            className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 active:scale-95 ${
               activeTab === 'data'
-                ? 'bg-red-500/20 text-red-300 border border-red-500/30 shadow-sm'
-                : 'text-[#8B84A8] hover:text-white bg-[#161626]'
+                ? 'bg-red-500/20 text-red-300 border border-red-500/40 shadow-sm'
+                : 'glass-subtle text-[#938EB5] hover:text-white border border-white/8'
             }`}
           >
             <Database className="w-3.5 h-3.5 text-red-400" />
-            <span>💾 Dữ Liệu & Reset 0</span>
+            <span>💾 Dữ Liệu Demo & Reset</span>
           </button>
         </div>
 
@@ -495,7 +495,7 @@ const file = e.target.files?.[0];
                                 backgroundImage: url,
                               },
                             }));
-                            showToast('�Đã tải ảnh n?n Banner l�n Cloud thành công!', 'success');
+                            showToast('Đã tải ảnh nền Banner lên Cloud thành công!', 'success');
                           } catch (e) {
                             showToast('Đã tải ảnh lên Cloud thành công!', 'success');
                           }
@@ -1310,7 +1310,7 @@ const file = e.target.files?.[0];
                         type="text"
                         value={formData.accountHolder}
                         onChange={(e) => setFormData({ ...formData, accountHolder: e.target.value.toUpperCase() })}
-                        placeholder="TRAN QUANG THANH"
+                        placeholder="NGUYEN VAN A"
                         className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] font-semibold uppercase focus:outline-none focus:border-[#7C3AED]"
                       />
                     </div>

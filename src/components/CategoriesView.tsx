@@ -13,7 +13,6 @@ import {
   Plus,
   Edit2,
   Trash2,
-  Layers,
   Upload,
   Image as ImageIcon,
   Link as LinkIcon,
@@ -81,19 +80,19 @@ export const CategoriesView: React.FC = () => {
       return;
     }
 
-          setIsUploading(true);
-      try {
-        const url = await uploadMediaToSupabase(file, 'categories');
-        setFormData((prev) => ({
-          ...prev,
-          image: url,
-        }));
-        showToast('T?i ?nh d?i di?n danh m?c l�n Cloud thành công!', 'success');
-      } catch (e) {
-        showToast('Đã tải ảnh lên Cloud thành công!', 'success');
-      } finally {
-        setIsUploading(false);
-      }
+    setIsUploading(true);
+    try {
+      const url = await uploadMediaToSupabase(file, 'categories');
+      setFormData((prev) => ({
+        ...prev,
+        image: url,
+      }));
+      showToast('Tải ảnh đại diện danh mục lên Cloud thành công!', 'success');
+    } catch (err: any) {
+      showToast(err?.message || 'Lỗi khi tải ảnh lên Cloud', 'error');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleSave = (e: React.FormEvent) => {
@@ -125,96 +124,83 @@ export const CategoriesView: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  // Sample icon choices
   const sampleIcons = ['📱', '🍎', '🎮', '🌐', '👤', '🔧', '⚡', '🔥', '💎', '🚀', '👑', '🛡️', '📦', '💻', '🎯'];
 
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#0F0F1A] border border-white/5 rounded-2xl p-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-prominent border border-white/10 rounded-3xl p-5 sm:p-6 shadow-xl">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="font-display text-lg font-bold text-[#F0EDFF]">Danh Mục Phân Loại</h2>
+            <h2 className="font-display text-lg sm:text-xl font-black text-[#F4F2FF] tracking-tight">Danh Mục Phân Loại</h2>
             <Badge variant="brand" size="xs">
               {categories.length} nhóm
             </Badge>
           </div>
-          <p className="text-xs text-[#6B658E] mt-0.5">
-            Tổ chức cây thư mục và danh mục hiển thị cho khách hàng chọn mua (hỗ trợ ảnh đại diện & icon)
+          <p className="text-xs text-[#938EB5] mt-0.5">
+            Cấu hình icon, hình ảnh đại diện và trạng thái hiển thị của các nhóm sản phẩm
           </p>
         </div>
 
         <Button variant="primary" size="sm" onClick={openCreateModal} leftIcon={<Plus className="w-4 h-4" />}>
-          Thêm Danh Mục Mới
+          Thêm Danh Mục
         </Button>
       </div>
 
-      {/* Categories Grid */}
+      {/* Grid of Categories */}
       {categories.length === 0 ? (
         <EmptyState
-          icon={<FolderTree className="w-6 h-6 text-[#9D5CF6]" />}
+          icon={<FolderTree className="w-6 h-6 text-[#C084FC]" />}
           title="Chưa có danh mục nào"
-          description="Tạo danh mục để phân loại các sản phẩm như File Android, Menu FF, Proxy..."
+          description="Tạo danh mục đầu tiên để phân loại các file và key bản quyền."
           actionLabel="Tạo Danh Mục Đầu Tiên"
           onAction={openCreateModal}
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {categories.map((cat) => {
-            const actualCount = products.filter((p) => p.category === cat.name).length;
+            const productCount = products.filter((p) => p.category === cat.name).length;
             const hasImage = cat.image || (cat.icon && (cat.icon.startsWith('http') || cat.icon.startsWith('data:image')));
 
             return (
               <Card
                 key={cat.id}
-                className="p-5 flex flex-col justify-between space-y-4 hover:border-[#7C3AED]/40 transition-all group"
-                variant="interactive"
+                className="p-5 space-y-4 glass-standard border-white/8 hover:border-[#7C3AED]/40 transition-all group"
+                variant="default"
               >
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    {/* Category Avatar / Icon Box */}
-                    <div className="w-12 h-12 rounded-2xl bg-[#161626] border border-white/10 flex items-center justify-center text-xl shadow-inner overflow-hidden flex-shrink-0 relative group-hover:border-[#7C3AED]/50 transition-colors">
-                      {hasImage ? (
-                        <img
-                          src={cat.image || cat.icon}
-                          alt={cat.name}
-                          className="w-full h-full object-cover rounded-xl"
-                        />
-                      ) : (
-                        <span className="text-2xl">{cat.icon || '📱'}</span>
-                      )}
-                    </div>
-
-                    <Badge variant={cat.status === 'active' ? 'success' : 'neutral'} size="xs" dot>
-                      {cat.status === 'active' ? 'Hiển thị' : 'Đang ẩn'}
-                    </Badge>
+                <div className="flex items-start justify-between">
+                  <div className="w-12 h-12 rounded-2xl glass-subtle border border-white/10 flex items-center justify-center overflow-hidden shadow-sm">
+                    {hasImage ? (
+                      <img src={cat.image || cat.icon} alt={cat.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-2xl">{cat.icon || '📱'}</span>
+                    )}
                   </div>
 
-                  <div>
-                    <h3 className="font-semibold text-sm text-[#F0EDFF] truncate">{cat.name}</h3>
-                    <p className="text-[11px] text-[#6B658E] font-mono mt-0.5 truncate">/{cat.slug}</p>
+                  <div className="flex items-center gap-1">
+                    <Badge variant={cat.status === 'active' ? 'success' : 'neutral'} size="xs" dot>
+                      {cat.status === 'active' ? 'Đang hiện' : 'Đang ẩn'}
+                    </Badge>
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-white/5 flex items-center justify-between">
-                  <span className="text-xs text-[#8B84A8] font-semibold">{actualCount} sản phẩm</span>
-
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => openEditModal(cat)}
-                      className="p-1.5 rounded-lg bg-[#161626] hover:bg-[#1E1E30] text-[#8B84A8] hover:text-white transition-colors cursor-pointer"
-                      title="Chỉnh sửa"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => setDeleteTargetId(cat.id)}
-                      className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors cursor-pointer"
-                      title="Xóa"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                <div>
+                  <h3 className="font-bold text-sm text-[#F4F2FF] group-hover:text-[#C084FC] transition-colors">
+                    {cat.name}
+                  </h3>
+                  <div className="flex items-center justify-between text-xs text-[#938EB5] mt-1">
+                    <span className="font-mono text-[11px] text-[#5C567A]">/{cat.slug}</span>
+                    <span className="font-semibold text-white">{productCount} sản phẩm</span>
                   </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/6">
+                  <Button variant="ghost" size="xs" onClick={() => openEditModal(cat)} leftIcon={<Edit2 className="w-3 h-3" />}>
+                    Sửa
+                  </Button>
+                  <Button variant="danger" size="xs" onClick={() => setDeleteTargetId(cat.id)} leftIcon={<Trash2 className="w-3 h-3" />}>
+                    Xóa
+                  </Button>
                 </div>
               </Card>
             );
@@ -222,11 +208,11 @@ export const CategoriesView: React.FC = () => {
         </div>
       )}
 
-      {/* Add / Edit Category Modal */}
+      {/* Create / Edit Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingCat ? 'Chỉnh Sửa Danh Mục' : 'Thêm Danh Mục Mới'}
+        title={editingCat ? `Chỉnh Sửa Danh Mục "${editingCat.name}"` : 'Tạo Danh Mục Mới'}
         size="md"
         footer={
           <>
@@ -240,92 +226,8 @@ export const CategoriesView: React.FC = () => {
         }
       >
         <form onSubmit={handleSave} className="space-y-4 text-xs">
-          {/* Avatar / Image Upload Section */}
-          <div className="space-y-2 p-3.5 rounded-2xl bg-[#161626]/80 border border-white/5">
-            <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">
-              Ảnh Đại Diện / Avatar Danh Mục
-            </label>
-
-            <div className="flex items-center gap-3.5">
-              {/* Image / Avatar Preview Box */}
-              <div className="w-16 h-16 rounded-2xl bg-[#0F0F1A] border border-white/10 flex items-center justify-center text-2xl overflow-hidden flex-shrink-0 relative shadow-inner">
-                {formData.image ? (
-                  <>
-                    <img src={formData.image} alt="Preview" className="w-full h-full object-cover rounded-xl" />
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, image: '' })}
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center text-[10px] cursor-pointer"
-                      title="Gỡ ảnh"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </>
-                ) : (
-                  <span>{formData.icon || '📱'}</span>
-                )}
-              </div>
-
-              {/* Upload buttons */}
-              <div className="space-y-2 flex-1">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileUpload}
-                  accept="image/*"
-                  className="hidden"
-                />
-
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="xs"
-                    onClick={() => fileInputRef.current?.click()}
-                    leftIcon={<Upload className="w-3.5 h-3.5 text-cyan-400" />}
-                    className="font-bold border-white/10 hover:border-cyan-400"
-                  >
-                    Tải ảnh từ máy tính
-                  </Button>
-                </div>
-
-                <div className="relative">
-                  <LinkIcon className="w-3 h-3 text-[#8B84A8] absolute left-2.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={formData.image}
-                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                    placeholder="Hoặc dán link ảnh (https://...)"
-                    className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl pl-7 pr-3 py-1.5 text-[11px] text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED]"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Emoji selection */}
-            <div className="space-y-1 pt-2 border-t border-white/5">
-              <span className="text-[10.5px] text-[#8B84A8]">Hoặc chọn biểu tượng Emoji mặc định:</span>
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {sampleIcons.map((ic) => (
-                  <button
-                    type="button"
-                    key={ic}
-                    onClick={() => setFormData({ ...formData, icon: ic, image: '' })}
-                    className={`w-8 h-8 rounded-xl text-sm flex items-center justify-center border transition-all cursor-pointer ${
-                      !formData.image && formData.icon === ic
-                        ? 'bg-[#7C3AED]/20 border-[#7C3AED] scale-110 shadow-sm'
-                        : 'bg-[#0F0F1A] border-white/10 hover:bg-[#1E1E30]'
-                    }`}
-                  >
-                    {ic}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+            <label className="text-[11px] font-bold text-[#938EB5] uppercase tracking-wider">
               Tên Danh Mục *
             </label>
             <input
@@ -333,41 +235,108 @@ export const CategoriesView: React.FC = () => {
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="VD: File Android, File iOS, Menu VIP, Proxy..."
-              className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+              placeholder="VD: Hack Free Fire OB44"
+              className="w-full glass-input rounded-2xl px-3.5 py-2.5 text-xs text-[#F4F2FF]"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
-              Đường Dẫn Slug
+            <label className="text-[11px] font-bold text-[#938EB5] uppercase tracking-wider">
+              Đường Dẫn Tĩnh (Slug)
             </label>
             <input
               type="text"
               value={formData.slug}
               onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-              placeholder="VD: file-android (để trống sẽ tự tạo)"
-              className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] font-mono focus:outline-none focus:border-[#7C3AED]"
+              placeholder="Tự động tạo nếu để trống..."
+              className="w-full glass-input rounded-2xl px-3.5 py-2.5 text-xs text-[#F4F2FF] font-mono"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+          {/* Upload Ảnh Đại Diện / Icon */}
+          <div className="space-y-2 pt-1 border-t border-white/6">
+            <label className="text-[11px] font-bold text-[#938EB5] uppercase tracking-wider flex items-center justify-between">
+              <span>Hình Ảnh / Icon Danh Mục</span>
+              {formData.image && (
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, image: '' })}
+                  className="text-red-400 hover:text-red-300 font-bold"
+                >
+                  Xóa ảnh
+                </button>
+              )}
+            </label>
+
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-2xl glass-subtle border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                {formData.image ? (
+                  <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-2xl">{formData.icon}</span>
+                )}
+              </div>
+
+              <div className="flex-1 space-y-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="xs"
+                  onClick={() => fileInputRef.current?.click()}
+                  isLoading={isUploading}
+                  leftIcon={<Upload className="w-3.5 h-3.5" />}
+                >
+                  Tải Ảnh Lên Cloud
+                </Button>
+              </div>
+            </div>
+
+            {/* Quick Emoji selector */}
+            <div className="space-y-1 pt-1">
+              <span className="text-[10px] text-[#938EB5]">Hoặc chọn Emoji mặc định:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {sampleIcons.map((ico) => (
+                  <button
+                    key={ico}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, icon: ico, image: '' })}
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm cursor-pointer transition-all ${
+                      formData.icon === ico && !formData.image
+                        ? 'btn-liquid-primary shadow-sm'
+                        : 'glass-subtle hover:bg-white/10'
+                    }`}
+                  >
+                    {ico}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-1 pt-1">
+            <label className="text-[11px] font-bold text-[#938EB5] uppercase tracking-wider">
               Trạng Thái Hiển Thị
             </label>
             <select
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-              className="w-full bg-[#161626] border border-white/10 rounded-xl px-3 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
+              className="w-full glass-input rounded-2xl px-3.5 py-2.5 text-xs text-[#F4F2FF]"
             >
-              <option value="active">🟢 Hiển thị trên cửa hàng</option>
-              <option value="hidden">⚪ Đang ẩn</option>
+              <option value="active" className="bg-[#121220] text-white">🟢 Hiển thị trên Storefront</option>
+              <option value="hidden" className="bg-[#121220] text-white">⚪ Tạm ẩn khỏi khách hàng</option>
             </select>
           </div>
         </form>
       </Modal>
 
-      {/* Delete Category Confirmation Dialog */}
+      {/* Delete Confirmation */}
       <ConfirmDialog
         isOpen={!!deleteTargetId}
         onClose={() => setDeleteTargetId(null)}
@@ -375,12 +344,11 @@ export const CategoriesView: React.FC = () => {
           if (deleteTargetId) {
             deleteCategory(deleteTargetId);
             setDeleteTargetId(null);
-            showToast('Đã xóa danh mục thành công', 'info');
           }
         }}
-        title="Xóa Danh Mục?"
-        message="Xóa danh mục này có thể ảnh hưởng đến hiển thị nhóm sản phẩm. Bạn có chắc muốn tiếp tục?"
-        confirmLabel="Xóa danh mục"
+        title="Xóa Danh Mục Này?"
+        message="Các sản phẩm thuộc danh mục này sẽ không bị xóa nhưng sẽ cần gán lại danh mục mới."
+        confirmLabel="Xác Nhận Xóa"
         variant="danger"
       />
     </div>

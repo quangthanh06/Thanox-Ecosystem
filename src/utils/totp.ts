@@ -179,13 +179,13 @@ export function generateTotpCode(secretBase32: string, timeSec = Math.floor(Date
 export function verifyTotpCode(
   secretBase32: string,
   userCode: string,
-  backupCode = '888999',
+  backupCode?: string,
   windowSteps = 1
 ): { valid: boolean; reason?: string } {
   const cleanCode = userCode.replace(/\s+/g, '').trim();
 
-  // 1. Check backup code first
-  if (backupCode && cleanCode === backupCode) {
+  // 1. Check backup code first (if configured)
+  if (backupCode && cleanCode === backupCode.trim()) {
     return { valid: true, reason: 'backup_code' };
   }
 

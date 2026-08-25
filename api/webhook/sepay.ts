@@ -33,14 +33,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ success: false, error: 'Method Not Allowed' });
   }
 
-  // 1. Kiểm tra xác thực (Nếu SePay có gửi Header thì xác thực, nếu SePay cài "Không xác thực" thì cho qua luôn)
+  // 1. Kiểm tra xác thực SePay Webhook (Fail-closed)
   const authHeader = req.headers['authorization'] || req.headers['apikey'] || req.headers['x-api-key'];
   const provided = (Array.isArray(authHeader) ? authHeader[0] : authHeader)?.replace(/^Bearer\s+/i, '').replace(/^Apikey\s+/i, '').trim() || '';
   const expectedKey = process.env.SEPAY_API_KEY;
 
-  if (expectedKey && provided && !safeEqual(provided, expectedKey)) {
-    console.warn('[SEPAY] Unauthorized webhook request with invalid key');
-    return res.status(401).json({ success: false, error: 'Unauthorized' });
+  if (expectedKey) {
+    if (!provided || !safeEqual(provided, expectedKey)) {
+      console.warn('[SEPAY] Unauthorized webhook request with missing or invalid key');
+      return res.status(401).json({ success: false, error: 'Unauthorized: Invalid or missing API key' });
+    }
   }
 
   try {

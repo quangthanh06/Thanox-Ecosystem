@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
-import { SupportTicket } from '../types';
-import { Card, CardHeader } from './ui/Card';
+import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
 import { EmptyState } from './ui/EmptyState';
@@ -10,15 +9,11 @@ import {
   Search,
   Send,
   MessageSquare,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
   ShoppingBag,
   Wallet,
   User,
   Shield,
   Sparkles,
-  Zap,
 } from 'lucide-react';
 
 export const SupportView: React.FC = () => {
@@ -29,8 +24,6 @@ export const SupportView: React.FC = () => {
     sendTicketMessage,
     updateTicketStatus,
     createSupportTicket,
-    setCurrentPage,
-    showToast,
   } = useStore();
 
   const [selectedTicketId, setSelectedTicketId] = useState<string>(tickets[0]?.id || '');
@@ -74,17 +67,17 @@ export const SupportView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#0F0F1A] border border-white/5 rounded-2xl p-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-prominent border border-white/10 rounded-3xl p-5 sm:p-6 shadow-xl">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="font-display text-lg font-bold text-[#F0EDFF]">Trung Tâm Hỗ Trợ Khách Hàng</h2>
+            <h2 className="font-display text-lg sm:text-xl font-black text-[#F4F2FF] tracking-tight">Trung Tâm Hỗ Trợ Khách Hàng</h2>
             {openCount > 0 && (
               <Badge variant="danger" size="xs" dot>
                 {openCount} ticket chưa giải quyết
               </Badge>
             )}
           </div>
-          <p className="text-xs text-[#6B658E] mt-0.5">
+          <p className="text-xs text-[#938EB5] mt-0.5">
             Phản hồi khiếu nại, hỗ trợ cài đặt tệp tin và hướng dẫn kích hoạt key
           </p>
         </div>
@@ -92,7 +85,7 @@ export const SupportView: React.FC = () => {
 
       {tickets.length === 0 ? (
         <EmptyState
-          icon={<HeadphonesIcon className="w-6 h-6 text-[#9D5CF6]" />}
+          icon={<HeadphonesIcon className="w-6 h-6 text-[#C084FC]" />}
           title="Không có yêu cầu hỗ trợ nào"
           description="Khi khách hàng gửi ticket khiếu nại hoặc hỏi đáp, tin nhắn sẽ hiển thị tại đây."
           actionLabel="Tạo Ticket Thử Nghiệm"
@@ -105,15 +98,15 @@ export const SupportView: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
           {/* PANE 1: Ticket List (Col 4) */}
           <Card className="lg:col-span-4 p-0 flex flex-col justify-between overflow-hidden max-h-[420px] lg:max-h-[600px] lg:h-[600px]" variant="default">
-            <div className="p-3 border-b border-white/5 space-y-2 shrink-0">
+            <div className="p-3.5 border-b border-white/6 space-y-2.5 shrink-0">
               <div className="relative">
-                <Search className="w-3.5 h-3.5 text-[#6B658E] absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-3.5 h-3.5 text-[#938EB5] absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Tìm mã ticket, tên khách..."
-                  className="w-full bg-[#161626] border border-white/10 rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED]"
+                  className="w-full glass-input rounded-2xl pl-8 pr-3 py-1.5 text-xs text-[#F4F2FF]"
                 />
               </div>
 
@@ -123,10 +116,10 @@ export const SupportView: React.FC = () => {
                   <button
                     key={st}
                     onClick={() => setStatusFilter(st)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+                    className={`px-3 py-1 rounded-xl text-[11px] font-bold transition-colors cursor-pointer whitespace-nowrap ${
                       statusFilter === st
-                        ? 'bg-[#7C3AED] text-white'
-                        : 'text-[#8B84A8] hover:text-white bg-[#161626]'
+                        ? 'btn-liquid-primary text-white shadow-sm'
+                        : 'text-[#938EB5] hover:text-white glass-subtle'
                     }`}
                   >
                     {st === 'all'
@@ -141,110 +134,90 @@ export const SupportView: React.FC = () => {
               </div>
             </div>
 
-            {/* Ticket items */}
-            <div className="flex-1 overflow-y-auto divide-y divide-white/5 min-h-0">
-              {filteredTickets.map((ticket) => {
-                const isSelected = activeTicket?.id === ticket.id;
-                const lastMsg = ticket.messages[ticket.messages.length - 1];
-
+            {/* Scrollable list of tickets */}
+            <div className="overflow-y-auto flex-1 divide-y divide-white/6 custom-scrollbar">
+              {filteredTickets.map((t) => {
+                const isSelected = activeTicket?.id === t.id;
                 return (
-                  <div
-                    key={ticket.id}
-                    onClick={() => setSelectedTicketId(ticket.id)}
-                    className={`p-3.5 text-xs transition-colors cursor-pointer ${
+                  <button
+                    key={t.id}
+                    onClick={() => setSelectedTicketId(t.id)}
+                    className={`w-full text-left p-3.5 transition-all cursor-pointer space-y-1.5 ${
                       isSelected
-                        ? 'bg-[#7C3AED]/15 border-l-2 border-[#9D5CF6]'
+                        ? 'bg-[#7C3AED]/15 border-l-4 border-l-[#7C3AED]'
                         : 'hover:bg-white/[0.02]'
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="font-mono font-bold text-[#A78BFA]">{ticket.ticketNumber}</span>
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10.5px] font-bold text-[#C084FC]">
+                        {t.ticketNumber}
+                      </span>
                       <Badge
                         variant={
-                          ticket.status === 'open'
+                          t.status === 'open'
                             ? 'danger'
-                            : ticket.status === 'processing'
+                            : t.status === 'processing'
                             ? 'warning'
-                            : 'neutral'
+                            : 'success'
                         }
                         size="xs"
-                        dot
                       >
-                        {ticket.status === 'open'
-                          ? 'Mới'
-                          : ticket.status === 'processing'
-                          ? 'Đang xử lý'
-                          : 'Đã đóng'}
+                        {t.status === 'open' ? 'Mở' : t.status === 'processing' ? 'Xử lý' : 'Đóng'}
                       </Badge>
                     </div>
 
-                    <div className="font-semibold text-[#F0EDFF] truncate">{ticket.subject}</div>
-                    <div className="text-[11px] text-[#6B658E] truncate mt-0.5">
-                      {lastMsg ? lastMsg.message : 'Chưa có tin nhắn'}
-                    </div>
+                    <div className="font-bold text-xs text-[#F4F2FF] truncate">{t.subject}</div>
 
-                    <div className="flex items-center justify-between text-[10px] text-[#4E4A6F] mt-2">
-                      <span>{ticket.userName}</span>
-                      <span>{ticket.updatedAt}</span>
+                    <div className="flex items-center justify-between text-[10.5px] text-[#938EB5]">
+                      <span>{t.userName}</span>
+                      <span>{t.createdAt}</span>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
           </Card>
 
-          {/* PANE 2: Interactive Live Chat (Col 5) */}
-          <Card className="lg:col-span-5 p-0 flex flex-col justify-between overflow-hidden min-h-[450px] lg:h-[600px]" variant="default">
+          {/* PANE 2: Conversation Thread (Col 5) */}
+          <Card className="lg:col-span-5 p-0 flex flex-col justify-between overflow-hidden max-h-[500px] lg:max-h-[600px] lg:h-[600px]" variant="default">
             {activeTicket ? (
               <>
-                {/* Chat Header */}
-                <div className="p-3.5 border-b border-white/5 bg-[#161626]/50 flex items-center justify-between">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-xs text-[#A78BFA]">
-                        {activeTicket.ticketNumber}
-                      </span>
-                      <h3 className="font-semibold text-xs text-[#F0EDFF] truncate">
-                        {activeTicket.subject}
-                      </h3>
-                    </div>
-                    <div className="text-[10.5px] text-[#6B658E] mt-0.5">
-                      Khách hàng: <span className="text-[#F0EDFF]">{activeTicket.userName}</span>
-                    </div>
+                {/* Thread Header */}
+                <div className="p-3.5 border-b border-white/6 flex items-center justify-between shrink-0">
+                  <div>
+                    <h3 className="font-bold text-xs text-[#F4F2FF] truncate max-w-[200px] sm:max-w-xs">
+                      {activeTicket.subject}
+                    </h3>
+                    <div className="text-[10px] text-[#938EB5]">Mã: {activeTicket.ticketNumber} • Mục: {activeTicket.category}</div>
                   </div>
 
-                  <select
-                    value={activeTicket.status}
-                    onChange={(e) => updateTicketStatus(activeTicket.id, e.target.value as any)}
-                    className="bg-[#0F0F1A] border border-white/10 rounded-xl px-2.5 py-1 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
-                  >
-                    <option value="open">🔴 Đang mở</option>
-                    <option value="processing">🟡 Đang xử lý</option>
-                    <option value="closed">🟢 Đã giải quyết</option>
-                  </select>
+                  <div className="flex items-center gap-1.5">
+                    <select
+                      value={activeTicket.status}
+                      onChange={(e) => updateTicketStatus(activeTicket.id, e.target.value as any)}
+                      className="glass-input rounded-xl px-2.5 py-1 text-[11px] text-[#F4F2FF] cursor-pointer"
+                    >
+                      <option value="open" className="bg-[#121220] text-white">Mở</option>
+                      <option value="processing" className="bg-[#121220] text-white">Đang xử lý</option>
+                      <option value="closed" className="bg-[#121220] text-white">Đóng ticket</option>
+                    </select>
+                  </div>
                 </div>
 
-                {/* Messages Stream */}
-                <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#0A0A13]">
+                {/* Messages View */}
+                <div className="p-4 overflow-y-auto space-y-3 flex-1 custom-scrollbar">
                   {activeTicket.messages.map((msg) => {
-                    const isAdmin = msg.sender === 'admin';
-
+                    const isAdmin = msg.senderRole === 'admin' || msg.sender === 'admin';
                     return (
-                      <div
-                        key={msg.id}
-                        className={`flex flex-col ${isAdmin ? 'items-end' : 'items-start'}`}
-                      >
-                        <div className="flex items-center gap-1.5 mb-1 text-[10px] text-[#6B658E]">
-                          <span className="font-semibold text-[#8B84A8]">{msg.senderName}</span>
-                          <span>•</span>
-                          <span>{msg.time}</span>
+                      <div key={msg.id} className={`flex flex-col ${isAdmin ? 'items-end' : 'items-start'}`}>
+                        <div className="text-[10px] text-[#5C567A] mb-1 px-1">
+                          {msg.senderName} • {msg.time || msg.createdAt}
                         </div>
-
                         <div
-                          className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs ${
+                          className={`p-3 rounded-2xl text-xs max-w-[85%] leading-relaxed ${
                             isAdmin
-                              ? 'bg-[#7C3AED] text-white rounded-br-none shadow-md shadow-[#7C3AED]/20'
-                              : 'bg-[#161626] text-[#F0EDFF] border border-white/10 rounded-bl-none'
+                              ? 'btn-liquid-primary rounded-br-none'
+                              : 'glass-subtle text-[#E2DEFA] border border-white/8 rounded-bl-none'
                           }`}
                         >
                           {msg.message}
@@ -254,118 +227,104 @@ export const SupportView: React.FC = () => {
                   })}
                 </div>
 
-                {/* Quick Canned Replies & Send Input */}
-                <div className="p-3 border-t border-white/5 bg-[#161626]/40 space-y-2">
-                  {/* Canned reply chips */}
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-                    <button
-                      type="button"
-                      onClick={() => handleCannedReply('Chào bạn, mình đã kiểm tra và gửi lại mã kích hoạt cho bạn nhé!')}
-                      className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/10 text-[#A78BFA] border border-white/5 whitespace-nowrap cursor-pointer"
-                    >
-                      ⚡ Gửi lại key
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleCannedReply('Đơn hàng đã được hoàn tiền trực tiếp vào số dư ví của bạn.')}
-                      className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/10 text-emerald-400 border border-white/5 whitespace-nowrap cursor-pointer"
-                    >
-                      💰 Báo hoàn tiền
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleCannedReply('Bạn vui lòng gửi ảnh chụp lỗi màn hình để bên mình kiểm tra kỹ hơn nhé.')}
-                      className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/10 text-[#06B6D4] border border-white/5 whitespace-nowrap cursor-pointer"
-                    >
-                      📸 Yêu cầu ảnh lỗi
-                    </button>
-                  </div>
-
-                  {/* Send Form */}
-                  <form onSubmit={handleSendReply} className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={replyMessage}
-                      onChange={(e) => setReplyMessage(e.target.value)}
-                      placeholder="Nhập nội dung phản hồi khách hàng..."
-                      className="flex-1 bg-[#0F0F1A] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED]"
-                    />
-                    <Button variant="primary" size="sm" type="submit" leftIcon={<Send className="w-3.5 h-3.5" />}>
-                      Gửi
-                    </Button>
-                  </form>
+                {/* Quick Canned Responses */}
+                <div className="p-2 border-t border-white/6 flex items-center gap-1.5 overflow-x-auto shrink-0 text-[10px]">
+                  <span className="text-[#938EB5] px-1 shrink-0 font-bold">Mẫu:</span>
+                  <button
+                    type="button"
+                    onClick={() => handleCannedReply('Chào bạn, bạn vui lòng cung cấp mã đơn hàng để Admin kiểm tra nhé.')}
+                    className="px-2 py-0.5 rounded-lg glass-subtle text-[#938EB5] hover:text-white cursor-pointer truncate max-w-[140px]"
+                  >
+                    Xin mã đơn
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleCannedReply('Đã hỗ trợ reset key mới cho bạn, bạn kiểm tra lại trong mục Đơn Hàng nhé!')}
+                    className="px-2 py-0.5 rounded-lg glass-subtle text-[#938EB5] hover:text-white cursor-pointer truncate max-w-[140px]"
+                  >
+                    Đã cấp lại key
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleCannedReply('Đã hoàn tiền ví cho bạn thành công!')}
+                    className="px-2 py-0.5 rounded-lg glass-subtle text-[#938EB5] hover:text-white cursor-pointer truncate max-w-[140px]"
+                  >
+                    Đã hoàn tiền
+                  </button>
                 </div>
+
+                {/* Reply Form */}
+                <form onSubmit={handleSendReply} className="p-3 border-t border-white/6 flex items-center gap-2 shrink-0">
+                  <input
+                    type="text"
+                    value={replyMessage}
+                    onChange={(e) => setReplyMessage(e.target.value)}
+                    placeholder="Nhập nội dung phản hồi cho khách..."
+                    className="flex-1 glass-input rounded-2xl px-3.5 py-2 text-xs text-[#F4F2FF]"
+                  />
+                  <Button variant="primary" size="sm" type="submit" leftIcon={<Send className="w-3.5 h-3.5" />}>
+                    Gửi
+                  </Button>
+                </form>
               </>
             ) : (
-              <div className="flex items-center justify-center h-full text-xs text-[#6B658E]">
-                Chọn ticket để xem chi tiết
-              </div>
+              <div className="p-12 text-center text-xs text-[#938EB5]">Chọn một ticket để xem chi tiết</div>
             )}
           </Card>
 
-          {/* PANE 3: Customer 360 & Order Details (Col 3) */}
-          <Card className="lg:col-span-3 p-4 space-y-4" variant="default">
-            <CardHeader title="Thông Tin Khách Hàng" subtitle="Hồ sơ thành viên & lịch sử mua" />
+          {/* PANE 3: Customer Quick Profile (Col 3) */}
+          <Card className="lg:col-span-3 p-5 space-y-4 max-h-[600px]" variant="default">
+            <h4 className="font-bold text-xs text-[#F4F2FF] border-b border-white/6 pb-2.5 flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5 text-[#C084FC]" /> Thông Tin Khách Hàng
+            </h4>
 
             {ticketUser ? (
-              <div className="space-y-4 text-xs">
-                {/* User avatar and balance card */}
-                <div className="p-3.5 rounded-xl bg-[#161626]/60 border border-white/5 space-y-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#06B6D4] flex items-center justify-center font-bold text-white shadow-sm">
-                      {ticketUser.username.substring(0, 2).toUpperCase()}
-                    </div>
-                    <div>
-                      <div className="font-semibold text-[#F0EDFF]">{ticketUser.username}</div>
-                      <div className="text-[10px] text-[#6B658E]">{ticketUser.email}</div>
-                    </div>
+              <div className="space-y-3.5 text-xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#7C3AED] to-[#06B6D4] flex items-center justify-center font-bold text-white shadow-sm">
+                    {ticketUser.avatarText || ticketUser.username.substring(0, 2).toUpperCase()}
                   </div>
+                  <div>
+                    <div className="font-bold text-[#F4F2FF]">{ticketUser.username}</div>
+                    <div className="text-[10.5px] text-[#938EB5]">{ticketUser.email}</div>
+                  </div>
+                </div>
 
-                  <div className="pt-2 border-t border-white/5 flex justify-between items-baseline">
-                    <span className="text-[#8B84A8]">Số dư ví:</span>
-                    <span className="font-bold text-emerald-400">
+                <div className="p-3.5 rounded-2xl glass-subtle border border-white/6 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#938EB5]">Số dư ví:</span>
+                    <span className="font-bold text-emerald-300">
                       {ticketUser.balance.toLocaleString('vi-VN')}đ
                     </span>
                   </div>
 
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-[#8B84A8]">Tổng chi tiêu:</span>
-                    <span className="text-[#F0EDFF] font-medium">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#938EB5]">Tổng đơn mua:</span>
+                    <span className="font-bold text-white">{ticketUser.totalOrders} đơn</span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#938EB5]">Tổng chi tiêu:</span>
+                    <span className="font-bold text-[#C084FC]">
                       {ticketUser.totalSpent.toLocaleString('vi-VN')}đ
                     </span>
                   </div>
                 </div>
 
-                {/* Related Order Shortcut */}
-                {activeTicket?.relatedOrderCode && (
-                  <div className="p-3.5 rounded-xl bg-[#161626]/60 border border-white/5 space-y-2">
-                    <span className="text-[10px] font-bold text-[#6B658E] uppercase tracking-wider">
-                      Đơn Hàng Liên Quan
-                    </span>
-                    <div className="font-mono font-bold text-[#A78BFA]">
-                      {activeTicket.relatedOrderCode}
+                {relatedOrder && (
+                  <div className="p-3.5 rounded-2xl glass-subtle border border-white/6 space-y-1.5">
+                    <div className="text-[10px] text-[#938EB5] uppercase font-bold">Đơn hàng liên quan</div>
+                    <div className="font-bold text-white text-xs">{relatedOrder.productName}</div>
+                    <div className="text-[10.5px] text-emerald-300 font-bold">
+                      {relatedOrder.totalPrice.toLocaleString('vi-VN')}đ ({relatedOrder.status})
                     </div>
-                    {relatedOrder && (
-                      <div className="text-[11px] text-[#8B84A8]">
-                        <div>Sản phẩm: {relatedOrder.productName}</div>
-                        <div>Tổng: {relatedOrder.totalPrice.toLocaleString('vi-VN')}đ</div>
-                      </div>
-                    )}
-                    <Button
-                      variant="secondary"
-                      size="xs"
-                      onClick={() => setCurrentPage('orders')}
-                      className="w-full mt-1"
-                    >
-                      Xem Đơn Này
-                    </Button>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="text-xs text-[#6B658E]">Không tìm thấy hồ sơ thành viên</div>
+              <div className="py-8 text-center text-xs text-[#938EB5]">
+                {activeTicket ? `Khách: ${activeTicket.userName}` : 'Chưa có thông tin'}
+              </div>
             )}
           </Card>
         </div>

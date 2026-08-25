@@ -9,9 +9,7 @@ import {
   Copy,
   Check,
   Download,
-  Clock,
   CheckCircle2,
-  AlertCircle,
   HelpCircle,
   ShoppingBag,
   ShieldCheck,
@@ -33,9 +31,9 @@ export const StorefrontOrders: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto space-y-8 py-4">
       {/* Breadcrumb & Header */}
-      <div className="border-b border-white/5 pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="border-b border-white/6 pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs text-[#8B84A8] mb-1.5">
+          <div className="flex items-center gap-2 text-xs text-[#938EB5] mb-1.5">
             <button onClick={() => navigateToStorefront('home')} className="hover:text-white transition-colors cursor-pointer">
               Trang Chủ
             </button>
@@ -44,12 +42,12 @@ export const StorefrontOrders: React.FC = () => {
               Tài Khoản
             </button>
             <span>/</span>
-            <span className="text-[#9D5CF6] font-medium">Đơn Hàng & License Key</span>
+            <span className="text-[#C084FC] font-semibold">Đơn Hàng & License Key</span>
           </div>
-          <h1 className="font-display text-2xl font-extrabold text-[#F0EDFF]">
+          <h1 className="font-display text-2xl sm:text-3xl font-black text-[#F4F2FF] tracking-tight uppercase">
             Lịch Sử Mua Hàng & Key Kích Hoạt
           </h1>
-          <p className="text-xs text-[#8B84A8] mt-0.5">
+          <p className="text-xs text-[#938EB5] mt-0.5">
             Quản lý tất cả mã kích hoạt License Key và link tải file của bạn
           </p>
         </div>
@@ -66,14 +64,14 @@ export const StorefrontOrders: React.FC = () => {
 
       {/* Orders List */}
       {userOrders.length === 0 ? (
-        <div className="text-center py-16 bg-[#0F0F1A] border border-dashed border-white/10 rounded-3xl space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-[#7C3AED]/10 flex items-center justify-center text-[#9D5CF6] mx-auto">
+        <div className="text-center py-16 glass-subtle border border-dashed border-white/10 rounded-3xl space-y-4">
+          <div className="w-16 h-16 rounded-3xl glass-standard text-[#C084FC] flex items-center justify-center mx-auto shadow-md border border-white/12">
             <Package className="w-8 h-8" />
           </div>
-          <h2 className="font-display text-lg font-bold text-[#F0EDFF]">
+          <h2 className="font-display text-lg font-black text-[#F4F2FF]">
             Bạn Chưa Có Đơn Hàng Nào
           </h2>
-          <p className="text-xs text-[#8B84A8] max-w-sm mx-auto">
+          <p className="text-xs text-[#938EB5] max-w-sm mx-auto">
             Hãy lựa chọn các gói bản quyền Thanox và thanh toán tự động để nhận key ngay lập tức.
           </p>
           <Button variant="primary" onClick={() => navigateToStorefront('products')}>
@@ -85,16 +83,16 @@ export const StorefrontOrders: React.FC = () => {
           {userOrders.map((order) => (
             <div
               key={order.id}
-              className="bg-[#0F0F1A] border border-white/10 rounded-2xl p-5 space-y-4 hover:border-white/20 transition-all"
+              className="glass-standard border border-white/8 rounded-3xl p-5 sm:p-6 space-y-4 shadow-md transition-all"
             >
               {/* Order Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/6 pb-3">
                 <div className="flex items-center gap-3">
-                  <span className="font-mono font-bold text-xs text-[#9D5CF6]">
+                  <span className="font-mono font-bold text-xs text-[#C084FC]">
                     #{order.id}
                   </span>
-                  <span className="text-xs text-[#8B84A8]">
-                    Ngày mua: <span className="text-[#CBC7E0]">{order.createdAt}</span>
+                  <span className="text-xs text-[#938EB5]">
+                    Ngày mua: <span className="text-[#F4F2FF] font-medium">{order.createdAt}</span>
                   </span>
                 </div>
 
@@ -121,22 +119,22 @@ export const StorefrontOrders: React.FC = () => {
               {/* Order Item Details */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-[#8B84A8]">
+                  <span className="text-[10px] uppercase font-bold text-[#938EB5]">
                     {order.productCategory || order.category}
                   </span>
-                  <h3 className="font-display font-bold text-sm sm:text-base text-[#F0EDFF]">
+                  <h3 className="font-display font-bold text-sm sm:text-base text-[#F4F2FF]">
                     {order.productName}
                   </h3>
-                  <div className="text-xs text-[#8B84A8]">
-                    Số lượng: <strong className="text-[#CBC7E0]">{order.quantity}</strong> • Thanh toán:{' '}
-                    <strong className="text-emerald-400">
+                  <div className="text-xs text-[#938EB5]">
+                    Số lượng: <strong className="text-[#F4F2FF]">{order.quantity}</strong> • Thanh toán:{' '}
+                    <strong className="text-emerald-300">
                       {(order.totalAmount || order.totalPrice || 0).toLocaleString('vi-VN')}đ
                     </strong>
                   </div>
                 </div>
               </div>
 
-              {/* Order Delivery Content (Download Link & License Key / Account Credentials) */}
+              {/* Order Delivery Content */}
               {(() => {
                 const prod = products.find((p) => p.id === order.productId);
                 const rawContent = order.deliveredContent || order.key || prod?.downloadLinkOrKeys || '';
@@ -182,7 +180,7 @@ export const StorefrontOrders: React.FC = () => {
                   return (
                     <div className="space-y-3 pt-2">
                       {/* Account Delivery Card */}
-                      <div className="p-4 rounded-2xl bg-[#0F0F1A] border border-cyan-500/30 space-y-3 shadow-inner">
+                      <div className="p-4 sm:p-5 rounded-2xl glass-subtle border border-cyan-500/25 space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="text-[11px] uppercase font-bold text-cyan-300 flex items-center gap-1.5">
                             <ShieldCheck className="w-4 h-4 text-cyan-400" />
@@ -191,10 +189,10 @@ export const StorefrontOrders: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleCopyKey(rawContent)}
-                            className="text-xs font-bold text-cyan-300 hover:text-white flex items-center gap-1 transition-colors cursor-pointer bg-cyan-500/10 hover:bg-cyan-500/20 px-2.5 py-1 rounded-lg border border-cyan-500/20"
+                            className="text-xs font-bold text-cyan-300 hover:text-white flex items-center gap-1 transition-colors cursor-pointer bg-cyan-500/10 hover:bg-cyan-500/20 px-2.5 py-1 rounded-xl border border-cyan-500/20 active:scale-95"
                           >
                             {copiedKey === rawContent ? (
-                              <span className="text-emerald-400 flex items-center gap-1">
+                              <span className="text-emerald-300 flex items-center gap-1">
                                 <Check className="w-3.5 h-3.5" /> Đã sao chép tất cả!
                               </span>
                             ) : (
@@ -209,17 +207,17 @@ export const StorefrontOrders: React.FC = () => {
                           <div className="space-y-2">
                             {/* Username Row */}
                             {accUser && (
-                              <div className="p-2.5 rounded-xl bg-[#161626] border border-white/5 flex items-center justify-between gap-2">
+                              <div className="p-3 rounded-xl glass-subtle border border-white/6 flex items-center justify-between gap-2">
                                 <div className="text-xs font-mono">
-                                  <span className="text-[#8B84A8] text-[10.5px] block font-sans">TÀI KHOẢN / EMAIL:</span>
+                                  <span className="text-[#938EB5] text-[10px] block font-sans font-bold">TÀI KHOẢN / EMAIL:</span>
                                   <span className="text-cyan-300 font-bold text-sm select-all">{accUser}</span>
                                 </div>
                                 <button
                                   type="button"
                                   onClick={() => handleCopyKey(accUser)}
-                                  className="text-[11px] font-bold text-[#CBC7E0] hover:text-white px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 flex items-center gap-1 cursor-pointer shrink-0"
+                                  className="text-[11px] font-bold text-[#E2DEFA] hover:text-white px-2.5 py-1 rounded-xl glass-subtle hover:bg-white/10 flex items-center gap-1 cursor-pointer shrink-0 active:scale-95"
                                 >
-                                  {copiedKey === accUser ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                                  {copiedKey === accUser ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
                                   <span>{copiedKey === accUser ? 'Đã chép' : 'Sao chép TK'}</span>
                                 </button>
                               </div>
@@ -227,17 +225,17 @@ export const StorefrontOrders: React.FC = () => {
 
                             {/* Password Row */}
                             {accPass && (
-                              <div className="p-2.5 rounded-xl bg-[#161626] border border-white/5 flex items-center justify-between gap-2">
+                              <div className="p-3 rounded-xl glass-subtle border border-white/6 flex items-center justify-between gap-2">
                                 <div className="text-xs font-mono">
-                                  <span className="text-[#8B84A8] text-[10.5px] block font-sans">MẬT KHẨU:</span>
-                                  <span className="text-emerald-400 font-bold text-sm select-all">{accPass}</span>
+                                  <span className="text-[#938EB5] text-[10px] block font-sans font-bold">MẬT KHẨU:</span>
+                                  <span className="text-emerald-300 font-bold text-sm select-all">{accPass}</span>
                                 </div>
                                 <button
                                   type="button"
                                   onClick={() => handleCopyKey(accPass)}
-                                  className="text-[11px] font-bold text-[#CBC7E0] hover:text-white px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 flex items-center gap-1 cursor-pointer shrink-0"
+                                  className="text-[11px] font-bold text-[#E2DEFA] hover:text-white px-2.5 py-1 rounded-xl glass-subtle hover:bg-white/10 flex items-center gap-1 cursor-pointer shrink-0 active:scale-95"
                                 >
-                                  {copiedKey === accPass ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                                  {copiedKey === accPass ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
                                   <span>{copiedKey === accPass ? 'Đã chép' : 'Sao chép MK'}</span>
                                 </button>
                               </div>
@@ -245,24 +243,24 @@ export const StorefrontOrders: React.FC = () => {
 
                             {/* 2FA Row */}
                             {acc2FA && (
-                              <div className="p-2.5 rounded-xl bg-[#161626] border border-white/5 flex items-center justify-between gap-2">
+                              <div className="p-3 rounded-xl glass-subtle border border-white/6 flex items-center justify-between gap-2">
                                 <div className="text-xs font-mono">
-                                  <span className="text-[#8B84A8] text-[10.5px] block font-sans">2FA / GHI CHÚ:</span>
+                                  <span className="text-[#938EB5] text-[10px] block font-sans font-bold">2FA / GHI CHÚ:</span>
                                   <span className="text-purple-300 font-bold text-xs select-all">{acc2FA}</span>
                                 </div>
                                 <button
                                   type="button"
                                   onClick={() => handleCopyKey(acc2FA)}
-                                  className="text-[11px] font-bold text-[#CBC7E0] hover:text-white px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 flex items-center gap-1 cursor-pointer shrink-0"
+                                  className="text-[11px] font-bold text-[#E2DEFA] hover:text-white px-2.5 py-1 rounded-xl glass-subtle hover:bg-white/10 flex items-center gap-1 cursor-pointer shrink-0 active:scale-95"
                                 >
-                                  {copiedKey === acc2FA ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                                  {copiedKey === acc2FA ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
                                   <span>{copiedKey === acc2FA ? 'Đã chép' : 'Sao chép 2FA'}</span>
                                 </button>
                               </div>
                             )}
                           </div>
                         ) : (
-                          <div className="font-mono text-xs font-bold text-cyan-300 bg-[#0A0A10] p-3 rounded-xl border border-white/5 select-all whitespace-pre-wrap break-all leading-relaxed">
+                          <div className="font-mono text-xs font-bold text-cyan-300 glass-subtle p-3 rounded-xl border border-white/6 select-all whitespace-pre-wrap break-all leading-relaxed">
                             {rawContent}
                           </div>
                         )}
@@ -270,9 +268,9 @@ export const StorefrontOrders: React.FC = () => {
 
                       {/* Instructions if available */}
                       {prod?.instructions && (
-                        <div className="p-3 rounded-xl bg-purple-950/20 border border-purple-500/20 text-[11px] text-[#CBC7E0] space-y-1">
-                          <div className="font-bold text-[#9D5CF6]">📖 Hướng dẫn đăng nhập & đổi mật khẩu:</div>
-                          <div className="whitespace-pre-wrap">{prod.instructions}</div>
+                        <div className="p-3.5 rounded-2xl glass-subtle border border-purple-500/20 text-[11px] text-[#E2DEFA] space-y-1">
+                          <div className="font-bold text-[#C084FC]">📖 Hướng dẫn đăng nhập & đổi mật khẩu:</div>
+                          <div className="whitespace-pre-wrap leading-relaxed">{prod.instructions}</div>
                         </div>
                       )}
                     </div>
@@ -281,18 +279,18 @@ export const StorefrontOrders: React.FC = () => {
 
                 return (
                   <div className="space-y-3 pt-2">
-                    {/* Direct Attached File Download (If Admin uploaded file directly) */}
+                    {/* Direct Attached File Download */}
                     {prod?.attachedFileName && prod?.attachedFileData && (
-                      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-[#161626] to-[#06B6D4]/20 border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="p-3.5 rounded-2xl glass-subtle border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-300">
                             <Download className="w-5 h-5" />
                           </div>
                           <div>
-                            <div className="font-display font-bold text-xs text-[#F0EDFF]">
+                            <div className="font-display font-bold text-xs text-[#F4F2FF]">
                               Tệp Đính Kèm: <span className="text-emerald-300 font-mono">{prod.attachedFileName}</span>
                             </div>
-                            <div className="text-[10.5px] text-[#8B84A8]">
+                            <div className="text-[10.5px] text-[#938EB5]">
                               Dung lượng: {prod.attachedFileSize || 'Sẵn sàng tải xuống'} • Bàn giao trực tiếp
                             </div>
                           </div>
@@ -301,7 +299,7 @@ export const StorefrontOrders: React.FC = () => {
                         <a
                           href={prod.attachedFileData}
                           download={prod.attachedFileName}
-                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-teal-500 hover:to-emerald-500 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/25 transition-transform active:scale-95 text-center shrink-0 cursor-pointer"
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-teal-500 hover:to-emerald-500 text-black font-black text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/25 transition-transform active:scale-95 text-center shrink-0 cursor-pointer"
                         >
                           <Download className="w-4 h-4" />
                           <span>📥 Tải Tệp Về Máy Ngay</span>
@@ -311,16 +309,16 @@ export const StorefrontOrders: React.FC = () => {
 
                     {/* Direct Download Button */}
                     {downloadLink && (
-                      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-[#161626] to-[#7C3AED]/20 border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="p-3.5 rounded-2xl glass-subtle border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                          <div className="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-300">
                             <Download className="w-5 h-5" />
                           </div>
                           <div>
-                            <div className="font-display font-bold text-xs text-[#F0EDFF]">
+                            <div className="font-display font-bold text-xs text-[#F4F2FF]">
                               File Cài Đặt Sẵn Sàng Tải Xuống
                             </div>
-                            <div className="text-[10.5px] text-[#8B84A8] line-clamp-1 font-mono">
+                            <div className="text-[10.5px] text-[#938EB5] line-clamp-1 font-mono">
                               {downloadLink}
                             </div>
                           </div>
@@ -330,7 +328,7 @@ export const StorefrontOrders: React.FC = () => {
                           href={downloadLink}
                           target="_blank"
                           rel="noreferrer"
-                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#06B6D4] to-[#0891B2] hover:from-[#0891B2] hover:to-[#06B6D4] text-black font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/25 transition-transform active:scale-95 text-center shrink-0 cursor-pointer"
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#06B6D4] to-[#0891B2] hover:from-[#0891B2] hover:to-[#06B6D4] text-black font-black text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/25 transition-transform active:scale-95 text-center shrink-0 cursor-pointer"
                         >
                           <Download className="w-4 h-4" />
                           <span>📥 Tải File Cài Đặt Ngay</span>
@@ -340,19 +338,19 @@ export const StorefrontOrders: React.FC = () => {
 
                     {/* Delivered License Key Box */}
                     {cleanKey && (
-                      <div className="p-3.5 rounded-2xl bg-[#161626] border border-white/10 space-y-2">
+                      <div className="p-3.5 rounded-2xl glass-subtle border border-white/8 space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] uppercase font-bold text-[#9D5CF6] flex items-center gap-1.5">
+                          <span className="text-[11px] uppercase font-bold text-[#C084FC] flex items-center gap-1.5">
                             <Key className="w-3.5 h-3.5" />
                             Mã Bản Quyền / License Key Kích Hoạt
                           </span>
                           <button
                             type="button"
                             onClick={() => handleCopyKey(cleanKey)}
-                            className="text-xs font-bold text-[#CBC7E0] hover:text-white flex items-center gap-1 transition-colors cursor-pointer bg-white/5 hover:bg-white/10 px-2.5 py-1 rounded-lg"
+                            className="text-xs font-bold text-[#E2DEFA] hover:text-white flex items-center gap-1 transition-colors cursor-pointer glass-subtle hover:bg-white/10 px-2.5 py-1 rounded-xl active:scale-95"
                           >
                             {copiedKey === cleanKey ? (
-                              <span className="text-emerald-400 flex items-center gap-1">
+                              <span className="text-emerald-300 flex items-center gap-1">
                                 <Check className="w-3.5 h-3.5" /> Đã sao chép!
                               </span>
                             ) : (
@@ -362,7 +360,7 @@ export const StorefrontOrders: React.FC = () => {
                             )}
                           </button>
                         </div>
-                        <div className="font-mono text-xs font-bold text-amber-300 bg-[#0A0A10] p-3 rounded-xl border border-white/5 select-all whitespace-pre-wrap break-all leading-relaxed">
+                        <div className="font-mono text-xs font-bold text-amber-300 glass-subtle p-3 rounded-xl border border-white/6 select-all whitespace-pre-wrap break-all leading-relaxed">
                           {cleanKey}
                         </div>
                       </div>
@@ -370,9 +368,9 @@ export const StorefrontOrders: React.FC = () => {
 
                     {/* Instructions if available */}
                     {prod?.instructions && (
-                      <div className="p-3 rounded-xl bg-purple-950/20 border border-purple-500/20 text-[11px] text-[#CBC7E0] space-y-1">
-                        <div className="font-bold text-[#9D5CF6]">📖 Hướng dẫn kích hoạt & lưu ý:</div>
-                        <div className="whitespace-pre-wrap">{prod.instructions}</div>
+                      <div className="p-3.5 rounded-2xl glass-subtle border border-purple-500/20 text-[11px] text-[#E2DEFA] space-y-1">
+                        <div className="font-bold text-[#C084FC]">📖 Hướng dẫn kích hoạt & lưu ý:</div>
+                        <div className="whitespace-pre-wrap leading-relaxed">{prod.instructions}</div>
                       </div>
                     )}
                   </div>
@@ -380,8 +378,8 @@ export const StorefrontOrders: React.FC = () => {
               })()}
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/5 text-xs">
-                <div className="text-[#8B84A8] flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/6 text-xs">
+                <div className="text-[#938EB5] flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                   <span>Bảo hành trọn đời theo chính sách Thanox</span>
                 </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { User, UserRole } from '../types';
-import { Card, CardHeader } from './ui/Card';
+import { Card } from './ui/Card';
 import { StatCard } from './ui/StatCard';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
@@ -11,24 +11,18 @@ import { EmptyState } from './ui/EmptyState';
 import {
   Users,
   Search,
-  Shield,
   Crown,
   Wallet,
   Lock,
   Unlock,
   Edit2,
-  DollarSign,
-  UserCheck,
   UserX,
-  Mail,
-  Phone,
   Key,
   CheckCircle2,
-  XCircle,
-  AlertCircle,
   Sparkles,
-  RefreshCw,
   Trash2,
+  Plus,
+  Minus,
 } from 'lucide-react';
 
 export const UsersView: React.FC = () => {
@@ -70,7 +64,6 @@ export const UsersView: React.FC = () => {
 
   // Real calculations
   const totalUsers = users.length;
-  const vipUsers = users.filter((u) => u.role === 'vip').length;
   const bannedUsers = users.filter((u) => u.status === 'banned').length;
   const sellerRequests = users.filter((u) => u.sellerStatus === 'pending');
   const activeSellers = users.filter((u) => u.sellerStatus === 'active');
@@ -148,10 +141,10 @@ export const UsersView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#0F0F1A] border border-white/5 rounded-2xl p-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-prominent border border-white/10 rounded-3xl p-5 sm:p-6 shadow-xl">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="font-display text-lg font-bold text-[#F0EDFF]">Quản Lý Người Dùng & Đại Lý</h2>
+            <h2 className="font-display text-lg sm:text-xl font-black text-[#F4F2FF] tracking-tight">Quản Lý Người Dùng & Đại Lý</h2>
             <Badge variant="brand" size="xs">
               {users.length} tài khoản
             </Badge>
@@ -161,7 +154,7 @@ export const UsersView: React.FC = () => {
               </Badge>
             )}
           </div>
-          <p className="text-xs text-[#6B658E] mt-0.5">
+          <p className="text-xs text-[#938EB5] mt-0.5">
             Quản trị danh bạ thành viên, phê duyệt hồ sơ Đại lý / CTV, đổi mật khẩu và điều chỉnh số dư
           </p>
         </div>
@@ -201,31 +194,31 @@ export const UsersView: React.FC = () => {
       </div>
 
       {/* Tabs Switcher */}
-      <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+      <div className="flex items-center gap-2 border-b border-white/6 pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab('users')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-2 ${
+          className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
             activeTab === 'users'
-              ? 'bg-[#7C3AED]/15 text-white border border-[#7C3AED]/30 shadow-sm'
-              : 'text-[#8B84A8] hover:text-white hover:bg-white/5'
+              ? 'btn-liquid-primary shadow-sm'
+              : 'glass-subtle text-[#938EB5] hover:text-white border border-white/8'
           }`}
         >
-          <Users className="w-3.5 h-3.5 text-[#9D5CF6]" />
+          <Users className="w-3.5 h-3.5 text-[#C084FC]" />
           <span>Tất Cả Thành Viên ({users.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('sellers')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-2 ${
+          className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
             activeTab === 'sellers'
-              ? 'bg-[#7C3AED]/15 text-white border border-[#7C3AED]/30 shadow-sm'
-              : 'text-[#8B84A8] hover:text-white hover:bg-white/5'
+              ? 'btn-liquid-primary shadow-sm'
+              : 'glass-subtle text-[#938EB5] hover:text-white border border-white/8'
           }`}
         >
-          <Crown className="w-3.5 h-3.5 text-amber-400" />
+          <Crown className="w-3.5 h-3.5 text-amber-300" />
           <span>Hồ Sơ Đại Lý / CTV</span>
           {sellerRequests.length > 0 && (
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-400 font-bold">
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-bold">
               {sellerRequests.length}
             </span>
           )}
@@ -238,13 +231,13 @@ export const UsersView: React.FC = () => {
           <Card className="p-4 space-y-3" variant="default">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div className="relative flex-1">
-                <Search className="w-4 h-4 text-[#6B658E] absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-[#938EB5] absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Tìm theo username, email, số điện thoại..."
-                  className="w-full bg-[#161626] border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED]"
+                  className="w-full glass-input rounded-2xl pl-9 pr-4 py-2 text-xs text-[#F4F2FF]"
                 />
               </div>
 
@@ -252,23 +245,23 @@ export const UsersView: React.FC = () => {
                 <select
                   value={selectedRole}
                   onChange={(e) => setSelectedRole(e.target.value)}
-                  className="bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
+                  className="glass-input rounded-2xl px-3 py-2 text-xs text-[#F4F2FF] cursor-pointer"
                 >
-                  <option value="all">Tất cả vai trò</option>
-                  <option value="user">Thành viên</option>
-                  <option value="vip">VIP Member</option>
-                  <option value="affiliate">Đối tác CTV</option>
-                  <option value="admin">Quản trị viên</option>
+                  <option value="all" className="bg-[#121220] text-white">Tất cả vai trò</option>
+                  <option value="user" className="bg-[#121220] text-white">Thành viên</option>
+                  <option value="vip" className="bg-[#121220] text-white">VIP Member</option>
+                  <option value="affiliate" className="bg-[#121220] text-white">Đối tác CTV</option>
+                  <option value="admin" className="bg-[#121220] text-white">Quản trị viên</option>
                 </select>
 
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
+                  className="glass-input rounded-2xl px-3 py-2 text-xs text-[#F4F2FF] cursor-pointer"
                 >
-                  <option value="all">Tất cả trạng thái</option>
-                  <option value="active">🟢 Đang hoạt động</option>
-                  <option value="banned">🔴 Bị khóa</option>
+                  <option value="all" className="bg-[#121220] text-white">Tất cả trạng thái</option>
+                  <option value="active" className="bg-[#121220] text-white">🟢 Đang hoạt động</option>
+                  <option value="banned" className="bg-[#121220] text-white">🔴 Bị khóa</option>
                 </select>
               </div>
             </div>
@@ -277,7 +270,7 @@ export const UsersView: React.FC = () => {
           {/* Users Table */}
           {filteredUsers.length === 0 ? (
             <EmptyState
-              icon={<Users className="w-6 h-6 text-[#9D5CF6]" />}
+              icon={<Users className="w-6 h-6 text-[#C084FC]" />}
               title="Không tìm thấy người dùng nào"
               description="Danh sách người dùng hiện đang trống hoặc không khớp với bộ lọc tìm kiếm."
             />
@@ -286,7 +279,7 @@ export const UsersView: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs whitespace-nowrap min-w-[750px]">
                   <thead>
-                    <tr className="bg-[#161626]/60 text-[#555074] border-b border-white/5 uppercase text-[10px] tracking-wider font-semibold">
+                    <tr className="bg-white/[0.02] text-[#938EB5] border-b border-white/6 uppercase text-[10px] tracking-wider font-bold">
                       <th className="py-3 px-4">Tài Khoản</th>
                       <th className="py-3 px-4">Vai Trò</th>
                       <th className="py-3 px-4">Đại Lý</th>
@@ -297,7 +290,7 @@ export const UsersView: React.FC = () => {
                       <th className="py-3 px-4 text-right">Hành Động</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-white/6">
                     {filteredUsers.map((user) => (
                       <tr key={user.id} className="hover:bg-white/[0.02] transition-colors group">
                         <td className="py-3.5 px-4">
@@ -306,8 +299,8 @@ export const UsersView: React.FC = () => {
                               {user.avatarText || user.username.substring(0, 2).toUpperCase()}
                             </div>
                             <div className="min-w-0">
-                              <div className="font-semibold text-[#F0EDFF] truncate">{user.username}</div>
-                              <div className="text-[10px] text-[#6B658E] truncate">{user.email}</div>
+                              <div className="font-bold text-[#F4F2FF] truncate">{user.username}</div>
+                              <div className="text-[10px] text-[#938EB5] truncate">{user.email}</div>
                             </div>
                           </div>
                         </td>
@@ -316,17 +309,17 @@ export const UsersView: React.FC = () => {
 
                         <td className="py-3.5 px-4">
                           {getSellerBadge(user.sellerStatus) || (
-                            <span className="text-[#6B658E] text-[11px]">—</span>
+                            <span className="text-[#5C567A] text-[11px]">—</span>
                           )}
                         </td>
 
-                        <td className="py-3.5 px-4 font-bold text-emerald-400">
+                        <td className="py-3.5 px-4 font-bold text-emerald-300">
                           {user.balance.toLocaleString('vi-VN')}đ
                         </td>
 
-                        <td className="py-3.5 px-4 font-semibold text-[#F0EDFF]">{user.totalOrders} đơn</td>
+                        <td className="py-3.5 px-4 font-bold text-[#F4F2FF]">{user.totalOrders} đơn</td>
 
-                        <td className="py-3.5 px-4 font-mono text-[#8B84A8]">
+                        <td className="py-3.5 px-4 font-mono text-[#938EB5]">
                           {user.totalSpent.toLocaleString('vi-VN')}đ
                         </td>
 
@@ -344,7 +337,7 @@ export const UsersView: React.FC = () => {
                                 setResetPassTargetUser(user);
                                 setNewPasswordInput('');
                               }}
-                              className="p-1.5 rounded-lg bg-[#161626] hover:bg-[#1E1E30] text-[#8B84A8] hover:text-amber-400 transition-colors cursor-pointer"
+                              className="p-1.5 rounded-xl glass-subtle hover:bg-white/10 text-[#938EB5] hover:text-amber-300 transition-colors cursor-pointer"
                               title="Đặt lại mật khẩu"
                             >
                               <Key className="w-3.5 h-3.5" />
@@ -357,7 +350,7 @@ export const UsersView: React.FC = () => {
                                 setAdjustAmount(50000);
                                 setAdjustAction('add');
                               }}
-                              className="p-1.5 rounded-lg bg-[#161626] hover:bg-[#1E1E30] text-[#8B84A8] hover:text-emerald-400 transition-colors cursor-pointer"
+                              className="p-1.5 rounded-xl glass-subtle hover:bg-white/10 text-[#938EB5] hover:text-emerald-300 transition-colors cursor-pointer"
                               title="Cộng/Trừ số dư ví"
                             >
                               <Wallet className="w-3.5 h-3.5" />
@@ -369,7 +362,7 @@ export const UsersView: React.FC = () => {
                                 setEditingUser(user);
                                 setRoleForm(user.role);
                               }}
-                              className="p-1.5 rounded-lg bg-[#161626] hover:bg-[#1E1E30] text-[#8B84A8] hover:text-white transition-colors cursor-pointer"
+                              className="p-1.5 rounded-xl glass-subtle hover:bg-white/10 text-[#938EB5] hover:text-white transition-colors cursor-pointer"
                               title="Đổi vai trò"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
@@ -378,21 +371,21 @@ export const UsersView: React.FC = () => {
                             {/* Ban toggle */}
                             <button
                               onClick={() => setBanTargetUser(user)}
-                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                              className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
                                 user.status === 'active'
-                                  ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400'
-                                  : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400'
+                                  ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300'
+                                  : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300'
                               }`}
                               title={user.status === 'active' ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
                             >
                               {user.status === 'active' ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                             </button>
 
-                            {/* Delete User (Non-Admin only) */}
+                            {/* Delete User */}
                             {user.role !== 'admin' && user.username !== 'admin' && (
                               <button
                                 onClick={() => setDeleteTargetUser(user)}
-                                className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors cursor-pointer"
+                                className="p-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 transition-colors cursor-pointer"
                                 title="Xóa tài khoản"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -417,31 +410,31 @@ export const UsersView: React.FC = () => {
               .map((user) => (
                 <Card
                   key={user.id}
-                  className={`p-4 space-y-3 border-white/5 ${
+                  className={`p-5 space-y-3.5 glass-subtle border-white/8 ${
                     user.sellerStatus === 'pending'
-                      ? 'border-amber-500/30 bg-[#161626]/70'
+                      ? 'border-amber-500/30'
                       : user.sellerStatus === 'active'
-                      ? 'border-emerald-500/20 bg-[#161626]/40'
-                      : 'border-white/5 bg-[#161626]/20'
+                      ? 'border-emerald-500/20'
+                      : 'border-white/5'
                   }`}
                   variant="default"
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <h4 className="font-bold text-sm text-[#F0EDFF]">{user.username}</h4>
-                      <p className="text-[11px] text-[#8B84A8]">{user.email}</p>
+                      <h4 className="font-bold text-sm text-[#F4F2FF]">{user.username}</h4>
+                      <p className="text-[11px] text-[#938EB5]">{user.email}</p>
                     </div>
                     {getSellerBadge(user.sellerStatus)}
                   </div>
 
-                  <div className="p-3 rounded-xl bg-[#0F0F1A] border border-white/5 space-y-1 text-xs">
+                  <div className="p-3.5 rounded-2xl glass-standard border border-white/6 space-y-1 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-[#8B84A8]">Số dư ví:</span>
-                      <span className="font-bold text-emerald-400">{user.balance.toLocaleString('vi-VN')}đ</span>
+                      <span className="text-[#938EB5]">Số dư ví:</span>
+                      <span className="font-bold text-emerald-300">{user.balance.toLocaleString('vi-VN')}đ</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-[#8B84A8]">Đã mua:</span>
-                      <span className="font-semibold text-white">{user.totalOrders} đơn</span>
+                      <span className="text-[#938EB5]">Đã mua:</span>
+                      <span className="font-bold text-white">{user.totalOrders} đơn</span>
                     </div>
                   </div>
 
@@ -472,7 +465,7 @@ export const UsersView: React.FC = () => {
                         variant="secondary"
                         size="xs"
                         onClick={() => updateSellerStatus(user.id, 'suspended')}
-                        className="w-full text-red-400 hover:text-red-300"
+                        className="w-full text-red-300 hover:text-red-200"
                       >
                         Thu Hồi Quyền Đại Lý
                       </Button>
@@ -493,7 +486,7 @@ export const UsersView: React.FC = () => {
 
           {users.filter((u) => u.sellerStatus && u.sellerStatus !== 'none').length === 0 && (
             <EmptyState
-              icon={<Crown className="w-6 h-6 text-amber-400" />}
+              icon={<Crown className="w-6 h-6 text-amber-300" />}
               title="Chưa có hồ sơ đại lý nào"
               description="Khi thành viên đăng ký trở thành Đại lý / CTV ngoài trang chủ, hồ sơ sẽ hiển thị tại đây để duyệt."
             />
@@ -520,18 +513,18 @@ export const UsersView: React.FC = () => {
       >
         <form onSubmit={handleSaveRole} className="space-y-4 text-xs">
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+            <label className="text-[11px] font-bold text-[#938EB5] uppercase tracking-wider">
               Chọn Vai Trò Mới
             </label>
             <select
               value={roleForm}
               onChange={(e) => setRoleForm(e.target.value as UserRole)}
-              className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+              className="w-full glass-input rounded-2xl px-3.5 py-2.5 text-xs text-[#F4F2FF]"
             >
-              <option value="user">Thành viên thông thường</option>
-              <option value="vip">VIP Member (Chiết khấu riêng)</option>
-              <option value="affiliate">Đối tác CTV (Nhận hoa hồng)</option>
-              <option value="admin">Quản trị viên (Super Admin)</option>
+              <option value="user" className="bg-[#121220] text-white">Thành viên thông thường</option>
+              <option value="vip" className="bg-[#121220] text-white">VIP Member (Chiết khấu riêng)</option>
+              <option value="affiliate" className="bg-[#121220] text-white">Đối tác CTV (Nhận hoa hồng)</option>
+              <option value="admin" className="bg-[#121220] text-white">Quản trị viên (Super Admin)</option>
             </select>
           </div>
         </form>
@@ -555,46 +548,46 @@ export const UsersView: React.FC = () => {
         }
       >
         <form onSubmit={handleConfirmAdjustBalance} className="space-y-4 text-xs">
-          <div className="p-3 rounded-xl bg-[#161626] border border-white/5 flex justify-between items-baseline">
-            <span className="text-[#8B84A8]">Số dư hiện tại:</span>
-            <span className="font-bold text-emerald-400 text-sm">
+          <div className="p-3.5 rounded-2xl glass-standard border border-white/6 flex justify-between items-baseline">
+            <span className="text-[#938EB5]">Số dư hiện tại:</span>
+            <span className="font-black text-emerald-300 text-sm">
               {adjustTargetUser?.balance.toLocaleString('vi-VN')}đ
             </span>
           </div>
 
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+            <label className="text-[11px] font-bold text-[#938EB5] uppercase tracking-wider">
               Hành Động
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setAdjustAction('add')}
-                className={`py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`py-2 px-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer ${
                   adjustAction === 'add'
-                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-                    : 'bg-[#161626] border-white/10 text-[#8B84A8]'
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    : 'glass-subtle border-white/8 text-[#938EB5]'
                 }`}
               >
-                Cộng Tiền
+                <Plus className="w-3.5 h-3.5" /> Cộng Tiền
               </button>
 
               <button
                 type="button"
                 onClick={() => setAdjustAction('subtract')}
-                className={`py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`py-2 px-3 rounded-2xl border text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer ${
                   adjustAction === 'subtract'
-                    ? 'bg-red-500/20 text-red-400 border-red-500/40'
-                    : 'bg-[#161626] border-white/10 text-[#8B84A8]'
+                    ? 'bg-red-500/20 text-red-300 border-red-500/40'
+                    : 'glass-subtle border-white/8 text-[#938EB5]'
                 }`}
               >
-                Trừ Tiền
+                <Minus className="w-3.5 h-3.5" /> Trừ Tiền
               </button>
             </div>
           </div>
 
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+            <label className="text-[11px] font-bold text-[#938EB5] uppercase tracking-wider">
               Số Tiền Điều Chỉnh (VNĐ)
             </label>
             <input
@@ -603,12 +596,12 @@ export const UsersView: React.FC = () => {
               step={1000}
               value={adjustAmount}
               onChange={(e) => setAdjustAmount(Number(e.target.value))}
-              className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] font-bold focus:outline-none focus:border-[#7C3AED]"
+              className="w-full glass-input rounded-2xl px-3.5 py-2.5 text-xs text-[#F4F2FF] font-bold"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+            <label className="text-[11px] font-bold text-[#938EB5] uppercase tracking-wider">
               Ghi Chú Lý Do
             </label>
             <input
@@ -616,7 +609,7 @@ export const UsersView: React.FC = () => {
               value={adjustNote}
               onChange={(e) => setAdjustNote(e.target.value)}
               placeholder="VD: Hỗ trợ nạp tiền, hoàn phí..."
-              className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+              className="w-full glass-input rounded-2xl px-3.5 py-2.5 text-xs text-[#F4F2FF]"
             />
           </div>
         </form>
@@ -640,14 +633,14 @@ export const UsersView: React.FC = () => {
         }
       >
         <form onSubmit={handleAdminResetPassword} className="space-y-4 text-xs">
-          <div className="p-3 rounded-xl bg-[#161626] border border-white/5 text-xs space-y-1">
-            <div className="text-[#8B84A8]">Tài khoản: <strong className="text-white">{resetPassTargetUser?.username}</strong></div>
-            <div className="text-[#8B84A8]">Email: <strong className="text-cyan-400">{resetPassTargetUser?.email}</strong></div>
+          <div className="p-3.5 rounded-2xl glass-subtle border border-white/6 text-xs space-y-1">
+            <div className="text-[#938EB5]">Tài khoản: <strong className="text-white">{resetPassTargetUser?.username}</strong></div>
+            <div className="text-[#938EB5]">Email: <strong className="text-cyan-300">{resetPassTargetUser?.email}</strong></div>
           </div>
 
           <div className="space-y-1.5">
             <div className="flex justify-between items-center">
-              <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">
+              <label className="text-[11px] font-bold text-[#938EB5] uppercase tracking-wider">
                 Mật Khẩu Mới *
               </label>
               <button
@@ -656,7 +649,7 @@ export const UsersView: React.FC = () => {
                   const randomPass = 'TX' + Math.floor(100000 + Math.random() * 900000);
                   setNewPasswordInput(randomPass);
                 }}
-                className="text-[10px] text-[#9D5CF6] hover:underline flex items-center gap-1 cursor-pointer font-semibold"
+                className="text-[10px] text-[#C084FC] hover:underline flex items-center gap-1 cursor-pointer font-bold"
               >
                 <Sparkles className="w-3 h-3" /> Tạo ngẫu nhiên
               </button>
@@ -667,7 +660,7 @@ export const UsersView: React.FC = () => {
               placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)..."
               value={newPasswordInput}
               onChange={(e) => setNewPasswordInput(e.target.value)}
-              className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] font-mono focus:outline-none focus:border-[#7C3AED]"
+              className="w-full glass-input rounded-2xl px-3.5 py-2.5 text-xs text-[#F4F2FF] font-mono"
             />
           </div>
         </form>

@@ -79,6 +79,37 @@ DROP POLICY IF EXISTS "bank_transactions_read_owner" ON public.bank_transactions
 CREATE POLICY "bank_transactions_read_owner" ON public.bank_transactions
   FOR SELECT USING (false);
 
+-- ---------------------------------------------------------------------------
+-- 4) PROFILES: Chống leo quyền (Privilege Escalation) & Chống tự chỉnh số dư
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.protect_sensitive_profile_fields()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Nếu không phải service_role (ví dụ user gọi qua client SDK)
+  IF coalesce(current_setting('request.jwt.claim.role', true), '') != 'service_role' THEN
+    IF NEW.role IS DISTINCT FROM OLD.role THEN
+      RAISE EXCEPTION 'Không có quyền thay đổi role tài khoản!';
+    END IF;
+    IF NEW.balance IS DISTINCT FROM OLD.balance THEN
+      RAISE EXCEPTION 'Không có quyền tự ý thay đổi số dư tài khoản!';
+    END IF;
+    IF NEW.total_spent IS DISTINCT FROM OLD.total_spent THEN
+      RAISE EXCEPTION 'Không có quyền tự ý thay đổi tổng chi tiêu!';
+    END IF;
+    IF NEW.status IS DISTINCT FROM OLD.status THEN
+      RAISE EXCEPTION 'Không có quyền tự ý thay đổi trạng thái khóa tài khoản!';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trg_protect_sensitive_profile_fields ON public.profiles;
+CREATE TRIGGER trg_protect_sensitive_profile_fields
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION public.protect_sensitive_profile_fields();
+
 -- ============================================================================
 -- KIỂM TRA SAU KHI CHẠY (phải trả về 0 dòng):
 --   SELECT grantee FROM information_schema.routine_privileges

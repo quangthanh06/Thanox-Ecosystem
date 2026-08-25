@@ -26,8 +26,14 @@ export const Drawer: React.FC<DrawerProps> = ({
         onClose();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -42,34 +48,34 @@ export const Drawer: React.FC<DrawerProps> = ({
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"
+        className="fixed inset-0 bg-black/75 backdrop-blur-xl transition-opacity duration-200"
         onClick={onClose}
       />
 
-      <div className="fixed inset-y-0 right-0 flex max-w-full pl-10">
+      <div className="fixed inset-y-0 right-0 flex max-w-full pl-6 sm:pl-10">
         <div
-          className={`w-screen ${widthStyles[width]} bg-[#0F0F1A] border-l border-white/10 shadow-2xl flex flex-col animate-in slide-in-from-right duration-250`}
+          className={`w-screen ${widthStyles[width]} glass-prominent border-l border-white/12 shadow-[0_30px_70px_rgba(0,0,0,0.85)] flex flex-col transform transition-transform duration-250 ease-[cubic-bezier(0.16,1,0.3,1)]`}
         >
           {/* Header */}
-          <div className="p-5 border-b border-white/5 bg-[#161626]/50 flex items-center justify-between shrink-0">
+          <div className="px-5 sm:px-6 py-4.5 border-b border-white/8 bg-white/[0.02] flex items-center justify-between shrink-0">
             <div>
-              <h3 className="font-display font-semibold text-base text-[#F0EDFF]">{title}</h3>
-              {subtitle && <p className="text-xs text-[#6B658E] mt-0.5">{subtitle}</p>}
+              <h3 className="font-display font-bold text-base sm:text-lg text-[#F4F2FF] tracking-tight">{title}</h3>
+              {subtitle && <p className="text-xs text-[#938EB5] mt-0.5">{subtitle}</p>}
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-lg bg-[#161626] border border-white/5 flex items-center justify-center text-[#8B84A8] hover:text-white hover:bg-[#1E1E30] transition-colors"
+              className="w-8 h-8 rounded-full glass-subtle hover:bg-white/10 flex items-center justify-center text-[#938EB5] hover:text-white transition-all cursor-pointer active:scale-90"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Body */}
-          <div className="p-5 overflow-y-auto space-y-4 flex-1">{children}</div>
+          <div className="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1 custom-scrollbar">{children}</div>
 
           {/* Footer */}
           {footer && (
-            <div className="p-4 border-t border-white/5 bg-[#161626]/30 flex items-center justify-end gap-2.5 shrink-0">
+            <div className="px-5 sm:px-6 py-4 border-t border-white/8 bg-white/[0.02] flex items-center justify-end gap-2.5 shrink-0">
               {footer}
             </div>
           )}

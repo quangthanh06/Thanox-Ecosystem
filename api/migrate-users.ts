@@ -31,10 +31,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
   }
 
-  // Require a secret key to prevent unauthorized calls
+  // Require a server secret key to prevent unauthorized calls
+  const expectedSecret = process.env.CRON_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
   const secret = req.headers['authorization'];
-  if (secret !== 'Bearer ' + process.env.VITE_SUPABASE_ANON_KEY) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  if (!expectedSecret || secret !== 'Bearer ' + expectedSecret) {
+    return res.status(401).json({ error: 'Unauthorized: Valid server secret required' });
   }
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;

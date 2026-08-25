@@ -264,22 +264,13 @@ export const StorefrontDepositQR: React.FC = () => {
       )
       .subscribe();
 
-    // 2. FAST SCANNER FALLBACK (Quét mỗi 1.5s)
+    // 2. POLLING FALLBACK (Ưu tiên Realtime WebSockets, kết hợp Supabase DB polling & SePay check hợp lý)
+    let pollCount = 0;
     const checkDepositStatus = async () => {
       try {
-        // Quét trực tiếp SePay API
-        try {
-          const res = await fetch(`/api/topup/check-bank?note=${encodeURIComponent(transactionCode)}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (isSubscribed && (data.matched || data.status === 'approved')) {
-              handleSuccess(activeAmount, data.newBalance);
-              return true;
-            }
-          }
-        } catch {}
+        pollCount++;
 
-        // Kiểm tra Supabase
+        // Kiểm tra Supabase DB trước (siêu tốc, không tốn quota SePay)
         const { data: topupRow } = await supabase
           .from('topups')
           .select('id, status, amount, user_id')
@@ -296,18 +287,32 @@ export const StorefrontDepositQR: React.FC = () => {
           handleSuccess(topupRow.amount || activeAmount, updatedBal);
           return true;
         }
+
+        // Quét API SePay dự phòng (mỗi 2 chu kỳ ~ 5-6s/lần để tránh cạn rate limit SePay)
+        if (pollCount % 2 === 0) {
+          try {
+            const res = await fetch(`/api/topup/check-bank?note=${encodeURIComponent(transactionCode)}`);
+            if (res.ok) {
+              const data = await res.json();
+              if (isSubscribed && (data.matched || data.status === 'approved')) {
+                handleSuccess(activeAmount, data.newBalance);
+                return true;
+              }
+            }
+          } catch {}
+        }
       } catch {}
       return false;
     };
 
-    // Chạy kiểm tra ngay lập tức
+    // Chạy kiểm tra ban đầu
     checkDepositStatus();
 
-    // Quét định kỳ mỗi 1 giây siêu tốc
+    // Quét định kỳ mỗi 2.8 giây (WebSockets vẫn bắt ngay tức thì < 50ms)
     const interval = setInterval(async () => {
       const isDone = await checkDepositStatus();
       if (isDone) clearInterval(interval);
-    }, 1000);
+    }, 2800);
 
     return () => {
       isSubscribed = false;
@@ -552,13 +557,13 @@ export const StorefrontDepositQR: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 bg-[rgba(255,255,255,0.05)] backdrop-blur-[26px] border border-white/10 p-3.5 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
-          <div className="w-10 h-10 rounded-xl bg-[#7C3AED]/20 border border-[#7C3AED]/30 flex items-center justify-center text-[#9D5CF6]">
+        <div className="flex items-center gap-3 glass-subtle border border-white/8 p-3.5 rounded-2xl shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-[#7C3AED]/20 border border-[#7C3AED]/30 flex items-center justify-center text-[#C084FC]">
             <Wallet className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider">Số dư ví của bạn</div>
-            <div className="font-display text-lg font-bold text-emerald-400">
+            <div className="text-[10px] font-bold text-[#938EB5] uppercase tracking-wider">Số dư ví của bạn</div>
+            <div className="font-display text-lg font-black text-emerald-300">
               {currentUser.balance.toLocaleString('vi-VN')} <span className="text-xs font-normal">đ</span>
             </div>
           </div>
@@ -566,19 +571,19 @@ export const StorefrontDepositQR: React.FC = () => {
       </div>
 
       {/* Channel Switcher */}
-      <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+      <div className="flex items-center gap-3 border-b border-white/8 pb-4">
         <button
           type="button"
           onClick={() => setDepositChannel('vietqr')}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer border ${
+          className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer border active:scale-95 ${
             depositChannel === 'vietqr'
-              ? 'bg-[#7C3AED] text-white border-[#9D5CF6] shadow-lg shadow-[#7C3AED]/30'
-              : 'bg-[#161626]/80 text-[#8B84A8] border-white/5 hover:text-white hover:border-white/15'
+              ? 'btn-liquid-primary shadow-md'
+              : 'glass-subtle text-[#938EB5] border-white/8 hover:text-white hover:bg-white/5'
           }`}
         >
           <QrCode className="w-4 h-4" />
           <span>Chuyển Khoản Ngân Hàng (VietQR)</span>
-          <span className="px-1.5 py-0.5 rounded-md text-[10px] bg-emerald-400/20 text-emerald-300 font-bold ml-1">
+          <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-400/20 text-emerald-300 font-bold ml-1">
             Khuyên Dùng
           </span>
         </button>
@@ -586,15 +591,15 @@ export const StorefrontDepositQR: React.FC = () => {
         <button
           type="button"
           onClick={() => setDepositChannel('card')}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer border ${
+          className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer border active:scale-95 ${
             depositChannel === 'card'
-              ? 'bg-[#7C3AED] text-white border-[#9D5CF6] shadow-lg shadow-[#7C3AED]/30'
-              : 'bg-[#161626]/80 text-[#8B84A8] border-white/5 hover:text-white hover:border-white/15'
+              ? 'btn-liquid-primary shadow-md'
+              : 'glass-subtle text-[#938EB5] border-white/8 hover:text-white hover:bg-white/5'
           }`}
         >
           <Smartphone className="w-4 h-4" />
           <span>Nạp Thẻ Cào Điện Thoại / Game</span>
-          <span className="px-1.5 py-0.5 rounded-md text-[10px] bg-amber-400/20 text-amber-300 font-bold ml-1">
+          <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-400/20 text-amber-300 font-bold ml-1">
             Chiết khấu {cardFeePercent}%
           </span>
         </button>
@@ -605,13 +610,13 @@ export const StorefrontDepositQR: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Left Column: Preset Denominations & Custom Amount */}
             <div className="lg:col-span-5 space-y-6">
-              <div className="bg-[rgba(255,255,255,0.05)] backdrop-blur-[26px] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.35)] rounded-3xl p-6 space-y-4">
+              <div className="glass-standard border border-white/10 shadow-xl rounded-3xl p-6 space-y-4">
                 <div>
-                  <h3 className="font-display font-bold text-sm sm:text-base text-[#F0EDFF] flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-[#9D5CF6]" />
+                  <h3 className="font-display font-black text-sm sm:text-base text-[#F4F2FF] flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-[#C084FC]" />
                     Chọn mệnh giá nạp (1 Chạm)
                   </h3>
-                  <p className="text-xs text-[#8B84A8] mt-1">
+                  <p className="text-xs text-[#938EB5] mt-1">
                     Bấm chọn số tiền, hệ thống sẽ tự động tạo mã QR chuyển khoản ngay lập tức.
                   </p>
                 </div>
@@ -631,13 +636,13 @@ export const StorefrontDepositQR: React.FC = () => {
                         key={amt}
                         type="button"
                         onClick={() => handleSelectPreset(amt)}
-                        className={`py-3 px-2 rounded-2xl text-center font-bold text-xs transition-all cursor-pointer border ${
+                        className={`py-3 px-2 rounded-2xl text-center font-bold text-xs transition-all cursor-pointer border active:scale-95 ${
                           active
-                            ? 'bg-gradient-to-br from-[#7C3AED] to-[#06B6D4] text-white border-cyan-400 shadow-lg shadow-[#7C3AED]/35 scale-[1.03]'
-                            : 'bg-[#161626]/90 text-[#CBC7E0] border-white/5 hover:border-white/20 hover:text-white hover:bg-[#1f1f33]'
+                            ? 'btn-liquid-primary border-cyan-400/50 shadow-lg shadow-[#7C3AED]/35 scale-[1.03]'
+                            : 'glass-subtle text-[#E2DEFA] border-white/8 hover:border-white/20 hover:text-white hover:bg-white/10'
                         }`}
                       >
-                        <span className="text-sm font-extrabold block">{label}</span>
+                        <span className="text-sm font-black block">{label}</span>
                         <span className="text-[10px] font-normal text-white/70 block mt-0.5">
                           {amt.toLocaleString('vi-VN')}đ
                         </span>
@@ -659,9 +664,9 @@ export const StorefrontDepositQR: React.FC = () => {
                         value={customAmountText}
                         onChange={handleCustomAmountChange}
                         placeholder={`Tối thiểu ${minDeposit.toLocaleString('vi-VN')}đ`}
-                        className="w-full bg-[#161626] border border-white/10 focus:border-[#7C3AED] rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] font-bold outline-none transition-colors"
+                        className="w-full glass-input rounded-2xl px-3.5 py-2.5 text-xs text-[#F4F2FF] font-bold"
                       />
-                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#8B84A8]">
+                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[#938EB5]">
                         VND
                       </span>
                     </div>
@@ -670,7 +675,7 @@ export const StorefrontDepositQR: React.FC = () => {
                       size="sm"
                       onClick={handleGenerateCustomQR}
                       disabled={!isValidAmount}
-                      className="font-bold whitespace-nowrap text-xs border-white/10"
+                      className="font-bold whitespace-nowrap text-xs"
                     >
                       Tạo QR
                     </Button>
@@ -679,12 +684,12 @@ export const StorefrontDepositQR: React.FC = () => {
               </div>
 
               {/* 24/7 Support */}
-              <div className="p-5 rounded-3xl bg-[rgba(255,255,255,0.05)] backdrop-blur-[26px] border border-white/10 text-xs space-y-2.5">
-                <div className="flex items-center gap-2 font-bold text-[#F0EDFF]">
-                  <MessageSquare className="w-4 h-4 text-[#9D5CF6]" />
+              <div className="p-5 rounded-3xl glass-subtle border border-white/8 text-xs space-y-2.5">
+                <div className="flex items-center gap-2 font-bold text-[#F4F2FF]">
+                  <MessageSquare className="w-4 h-4 text-[#C084FC]" />
                   <span>Hỗ trợ nạp tiền 24/7</span>
                 </div>
-                <p className="text-[11.5px] leading-relaxed text-[#8B84A8]">
+                <p className="text-[11.5px] leading-relaxed text-[#938EB5]">
                   Nếu giao dịch chưa cộng tiền sau 3-5 phút, vui lòng liên hệ Admin để được hỗ trợ kiểm tra tức thì:
                 </p>
                 <div className="grid grid-cols-2 gap-2 pt-1">
@@ -692,7 +697,7 @@ export const StorefrontDepositQR: React.FC = () => {
                     href="https://t.me/quangthank"
                     target="_blank"
                     rel="noreferrer"
-                    className="p-2.5 rounded-xl bg-[#161626]/80 border border-white/5 hover:border-[#06B6D4]/40 flex items-center gap-1.5 text-[11px] text-[#06B6D4] font-semibold transition-colors"
+                    className="p-2.5 rounded-xl glass-subtle border border-white/6 hover:border-[#06B6D4]/40 flex items-center gap-1.5 text-[11px] text-[#22D3EE] font-semibold transition-colors"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span className="truncate">Telegram: @quangthank</span>
@@ -701,7 +706,7 @@ export const StorefrontDepositQR: React.FC = () => {
                     href="https://zalo.me/0889696810"
                     target="_blank"
                     rel="noreferrer"
-                    className="p-2.5 rounded-xl bg-[#161626]/80 border border-white/5 hover:border-emerald-400/40 flex items-center gap-1.5 text-[11px] text-emerald-400 font-semibold transition-colors"
+                    className="p-2.5 rounded-xl glass-subtle border border-white/6 hover:border-emerald-400/40 flex items-center gap-1.5 text-[11px] text-emerald-300 font-semibold transition-colors"
                   >
                     <PhoneCall className="w-3.5 h-3.5" />
                     <span className="truncate">Zalo: 0889696810</span>
@@ -712,14 +717,14 @@ export const StorefrontDepositQR: React.FC = () => {
 
             {/* Right Column: QR Code & Transfer Information */}
             <div className="lg:col-span-7 space-y-6">
-              <div id="deposit-qr-section" className="bg-[rgba(255,255,255,0.05)] backdrop-blur-[26px] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.35)] rounded-3xl p-6 sm:p-8 space-y-5">
-                <div className="flex items-center justify-between border-b border-white/5 pb-4">
+              <div id="deposit-qr-section" className="glass-standard border border-white/10 shadow-xl rounded-3xl p-6 sm:p-8 space-y-5">
+                <div className="flex items-center justify-between border-b border-white/6 pb-4">
                   <div>
-                    <h3 className="font-display font-bold text-base sm:text-lg text-[#F0EDFF] flex items-center gap-2">
-                      <QrCode className="w-5 h-5 text-[#9D5CF6]" />
+                    <h3 className="font-display font-black text-base sm:text-lg text-[#F4F2FF] flex items-center gap-2">
+                      <QrCode className="w-5 h-5 text-[#C084FC]" />
                       Mã QR Thanh Toán
                     </h3>
-                    <p className="text-xs text-[#8B84A8] mt-0.5">
+                    <p className="text-xs text-[#938EB5] mt-0.5">
                       {transactionCode
                         ? 'Quét mã để tự động điền số tiền và nội dung chuyển khoản chính xác'
                         : 'Vui lòng chọn một mệnh giá nạp bên trái để hiển thị mã QR'}
@@ -731,15 +736,15 @@ export const StorefrontDepositQR: React.FC = () => {
                 </div>
 
                 {!transactionCode ? (
-                  <div className="py-14 px-6 rounded-2xl border border-dashed border-white/10 bg-[#161626]/40 text-center space-y-3">
-                    <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 mx-auto flex items-center justify-center text-[#8B84A8]">
+                  <div className="py-14 px-6 rounded-3xl border border-dashed border-white/10 glass-subtle text-center space-y-3">
+                    <div className="w-16 h-16 rounded-2xl glass-standard border border-white/10 mx-auto flex items-center justify-center text-[#938EB5] shadow-sm">
                       <QrCode className="w-8 h-8 opacity-60" />
                     </div>
                     <div>
-                      <h4 className="font-display font-bold text-sm text-[#F0EDFF] uppercase tracking-wider">
+                      <h4 className="font-display font-black text-sm text-[#F4F2FF] uppercase tracking-wider">
                         Chưa chọn số tiền nạp
                       </h4>
-                      <p className="text-xs text-[#8B84A8] mt-1 max-w-sm mx-auto">
+                      <p className="text-xs text-[#938EB5] mt-1 max-w-sm mx-auto">
                         Hãy bấm vào một trong các mệnh giá nạp (10K, 20K, 50K...) ở cột bên trái để hệ thống tự tạo mã QR thanh toán.
                       </p>
                     </div>
@@ -910,26 +915,26 @@ export const StorefrontDepositQR: React.FC = () => {
           </div>
 
           {/* Transaction History */}
-          <div className="bg-[rgba(255,255,255,0.05)] backdrop-blur-[26px] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.35)] rounded-3xl p-6 sm:p-8 space-y-4">
+          <div className="glass-standard border border-white/10 shadow-xl rounded-3xl p-6 sm:p-8 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#9D5CF6]" />
-                <h3 className="font-display font-bold text-sm sm:text-base text-[#F0EDFF]">
+                <Clock className="w-4 h-4 text-[#C084FC]" />
+                <h3 className="font-display font-black text-sm sm:text-base text-[#F4F2FF]">
                   Lịch sử nạp tiền VietQR
                 </h3>
               </div>
-              <span className="text-xs text-[#8B84A8]">{userTopups.length} giao dịch</span>
+              <span className="text-xs text-[#938EB5]">{userTopups.length} giao dịch</span>
             </div>
 
             {userTopups.length === 0 ? (
-              <div className="p-8 text-center text-xs text-[#8B84A8] border border-dashed border-white/5 rounded-2xl bg-[#161626]/30">
+              <div className="p-8 text-center text-xs text-[#938EB5] border border-dashed border-white/8 rounded-2xl glass-subtle">
                 Bạn chưa có yêu cầu nạp tiền nào. Hãy chọn mức nạp bên trên để bắt đầu!
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-white/5 text-[#8B84A8] text-[11px] uppercase">
+                    <tr className="border-b border-white/6 text-[#938EB5] text-[11px] uppercase">
                       <th className="pb-3 font-semibold">Mã Yêu Cầu</th>
                       <th className="pb-3 font-semibold">Số Tiền</th>
                       <th className="pb-3 font-semibold">Phương Thức</th>
@@ -938,16 +943,16 @@ export const StorefrontDepositQR: React.FC = () => {
                       <th className="pb-3 font-semibold text-right">Trạng Thái</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-white/6">
                     {userTopups.map((topup) => (
                       <tr key={topup.id} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="py-3 font-mono font-bold text-[#9D5CF6]">{topup.requestCode}</td>
-                        <td className="py-3 font-display font-bold text-emerald-400">
+                        <td className="py-3 font-mono font-bold text-[#C084FC]">{topup.requestCode}</td>
+                        <td className="py-3 font-display font-bold text-emerald-300">
                           +{topup.amount.toLocaleString('vi-VN')}đ
                         </td>
-                        <td className="py-3 text-[#CBC7E0]">{topup.method}</td>
-                        <td className="py-3 font-mono text-[11px] text-[#8B84A8]">{topup.transferNote}</td>
-                        <td className="py-3 text-[#8B84A8]">{topup.createdAt}</td>
+                        <td className="py-3 text-[#E2DEFA]">{topup.method}</td>
+                        <td className="py-3 font-mono text-[11px] text-[#938EB5]">{topup.transferNote}</td>
+                        <td className="py-3 text-[#938EB5]">{topup.createdAt}</td>
                         <td className="py-3 text-right">
                           {topup.status === 'pending' && <Badge variant="warning" size="xs" dot>Đang Chờ</Badge>}
                           {topup.status === 'processing' && <Badge variant="warning" size="xs" dot>Đang Xử Lý</Badge>}
@@ -968,9 +973,9 @@ export const StorefrontDepositQR: React.FC = () => {
       {depositChannel === 'card' && (
         <div className="space-y-6">
           <form onSubmit={handleCardRechargeSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-7 bg-[rgba(255,255,255,0.05)] backdrop-blur-[26px] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.35)] rounded-3xl p-6 sm:p-8 space-y-5">
-              <div className="flex items-center gap-2 border-b border-white/5 pb-3 font-bold text-sm text-[#F0EDFF]">
-                <CreditCard className="w-4 h-4 text-[#06B6D4]" />
+            <div className="lg:col-span-7 glass-standard border border-white/10 shadow-xl rounded-3xl p-6 sm:p-8 space-y-5">
+              <div className="flex items-center gap-2 border-b border-white/6 pb-3 font-bold text-sm text-[#F4F2FF]">
+                <CreditCard className="w-4 h-4 text-[#22D3EE]" />
                 <span>Nhập Thông Tin Thẻ Cào</span>
               </div>
 

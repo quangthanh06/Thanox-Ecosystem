@@ -2,25 +2,17 @@ import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Card, CardHeader } from './ui/Card';
 import { StatCard } from './ui/StatCard';
-import { Badge } from './ui/Badge';
-import { Button } from './ui/Button';
-import { EmptyState } from './ui/EmptyState';
 import {
   TrendingUp,
   DollarSign,
   ShoppingBag,
-  Users,
   CreditCard,
   PieChart,
-  ArrowUpRight,
-  ArrowDownRight,
   Calendar,
-  Sparkles,
-  Zap,
 } from 'lucide-react';
 
 export const AnalyticsView: React.FC = () => {
-  const { orders, topups, users, products } = useStore();
+  const { orders } = useStore();
   const [reportPeriod, setReportPeriod] = useState<'month' | 'quarter' | 'year'>('month');
 
   // Real calculations
@@ -58,21 +50,21 @@ export const AnalyticsView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Banner & Date Filter */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#0F0F1A] border border-white/5 rounded-2xl p-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-prominent border border-white/10 rounded-3xl p-5 sm:p-6 shadow-xl">
         <div>
-          <h2 className="font-display text-lg font-bold text-[#F0EDFF]">Thống Kê & Báo Cáo Tài Chính</h2>
-          <p className="text-xs text-[#6B658E] mt-0.5">
+          <h2 className="font-display text-lg sm:text-xl font-black text-[#F4F2FF] tracking-tight">Thống Kê & Báo Cáo Tài Chính</h2>
+          <p className="text-xs text-[#938EB5] mt-0.5">
             Báo cáo chi tiết dòng tiền, biên lợi nhuận, AOV và hiệu suất bán hàng
           </p>
         </div>
 
-        <div className="flex items-center gap-2 bg-[#161626] p-1 rounded-xl border border-white/5 text-xs">
+        <div className="flex items-center gap-2 glass-subtle p-1 rounded-2xl border border-white/6 text-xs">
           {(['month', 'quarter', 'year'] as const).map((p) => (
             <button
               key={p}
               onClick={() => setReportPeriod(p)}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-                reportPeriod === p ? 'bg-[#7C3AED] text-white' : 'text-[#8B84A8] hover:text-[#F0EDFF]'
+              className={`px-3.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+                reportPeriod === p ? 'btn-liquid-primary text-white shadow-sm' : 'text-[#938EB5] hover:text-[#F4F2FF]'
               }`}
             >
               {p === 'month' ? 'Tháng Này' : p === 'quarter' ? 'Quý Này' : 'Cả Năm'}
@@ -130,7 +122,7 @@ export const AnalyticsView: React.FC = () => {
           />
 
           {totalRevenue === 0 ? (
-            <div className="py-10 text-center text-xs text-[#6B658E]">Chưa có dữ liệu thanh toán</div>
+            <div className="py-10 text-center text-xs text-[#938EB5]">Chưa có dữ liệu thanh toán</div>
           ) : (
             <div className="space-y-4">
               {Object.entries(paymentMap).map(([key, amount]) => {
@@ -138,13 +130,11 @@ export const AnalyticsView: React.FC = () => {
                 const pct = totalRevenue > 0 ? Math.round((amount / totalRevenue) * 100) : 0;
                 return (
                   <div key={key} className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-semibold">
-                      <span className="text-[#F0EDFF]">{info.label}</span>
-                      <span className="text-emerald-400">
-                        {amount.toLocaleString('vi-VN')}đ ({pct}%)
-                      </span>
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-[#F4F2FF]">{info.label}</span>
+                      <span className="text-emerald-300">{pct}% ({amount.toLocaleString('vi-VN')}đ)</span>
                     </div>
-                    <div className="h-2 rounded-full bg-[#161626] overflow-hidden">
+                    <div className="h-2 rounded-full glass-subtle overflow-hidden">
                       <div
                         className={`h-full rounded-full bg-gradient-to-r ${info.color} transition-all duration-500`}
                         style={{ width: `${pct}%` }}
@@ -157,42 +147,33 @@ export const AnalyticsView: React.FC = () => {
           )}
         </Card>
 
-        {/* Customer Metrics */}
+        {/* Growth Forecast & Targets */}
         <Card className="lg:col-span-6 p-5 space-y-4" variant="default">
           <CardHeader
-            title="Chỉ Số Người Dùng & Chuyển Đổi"
-            subtitle="Tương tác thành viên và tỷ lệ quay lại mua hàng"
-            icon={<Users className="w-4 h-4" />}
+            title="Tăng Trưởng Theo Chu Kỳ"
+            subtitle="Doanh số tích lũy qua các giai đoạn kinh doanh"
+            icon={<Calendar className="w-4 h-4" />}
           />
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-4 rounded-xl bg-[#161626]/50 border border-white/5 space-y-1">
-              <div className="text-[11px] text-[#6B658E]">Tổng Thành Viên</div>
-              <div className="text-xl font-bold font-display text-[#F0EDFF]">{users.length}</div>
-              <div className="text-[10.5px] text-emerald-400">Hoạt động bình thường</div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-[#161626]/50 border border-white/5 space-y-1">
-              <div className="text-[11px] text-[#6B658E]">Số Lượng Sản Phẩm</div>
-              <div className="text-xl font-bold font-display text-[#F0EDFF]">{products.length}</div>
-              <div className="text-[10.5px] text-[#A78BFA]">Sẵn sàng giao tự động</div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-[#161626]/50 border border-white/5 space-y-1">
-              <div className="text-[11px] text-[#6B658E]">Tỷ Lệ Mua Lại (Repeat Rate)</div>
-              <div className="text-xl font-bold font-display text-[#F0EDFF]">
-                {users.length > 0 && orders.length > 0 ? '42.8%' : '0%'}
-              </div>
-              <div className="text-[10.5px] text-emerald-400">+5.3% so với tháng trước</div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-[#161626]/50 border border-white/5 space-y-1">
-              <div className="text-[11px] text-[#6B658E]">Đơn Hoàn Tất</div>
-              <div className="text-xl font-bold font-display text-[#F0EDFF]">
-                {completedOrders.length}/{totalOrders}
-              </div>
-              <div className="text-[10.5px] text-blue-400">Giao key tức thì</div>
-            </div>
+          <div className="space-y-3.5">
+            {monthlyData.map((m, i) => {
+              const maxRev = Math.max(...monthlyData.map((d) => d.rev), 1);
+              const barPct = Math.round((m.rev / maxRev) * 100);
+              return (
+                <div key={i} className="space-y-1.5">
+                  <div className="flex justify-between text-xs font-bold">
+                    <span className="text-[#F4F2FF]">{m.month}</span>
+                    <span className="text-emerald-300">{m.rev.toLocaleString('vi-VN')}đ</span>
+                  </div>
+                  <div className="h-2 rounded-full glass-subtle overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-[#7C3AED] via-[#06B6D4] to-emerald-400 transition-all duration-500"
+                      style={{ width: `${barPct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </Card>
       </div>

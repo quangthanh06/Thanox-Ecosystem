@@ -50,44 +50,65 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .maybeSingle();
 
       if (topupRow && (topupRow.status === 'approved' || topupRow.status === 'paid')) {
-        const { data: prof } = await supabase
-          .from('profiles')
-          .select('balance')
-          .eq('id', topupRow.user_id)
-          .maybeSingle();
+        let isOwner = false;
+        const authHeader = req.headers?.['authorization'];
+        const token = (Array.isArray(authHeader) ? authHeader[0] : authHeader)?.replace(/^Bearer\s+/i, '').trim();
+        if (token) {
+          try {
+            const { data: userData } = await supabase.auth.getUser(token);
+            if (userData?.user?.id === topupRow.user_id) {
+              isOwner = true;
+            }
+          } catch {}
+        }
+
+        let userBalance: number | undefined;
+        if (isOwner) {
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('balance')
+            .eq('id', topupRow.user_id)
+            .maybeSingle();
+          if (prof) userBalance = Number(prof.balance);
+        }
 
         return res.status(200).json({
           success: true,
           matched: true,
           status: topupRow.status,
-          newBalance: prof ? Number(prof.balance) : undefined,
+          amount: topupRow.amount,
+          newBalance: userBalance,
           source: 'instant_db_hit',
         });
       }
     }
 
-    // 2. Nếu DB chưa duyệt, gọi API SePay lấy 5 giao dịch MỚI NHẤT
-    const sepayApiKey =
-      process.env.SEPAY_API_KEY || 'NIWF2SUUD9L0AO3CUIJFY4FFPBJJTJTGLCVCHCLVZRBWMKSWVB31QKGNX5SQVERO';
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3500);
-
-    const apiRes = await fetch('https://my.sepay.vn/userapi/transactions/list?limit=5', {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${sepayApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      signal: controller.signal,
-    }).finally(() => clearTimeout(timeout));
+    // 2. Nếu DB chưa duyệt, gọi API SePay lấy 5 giao dịch MỚI NHẤT (yêu cầu cấu hình SEPAY_API_KEY trong env)
+    const sepayApiKey = process.env.SEPAY_API_KEY;
 
     let transactions: any[] = [];
-    if (apiRes.ok) {
-      const payload: any = await apiRes.json();
-      if (Array.isArray(payload?.transactions)) {
-        // Chỉ lấy tối đa 5 giao dịch mới nhất để xử lý song song siêu tốc
-        transactions = payload.transactions.slice(0, 5);
+    if (sepayApiKey) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3500);
+
+      try {
+        const apiRes = await fetch('https://my.sepay.vn/userapi/transactions/list?limit=5', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${sepayApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal,
+        }).finally(() => clearTimeout(timeout));
+
+        if (apiRes.ok) {
+          const payload: any = await apiRes.json();
+          if (Array.isArray(payload?.transactions)) {
+            transactions = payload.transactions.slice(0, 5);
+          }
+        }
+      } catch (fetchErr) {
+        console.warn('[check-bank] External SePay fetch skipped / timed out:', fetchErr);
       }
     }
 

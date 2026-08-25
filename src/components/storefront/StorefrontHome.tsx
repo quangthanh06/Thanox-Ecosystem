@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
 import {
-  Sparkles,
-  Zap,
   ShieldCheck,
   Headphones,
   ArrowRight,
@@ -12,17 +9,12 @@ import {
   ShoppingCart,
   ShoppingBag,
   Package,
-  CheckCircle2,
-  Star,
   Flame,
-  Key,
-  Download,
-  Wallet,
   TrendingUp,
   ChevronLeft,
   ChevronRight,
   Eye,
-  Loader2,
+  Zap,
 } from 'lucide-react';
 import { getThemeTypography } from '../../utils/themeStyles';
 import { useDragScroll } from '../../hooks/useDragScroll';
@@ -34,8 +26,9 @@ export const StorefrontHome: React.FC = () => {
     settings,
     navigateToStorefront,
     addToCart,
-    createOrder,
     currentUser,
+    isAuthenticated,
+    setSelectedOrderId,
     showToast,
   } = useStore();
 
@@ -51,7 +44,6 @@ export const StorefrontHome: React.FC = () => {
   const bannerBrightness = (settings.heroBanner?.brightness ?? 65) / 100;
   const bannerBlur = settings.heroBanner?.blur ?? 0;
   const bannerOverlayOpacity = (settings.heroBanner?.overlayOpacity ?? 45) / 100;
-  const bannerHotline = settings.heroBanner?.hotlineZalo || settings.zaloHotline || '0889696810';
 
   // Active public products (filter out hidden status)
   const activeProducts = products.filter((p) => p.status !== 'hidden');
@@ -59,10 +51,10 @@ export const StorefrontHome: React.FC = () => {
   // Auto-slide carousel every 4.5 seconds
   useEffect(() => {
     if (activeProducts.length <= 1) return;
-    const timer = setInterval(() => {
+    const interval = setInterval(() => {
       setCurrentSlideIndex((prev) => (prev + 1) % activeProducts.length);
     }, 4500);
-    return () => clearInterval(timer);
+    return () => clearInterval(interval);
   }, [activeProducts.length]);
 
   const currentSlide = activeProducts[currentSlideIndex] || activeProducts[0];
@@ -76,127 +68,140 @@ export const StorefrontHome: React.FC = () => {
   });
 
   const featuredProducts = activeProducts.filter((p) => p.featured);
-  const [purchasingId, setPurchasingId] = useState<string | null>(null);
-
-  const handleQuickBuy = async (productId: string, price: number) => {
-    if (purchasingId) return;
-    if (!isAuthenticated) {
-      showToast('Vui lòng đăng nhập tài khoản để mua hàng!', 'warning');
-      navigateToStorefront('login', '/');
-      return;
-    }
-    setPurchasingId(productId);
-    try {
-      const res = await createOrder(productId, 1, 'wallet');
-      if (res?.success && res?.order) {
-        showToast('🎉 Mua hàng thành công!', 'success');
-        setSelectedOrderId(res.order.id);
-        navigateToStorefront('account-orders');
-      } else {
-        showToast(res?.error || 'Có lỗi xảy ra, vui lòng thử lại', 'error');
-      }
-    } finally {
-      setPurchasingId(null);
-    }
-  };
 
   return (
     <div className="space-y-10 sm:space-y-12">
-      {/* 1. UNIFIED CYBERPUNK HERO PRODUCT SLIDER WITH CUSTOMIZABLE MASTER BANNER */}
+      {/* 1. iOS 27 LIQUID GLASS HERO PRODUCT SLIDER */}
       {currentSlide && (
-        <section className="relative overflow-hidden rounded-3xl border border-[#7C3AED]/40 shadow-[0_0_50px_rgba(124,58,237,0.25)] p-6 sm:p-10 lg:p-12 min-h-[340px] sm:min-h-[400px] flex flex-col justify-between group">
-          {/* Master Cyberpunk Backdrop Image & Atmospheric Lighting */}
+        <section className="relative overflow-hidden rounded-3xl glass-prominent border border-white/14 shadow-[0_30px_70px_rgba(0,0,0,0.85)] p-6 sm:p-10 lg:p-12 min-h-[340px] sm:min-h-[400px] flex flex-col justify-between group">
+          {/* Master Backdrop Image & Atmospheric Diffusion */}
           <div className="absolute inset-0 z-0 overflow-hidden">
             <img
               src={bannerBg}
               alt="Thanox Master Background"
-              className="w-full h-full object-cover object-center contrast-125 scale-105 group-hover:scale-100 transition-transform duration-1000"
+              className="w-full h-full object-cover object-center contrast-125 scale-105 group-hover:scale-100 transition-transform duration-1000 opacity-60"
               style={{
                 filter: `brightness(${bannerBrightness}) blur(${bannerBlur}px)`,
               }}
             />
-            {/* Customizable Dynamic Gradient Overlays for Perfect Contrast */}
+            {/* Darkened Gradient Overlays for Readability */}
             <div
-              className="absolute inset-0 bg-gradient-to-r from-[#070714] via-[#0A0A1E] to-[#070714]"
+              className="absolute inset-0 bg-gradient-to-r from-[#07070D] via-[#0D0D1A] to-[#07070D]"
               style={{
                 opacity: bannerOverlayOpacity,
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#070714] via-transparent to-black/30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#07070D] via-transparent to-black/30" />
             <div className="absolute top-0 right-0 w-96 h-96 bg-[#8B5CF6]/15 rounded-full blur-[100px] pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none" />
           </div>
 
-          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
-            {/* Left Content Column (7 cols) */}
-            <div key={currentSlide.id} className="lg:col-span-7 space-y-4 sm:space-y-5 animate-in fade-in slide-in-from-left-4 duration-500">
-              {/* Category Indicator with Top Line */}
-              <div className="space-y-1.5">
-                <div className="w-8 h-1 bg-cyan-400 rounded-full shadow-[0_0_10px_#06B6D4]" />
-                <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#06B6D4] font-display">
-                  {currentSlide.category || 'FILE BẢN QUYỀN'}
-                </span>
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-center">
+            {/* Left Content Column (7 cols on desktop) */}
+            <div className="lg:col-span-7 flex flex-col justify-between h-full space-y-5">
+              {/* 1. Dynamic Slide Content with stabilized height to prevent CTA jumping */}
+              <div className="min-h-[120px] sm:min-h-[140px] flex flex-col justify-center">
+                <div
+                  key={`hero-text-${currentSlide.id}`}
+                  className="space-y-2 sm:space-y-2.5 animate-in fade-in slide-in-from-left-2 duration-300"
+                >
+                  {/* Eyebrow / Category Indicator */}
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#06B6D4] shadow-[0_0_6px_#06B6D4]" />
+                    <span className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[#22D3EE]">
+                      {currentSlide.category || 'BẢN QUYỀN CHÍNH HÃNG'}
+                    </span>
+                  </div>
+
+                  {/* Refined Apple-style Title */}
+                  <h1
+                    className="text-2xl sm:text-3xl lg:text-[34px] font-bold text-[#F4F2FF] tracking-tight leading-[1.2] line-clamp-2 drop-shadow-sm font-sans"
+                  >
+                    {currentSlide.name}
+                  </h1>
+
+                  {/* Price Display with Tabular Numbers */}
+                  <div className="flex items-baseline gap-1.5 pt-0.5">
+                    <span className="font-display font-black text-xl sm:text-2xl text-amber-300 tabular-nums">
+                      {currentSlide.price.toLocaleString('vi-VN')}
+                    </span>
+                    <span className="text-xs sm:text-sm font-bold text-amber-400/90 tracking-wide">
+                      VNĐ
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              {/* Huge Bold Title with Pure Thanox Digital Gradient (Purple ➔ Pink ➔ Cyan) or Admin Typography */}
-              <h1
-                style={themeTypo.fontStyle}
-                className={`text-3xl sm:text-5xl md:text-6xl ${themeTypo.headingClass} tracking-tight uppercase leading-[1.15] drop-shadow-[0_5px_30px_rgba(124,58,237,0.4)] line-clamp-2`}
-              >
-                {currentSlide.name}
-              </h1>
-
-              {/* Golden / Orange Price with VND */}
-              <div className="font-display font-black text-2xl sm:text-3xl md:text-4xl text-[#FBBF24] tracking-tight flex items-baseline gap-1.5 drop-shadow-md">
-                <span>{currentSlide.price.toLocaleString('vi-VN')}</span>
-                <span className="text-lg sm:text-2xl font-black text-amber-400">VND</span>
-              </div>
-
-              {/* Action Buttons Side-by-Side */}
-              <div className="flex flex-wrap items-center gap-3.5 pt-2">
+              {/* 2. Desktop Persistent Fixed CTA Action Row (Never re-mounts / Never jumps) */}
+              <div className="hidden lg:flex items-center gap-3 pt-1">
                 <button
                   type="button"
                   onClick={() => navigateToStorefront('product-detail', currentSlide.id)}
-                  className="px-6 sm:px-8 py-3.5 rounded-2xl bg-[#14B8A6] hover:bg-[#0D9488] text-black font-black uppercase text-xs sm:text-sm shadow-xl shadow-teal-500/30 flex items-center gap-2.5 transition-all transform hover:-translate-y-0.5 active:scale-95 cursor-pointer tracking-wider"
+                  className="px-6 py-3 rounded-2xl btn-liquid-primary font-bold text-xs sm:text-sm flex items-center gap-2 cursor-pointer shadow-md active:scale-95 transition-all min-h-[44px]"
                 >
-                  <ShoppingBag className="w-4 h-4 text-black stroke-[2.5]" />
-                  <span>XEM SẢN PHẨM</span>
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>Xem Sản Phẩm</span>
                 </button>
 
-                {/* Button 2: Dark Glassmorphism Hỗ Trợ Ngay */}
                 <button
                   type="button"
                   onClick={() => navigateToStorefront('support')}
-                  className="px-6 sm:px-8 py-3.5 rounded-2xl bg-[#0F172A]/85 hover:bg-[#1E293B] border border-white/15 text-white font-extrabold uppercase text-xs sm:text-sm shadow-lg flex items-center gap-2.5 transition-all transform hover:-translate-y-0.5 active:scale-95 cursor-pointer tracking-wider"
+                  className="px-6 py-3 rounded-2xl btn-liquid-secondary font-bold text-xs sm:text-sm flex items-center gap-2 cursor-pointer active:scale-95 transition-all min-h-[44px] border border-white/10"
                 >
-                  <Headphones className="w-4 h-4 text-cyan-300" />
-                  <span>HỖ TRỢ NGAY</span>
+                  <Headphones className="w-4 h-4 text-[#22D3EE]" />
+                  <span>Hỗ Trợ Ngay</span>
                 </button>
               </div>
             </div>
 
-            {/* Right Showcase Image Card (5 cols) — hiện cả trên mobile để màn hẹp vẫn xem được ảnh sản phẩm */}
+            {/* Right Showcase Image Card (5 cols on desktop) */}
             <div className="lg:col-span-5 flex justify-center items-center">
               <div
                 onClick={() => navigateToStorefront('product-detail', currentSlide.id)}
-                className="relative w-full max-w-2xl aspect-video rounded-3xl bg-gradient-to-b from-white/10 to-white/5 border border-white/15 p-2 shadow-2xl backdrop-blur-md overflow-hidden group/card cursor-pointer hover:border-cyan-400/50 transition-all hover:scale-105"
+                className="relative w-full max-w-md aspect-video rounded-3xl glass-standard p-2 shadow-2xl overflow-hidden group/card cursor-pointer border border-white/12 hover:border-[#7C3AED]/40 transition-all hover:scale-[1.01]"
               >
-                {currentSlide.image ? (
-                  <img
-                    src={currentSlide.image}
-                    alt={currentSlide.name}
-                    className="w-full h-full object-cover rounded-2xl"
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-[#121220] rounded-2xl p-6 text-center space-y-2">
-                    <Package className="w-16 h-16 text-[#06B6D4]" />
-                    <span className="text-xs font-bold text-[#CBC7E0]">{currentSlide.name}</span>
-                  </div>
-                )}
-                <div className="absolute top-4 right-4 px-3 py-1 rounded-xl bg-black/80 backdrop-blur-md text-[#06B6D4] text-xs font-black border border-cyan-500/30">
+                <div
+                  key={`hero-img-${currentSlide.id}`}
+                  className="w-full h-full animate-in fade-in zoom-in-95 duration-300"
+                >
+                  {currentSlide.image ? (
+                    <img
+                      src={currentSlide.image}
+                      alt={currentSlide.name}
+                      className="w-full h-full object-cover rounded-2xl"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center glass-subtle rounded-2xl p-6 text-center space-y-2">
+                      <Package className="w-12 h-12 text-[#06B6D4]" />
+                      <span className="text-xs font-bold text-[#938EB5] line-clamp-1">{currentSlide.name}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="absolute top-3.5 right-3.5 px-3 py-1 rounded-xl glass-prominent text-[#22D3EE] text-[11px] font-bold border border-cyan-500/30">
                   {currentSlide.category}
                 </div>
               </div>
+            </div>
+
+            {/* Mobile Persistent Fixed CTA Action Row (< lg) */}
+            <div className="lg:hidden flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1 w-full">
+              <button
+                type="button"
+                onClick={() => navigateToStorefront('product-detail', currentSlide.id)}
+                className="w-full sm:w-auto flex-1 px-5 py-3 rounded-2xl btn-liquid-primary font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-95 transition-all min-h-[44px]"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>Xem Sản Phẩm</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigateToStorefront('support')}
+                className="w-full sm:w-auto flex-1 px-5 py-3 rounded-2xl btn-liquid-secondary font-bold text-xs flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all min-h-[44px] border border-white/10"
+              >
+                <Headphones className="w-4 h-4 text-[#22D3EE]" />
+                <span>Hỗ Trợ Ngay</span>
+              </button>
             </div>
           </div>
         </section>
@@ -204,43 +209,43 @@ export const StorefrontHome: React.FC = () => {
 
       {/* 2. TRUST HIGHLIGHTS */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-        <div className="p-4 rounded-2xl bg-[#0F0F1A] border border-white/5 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 flex-shrink-0">
+        <div className="p-4 rounded-2xl glass-subtle border border-white/8 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-2xl bg-amber-500/12 border border-amber-500/25 flex items-center justify-center text-amber-300 flex-shrink-0 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
             <Zap className="w-5 h-5" />
           </div>
           <div>
-            <div className="font-bold text-xs sm:text-sm text-[#F0EDFF]">Giao Key 3 Giây</div>
-            <div className="text-[11px] text-[#8B84A8]">Tự động trả mã ngay</div>
+            <div className="font-bold text-xs sm:text-sm text-[#F4F2FF]">Giao Key 3 Giây</div>
+            <div className="text-[11px] text-[#938EB5]">Tự động trả mã ngay</div>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#0F0F1A] border border-white/5 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0">
+        <div className="p-4 rounded-2xl glass-subtle border border-white/8 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-2xl bg-emerald-500/12 border border-emerald-500/25 flex items-center justify-center text-emerald-300 flex-shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <div className="font-bold text-xs sm:text-sm text-[#F0EDFF]">Bảo Hành 100%</div>
-            <div className="text-[11px] text-[#8B84A8]">1 đổi 1 & hỗ trợ key</div>
+            <div className="font-bold text-xs sm:text-sm text-[#F4F2FF]">Bảo Hành 100%</div>
+            <div className="text-[11px] text-[#938EB5]">1 đổi 1 & hỗ trợ key</div>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#0F0F1A] border border-white/5 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 flex-shrink-0">
+        <div className="p-4 rounded-2xl glass-subtle border border-white/8 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-2xl bg-blue-500/12 border border-blue-500/25 flex items-center justify-center text-blue-300 flex-shrink-0 shadow-[0_0_10px_rgba(59,130,246,0.2)]">
             <Headphones className="w-5 h-5" />
           </div>
           <div>
-            <div className="font-bold text-xs sm:text-sm text-[#F0EDFF]">Hỗ Trợ 24/7</div>
-            <div className="text-[11px] text-[#8B84A8]">Zalo & Telegram trực</div>
+            <div className="font-bold text-xs sm:text-sm text-[#F4F2FF]">Hỗ Trợ 24/7</div>
+            <div className="text-[11px] text-[#938EB5]">Zalo & Telegram trực</div>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#0F0F1A] border border-white/5 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 flex-shrink-0">
+        <div className="p-4 rounded-2xl glass-subtle border border-white/8 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-2xl bg-purple-500/12 border border-purple-500/25 flex items-center justify-center text-[#C084FC] flex-shrink-0 shadow-[0_0_10px_rgba(124,58,237,0.2)]">
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
-            <div className="font-bold text-xs sm:text-sm text-[#F0EDFF]">Cộng Đồng 50k+</div>
-            <div className="text-[11px] text-[#8B84A8]">Game thủ tin dùng</div>
+            <div className="font-bold text-xs sm:text-sm text-[#F4F2FF]">Cộng Đồng 50k+</div>
+            <div className="text-[11px] text-[#938EB5]">Game thủ tin dùng</div>
           </div>
         </div>
       </section>
@@ -255,7 +260,7 @@ export const StorefrontHome: React.FC = () => {
             >
               <span>Danh Mục Sản Phẩm</span>
             </h2>
-            <p className="text-xs text-[#8B84A8]">Khám phá các danh mục công cụ game phổ biến</p>
+            <p className="text-xs text-[#938EB5]">Khám phá các danh mục công cụ game phổ biến</p>
           </div>
         </div>
 
@@ -267,19 +272,19 @@ export const StorefrontHome: React.FC = () => {
                 setActiveCategoryFilter(cat.name);
                 navigateToStorefront('products');
               }}
-              className="p-4 rounded-2xl bg-[#0F0F1A] border border-white/5 hover:border-[#7C3AED]/40 hover:bg-[#161626] transition-all cursor-pointer text-center group"
+              className="p-4 rounded-2xl glass-subtle hover:glass-standard border border-white/8 hover:border-[#7C3AED]/40 transition-all cursor-pointer text-center group active:scale-95"
             >
-              <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-transparent flex items-center justify-center overflow-hidden group-hover:scale-110 group-hover:border-[#7C3AED]/50 transition-transform shadow-sm">
+              <div className="w-10 h-10 mx-auto mb-2 rounded-xl glass-pill flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform shadow-sm">
                 {cat.image || (cat.icon && (cat.icon.startsWith('http') || cat.icon.startsWith('data:image'))) ? (
                   <img src={cat.image || cat.icon} alt={cat.name} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-xl">{cat.icon || '📱'}</span>
                 )}
               </div>
-              <div className="font-bold text-xs text-[#F0EDFF] group-hover:text-[#9D5CF6] transition-colors line-clamp-1">
+              <div className="font-bold text-xs text-[#F4F2FF] group-hover:text-[#C084FC] transition-colors line-clamp-1">
                 {cat.name}
               </div>
-              <div className="text-[11px] text-[#6B658E] mt-0.5">{cat.count} sản phẩm</div>
+              <div className="text-[11px] text-[#938EB5] mt-0.5">{cat.count} sản phẩm</div>
             </button>
           ))}
         </div>
@@ -297,11 +302,11 @@ export const StorefrontHome: React.FC = () => {
                 <Flame className="w-5 h-5 text-amber-400 animate-pulse" />
                 <span>Sản Phẩm Nổi Bật & Bán Chạy</span>
               </h2>
-              <p className="text-xs text-[#8B84A8]">Được mua nhiều nhất bởi các game thủ chuyên nghiệp</p>
+              <p className="text-xs text-[#938EB5]">Được mua nhiều nhất bởi các game thủ chuyên nghiệp</p>
             </div>
             <button
               onClick={() => navigateToStorefront('products')}
-              className="text-xs font-semibold text-[#9D5CF6] hover:text-[#C084FC] transition-colors flex items-center gap-1 cursor-pointer"
+              className="text-xs font-semibold text-[#C084FC] hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
             >
               Xem tất cả <ArrowRight className="w-3.5 h-3.5" />
             </button>
@@ -316,13 +321,13 @@ export const StorefrontHome: React.FC = () => {
               return (
                 <div
                   key={product.id}
-                  className="bg-[#0F0F1A] border border-white/10 hover:border-[#7C3AED]/50 rounded-3xl p-4.5 flex flex-col justify-between transition-all group hover:bg-[#131326] shadow-lg shadow-black/40"
+                  className="glass-standard hover:glass-elevated border border-white/10 hover:border-[#7C3AED]/40 rounded-3xl p-4.5 flex flex-col justify-between transition-all group shadow-lg"
                 >
                   <div className="space-y-3">
                     {/* Product Cover Thumbnail */}
                     <div
                       onClick={() => navigateToStorefront('product-detail', product.id)}
-                      className="relative w-full aspect-video rounded-2xl bg-transparent overflow-hidden cursor-pointer group-hover:border-[#7C3AED]/50 transition-colors"
+                      className="relative w-full aspect-video rounded-2xl overflow-hidden cursor-pointer group-hover:border-[#7C3AED]/40 transition-colors"
                     >
                       {product.image ? (
                         <img
@@ -331,29 +336,29 @@ export const StorefrontHome: React.FC = () => {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-[#6B658E]">
-                          <Package className="w-8 h-8 text-[#9D5CF6]/60" />
+                        <div className="w-full h-full flex flex-col items-center justify-center glass-subtle text-[#938EB5]">
+                          <Package className="w-8 h-8 text-[#C084FC]/60" />
                         </div>
                       )}
                       {/* Badges on Image */}
-                      <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-black/80 backdrop-blur-md text-[#C084FC] border border-purple-500/30">
+                      <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-lg text-[10px] font-bold glass-prominent text-[#C084FC] border border-purple-500/30">
                         {product.category}
                       </span>
                       {discount && (
-                        <span className="absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-red-600/90 text-white shadow-md">
+                        <span className="absolute top-2.5 right-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-red-500/90 text-white shadow-md">
                           GIẢM {discount}%
                         </span>
                       )}
 
-                      {/* Nút Xem Chi Tiết nằm giữa ảnh — chỉ hiện khi rê chuột / chạm vào card */}
-                      <div className="absolute inset-0 z-[5] flex items-center justify-center bg-gradient-to-t from-black/55 via-black/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200 pointer-events-none">
+                      {/* View Details Overlay */}
+                      <div className="absolute inset-0 z-[5] flex items-center justify-center bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             navigateToStorefront('product-detail', product.id);
                           }}
-                          className="pointer-events-none group-hover:pointer-events-auto group-active:pointer-events-auto px-3.5 sm:px-4 py-2 rounded-xl bg-[#7C3AED]/95 hover:bg-[#8B5CF6] active:scale-95 text-white text-[11px] sm:text-xs font-extrabold uppercase tracking-wide shadow-lg shadow-purple-950/50 border border-white/25 backdrop-blur-sm transition-all hover:scale-105 cursor-pointer flex items-center gap-1.5"
+                          className="pointer-events-auto px-4 py-2 rounded-xl btn-liquid-primary text-white text-xs font-bold uppercase tracking-wide shadow-lg border border-white/20 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>Xem Chi Tiết</span>
@@ -364,11 +369,11 @@ export const StorefrontHome: React.FC = () => {
                     <div>
                       <h3
                         onClick={() => navigateToStorefront('product-detail', product.id)}
-                        className="font-display font-bold text-sm sm:text-base text-[#F0EDFF] group-hover:text-[#9D5CF6] transition-colors cursor-pointer line-clamp-1"
+                        className="font-display font-bold text-sm sm:text-base text-[#F4F2FF] group-hover:text-[#C084FC] transition-colors cursor-pointer line-clamp-1"
                       >
                         {product.name}
                       </h3>
-                      <p className="text-xs text-[#8B84A8] line-clamp-2 mt-1.5 leading-relaxed">
+                      <p className="text-xs text-[#938EB5] line-clamp-2 mt-1.5 leading-relaxed">
                         {product.description}
                       </p>
                     </div>
@@ -385,22 +390,22 @@ export const StorefrontHome: React.FC = () => {
                       return (
                         <>
                           <div className="flex items-baseline gap-2 pt-1">
-                            <span className="font-display font-extrabold text-lg text-emerald-400">
+                            <span className="font-display font-black text-lg text-emerald-300">
                               {displayPrice.toLocaleString('vi-VN')} <span className="text-xs font-bold">VNĐ</span>
                             </span>
                             {displayOriginalPrice && (
-                              <span className="text-xs text-[#6B658E] line-through">
+                              <span className="text-xs text-[#5C567A] line-through">
                                 {displayOriginalPrice.toLocaleString('vi-VN')} VNĐ
                               </span>
                             )}
                             {isSale && (
-                              <span className="px-1.5 py-0.2 rounded text-[9.5px] font-extrabold bg-red-600/90 text-white">
+                              <span className="px-1.5 py-0.2 rounded text-[9.5px] font-extrabold bg-red-500/90 text-white">
                                 SALE
                               </span>
                             )}
                           </div>
 
-                          <div className="grid grid-cols-2 gap-2 pt-4 mt-4 border-t border-white/5">
+                          <div className="grid grid-cols-2 gap-2 pt-4 mt-4 border-t border-white/6">
                             <Button
                               variant="secondary"
                               size="sm"
@@ -438,35 +443,35 @@ export const StorefrontHome: React.FC = () => {
             >
               Tất Cả Sản Phẩm & Key Bản Quyền
             </h2>
-            <p className="text-xs text-[#8B84A8]">
+            <p className="text-xs text-[#938EB5]">
               Hiển thị {filteredProducts.length} sản phẩm sẵn sàng kích hoạt
             </p>
           </div>
 
           {/* Quick Search */}
           <div className="relative w-full sm:w-72">
-            <Search className="w-4 h-4 text-[#8B84A8] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[#938EB5] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Tìm kiếm file, menu, acc..."
               value={localSearch}
               onChange={(e) => setLocalSearch(e.target.value)}
-              className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl pl-9 pr-3.5 py-2 text-xs text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED]"
+              className="w-full glass-input rounded-2xl pl-9.5 pr-4 py-2.5 text-xs text-[#F4F2FF] placeholder-[#5C567A]"
             />
           </div>
         </div>
 
-        {/* Category Filter Pills with Mouse Drag & Wheel Scrolling Support */}
+        {/* Category Filter Pills */}
         <div
           {...homeCatDragProps}
           className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none no-scrollbar"
         >
           <button
             onClick={() => setActiveCategoryFilter('all')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 active:scale-95 ${
               activeCategoryFilter === 'all'
-                ? 'bg-[#7C3AED] text-white shadow-sm shadow-[#7C3AED]/30'
-                : 'bg-[#0F0F1A] text-[#8B84A8] hover:text-white border border-white/5'
+                ? 'btn-liquid-primary shadow-md'
+                : 'glass-subtle text-[#938EB5] hover:text-white border border-white/8'
             }`}
           >
             Tất Cả
@@ -475,10 +480,10 @@ export const StorefrontHome: React.FC = () => {
             <button
               key={c.id}
               onClick={() => setActiveCategoryFilter(c.name)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+              className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1.5 active:scale-95 ${
                 activeCategoryFilter === c.name
-                  ? 'bg-[#7C3AED] text-white shadow-sm shadow-[#7C3AED]/30'
-                  : 'bg-[#0F0F1A] text-[#8B84A8] hover:text-white border border-white/5'
+                  ? 'btn-liquid-primary shadow-md'
+                  : 'glass-subtle text-[#938EB5] hover:text-white border border-white/8'
               }`}
             >
               {c.image || (c.icon && (c.icon.startsWith('http') || c.icon.startsWith('data:image'))) ? (
@@ -493,7 +498,7 @@ export const StorefrontHome: React.FC = () => {
 
         {/* Products Grid */}
         {filteredProducts.length === 0 ? (
-          <div className="p-12 text-center text-xs text-[#8B84A8] bg-[#0F0F1A] border border-dashed border-white/5 rounded-2xl">
+          <div className="p-12 text-center text-xs text-[#938EB5] glass-subtle border border-dashed border-white/10 rounded-3xl">
             Không tìm thấy sản phẩm nào phù hợp với bộ lọc hiện tại.
           </div>
         ) : (
@@ -501,13 +506,13 @@ export const StorefrontHome: React.FC = () => {
             {filteredProducts.map((prod) => (
               <div
                 key={prod.id}
-                className="bg-[#0F0F1A] border border-white/5 hover:border-[#7C3AED]/40 rounded-3xl p-4 sm:p-4.5 flex flex-col justify-between transition-all group hover:bg-[#121224] shadow-md shadow-black/20"
+                className="glass-standard hover:glass-elevated border border-white/8 hover:border-[#7C3AED]/40 rounded-3xl p-4 sm:p-4.5 flex flex-col justify-between transition-all group shadow-md"
               >
                 <div className="space-y-2.5">
                   {/* Product Thumbnail Banner */}
                   <div
                     onClick={() => navigateToStorefront('product-detail', prod.id)}
-                    className="relative w-full aspect-video rounded-2xl bg-transparent overflow-hidden cursor-pointer group-hover:border-[#7C3AED]/50 transition-colors"
+                    className="relative w-full aspect-video rounded-2xl overflow-hidden cursor-pointer group-hover:border-[#7C3AED]/40 transition-colors"
                   >
                     {prod.image ? (
                       <img
@@ -517,26 +522,26 @@ export const StorefrontHome: React.FC = () => {
                         loading="lazy"
                       />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-[#6B658E]">
-                        <Package className="w-7 h-7 text-[#9D5CF6]/50" />
+                      <div className="w-full h-full flex flex-col items-center justify-center glass-subtle text-[#938EB5]">
+                        <Package className="w-7 h-7 text-[#C084FC]/50" />
                       </div>
                     )}
-                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9.5px] font-bold bg-black/80 backdrop-blur-md text-[#9D5CF6] border border-purple-500/30">
+                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-lg text-[9.5px] font-bold glass-prominent text-[#C084FC] border border-purple-500/30">
                       {prod.category}
                     </span>
-                    <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-black/80 text-emerald-400">
+                    <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded-lg text-[9px] font-bold glass-prominent text-emerald-300">
                       Đã bán: {prod.soldCount}
                     </span>
 
-                    {/* Nút Xem Chi Tiết nằm giữa ảnh — chỉ hiện khi rê chuột / chạm vào card */}
-                    <div className="absolute inset-0 z-[5] flex items-center justify-center bg-gradient-to-t from-black/55 via-black/10 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200 pointer-events-none">
+                    {/* View Detail Overlay */}
+                    <div className="absolute inset-0 z-[5] flex items-center justify-center bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigateToStorefront('product-detail', prod.id);
                         }}
-                        className="pointer-events-none group-hover:pointer-events-auto group-active:pointer-events-auto px-3.5 sm:px-4 py-2 rounded-xl bg-[#7C3AED]/95 hover:bg-[#8B5CF6] active:scale-95 text-white text-[11px] sm:text-xs font-extrabold uppercase tracking-wide shadow-lg shadow-purple-950/50 border border-white/25 backdrop-blur-sm transition-all hover:scale-105 cursor-pointer flex items-center gap-1.5"
+                        className="pointer-events-auto px-3.5 py-1.5 rounded-xl btn-liquid-primary text-white text-[11px] font-bold uppercase tracking-wide shadow-lg border border-white/20 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>Xem Chi Tiết</span>
@@ -546,12 +551,12 @@ export const StorefrontHome: React.FC = () => {
 
                   <h4
                     onClick={() => navigateToStorefront('product-detail', prod.id)}
-                    className="font-display font-bold text-xs sm:text-sm text-[#F0EDFF] group-hover:text-[#9D5CF6] transition-colors cursor-pointer line-clamp-2"
+                    className="font-display font-bold text-xs sm:text-sm text-[#F4F2FF] group-hover:text-[#C084FC] transition-colors cursor-pointer line-clamp-2"
                   >
                     {prod.name}
                   </h4>
 
-                  <p className="text-[11.5px] text-[#6B658E] line-clamp-2 leading-relaxed">
+                  <p className="text-[11.5px] text-[#938EB5] line-clamp-2 leading-relaxed">
                     {prod.description}
                   </p>
 
@@ -567,22 +572,22 @@ export const StorefrontHome: React.FC = () => {
                     return (
                       <>
                         <div className="pt-1 flex items-baseline gap-2">
-                          <div className="font-display font-extrabold text-base text-emerald-400">
+                          <div className="font-display font-black text-base text-emerald-300">
                             {displayPrice.toLocaleString('vi-VN')} <span className="text-xs font-bold">VNĐ</span>
                           </div>
                           {displayOriginalPrice && (
-                            <span className="text-[11px] text-[#6B658E] line-through">
+                            <span className="text-[11px] text-[#5C567A] line-through">
                               {displayOriginalPrice.toLocaleString('vi-VN')} VNĐ
                             </span>
                           )}
                           {isSale && (
-                            <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-red-600/90 text-white">
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-red-500/90 text-white">
                               SALE
                             </span>
                           )}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 pt-4 mt-3 border-t border-white/5">
+                        <div className="grid grid-cols-2 gap-2 pt-3.5 mt-3 border-t border-white/6">
                           <Button
                             variant="secondary"
                             size="xs"
@@ -611,59 +616,59 @@ export const StorefrontHome: React.FC = () => {
       </section>
 
       {/* 6. STEP-BY-STEP PROCESS */}
-      <section className="bg-[#0F0F1A] border border-white/10 rounded-3xl p-6 sm:p-10 space-y-6">
+      <section className="glass-standard border border-white/10 rounded-3xl p-6 sm:p-10 space-y-6">
         <div className="text-center max-w-xl mx-auto space-y-1.5">
           <h3
             style={themeTypo.fontStyle}
-            className={`text-xl sm:text-2xl ${themeTypo.headingClass}`}
+            className={`text-xl sm:text-2xl font-black ${themeTypo.headingClass}`}
           >
             Quy Trình Mua Hàng & Nhận Key 3 Bước
           </h3>
-          <p className="text-xs text-[#8B84A8]">Hệ thống vận hành tự động 100% không cần chờ đợi thủ công</p>
+          <p className="text-xs text-[#938EB5]">Hệ thống vận hành tự động 100% không cần chờ đợi thủ công</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-          <div className="p-5 rounded-2xl bg-[#161626] border border-white/5 text-center space-y-3 relative group hover:border-[#7C3AED]/50 transition-all shadow-lg">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-4">
+          <div className="p-6 rounded-2xl glass-subtle border border-white/8 text-center space-y-3 relative group hover:border-[#7C3AED]/40 transition-all shadow-md">
             <div className="w-12 h-12 rounded-2xl bg-[#7C3AED]/20 border border-[#7C3AED]/40 flex items-center justify-center text-lg mx-auto shadow-md">
               <span className={themeTypo.headingClass}>1</span>
             </div>
             <h4
               style={themeTypo.fontStyle}
-              className={`text-sm ${themeTypo.headingClass}`}
+              className={`text-sm font-bold ${themeTypo.headingClass}`}
             >
               1. Nạp Tiền Ví VietQR
             </h4>
-            <p className="text-xs text-[#8B84A8] leading-relaxed">
+            <p className="text-xs text-[#938EB5] leading-relaxed">
               Quét mã VietQR tự động. Tiền vào ví chỉ sau 1-3 phút.
             </p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#161626] border border-white/5 text-center space-y-3 relative group hover:border-[#06B6D4]/50 transition-all shadow-lg">
+          <div className="p-6 rounded-2xl glass-subtle border border-white/8 text-center space-y-3 relative group hover:border-[#06B6D4]/40 transition-all shadow-md">
             <div className="w-12 h-12 rounded-2xl bg-[#06B6D4]/20 border border-[#06B6D4]/40 flex items-center justify-center text-lg mx-auto shadow-md">
               <span className={themeTypo.headingClass}>2</span>
             </div>
             <h4
               style={themeTypo.fontStyle}
-              className={`text-sm ${themeTypo.headingClass}`}
+              className={`text-sm font-bold ${themeTypo.headingClass}`}
             >
               2. Chọn Sản Phẩm & Mua
             </h4>
-            <p className="text-xs text-[#8B84A8] leading-relaxed">
+            <p className="text-xs text-[#938EB5] leading-relaxed">
               Nhấn Mua Ngay để thanh toán tức thì bằng số dư ví tài khoản.
             </p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#161626] border border-white/5 text-center space-y-3 relative group hover:border-emerald-500/50 transition-all shadow-lg">
+          <div className="p-6 rounded-2xl glass-subtle border border-white/8 text-center space-y-3 relative group hover:border-emerald-500/40 transition-all shadow-md">
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-lg mx-auto shadow-md">
               <span className={themeTypo.headingClass}>3</span>
             </div>
             <h4
               style={themeTypo.fontStyle}
-              className={`text-sm ${themeTypo.headingClass}`}
+              className={`text-sm font-bold ${themeTypo.headingClass}`}
             >
               3. Nhận Key & Tải File
             </h4>
-            <p className="text-xs text-[#8B84A8] leading-relaxed">
+            <p className="text-xs text-[#938EB5] leading-relaxed">
               Mã kích hoạt hoặc link tải hiển thị ngay trong mục Đơn Hàng.
             </p>
           </div>

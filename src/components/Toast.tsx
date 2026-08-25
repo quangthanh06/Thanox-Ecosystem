@@ -10,33 +10,33 @@ export const ToastContainer: React.FC = () => {
   return (
     <div className="fixed top-5 right-5 z-[999999] flex flex-col gap-2.5 max-w-sm pointer-events-none">
       {toasts.map((toast) => {
-        let borderCls = 'border-purple-500/30 bg-[#161626]';
-        let icon = <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />;
+        let borderCls = 'border-[#7C3AED]/35 shadow-[0_12px_30px_rgba(124,58,237,0.25)]';
+        let icon = <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0 mt-0.5" />;
 
         if (toast.type === 'success') {
-          borderCls = 'border-emerald-500/40 bg-[#121c22]';
-          icon = <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />;
+          borderCls = 'border-emerald-500/35 shadow-[0_12px_30px_rgba(16,185,129,0.2)]';
+          icon = <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0 mt-0.5" />;
         } else if (toast.type === 'error') {
-          borderCls = 'border-red-500/40 bg-[#221216]';
-          icon = <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />;
+          borderCls = 'border-red-500/35 shadow-[0_12px_30px_rgba(239,68,68,0.2)]';
+          icon = <AlertCircle className="w-4 h-4 text-red-300 shrink-0 mt-0.5" />;
         } else if (toast.type === 'warning') {
-          borderCls = 'border-amber-500/40 bg-[#221c12]';
-          icon = <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />;
+          borderCls = 'border-amber-500/35 shadow-[0_12px_30px_rgba(245,158,11,0.2)]';
+          icon = <AlertTriangle className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />;
         } else {
-          borderCls = 'border-cyan-500/40 bg-[#121e26]';
-          icon = <Info className="w-4 h-4 text-cyan-400 shrink-0" />;
+          borderCls = 'border-cyan-500/35 shadow-[0_12px_30px_rgba(6,182,212,0.2)]';
+          icon = <Info className="w-4 h-4 text-cyan-300 shrink-0 mt-0.5" />;
         }
 
         return (
           <div
             key={toast.id}
             id={`toast-${toast.id}`}
-            className={`pointer-events-auto flex items-start gap-3 p-3.5 rounded-xl border shadow-2xl backdrop-blur-md text-xs font-medium text-[#F0EDFF] transition-all animate-in fade-in slide-in-from-top-5 duration-200 ${borderCls}`}
+            className={`pointer-events-auto flex items-start gap-3 p-3.5 sm:p-4 rounded-2xl glass-prominent text-xs font-medium text-[#F4F2FF] transition-all transform animate-in fade-in slide-in-from-top-4 duration-200 border ${borderCls}`}
           >
             {icon}
-            <div className="flex-1 leading-snug">
-              {toast.title && <div className="font-semibold text-sm mb-0.5 text-white">{toast.title}</div>}
-              <div>{toast.message}</div>
+            <div className="flex-1 leading-relaxed">
+              {toast.title && <div className="font-bold text-sm mb-0.5 text-white">{toast.title}</div>}
+              <div className="text-[#E2DEFA]">{toast.message}</div>
             </div>
           </div>
         );

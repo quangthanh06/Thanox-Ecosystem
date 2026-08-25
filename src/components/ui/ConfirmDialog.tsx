@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal } from './Modal';
 import { Button } from './Button';
-import { AlertTriangle, Info, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, Info } from 'lucide-react';
 
 export interface ConfirmDialogProps {
   isOpen: boolean;
@@ -28,15 +28,15 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 }) => {
   const icon =
     variant === 'danger' ? (
-      <div className="w-10 h-10 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center shrink-0">
+      <div className="w-10 h-10 rounded-2xl bg-red-500/12 text-red-400 border border-red-500/25 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(239,68,68,0.2)]">
         <AlertTriangle className="w-5 h-5" />
       </div>
     ) : variant === 'warning' ? (
-      <div className="w-10 h-10 rounded-full bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
+      <div className="w-10 h-10 rounded-2xl bg-amber-500/12 text-amber-300 border border-amber-500/25 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
         <AlertTriangle className="w-5 h-5" />
       </div>
     ) : (
-      <div className="w-10 h-10 rounded-full bg-[#7C3AED]/10 text-[#9D5CF6] flex items-center justify-center shrink-0">
+      <div className="w-10 h-10 rounded-2xl bg-[#7C3AED]/12 text-[#C084FC] border border-[#7C3AED]/25 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(124,58,237,0.2)]">
         <Info className="w-5 h-5" />
       </div>
     );
@@ -65,7 +65,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     >
       <div className="flex items-start gap-3.5">
         {icon}
-        <div className="text-xs text-[#8B84A8] leading-relaxed pt-1">{message}</div>
+        <div className="text-xs text-[#938EB5] leading-relaxed pt-1">{message}</div>
       </div>
     </Modal>
   );

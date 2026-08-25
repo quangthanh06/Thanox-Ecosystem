@@ -2,12 +2,10 @@ import React, { useState } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../../context/StoreContext';
 import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
 import { Toast } from '../Toast';
 import {
   Flame,
   ShoppingCart,
-  Wallet,
   Zap,
   User,
   Shield,
@@ -15,35 +13,22 @@ import {
   MessageCircle,
   Menu,
   X,
-  ArrowRight,
-  ExternalLink,
   ChevronDown,
   Layers,
   Sparkles,
-  Search,
   LogIn,
   UserPlus,
   LogOut,
-  ShoppingBag,
   Package,
   Wrench,
   UserCheck,
+  Wallet,
+  ArrowRight,
 } from 'lucide-react';
 
-import { StorefrontHome } from './StorefrontHome';
-import { StorefrontProducts } from './StorefrontProducts';
-import { StorefrontProductDetail } from './StorefrontProductDetail';
-import { StorefrontCart } from './StorefrontCart';
-import { StorefrontDepositQR } from './StorefrontDepositQR';
-import { StorefrontAccount } from './StorefrontAccount';
-import { StorefrontOrders } from './StorefrontOrders';
-import { StorefrontTransactions } from './StorefrontTransactions';
-import { StorefrontSupport } from './StorefrontSupport';
-import { StorefrontAffiliate } from './StorefrontAffiliate';
-import { StorefrontMaintenanceScreen } from './StorefrontMaintenanceScreen';
-import { StorefrontAIAssistant } from './StorefrontAIAssistant';
 import { MusicPlayer } from './MusicPlayer';
 import { getThemeTypography } from '../../utils/themeStyles';
+import { StorefrontMaintenanceScreen } from './StorefrontMaintenanceScreen';
 
 export const StorefrontLayout: React.FC = () => {
   const {
@@ -72,50 +57,66 @@ export const StorefrontLayout: React.FC = () => {
     navigate('/');
   };
 
-  // If maintenance mode is active and user is not admin, immediately render full-page maintenance screen
-  if (settings.maintenanceMode && currentUser?.role !== 'admin') {
+  // If maintenance mode is active and user is not admin, exempt auth routes so admin can log in
+  const isAuthRoute = ['/login', '/register', '/forgot-password'].includes(location.pathname);
+  if (settings.maintenanceMode && currentUser?.role !== 'admin' && !isAuthRoute) {
     return (
-      <div className="min-h-screen bg-[#08080F] text-[#F0EDFF] flex flex-col justify-center items-center font-sans">
+      <div className="min-h-screen bg-[#07070D] text-[#F4F2FF] flex flex-col justify-center items-center font-sans">
         <StorefrontMaintenanceScreen />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A12] text-[#F0EDFF] flex flex-col font-sans selection:bg-[#7C3AED]/30">
-      {/* Admin Maintenance Alert Banner */}
+    <div className="min-h-screen bg-[#07070D] text-[#F4F2FF] flex flex-col font-sans selection:bg-[#7C3AED]/30 selection:text-white relative">
+      {/* Subtle ambient lighting layer */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute top-[-5%] left-[25%] w-[600px] h-[350px] bg-[#7C3AED]/08 rounded-full blur-[140px]" />
+        <div className="absolute top-[40%] right-[-5%] w-[500px] h-[400px] bg-[#06B6D4]/05 rounded-full blur-[150px]" />
+      </div>
+
+      {/* Admin Maintenance Bypass Notice Header Bar */}
       {settings.maintenanceMode && currentUser?.role === 'admin' && (
-        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-black text-xs font-black py-2.5 px-4 text-center flex items-center justify-center gap-2 shadow-lg z-50">
-          <Wrench className="w-4 h-4 text-black animate-spin" style={{ animationDuration: '6s' }} />
-          <span>⚠️ CHẾ ĐỘ BẢO TRÌ ĐANG BẬT: Khách hàng ngoài web đang thấy màn hình bảo trì & nút Zalo Admin.</span>
+        <div className="bg-amber-500/20 border-b border-amber-500/40 px-4 py-2 text-center text-xs font-semibold text-amber-200 flex items-center justify-center gap-2 z-50">
+          <Wrench className="w-4 h-4 text-amber-300" />
+          <span>Hệ thống đang BẬT BẢO TRÌ. Bạn đang xem với quyền Quản Trị Viên (Bypass).</span>
           <button
             type="button"
             onClick={() => navigateToAdmin('maintenance-settings')}
-            className="underline ml-2 bg-black text-amber-300 px-3 py-1 rounded-lg hover:bg-zinc-900 cursor-pointer transition-all text-xs font-bold"
+            className="underline ml-2 bg-black text-amber-300 px-3 py-0.5 rounded-lg hover:bg-zinc-900 cursor-pointer transition-all text-xs font-bold"
           >
             Vào Tắt Bảo Trì →
           </button>
         </div>
       )}
 
-      {/* 1. TOP ANNOUNCEMENT BAR */}
+      {/* 1. TOP ANNOUNCEMENT BAR (Apple-Inspired iOS 27 Liquid Glass) */}
       {(settings.announcementBar?.enabled ?? settings.announcementEnabled) && (
-        <div className="bg-[#161626]/80 backdrop-blur-md border-b border-white/5 text-[#E2E8F0] text-[11px] sm:text-xs font-semibold py-2 px-4 text-center flex items-center justify-center gap-2 shadow-sm">
-          <Sparkles className="w-3.5 h-3.5 flex-shrink-0 animate-pulse" />
-          <span>{settings.announcementBar?.text || settings.announcementText || 'Khuyến mãi nạp tiền tự động qua VietQR — Giao key tức thì 24/7!'}</span>
-          {settings.announcementBar?.linkText && (
-            <button
-              onClick={() => navigateToStorefront('account-wallet-deposit')}
-              className="underline font-bold hover:text-amber-200 transition-colors cursor-pointer ml-1"
-            >
-              {settings.announcementBar.linkText}
-            </button>
-          )}
-        </div>
+        <aside
+          aria-label="Thông báo hệ thống"
+          className="relative z-30 bg-[#0A0A14]/80 backdrop-blur-md border-b border-white/[0.06] text-[#E2DEFA] text-[11px] sm:text-xs font-medium h-[36px] px-3 sm:px-6 flex items-center justify-center transition-colors shadow-[0_1px_0_0_rgba(255,255,255,0.03)]"
+        >
+          <div className="max-w-7xl mx-auto w-full flex items-center justify-center gap-2 overflow-hidden select-none">
+            <Sparkles className="w-3 h-3 text-[#22D3EE] shrink-0 opacity-80" />
+            <span className="truncate font-normal text-[#F4F2FF]/90 tracking-wide">
+              {settings.announcementBar?.text || settings.announcementText || 'Khuyến mãi nạp tiền tự động qua VietQR — Giao key tức thì 24/7!'}
+            </span>
+            {(settings.announcementBar?.linkText || 'Xem Ngay') && (
+              <button
+                type="button"
+                onClick={() => navigateToStorefront('account-wallet-deposit')}
+                className="group inline-flex items-center gap-1 font-semibold text-[#22D3EE] hover:text-[#38BDF8] transition-all cursor-pointer shrink-0 ml-1 text-[11px] sm:text-xs active:scale-95 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#22D3EE] rounded"
+              >
+                <span>{settings.announcementBar?.linkText || 'Xem Ngay'}</span>
+                <ArrowRight className="w-3 h-3 transition-transform duration-200 group-hover:translate-x-0.5" />
+              </button>
+            )}
+          </div>
+        </aside>
       )}
 
-      {/* 2. MAIN STOREFRONT NAVBAR */}
-      <header className="sticky top-0 z-40 bg-[#0F0F1A]/90 backdrop-blur-md border-b border-white/10">
+      {/* 2. MAIN STOREFRONT NAVBAR (iOS 27 Liquid Glass Sticky Header) */}
+      <header className="sticky top-0 z-40 glass-prominent border-b border-white/8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           {/* Logo */}
           <div className="flex items-center gap-6">
@@ -123,32 +124,32 @@ export const StorefrontLayout: React.FC = () => {
               onClick={() => navigateToStorefront('home')}
               className="flex items-center gap-2.5 cursor-pointer text-left group select-none"
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7C3AED] via-[#9D5CF6] to-[#06B6D4] p-0.5 shadow-lg shadow-[#7C3AED]/30 group-hover:shadow-[0_0_20px_rgba(124,58,237,0.6)] transition-all">
-                <div className="w-full h-full bg-[#0F0F1A] rounded-[10px] flex items-center justify-center text-[#9D5CF6] group-hover:text-white transition-colors">
-                  <Flame className="w-5 h-5 text-[#9D5CF6] group-hover:text-cyan-400 transition-colors" />
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#7C3AED] via-[#9D5CF6] to-[#06B6D4] p-0.5 shadow-lg shadow-[#7C3AED]/25 group-hover:shadow-[0_0_20px_rgba(124,58,237,0.5)] transition-all">
+                <div className="w-full h-full bg-[#0B0B14] rounded-[14px] flex items-center justify-center text-[#C084FC] group-hover:text-white transition-colors">
+                  <Flame className="w-4.5 h-4.5 text-[#C084FC] group-hover:text-[#22D3EE] transition-colors" />
                 </div>
               </div>
               <div className="flex flex-col">
                 <span
-                  className={`${themeTypo.logoClass} text-xl sm:text-[23px] tracking-wider uppercase leading-tight`}
+                  className={`${themeTypo.logoClass} text-xl sm:text-[22px] tracking-wider uppercase leading-tight font-black`}
                   style={themeTypo.fontStyle}
                 >
                   THANOX.VN
                 </span>
-                <span className="hidden sm:block text-[9.5px] uppercase tracking-widest text-[#8B84A8] font-extrabold -mt-0.5">
+                <span className="hidden sm:block text-[9px] uppercase tracking-widest text-[#938EB5] font-extrabold -mt-0.5">
                   Digital Gaming Hub
                 </span>
               </div>
             </button>
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden xl:flex items-center gap-1 bg-[#0F0F1A]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1 shadow-lg shadow-black/40 shrink-0">
+            <nav className="hidden xl:flex items-center gap-1 glass-subtle border border-white/8 rounded-2xl p-1 shadow-md shrink-0">
               <Link
                 to="/"
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   storefrontPage === 'home'
-                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40'
-                    : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
+                    ? 'btn-liquid-primary shadow-md'
+                    : 'text-[#938EB5] hover:text-[#F4F2FF] hover:bg-white/[0.05]'
                 }`}
                 style={themeTypo.fontStyle}
               >
@@ -156,10 +157,10 @@ export const StorefrontLayout: React.FC = () => {
               </Link>
               <Link
                 to="/products"
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   storefrontPage === 'products'
-                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40'
-                    : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
+                    ? 'btn-liquid-primary shadow-md'
+                    : 'text-[#938EB5] hover:text-[#F4F2FF] hover:bg-white/[0.05]'
                 }`}
                 style={themeTypo.fontStyle}
               >
@@ -167,22 +168,22 @@ export const StorefrontLayout: React.FC = () => {
               </Link>
               <Link
                 to="/account/wallet/deposit"
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   storefrontPage === 'account-wallet-deposit'
-                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40'
-                    : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
+                    ? 'btn-liquid-primary shadow-md'
+                    : 'text-[#938EB5] hover:text-[#F4F2FF] hover:bg-white/[0.05]'
                 }`}
                 style={themeTypo.fontStyle}
               >
-                <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400/20" />
+                <Zap className="w-3.5 h-3.5 text-amber-300" />
                 <span className="text-amber-300">Nạp Tiền VietQR</span>
               </Link>
               <Link
                 to="/account/orders"
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   storefrontPage === 'account-orders'
-                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40'
-                    : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
+                    ? 'btn-liquid-primary shadow-md'
+                    : 'text-[#938EB5] hover:text-[#F4F2FF] hover:bg-white/[0.05]'
                 }`}
                 style={themeTypo.fontStyle}
               >
@@ -190,10 +191,10 @@ export const StorefrontLayout: React.FC = () => {
               </Link>
               <Link
                 to="/affiliate"
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   storefrontPage === 'affiliate'
-                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40'
-                    : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
+                    ? 'btn-liquid-primary shadow-md'
+                    : 'text-[#938EB5] hover:text-[#F4F2FF] hover:bg-white/[0.05]'
                 }`}
                 style={themeTypo.fontStyle}
               >
@@ -201,10 +202,10 @@ export const StorefrontLayout: React.FC = () => {
               </Link>
               <Link
                 to="/support"
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   storefrontPage === 'support'
-                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#9D5CF6] text-white shadow-md shadow-[#7C3AED]/40'
-                    : 'text-[#CBC7E0] hover:text-white hover:bg-white/5'
+                    ? 'btn-liquid-primary shadow-md'
+                    : 'text-[#938EB5] hover:text-[#F4F2FF] hover:bg-white/[0.05]'
                 }`}
                 style={themeTypo.fontStyle}
               >
@@ -215,18 +216,18 @@ export const StorefrontLayout: React.FC = () => {
 
           {/* Right Action Bar */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Customer Wallet Pill (When authenticated) */}
+            {/* Customer Wallet Pill */}
             {isAuthenticated && currentUser ? (
-              <div className="hidden sm:flex items-center bg-[#161626] border border-white/10 rounded-xl p-1.5 pl-3 gap-2.5 shrink-0 whitespace-nowrap">
+              <div className="hidden sm:flex items-center glass-subtle border border-white/8 rounded-2xl p-1.5 pl-3.5 gap-2.5 shrink-0 whitespace-nowrap shadow-sm">
                 <div className="text-left whitespace-nowrap">
-                  <div className="text-[10px] uppercase font-bold text-[#8B84A8] whitespace-nowrap leading-none mb-0.5">Số dư ví</div>
-                  <div className="font-display font-extrabold text-xs text-emerald-400 whitespace-nowrap leading-none">
+                  <div className="text-[9.5px] uppercase font-bold text-[#938EB5] whitespace-nowrap leading-none mb-0.5">Số dư ví</div>
+                  <div className="font-display font-black text-xs text-emerald-300 whitespace-nowrap leading-none">
                     {(currentUser?.balance ?? 0).toLocaleString('vi-VN')} <span className="text-[10px] font-bold">VND</span>
                   </div>
                 </div>
                 <Link
                   to="/account/wallet/deposit"
-                  className="px-2.5 py-1.5 rounded-lg bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-sm shrink-0 whitespace-nowrap"
+                  className="px-2.5 py-1.5 rounded-xl bg-[#7C3AED] hover:bg-[#8B5CF6] text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-sm shrink-0 whitespace-nowrap active:scale-95"
                 >
                   <Zap className="w-3 h-3 text-amber-300" />
                   <span>Nạp</span>
@@ -237,14 +238,14 @@ export const StorefrontLayout: React.FC = () => {
             {/* Cart Button */}
             <button
               onClick={() => navigateToStorefront('cart')}
-              className="relative p-2.5 sm:px-3 sm:py-2 rounded-xl bg-[#161626] border border-white/10 hover:border-[#7C3AED]/50 text-[#CBC7E0] hover:text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-md group"
+              className="relative p-2.5 sm:px-3 sm:py-2 rounded-2xl glass-subtle hover:bg-white/10 border border-white/8 hover:border-[#7C3AED]/50 text-[#E2DEFA] hover:text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-sm group active:scale-95"
               style={themeTypo.fontStyle}
               title="Giỏ hàng"
             >
               <ShoppingCart className={`w-4 h-4 transition-transform group-hover:scale-110 ${themeTypo.isFlowEnabled ? 'text-[#22D3EE]' : 'text-white'}`} />
-              <span className={`hidden md:inline-block text-xs ${themeTypo.navClass}`}>Giỏ Hàng</span>
+              <span className={`hidden md:inline-block text-xs font-bold ${themeTypo.navClass}`}>Giỏ Hàng</span>
               {cartItemsCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white text-[10px] font-black flex items-center justify-center shadow-lg animate-pulse">
+                <span className="w-4 h-4 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white text-[9.5px] font-black flex items-center justify-center shadow-md animate-pulse">
                   {cartItemsCount}
                 </span>
               )}
@@ -255,22 +256,22 @@ export const StorefrontLayout: React.FC = () => {
               <div className="relative">
                 <button
                   onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
-                  className="flex items-center gap-2 p-1.5 pr-2.5 rounded-xl bg-[#161626] border border-white/10 hover:border-white/20 transition-all cursor-pointer"
+                  className="flex items-center gap-2 p-1.5 pr-2.5 rounded-2xl glass-subtle hover:bg-white/10 border border-white/8 transition-all cursor-pointer active:scale-95"
                 >
-                  <div className="w-7 h-7 rounded-lg bg-[#7C3AED]/20 border border-[#7C3AED]/40 flex items-center justify-center text-[#9D5CF6] font-bold text-xs">
+                  <div className="w-7 h-7 rounded-xl bg-[#7C3AED]/20 border border-[#7C3AED]/40 flex items-center justify-center text-[#C084FC] font-bold text-xs">
                     {(currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase()}
                   </div>
-                  <span className="hidden md:block text-xs font-bold text-[#F0EDFF] max-w-[90px] truncate">
+                  <span className="hidden md:block text-xs font-bold text-[#F4F2FF] max-w-[90px] truncate">
                     {currentUser.name || currentUser.username}
                   </span>
-                  <ChevronDown className="w-3.5 h-3.5 text-[#8B84A8]" />
+                  <ChevronDown className="w-3.5 h-3.5 text-[#938EB5]" />
                 </button>
 
                 {accountDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-[#0F0F1A] border border-white/10 rounded-2xl p-2 shadow-2xl z-50 space-y-1 text-xs">
-                    <div className="px-3 py-2 border-b border-white/5">
-                      <div className="font-bold text-[#F0EDFF]">{currentUser.name || currentUser.username}</div>
-                      <div className="text-[11px] text-[#8B84A8] truncate">{currentUser.email}</div>
+                  <div className="absolute right-0 mt-2 w-56 glass-prominent border border-white/12 rounded-2xl p-2 shadow-[0_20px_50px_rgba(0,0,0,0.8)] z-50 space-y-1 text-xs animate-in fade-in zoom-in-95 duration-150">
+                    <div className="px-3 py-2 border-b border-white/8 mb-1">
+                      <div className="font-bold text-[#F4F2FF]">{currentUser.name || currentUser.username}</div>
+                      <div className="text-[10.5px] text-[#938EB5] truncate">{currentUser.email}</div>
                     </div>
 
                     <button
@@ -278,9 +279,9 @@ export const StorefrontLayout: React.FC = () => {
                         navigateToStorefront('account');
                         setAccountDropdownOpen(false);
                       }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-[#CBC7E0] hover:bg-white/5 hover:text-white transition-colors cursor-pointer flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 rounded-xl text-[#938EB5] hover:bg-white/5 hover:text-white transition-colors cursor-pointer flex items-center gap-2"
                     >
-                      <User className="w-3.5 h-3.5 text-[#8B84A8]" />
+                      <User className="w-3.5 h-3.5 text-[#938EB5]" />
                       <span>Tổng quan tài khoản</span>
                     </button>
                     <button
@@ -288,9 +289,9 @@ export const StorefrontLayout: React.FC = () => {
                         navigateToStorefront('account-orders');
                         setAccountDropdownOpen(false);
                       }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-[#CBC7E0] hover:bg-white/5 hover:text-white transition-colors cursor-pointer flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 rounded-xl text-[#938EB5] hover:bg-white/5 hover:text-white transition-colors cursor-pointer flex items-center gap-2"
                     >
-                      <Layers className="w-3.5 h-3.5 text-[#8B84A8]" />
+                      <Layers className="w-3.5 h-3.5 text-[#938EB5]" />
                       <span>Đơn hàng & License Key</span>
                     </button>
                     <button
@@ -298,9 +299,9 @@ export const StorefrontLayout: React.FC = () => {
                         navigateToStorefront('account-wallet-deposit');
                         setAccountDropdownOpen(false);
                       }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-[#CBC7E0] hover:bg-white/5 hover:text-white transition-colors cursor-pointer flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 rounded-xl text-[#938EB5] hover:bg-white/5 hover:text-white transition-colors cursor-pointer flex items-center gap-2"
                     >
-                      <Wallet className="w-3.5 h-3.5 text-[#8B84A8]" />
+                      <Wallet className="w-3.5 h-3.5 text-[#938EB5]" />
                       <span>Nạp tiền</span>
                     </button>
                     <button
@@ -308,20 +309,20 @@ export const StorefrontLayout: React.FC = () => {
                         navigateToStorefront('account-transactions');
                         setAccountDropdownOpen(false);
                       }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-[#CBC7E0] hover:bg-white/5 hover:text-white transition-colors cursor-pointer flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 rounded-xl text-[#938EB5] hover:bg-white/5 hover:text-white transition-colors cursor-pointer flex items-center gap-2"
                     >
-                      <Zap className="w-3.5 h-3.5 text-[#8B84A8]" />
+                      <Zap className="w-3.5 h-3.5 text-[#938EB5]" />
                       <span>Lịch sử biến động ví</span>
                     </button>
 
-                    <div className="border-t border-white/5 pt-1 mt-1 space-y-1">
+                    <div className="border-t border-white/8 pt-1 mt-1 space-y-1">
                       {currentUser?.role === 'admin' && (
                         <button
                           onClick={() => {
                             navigateToAdmin();
                             setAccountDropdownOpen(false);
                           }}
-                          className="w-full text-left px-3 py-2 rounded-xl text-[#9D5CF6] hover:bg-[#7C3AED]/15 transition-colors cursor-pointer font-bold flex items-center justify-between"
+                          className="w-full text-left px-3 py-2 rounded-xl text-[#C084FC] hover:bg-[#7C3AED]/15 transition-colors cursor-pointer font-bold flex items-center justify-between"
                         >
                           <span>Quản Trị Admin Panel</span>
                           <Shield className="w-3.5 h-3.5" />
@@ -343,14 +344,14 @@ export const StorefrontLayout: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Link
                   to="/login"
-                  className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-[#F0EDFF] transition-colors flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-xl glass-subtle hover:bg-white/10 text-xs font-semibold text-[#F4F2FF] transition-all flex items-center gap-1.5 active:scale-95"
                 >
                   <LogIn className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Đăng Nhập</span>
                 </Link>
                 <Link
                   to="/register"
-                  className="px-3 py-1.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-xs font-bold text-white transition-colors flex items-center gap-1.5 shadow-sm shadow-[#7C3AED]/20"
+                  className="px-3 py-1.5 rounded-xl btn-liquid-primary text-xs font-bold text-white transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
                 >
                   <UserPlus className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Đăng Ký</span>
@@ -364,17 +365,17 @@ export const StorefrontLayout: React.FC = () => {
                 variant="secondary"
                 size="xs"
                 onClick={() => navigateToAdmin()}
-                leftIcon={<Shield className="w-3.5 h-3.5 text-[#9D5CF6]" />}
+                leftIcon={<Shield className="w-3.5 h-3.5 text-[#C084FC]" />}
                 className="hidden xl:flex font-bold border-[#7C3AED]/30 hover:border-[#7C3AED] shrink-0 whitespace-nowrap"
               >
                 Vào Admin
               </Button>
             )}
 
-            {/* Mobile Menu Toggle (Ba gạch) */}
+            {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2.5 rounded-xl bg-[#161626] border border-white/10 hover:border-[#7C3AED]/50 text-white cursor-pointer active:scale-95 transition-all shadow-md"
+              className="md:hidden p-2 rounded-xl glass-subtle hover:bg-white/10 text-white cursor-pointer active:scale-90 transition-all shadow-sm"
               aria-label="Menu"
             >
               {mobileMenuOpen ? (
@@ -388,19 +389,19 @@ export const StorefrontLayout: React.FC = () => {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-[#0F0F1A] border-b border-white/10 px-4 py-4 space-y-2">
+          <div className="md:hidden glass-prominent border-b border-white/8 px-4 py-4 space-y-2 animate-in fade-in slide-in-from-top-2 duration-150">
             {isAuthenticated && currentUser ? (
-              <div className="p-3 bg-[#161626] rounded-xl flex items-center justify-between mb-3">
+              <div className="p-3 glass-subtle rounded-2xl flex items-center justify-between mb-3 border border-white/8">
                 <div>
-                  <div className="text-[10px] text-[#8B84A8]">Số dư ví của {currentUser?.username || 'bạn'}:</div>
-                  <div className="font-display font-bold text-sm text-emerald-400">
+                  <div className="text-[10px] text-[#938EB5]">Số dư ví của {currentUser?.username || 'bạn'}:</div>
+                  <div className="font-display font-black text-sm text-emerald-300">
                     {(currentUser?.balance ?? 0).toLocaleString('vi-VN')}đ
                   </div>
                 </div>
                 <Link
                   to="/account/wallet/deposit"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="px-3 py-1.5 rounded-lg bg-[#7C3AED] text-white text-xs font-bold cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-[#7C3AED] text-white text-xs font-bold cursor-pointer shadow-sm"
                 >
                   + Nạp Tiền
                 </Link>
@@ -410,14 +411,14 @@ export const StorefrontLayout: React.FC = () => {
                 <Link
                   to="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 px-3 rounded-xl bg-white/5 text-center text-xs font-bold text-[#F0EDFF] hover:bg-white/10 transition-colors"
+                  className="py-2.5 px-3 rounded-2xl glass-subtle text-center text-xs font-bold text-[#F4F2FF] hover:bg-white/10 transition-colors"
                 >
                   Đăng Nhập
                 </Link>
                 <Link
                   to="/register"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 px-3 rounded-xl bg-[#7C3AED] text-center text-xs font-bold text-white hover:bg-[#6D28D9] transition-colors"
+                  className="py-2.5 px-3 rounded-2xl btn-liquid-primary text-center text-xs font-bold text-white transition-colors"
                 >
                   Đăng Ký
                 </Link>
@@ -468,13 +469,13 @@ export const StorefrontLayout: React.FC = () => {
             )}
 
             {isAuthenticated && currentUser?.role === 'admin' && (
-              <div className="pt-2 border-t border-white/5">
+              <div className="pt-2 border-t border-white/8">
                 <button
                   onClick={() => {
                     navigateToAdmin();
                     setMobileMenuOpen(false);
                   }}
-                  className="w-full text-left py-2 px-3 rounded-xl text-xs font-bold text-[#9D5CF6] bg-[#7C3AED]/10 hover:bg-[#7C3AED]/20 cursor-pointer"
+                  className="w-full text-left py-2 px-3 rounded-xl text-xs font-bold text-[#C084FC] bg-[#7C3AED]/12 hover:bg-[#7C3AED]/20 cursor-pointer"
                 >
                   ⚡ Chuyển Sang Admin Panel
                 </button>
@@ -485,41 +486,42 @@ export const StorefrontLayout: React.FC = () => {
       </header>
 
       {/* 3. MAIN STOREFRONT CONTENT */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-2 sm:px-6 lg:px-8 py-2 sm:py-6 pb-24 md:pb-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6 pb-28 md:pb-8 relative z-10">
         <Outlet />
       </main>
 
-      {/* Fixed Mobile Bottom Navigation Bar (Chunky high-tech navigation on smartphones) */}
+      {/* Floating Mobile Bottom Navigation Bar (iOS 27 Liquid Glass Floating Island) */}
       <nav
-        aria-label="Mobile Navigation"
-        className="block md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0B0B17]/95 backdrop-blur-2xl border-t border-cyan-500/20 h-[70px] px-1 shadow-[0_-10px_30px_rgba(0,0,0,0.7)]"
+        aria-label="Thanh điều hướng di động"
+        className="block md:hidden fixed bottom-3 left-3 right-3 max-w-lg mx-auto z-40 glass-prominent rounded-3xl border border-white/14 h-[68px] px-2 shadow-[0_16px_48px_rgba(0,0,0,0.85)]"
       >
         <div className="grid grid-cols-5 h-full items-center">
           {/* 1. Shop */}
           <button
             type="button"
+            aria-label="Cửa hàng sản phẩm"
             onClick={() => {
               navigateToStorefront('products');
               navigate('/products');
             }}
-            className="flex flex-col items-center justify-center gap-1 transition-all cursor-pointer py-1.5 relative group active:scale-90"
+            className="flex flex-col items-center justify-center gap-1 transition-all cursor-pointer py-1 min-h-[44px] relative group active:scale-90"
             style={themeTypo.fontStyle}
           >
             {(storefrontPage === 'products' || storefrontPage === 'home') && (
               <div className="absolute top-0 w-8 h-1 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full shadow-[0_0_8px_#06B6D4]" />
             )}
-            <ShoppingBag
-              className={`w-5 h-5 transition-transform group-hover:scale-110 ${
+            <Package
+              className={`w-5 h-5 transition-transform ${
                 storefrontPage === 'products' || storefrontPage === 'home'
                   ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]'
-                  : 'text-[#8B84A8]'
+                  : 'text-[#938EB5]'
               }`}
             />
             <span
-              className={`text-[11px] ${
+              className={`text-[10.5px] ${
                 storefrontPage === 'products' || storefrontPage === 'home'
                   ? 'text-cyan-300 font-black'
-                  : 'text-[#8B84A8] font-bold'
+                  : 'text-[#938EB5] font-bold'
               }`}
             >
               Shop
@@ -529,28 +531,29 @@ export const StorefrontLayout: React.FC = () => {
           {/* 2. Nạp */}
           <button
             type="button"
+            aria-label="Nạp tiền VietQR"
             onClick={() => {
               navigateToStorefront('account-wallet-deposit');
               navigate('/account/wallet');
             }}
-            className="flex flex-col items-center justify-center gap-1 transition-all cursor-pointer py-1.5 relative group active:scale-90"
+            className="flex flex-col items-center justify-center gap-1 transition-all cursor-pointer py-1 min-h-[44px] relative group active:scale-90"
             style={themeTypo.fontStyle}
           >
             {storefrontPage === 'account-wallet-deposit' && (
               <div className="absolute top-0 w-8 h-1 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full shadow-[0_0_8px_#F59E0B]" />
             )}
             <Zap
-              className={`w-5 h-5 transition-transform group-hover:scale-110 ${
+              className={`w-5 h-5 transition-transform ${
                 storefrontPage === 'account-wallet-deposit'
                   ? 'text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]'
-                  : 'text-[#8B84A8]'
+                  : 'text-[#938EB5]'
               }`}
             />
             <span
-              className={`text-[11px] ${
+              className={`text-[10.5px] ${
                 storefrontPage === 'account-wallet-deposit'
                   ? 'text-amber-300 font-black'
-                  : 'text-[#8B84A8] font-bold'
+                  : 'text-[#938EB5] font-bold'
               }`}
             >
               Nạp
@@ -560,34 +563,35 @@ export const StorefrontLayout: React.FC = () => {
           {/* 3. Đơn */}
           <button
             type="button"
+            aria-label="Đơn hàng của tôi"
             onClick={() => {
               navigateToStorefront('account-orders');
               navigate('/account/orders');
             }}
-            className="flex flex-col items-center justify-center gap-1 transition-all cursor-pointer py-1.5 relative group active:scale-90"
+            className="flex flex-col items-center justify-center gap-1 transition-all cursor-pointer py-1 min-h-[44px] relative group active:scale-90"
             style={themeTypo.fontStyle}
           >
             {storefrontPage === 'account-orders' && (
               <div className="absolute top-0 w-8 h-1 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full shadow-[0_0_8px_#C084FC]" />
             )}
-            <Package
-              className={`w-5 h-5 transition-transform group-hover:scale-110 ${
+            <Layers
+              className={`w-5 h-5 transition-transform ${
                 storefrontPage === 'account-orders'
                   ? 'text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.8)]'
-                  : 'text-[#8B84A8]'
+                  : 'text-[#938EB5]'
               }`}
             />
             <span
-              className={`text-[11px] ${
+              className={`text-[10.5px] ${
                 storefrontPage === 'account-orders'
                   ? 'text-purple-300 font-black'
-                  : 'text-[#8B84A8] font-bold'
+                  : 'text-[#938EB5] font-bold'
               }`}
             >
               Đơn
             </span>
             {cartItemsCount > 0 && (
-              <span className="absolute top-1 right-2 w-4 h-4 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white text-[9px] font-black flex items-center justify-center shadow-lg">
+              <span className="absolute top-0.5 right-2 w-4 h-4 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white text-[9px] font-black flex items-center justify-center shadow-lg">
                 {cartItemsCount}
               </span>
             )}
@@ -596,37 +600,39 @@ export const StorefrontLayout: React.FC = () => {
           {/* 4. Hỗ Trợ */}
           <button
             type="button"
+            aria-label="Kênh hỗ trợ"
             onClick={() => {
               navigateToStorefront('support');
               navigate('/account/support');
             }}
-            className="flex flex-col items-center justify-center gap-1 transition-all cursor-pointer py-1.5 relative group active:scale-90"
+            className="flex flex-col items-center justify-center gap-1 transition-all cursor-pointer py-1 min-h-[44px] relative group active:scale-90"
             style={themeTypo.fontStyle}
           >
             {(storefrontPage === 'support' || storefrontPage === 'account-support') && (
               <div className="absolute top-0 w-8 h-1 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full shadow-[0_0_8px_#10B981]" />
             )}
             <MessageCircle
-              className={`w-5 h-5 transition-transform group-hover:scale-110 ${
+              className={`w-5 h-5 transition-transform ${
                 storefrontPage === 'support' || storefrontPage === 'account-support'
                   ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]'
-                  : 'text-[#8B84A8]'
+                  : 'text-[#938EB5]'
               }`}
             />
             <span
-              className={`text-[11px] ${
+              className={`text-[10.5px] ${
                 storefrontPage === 'support' || storefrontPage === 'account-support'
                   ? 'text-emerald-300 font-black'
-                  : 'text-[#8B84A8] font-bold'
+                  : 'text-[#938EB5] font-bold'
               }`}
             >
               Hỗ Trợ
             </span>
           </button>
 
-          {/* 5. Tài Khoản (Góc cuối bên phải: Chưa đăng nhập -> vào /login, Đã đăng nhập -> vào /account) */}
+          {/* 5. Tài Khoản */}
           <button
             type="button"
+            aria-label="Tài khoản cá nhân"
             onClick={() => {
               if (isAuthenticated) {
                 navigateToStorefront('account');
@@ -635,7 +641,7 @@ export const StorefrontLayout: React.FC = () => {
                 navigate('/login');
               }
             }}
-            className="flex flex-col items-center justify-center gap-1 transition-all cursor-pointer py-1.5 relative group active:scale-90"
+            className="flex flex-col items-center justify-center gap-1 transition-all cursor-pointer py-1 min-h-[44px] relative group active:scale-90"
             style={themeTypo.fontStyle}
           >
             {(storefrontPage === 'account' || (!isAuthenticated && window.location.pathname === '/login')) && (
@@ -643,29 +649,23 @@ export const StorefrontLayout: React.FC = () => {
             )}
             {isAuthenticated ? (
               <UserCheck
-                className={`w-5 h-5 transition-transform group-hover:scale-110 ${
+                className={`w-5 h-5 transition-transform ${
                   storefrontPage === 'account'
                     ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]'
-                    : 'text-[#8B84A8]'
+                    : 'text-[#938EB5]'
                 }`}
               />
             ) : (
-              <User
-                className={`w-5 h-5 transition-transform group-hover:scale-110 ${
-                  storefrontPage === 'account'
-                    ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]'
-                    : 'text-[#8B84A8]'
-                }`}
-              />
+              <LogIn className="w-5 h-5 text-[#938EB5]" />
             )}
             <span
-              className={`text-[11px] ${
+              className={`text-[10.5px] ${
                 storefrontPage === 'account'
                   ? 'text-cyan-300 font-black'
-                  : 'text-[#8B84A8] font-bold'
+                  : 'text-[#938EB5] font-bold'
               }`}
             >
-              Tài Khoản
+              {isAuthenticated ? 'Tài Khoản' : 'Đăng Nhập'}
             </span>
           </button>
         </div>
@@ -678,28 +678,28 @@ export const StorefrontLayout: React.FC = () => {
       <Toast />
 
       {/* 4. STOREFRONT FOOTER */}
-      <footer className="bg-[#0A0A10] border-t border-white/10 mt-16 pt-12 pb-8">
+      <footer className="glass-standard border-t border-white/8 mt-16 pt-12 pb-8 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Brand column */}
             <div className="space-y-4 md:col-span-1">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#06B6D4] p-0.5 shadow-md shadow-[#7C3AED]/30 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#06B6D4] p-0.5 shadow-md shadow-[#7C3AED]/25 flex items-center justify-center">
                   <Flame className="w-4 h-4 text-cyan-300" />
                 </div>
                 <span className="thanox-animated-logo text-base font-black tracking-wider uppercase">
                   THANOX.VN
                 </span>
               </div>
-              <p className="text-xs text-[#8B84A8] leading-relaxed">
+              <p className="text-xs text-[#938EB5] leading-relaxed">
                 Nền tảng cung cấp công cụ tối ưu hóa hiệu năng, file mod an toàn và key bản quyền uy tín hàng đầu Việt Nam.
               </p>
             </div>
 
             {/* Quick Links */}
             <div className="space-y-3">
-              <div className="text-xs font-bold text-[#F0EDFF] uppercase tracking-wider">Khám Phá</div>
-              <ul className="space-y-2 text-xs text-[#8B84A8]">
+              <div className="text-xs font-bold text-[#F4F2FF] uppercase tracking-wider">Khám Phá</div>
+              <ul className="space-y-2 text-xs text-[#938EB5]">
                 <li>
                   <button onClick={() => navigateToStorefront('products')} className="hover:text-white transition-colors cursor-pointer">
                     Danh mục sản phẩm
@@ -725,8 +725,8 @@ export const StorefrontLayout: React.FC = () => {
 
             {/* Policies */}
             <div className="space-y-3">
-              <div className="text-xs font-bold text-[#F0EDFF] uppercase tracking-wider">Chính Sách & Bảo Mật</div>
-              <ul className="space-y-2 text-xs text-[#8B84A8]">
+              <div className="text-xs font-bold text-[#F4F2FF] uppercase tracking-wider">Chính Sách & Bảo Mật</div>
+              <ul className="space-y-2 text-xs text-[#938EB5]">
                 <li>Chính sách bảo hành 100%</li>
                 <li>Điều khoản sử dụng dịch vụ</li>
                 <li>Cam kết an toàn bảo mật tài khoản</li>
@@ -736,15 +736,15 @@ export const StorefrontLayout: React.FC = () => {
 
             {/* Contact & Support Channels */}
             <div className="space-y-3">
-              <div className="text-xs font-bold text-[#F0EDFF] uppercase tracking-wider">Kênh Hỗ Trợ Trực Tuyến</div>
-              <div className="space-y-2 text-xs text-[#8B84A8]">
+              <div className="text-xs font-bold text-[#F4F2FF] uppercase tracking-wider">Kênh Hỗ Trợ Trực Tuyến</div>
+              <div className="space-y-2 text-xs text-[#938EB5]">
                 <div className="flex items-center gap-2">
                   <MessageCircle className="w-4 h-4 text-emerald-400" />
-                  <span>Zalo: <strong className="text-[#CBC7E0]">{settings.zaloHotline || '0889696810'}</strong></span>
+                  <span>Zalo: <strong className="text-[#E2DEFA]">{settings.zaloHotline || '0889696810'}</strong></span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Send className="w-4 h-4 text-[#06B6D4]" />
-                  <span>Telegram: <strong className="text-[#CBC7E0]">{settings.telegramLink || '@quangthank'}</strong></span>
+                  <Send className="w-4 h-4 text-[#22D3EE]" />
+                  <span>Telegram: <strong className="text-[#E2DEFA]">{settings.telegramLink || '@quangthank'}</strong></span>
                 </div>
               </div>
               <div className="pt-2">
@@ -761,13 +761,13 @@ export const StorefrontLayout: React.FC = () => {
           </div>
 
           {/* Bottom copyright & payment badges */}
-          <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#6B658E]">
+          <div className="border-t border-white/6 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#5C567A]">
             <div>© 2026 Thanox Digital Ecosystem. All rights reserved.</div>
             <div className="flex items-center gap-3">
               <span className="text-[11px]">Thanh toán bảo mật:</span>
-              <span className="px-2 py-0.5 rounded bg-white/5 text-[#CBC7E0] text-[10px] font-bold">VietQR</span>
-              <span className="px-2 py-0.5 rounded bg-white/5 text-[#CBC7E0] text-[10px] font-bold">Thẻ Cào</span>
-              <span className="px-2 py-0.5 rounded bg-white/5 text-[#CBC7E0] text-[10px] font-bold">Napas247</span>
+              <span className="px-2.5 py-0.5 rounded-full glass-subtle text-[#E2DEFA] text-[10px] font-bold border border-white/8">VietQR</span>
+              <span className="px-2.5 py-0.5 rounded-full glass-subtle text-[#E2DEFA] text-[10px] font-bold border border-white/8">Thẻ Cào</span>
+              <span className="px-2.5 py-0.5 rounded-full glass-subtle text-[#E2DEFA] text-[10px] font-bold border border-white/8">Napas247</span>
             </div>
           </div>
         </div>

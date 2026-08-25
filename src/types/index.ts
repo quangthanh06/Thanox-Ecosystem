@@ -141,7 +141,7 @@ export interface TopupRequest {
   userId: string;
   userName: string;
   amount: number;
-  method: 'Bank Transfer' | 'Th? co';
+  method: 'Bank Transfer' | 'Thẻ cào' | 'bank' | 'card' | 'momo';
   proofImage?: string;
   transferNote: string;
   createdAt: string;
@@ -384,12 +384,12 @@ export interface StoreSettings {
   affiliateEnabled: boolean;
   affiliateCommissionRate: number;
   affiliateMinWithdraw: number;
-  affiliateDailyCap: number; // M?c nh?n thu?ng t?i da / ngu?i / ngy (VN)
-  affiliateMinimumOrderValue: number; // on t?i thi?u d? tnh thu?ng (200.000d)
-  affiliateDefaultReward: number; // M?c thu?ng m?c d?nh (10.000d)
+  affiliateDailyCap: number; // Mức nhận thưởng tối đa / người / ngày (VNĐ)
+  affiliateMinimumOrderValue: number; // Đơn tối thiểu để tính thưởng (200.000đ)
+  affiliateDefaultReward: number; // Mức thưởng mặc định (10.000đ)
   affiliateHigherTierEnabled: boolean;
-  affiliateHigherTierThreshold: number; // M?c thu?ng cao (300.000d)
-  affiliateHigherTierReward: number; // M?c thu?ng cao (30.000d)
+  affiliateHigherTierThreshold: number; // Mức thưởng cao (300.000đ)
+  affiliateHigherTierReward: number; // Mức thưởng cao (30.000đ)
 
   // Music & Effects
   musicEnabled: boolean;

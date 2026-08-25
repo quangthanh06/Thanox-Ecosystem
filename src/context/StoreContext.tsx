@@ -12,6 +12,7 @@ import {
   User,
   TopupRequest,
   Transaction,
+  TransactionType,
   AffiliateItem,
   AffiliateReward,
   SupportTicket,
@@ -58,8 +59,8 @@ interface StoreContextType {
   // Cart
   cart: CartItem[];
   addToCart: (product: Product, quantity?: number, selectedPackage?: ProductPackage) => void;
-  removeFromCart: (productId: string) => void;
-  updateCartQuantity: (productId: string, quantity: number) => void;
+  removeFromCart: (productId: string, packageId?: string) => void;
+  updateCartQuantity: (productId: string, quantity: number, packageId?: string) => void;
   clearCart: () => void;
   checkoutCart: (paymentMethod: Order['paymentMethod']) => Promise<boolean>;
 
@@ -88,6 +89,7 @@ interface StoreContextType {
 
   currentUser: User;
   isAuthenticated: boolean;
+  isAuthLoading: boolean;
 
   // Auth Actions
   login: (identifier: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; message?: string }>;
@@ -137,6 +139,7 @@ interface StoreContextType {
   createTicket: (subject: string, message: string) => string;
   addTicketMessage: (ticketId: string, message: string) => void;
 
+  getItemEffectivePrice: (product: Product, user?: User | null, selectedPlan?: ProductPackage) => number;
   updateSettings: (newSettings: Partial<StoreSettings>) => void;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
@@ -484,17 +487,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Current active user authentication state
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
   
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) setCurrentUserId(session.user.id);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        if (session?.user) setCurrentUserId(session.user.id);
+      })
+      .catch(() => {})
+      .finally(() => {
+        setIsAuthLoading(false);
+      });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setCurrentUserId(session.user.id);
       } else {
         setCurrentUserId(null);
       }
+      setIsAuthLoading(false);
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -764,96 +776,96 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [settings.antiInspectEnabled]);
 
-  // Live Sync with Server Backend for real-time multi-device updates (Customer <-> Admin)
+  // Load Categories from Supabase Cloud (with fallback to local)
   useEffect(() => {
-    let isMounted = true;
-    const syncWithServer = async () => {
+    const fetchCategories = async () => {
       try {
-        const res = await fetch(`/api/sync?t=${Date.now()}`, {
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
-        });
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && json.data && isMounted) {
-            const d = json.data;
-            if (d.users && Array.isArray(d.users)) {
-              setUsers((prev) => {
-                const map = new Map();
-                d.users.forEach((u: User) => {
-                  if (u.username !== 'admin_thanox' && u.id !== 'u-1') {
-                    map.set(u.id, u);
-                  }
-                });
-                prev.forEach((u) => {
-                  if (u.username !== 'admin_thanox' && u.id !== 'u-1') {
-                    map.set(u.id, u);
-                  }
-                });
-                return Array.from(map.values());
-              });
-            }
-            if (d.products && Array.isArray(d.products) && d.products.length > 0) {
-              setProducts((prev) => {
-                const map = new Map<string, Product>();
-                d.products.forEach((p: Product) => {
-                  map.set(p.id, p);
-                });
-                // Local products and locked products always take precedence
-                prev.forEach((local) => {
-                  if (local.isLocked || !map.has(local.id)) {
-                    map.set(local.id, local);
-                  }
-                });
-                return Array.from(map.values());
-              });
-            }
-            if (d.orders && Array.isArray(d.orders)) {
-              setOrders((prev) => {
-                const map = new Map();
-                d.orders.forEach((o: Order) => map.set(o.id, o));
-                prev.forEach((o) => map.set(o.id, o));
-                return Array.from(map.values());
-              });
-            }
-            if (d.topups && Array.isArray(d.topups)) {
-              setTopups((prev) => {
-                const map = new Map();
-                d.topups.forEach((t: TopupRequest) => map.set(t.id, t));
-                prev.forEach((t) => map.set(t.id, t));
-                return Array.from(map.values());
-              });
-            }
-            if (d.cardRecharges && Array.isArray(d.cardRecharges)) {
-              setCardRecharges((prev) => {
-                const map = new Map();
-                d.cardRecharges.forEach((c: CardRechargeRequest) => map.set(c.id, c));
-                prev.forEach((c) => map.set(c.id, c));
-                return Array.from(map.values());
-              });
-            }
-            if (d.settings && typeof d.settings === 'object') {
-              setSettings((prev) => ({
-                ...prev,
-                ...d.settings,
-              }));
-            }
-          }
+        const { data, error } = await supabase.from('categories').select('*');
+        if (!error && data && data.length > 0) {
+          const mapped: Category[] = data.map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            slug: c.slug || c.name.toLowerCase().replace(/\s+/g, '-'),
+            icon: c.icon || '📱',
+            image: c.image || '',
+            count: Number(c.count) || 0,
+            status: (c.status as 'active' | 'hidden') || 'active',
+          }));
+          setCategories(mapped);
         }
-      } catch {
-        // Fallback silently to local state
-      }
+      } catch {}
     };
-    syncWithServer();
-    const interval = setInterval(syncWithServer, 5000);
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
+    fetchCategories();
   }, []);
+
+  // Load User Transactions from Supabase Cloud
+  useEffect(() => {
+    if (!currentUserId) return;
+    const fetchUserTransactions = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('user_id', currentUserId)
+          .order('created_at', { ascending: false });
+        if (!error && data && data.length > 0) {
+          const mapped: Transaction[] = data.map((t: any) => ({
+            id: t.id,
+            txCode: t.tx_code || t.id.substring(0, 10),
+            userId: t.user_id,
+            userName: t.user_name || currentUser.username || 'Khách hàng',
+            type: (t.type as TransactionType) || 'deposit',
+            amount: Number(t.amount) || 0,
+            balanceAfter: Number(t.balance_after) || 0,
+            description: t.description || '',
+            createdAt: t.created_at || new Date().toISOString(),
+            status: (t.status as 'completed' | 'processing' | 'failed') || 'completed',
+          }));
+          setTransactions(mapped);
+        }
+      } catch {}
+    };
+    fetchUserTransactions();
+  }, [currentUserId, currentUser.username]);
+
+  // Load Card Recharges from Supabase Cloud
+  useEffect(() => {
+    const fetchCardRecharges = async () => {
+      try {
+        let query = supabase.from('card_recharges').select('*');
+        if (currentUserId && currentUser?.role !== 'admin') {
+          query = query.eq('user_id', currentUserId);
+        }
+        const { data, error } = await query.order('created_at', { ascending: false });
+        if (!error && data && data.length > 0) {
+          const mapped: CardRechargeRequest[] = data.map((c: any) => ({
+            id: c.id,
+            code: c.code || `#THE-${c.id.substring(0, 5)}`,
+            userId: c.user_id,
+            userName: c.user_name || 'Khách hàng',
+            network: c.network,
+            declaredAmount: Number(c.declared_amount) || 0,
+            receivedAmount: Number(c.received_amount) || 0,
+            serial: c.serial || '',
+            pin: c.pin || '',
+            status: c.status || 'pending',
+            createdAt: c.created_at || '',
+            processedAt: c.processed_at,
+            note: c.note,
+          }));
+          setCardRecharges((prev) => {
+            const map = new Map<string, CardRechargeRequest>();
+            mapped.forEach((item) => map.set(item.id, item));
+            prev.forEach((item) => {
+              if (!map.has(item.id)) map.set(item.id, item);
+            });
+            return Array.from(map.values());
+          });
+        }
+      } catch {}
+    };
+    fetchCardRecharges();
+  }, [currentUserId, currentUser?.role]);
 
   // Track referral query param (?ref=CODE) from URL
   useEffect(() => {
@@ -1021,7 +1033,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const sub = path.replace(/^\/qtri\/?/, '').split('/')[0] as PageId;
       if (sub && [
         'dashboard', 'analytics', 'products', 'categories', 'orders',
-        'wallet', 'transactions', 'affiliate', 'users', 'support', 'settings'
+        'wallet', 'transactions', 'affiliate', 'users', 'support', 'settings',
+        'theme-settings', 'payment-settings', 'maintenance-settings', 'security-settings', 'music-settings'
       ].includes(sub)) {
         setCurrentPage(sub);
       } else {
@@ -1132,20 +1145,30 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
-  const removeFromCart = (productId: string) => {
-    setCart((prev) => prev.filter((item) => item.product.id !== productId));
+  const removeFromCart = (productId: string, packageId?: string) => {
+    setCart((prev) =>
+      prev.filter((item) => {
+        if (packageId !== undefined) {
+          return !(item.product.id === productId && (item.selectedPackage?.id || '') === packageId);
+        }
+        return item.product.id !== productId;
+      })
+    );
     showToast('Đã xóa sản phẩm khỏi giỏ hàng', 'info');
   };
 
-  const updateCartQuantity = (productId: string, quantity: number) => {
+  const updateCartQuantity = (productId: string, quantity: number, packageId?: string) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      removeFromCart(productId, packageId);
       return;
     }
     setCart((prev) =>
-      prev.map((item) =>
-        item.product.id === productId ? { ...item, quantity } : item
-      )
+      prev.map((item) => {
+        const matches =
+          item.product.id === productId &&
+          (packageId === undefined || (item.selectedPackage?.id || '') === packageId);
+        return matches ? { ...item, quantity } : item;
+      })
     );
   };
 
@@ -1362,10 +1385,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // createOrder tự fallback local nếu RPC chưa áp. createOrder tự cập nhật
     // orders/balance thật/notification/toast cho từng đơn. =====
     let created = 0;
+    const successfulItems: { productId: string; packageId?: string }[] = [];
+
     for (const item of cart) {
       const res = await createOrder(item.product.id, item.quantity, paymentMethod, item.selectedPackage);
       if (res?.success) {
         created++;
+        successfulItems.push({
+          productId: item.product.id,
+          packageId: item.selectedPackage?.id,
+        });
       } else if (res?.error) {
         showToast(res.error, 'error');
       }
@@ -1379,9 +1408,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Affiliate cho đơn đầu tiên của lần checkout này
     processAffiliateRewardForOrder('ord-' + Date.now(), '#TX-' + Math.floor(10000 + Math.random() * 90000), total, buyer);
 
-    clearCart();
+    // Chỉ xóa các sản phẩm thanh toán thành công khỏi giỏ
+    setCart((prev) =>
+      prev.filter(
+        (item) =>
+          !successfulItems.some(
+            (s) => s.productId === item.product.id && s.packageId === item.selectedPackage?.id
+          )
+      )
+    );
+
     if (created < cart.length) {
-      showToast(`Thanh toán thành công ${created}/${cart.length} sản phẩm (một số sản phẩm lỗi/hết hàng)!`, 'warning');
+      showToast(`Thanh toán thành công ${created}/${cart.length} sản phẩm (sản phẩm lỗi vẫn được giữ lại trong giỏ)!`, 'warning');
     }
     return true;
   };
@@ -1890,19 +1928,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     showToast(`Đã duyệt nạp tiền ${addAmount.toLocaleString('vi-VN')}đ cho ${topup.userName}!`, 'success');
 
-    // 3. ĐỒNG BỘ CLOUD (Bypass RLS qua Serverless API)
+    // 3. ĐỒNG BỘ CLOUD (Bypass RLS qua Serverless API có xác thực Admin)
     try {
-      fetch('/api/topup/action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'approve',
-          id: topup.id,
-          transferNote: topup.transferNote,
-          userId: targetUserId,
-          amount: addAmount,
-        }),
-      }).catch(() => {});
+      void (async () => {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token || '';
+        await fetch('/api/topup/action', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            action: 'approve',
+            id: topup.id,
+            transferNote: topup.transferNote,
+            userId: targetUserId,
+            amount: addAmount,
+          }),
+        });
+      })();
     } catch {}
   };
 
@@ -1913,24 +1958,31 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       targetTopup = prev.find((t) => t.id === idOrNote || t.requestCode === idOrNote || t.transferNote === idOrNote);
       return prev.map((t) =>
         (t.id === idOrNote || t.requestCode === idOrNote || t.transferNote === idOrNote)
-          ? { ...t, status: 'rejected', rejectReason: reason || 'Giao dịch không khớp sao kê' }
+          ? { ...t, status: 'rejected' as const, rejectReason: reason || 'Giao dịch không khớp sao kê' }
           : t
       );
     });
 
     showToast('Đã từ chối yêu cầu nạp tiền', 'error');
 
-    // Đồng bộ lên Cloud qua Serverless API
+    // Đồng bộ lên Cloud qua Serverless API có xác thực Admin
     try {
-      fetch('/api/topup/action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'reject',
-          id: idOrNote,
-          transferNote: targetTopup?.transferNote || idOrNote,
-        }),
-      }).catch(() => {});
+      void (async () => {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token || '';
+        await fetch('/api/topup/action', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            action: 'reject',
+            id: idOrNote,
+            transferNote: targetTopup?.transferNote || idOrNote,
+          }),
+        });
+      })();
     } catch {}
   };
 
@@ -2096,7 +2148,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return { success: false, message: 'Vui lòng đăng nhập để đăng ký trở thành Đại Lý / Seller!' };
     }
 
-    if (currentUser.sellerStatus === 'approved') {
+    if (currentUser.sellerStatus === 'approved' || currentUser.sellerStatus === 'active') {
       return { success: false, message: 'Bạn đã là Đại Lý / Seller của Thanox!' };
     }
 
@@ -2118,6 +2170,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           : u
       )
     );
+
+    // Persist seller application to Supabase profiles
+    try {
+      supabase
+        .from('profiles')
+        .update({
+          seller_status: 'pending',
+          seller_note: note || 'Đăng ký chương trình Đại Lý Thanox',
+          seller_applied_at: new Date().toISOString(),
+        })
+        .eq('id', currentUser.id)
+        .then();
+    } catch {}
 
     setNotifications((prev) => [
       {
@@ -2334,12 +2399,37 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return { success: false, message: 'Mật khẩu mới phải có ít nhất 6 ký tự!' };
     }
 
-    setUsers((prev) =>
-      prev.map((u) => (u.id === userId ? { ...u, password: newPass } : u))
-    );
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token || '';
 
-    showToast('Đã đặt lại mật khẩu mới cho tài khoản khách hàng thành công!', 'success');
-    return { success: true, message: 'Mật khẩu đã được cập nhật.' };
+      const res = await fetch('/api/admin/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ userId, newPassword: newPass }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        const errMsg = data?.error || 'Không thể đổi mật khẩu qua Supabase Auth';
+        showToast(errMsg, 'error');
+        return { success: false, message: errMsg };
+      }
+
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, password: newPass } : u))
+      );
+
+      showToast('Đã đặt lại mật khẩu mới cho tài khoản khách hàng thành công!', 'success');
+      return { success: true, message: 'Mật khẩu đã được cập nhật thành công trên hệ thống.' };
+    } catch (err: any) {
+      const errMsg = err?.message || 'Lỗi kết nối máy chủ';
+      showToast(errMsg, 'error');
+      return { success: false, message: errMsg };
+    }
   };
 
   const updateUserProfile = (updates: Partial<User>) => {
@@ -2660,7 +2750,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
              if (now - createdTime > 300000) {
                 changed = true;
                 void supabase.from('topups').update({ status: 'rejected' }).eq('id', t.id);
-                return { ...t, status: 'rejected', rejectReason: 'Hết hạn (quá 5 phút)' };
+                return { ...t, status: 'rejected' as const, rejectReason: 'Hết hạn (quá 5 phút)' };
              }
           }
           return t;
@@ -2715,6 +2805,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         toasts,
         currentUser,
         isAuthenticated,
+        isAuthLoading,
         login,
         register,
         logout,
@@ -2750,6 +2841,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         createSupportTicket,
         createTicket,
         addTicketMessage,
+        getItemEffectivePrice,
         updateSettings,
         markNotificationRead,
         markAllNotificationsRead,

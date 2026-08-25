@@ -181,7 +181,7 @@ export const ProductsView: React.FC = () => {
 
       Array.from(files).forEach(async (file) => {
         if (!file.type.startsWith('image/')) {
-          showToast('Vui l�ng ch?n file h�nh ?nh (PNG, JPG, WEBP)', 'error');
+          showToast('Vui lòng chọn file hình ảnh (PNG, JPG, WEBP)', 'error');
           return;
         }
         try {
@@ -343,7 +343,7 @@ export const ProductsView: React.FC = () => {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      showToast('Vui l�ng nh?p t�n sản phẩm', 'error');
+      showToast('Vui lòng nhập tên sản phẩm', 'error');
       return;
     }
 
@@ -452,15 +452,15 @@ export const ProductsView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Header & Quick Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#0F0F1A] border border-white/5 rounded-2xl p-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-prominent border border-white/10 rounded-3xl p-5 sm:p-6 shadow-xl">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="font-display text-lg font-bold text-[#F0EDFF]">Kho Sản Phẩm & Key Tự Động</h2>
+            <h2 className="font-display text-lg sm:text-xl font-black text-[#F4F2FF] tracking-tight">Kho Sản Phẩm & Key Tự Động</h2>
             <Badge variant="brand" size="xs">
               {products.length} sản phẩm
             </Badge>
           </div>
-          <p className="text-xs text-[#6B658E] mt-0.5">
+          <p className="text-xs text-[#938EB5] mt-0.5">
             Quản lý file mod, key vip, tệp tin cấu hình và phân phối bàn giao tự động
           </p>
         </div>
@@ -477,13 +477,13 @@ export const ProductsView: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           {/* Search bar */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-[#6B658E] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[#938EB5] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm kiếm theo tên sản phẩm, danh mục, mô tả..."
-              className="w-full bg-[#161626] border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED]"
+              className="w-full glass-input rounded-2xl pl-9 pr-4 py-2 text-xs text-[#F4F2FF] placeholder-[#5C567A]"
             />
           </div>
 
@@ -492,11 +492,11 @@ export const ProductsView: React.FC = () => {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
+              className="glass-select rounded-2xl px-3 py-2 text-xs text-[#F4F2FF] cursor-pointer"
             >
               <option value="all">Tất cả danh mục ({categories.length})</option>
               {categories.map((c) => (
-                <option key={c.id} value={c.name}>
+                <option key={c.id} value={c.name} className="bg-[#121220] text-white">
                   {c.name}
                 </option>
               ))}
@@ -506,32 +506,32 @@ export const ProductsView: React.FC = () => {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
+              className="glass-select rounded-2xl px-3 py-2 text-xs text-[#F4F2FF] cursor-pointer"
             >
-              <option value="all">Tất cả trạng thái</option>
-              <option value="active">🟢 Đang bán</option>
-              <option value="hidden">⚪ Đang ẩn</option>
-              <option value="out_of_stock">🔴 Hết hàng</option>
+              <option value="all" className="bg-[#121220] text-white">Tất cả trạng thái</option>
+              <option value="active" className="bg-[#121220] text-white">🟢 Đang bán</option>
+              <option value="hidden" className="bg-[#121220] text-white">⚪ Đang ẩn</option>
+              <option value="out_of_stock" className="bg-[#121220] text-white">🔴 Hết hàng</option>
             </select>
 
             {/* Sort Dropdown */}
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED] cursor-pointer"
+              className="glass-select rounded-2xl px-3 py-2 text-xs text-[#F4F2FF] cursor-pointer"
             >
-              <option value="newest">Mới nhất</option>
-              <option value="sold_desc">Bán chạy nhất</option>
-              <option value="price_asc">Giá: Thấp đến Cao</option>
-              <option value="price_desc">Giá: Cao đến Thấp</option>
+              <option value="newest" className="bg-[#121220] text-white">Mới nhất</option>
+              <option value="sold_desc" className="bg-[#121220] text-white">Bán chạy nhất</option>
+              <option value="price_asc" className="bg-[#121220] text-white">Giá: Thấp đến Cao</option>
+              <option value="price_desc" className="bg-[#121220] text-white">Giá: Cao đến Thấp</option>
             </select>
 
             {/* View Mode Toggle */}
-            <div className="flex items-center bg-[#161626] p-0.5 rounded-xl border border-white/10">
+            <div className="flex items-center glass-subtle p-0.5 rounded-2xl border border-white/8">
               <button
                 onClick={() => setViewMode('table')}
-                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                  viewMode === 'table' ? 'bg-[#7C3AED] text-white' : 'text-[#8B84A8] hover:text-white'
+                className={`p-1.5 rounded-xl transition-all cursor-pointer ${
+                  viewMode === 'table' ? 'btn-liquid-primary shadow-sm text-white' : 'text-[#938EB5] hover:text-white'
                 }`}
                 title="Dạng bảng"
               >
@@ -539,8 +539,8 @@ export const ProductsView: React.FC = () => {
               </button>
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                  viewMode === 'grid' ? 'bg-[#7C3AED] text-white' : 'text-[#8B84A8] hover:text-white'
+                className={`p-1.5 rounded-xl transition-all cursor-pointer ${
+                  viewMode === 'grid' ? 'btn-liquid-primary shadow-sm text-white' : 'text-[#938EB5] hover:text-white'
                 }`}
                 title="Dạng lưới"
               >

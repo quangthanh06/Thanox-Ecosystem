@@ -9,13 +9,9 @@ import {
   Mail,
   Eye,
   EyeOff,
-  Flame,
   ArrowRight,
-  ShieldCheck,
   AlertCircle,
-  CheckCircle2,
   Share2,
-  Gift,
 } from 'lucide-react';
 
 export const StorefrontRegister: React.FC = () => {
@@ -60,9 +56,9 @@ export const StorefrontRegister: React.FC = () => {
     if (/[A-Z]/.test(password) || /[0-9]/.test(password)) score += 1;
     if (/[^A-Za-z0-9]/.test(password)) score += 1;
 
-    if (score <= 1) return { score: 1, label: 'Yếu', color: 'bg-red-500 text-red-400' };
-    if (score === 2) return { score: 2, label: 'Trung bình', color: 'bg-amber-500 text-amber-400' };
-    return { score: 3, label: 'Mạnh & An toàn', color: 'bg-emerald-500 text-emerald-400' };
+    if (score <= 1) return { score: 1, label: 'Yếu', color: 'bg-red-500 text-red-300' };
+    if (score === 2) return { score: 2, label: 'Trung bình', color: 'bg-amber-500 text-amber-300' };
+    return { score: 3, label: 'Mạnh & An toàn', color: 'bg-emerald-500 text-emerald-300' };
   };
 
   const strength = getPasswordStrength();
@@ -110,7 +106,7 @@ export const StorefrontRegister: React.FC = () => {
     }
 
     setIsLoading(true);
-    register(cleanUsername, cleanEmail, password).then(res => {
+    register(cleanUsername, cleanEmail, password).then((res) => {
       setIsLoading(false);
       if (res.success) {
         navigate(redirectPath, { replace: true });
@@ -130,19 +126,19 @@ export const StorefrontRegister: React.FC = () => {
 
         {/* Right Form Card Side */}
         <div className="lg:col-span-7 xl:col-span-6 flex flex-col justify-center">
-          <div className="bg-[#0F0F1A]/90 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl p-6 sm:p-10 space-y-6">
+          <div className="glass-prominent border border-white/12 shadow-[0_30px_70px_rgba(0,0,0,0.85)] rounded-3xl p-6 sm:p-10 space-y-6">
             {/* Top Switcher Tabs (Login / Register) */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
-              <div className="flex items-center gap-2 p-1 rounded-2xl bg-white/[0.04] border border-white/5">
+            <div className="flex items-center justify-between border-b border-white/8 pb-4">
+              <div className="flex items-center gap-2 p-1 rounded-2xl glass-subtle border border-white/6">
                 <Link
                   to={`/login${searchParams.toString() ? `?${searchParams.toString()}` : ''}`}
-                  className="px-4 py-2 rounded-xl text-xs font-medium transition-all text-[#8B84A8] hover:text-white"
+                  className="px-4 py-2 rounded-xl text-xs font-medium transition-all text-[#938EB5] hover:text-white"
                 >
                   Đăng Nhập
                 </Link>
                 <Link
                   to={`/register${searchParams.toString() ? `?${searchParams.toString()}` : ''}`}
-                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-[#7C3AED] text-white shadow-md shadow-[#7C3AED]/30"
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all btn-liquid-primary shadow-md"
                 >
                   Tạo Tài Khoản
                 </Link>
@@ -150,165 +146,158 @@ export const StorefrontRegister: React.FC = () => {
 
               <Link
                 to="/"
-                className="text-xs text-[#8B84A8] hover:text-[#9D5CF6] transition-colors"
+                className="text-xs text-[#938EB5] hover:text-[#C084FC] transition-colors font-medium"
               >
                 Về Trang Chủ &rarr;
               </Link>
             </div>
 
             {/* Title */}
-            <div className="space-y-1">
-              <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#F0EDFF] tracking-tight">
-                Tạo tài khoản Thanox 🚀
+            <div className="space-y-1.5">
+              <h1 className="font-display text-2xl sm:text-3xl font-black text-[#F4F2FF] tracking-tight">
+                Tạo Tài Khoản Thanox 🚀
               </h1>
-              <p className="text-xs sm:text-sm text-[#8B84A8]">
-                Đăng ký ngay để nhận ưu đãi thành viên và lưu trữ License vĩnh viễn
+              <p className="text-xs sm:text-sm text-[#938EB5]">
+                Đăng ký để nạp tiền tự động, nhận key bản quyền và tích lũy hoa hồng
               </p>
             </div>
 
             {/* Error Alert */}
             {errorMessage && (
-              <div className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2.5 animate-fadeIn">
+              <div className="p-3.5 rounded-2xl bg-red-500/12 border border-red-500/25 text-red-300 text-xs flex items-center gap-2.5 shadow-sm">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 <span>{errorMessage}</span>
               </div>
             )}
 
-            {/* Register Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#CBC7E0]">
-                  Tên đăng nhập (Username)
-                </label>
+                <label className="text-xs font-bold text-[#F4F2FF]">Tên đăng nhập</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8B84A8]">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#938EB5]">
                     <User className="w-4 h-4" />
                   </div>
                   <input
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="VD: pro_player_99"
-                    className="w-full bg-[#161626] border border-white/10 rounded-2xl pl-10 pr-4 py-3.5 text-xs sm:text-sm text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED] transition-colors"
-                    autoComplete="username"
+                    placeholder="VD: member99"
+                    className="w-full glass-input rounded-2xl pl-10 pr-4 py-3 text-xs sm:text-sm text-[#F4F2FF]"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#CBC7E0]">
-                  Địa chỉ Email
-                </label>
+                <label className="text-xs font-bold text-[#F4F2FF]">Địa chỉ Email</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8B84A8]">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#938EB5]">
                     <Mail className="w-4 h-4" />
                   </div>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="VD: player@gmail.com"
-                    className="w-full bg-[#161626] border border-white/10 rounded-2xl pl-10 pr-4 py-3.5 text-xs sm:text-sm text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED] transition-colors"
-                    autoComplete="email"
+                    placeholder="VD: user@example.com"
+                    className="w-full glass-input rounded-2xl pl-10 pr-4 py-3 text-xs sm:text-sm text-[#F4F2FF]"
                     required
                   />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#CBC7E0]">Mật khẩu (tối thiểu 6 ký tự)</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8B84A8]">
-                    <Lock className="w-4 h-4" />
-                  </div>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Tạo mật khẩu an toàn..."
-                    className="w-full bg-[#161626] border border-white/10 rounded-2xl pl-10 pr-10 py-3.5 text-xs sm:text-sm text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED] transition-colors"
-                    autoComplete="new-password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#8B84A8] hover:text-white transition-colors cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-
-                {/* Password Strength Indicator */}
-                {password && (
-                  <div className="space-y-1 pt-1 animate-fadeIn">
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-[#8B84A8]">Độ mạnh mật khẩu:</span>
-                      <span className={`font-semibold ${strength.color.split(' ')[1]}`}>
-                        {strength.label}
-                      </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-[#F4F2FF]">Mật khẩu</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#938EB5]">
+                      <Lock className="w-4 h-4" />
                     </div>
-                    <div className="grid grid-cols-3 gap-1.5 h-1">
-                      <div className={`rounded-full h-full ${strength.score >= 1 ? (strength.score === 1 ? 'bg-red-500' : strength.score === 2 ? 'bg-amber-500' : 'bg-emerald-500') : 'bg-white/10'}`} />
-                      <div className={`rounded-full h-full ${strength.score >= 2 ? (strength.score === 2 ? 'bg-amber-500' : 'bg-emerald-500') : 'bg-white/10'}`} />
-                      <div className={`rounded-full h-full ${strength.score >= 3 ? 'bg-emerald-500' : 'bg-white/10'}`} />
-                    </div>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Ít nhất 6 ký tự..."
+                      className="w-full glass-input rounded-2xl pl-10 pr-10 py-3 text-xs sm:text-sm text-[#F4F2FF]"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#938EB5] hover:text-white transition-colors cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
-                )}
-              </div>
+                </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#CBC7E0]">Nhập lại mật khẩu</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8B84A8]">
-                    <Lock className="w-4 h-4" />
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-[#F4F2FF]">Xác nhận mật khẩu</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#938EB5]">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Nhập lại mật khẩu..."
+                      className="w-full glass-input rounded-2xl pl-10 pr-4 py-3 text-xs sm:text-sm text-[#F4F2FF]"
+                      required
+                    />
                   </div>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Xác nhận lại mật khẩu..."
-                    className="w-full bg-[#161626] border border-white/10 rounded-2xl pl-10 pr-4 py-3.5 text-xs sm:text-sm text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED] transition-colors"
-                    autoComplete="new-password"
-                    required
-                  />
                 </div>
               </div>
 
-              {/* Referral Code Optional Input */}
+              {/* Password Strength Indicator */}
+              {password && (
+                <div className="space-y-1 pt-0.5">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-[#938EB5]">Độ mạnh mật khẩu:</span>
+                    <span className={`font-bold ${strength.color}`}>{strength.label}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5 h-1">
+                    <div className={`rounded-full ${strength.score >= 1 ? 'bg-red-500' : 'bg-white/10'}`} />
+                    <div className={`rounded-full ${strength.score >= 2 ? 'bg-amber-500' : 'bg-white/10'}`} />
+                    <div className={`rounded-full ${strength.score >= 3 ? 'bg-emerald-500' : 'bg-white/10'}`} />
+                  </div>
+                </div>
+              )}
+
+              {/* Referral Code (Optional) */}
               <div className="space-y-1.5 pt-1">
-                <label className="text-xs font-semibold text-[#CBC7E0] flex items-center justify-between">
-                  <span>Mã người giới thiệu (Không bắt buộc)</span>
-                  <span className="text-[11px] text-[#9D5CF6]">Affiliate Reward</span>
+                <label className="text-xs font-bold text-[#938EB5] flex items-center justify-between">
+                  <span>Mã Người Giới Thiệu (Không bắt buộc)</span>
+                  {refCodeInput && (
+                    <span className="text-[10.5px] text-[#22D3EE] font-bold">✓ Đã gắn mã</span>
+                  )}
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-amber-400">
-                    <Gift className="w-4 h-4" />
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#938EB5]">
+                    <Share2 className="w-4 h-4" />
                   </div>
                   <input
                     type="text"
                     value={refCodeInput}
                     onChange={(e) => setRefCodeInput(e.target.value.toUpperCase())}
-                    placeholder="Nhập mã giới thiệu (nếu có)..."
-                    className="w-full bg-[#161626] border border-white/10 rounded-2xl pl-10 pr-4 py-3 text-xs text-amber-300 placeholder-[#6B658E] focus:outline-none focus:border-amber-500/50 font-mono uppercase transition-colors"
+                    placeholder="VD: THANOX88"
+                    className="w-full glass-input rounded-2xl pl-10 pr-4 py-3 text-xs sm:text-sm text-amber-300 font-mono font-bold tracking-wider"
                   />
                 </div>
               </div>
 
-              {/* Terms Checkbox */}
+              {/* Terms Agreement */}
               <div className="pt-1">
-                <label className="flex items-start gap-2.5 text-xs text-[#8B84A8] cursor-pointer select-none">
+                <label className="flex items-start gap-2.5 text-xs text-[#938EB5] cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={agreeTerms}
                     onChange={(e) => setAgreeTerms(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded bg-[#161626] border-white/20 text-[#7C3AED] focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                    className="w-4 h-4 rounded-md bg-[#121220] border-white/20 text-[#7C3AED] focus:ring-0 focus:ring-offset-0 cursor-pointer mt-0.5"
                   />
                   <span>
                     Tôi đồng ý với{' '}
-                    <span className="text-[#9D5CF6] hover:underline">Điều khoản dịch vụ</span> &{' '}
-                    <span className="text-[#9D5CF6] hover:underline">Chính sách bảo mật</span> của Thanox
+                    <span className="text-[#C084FC] font-semibold">Điều khoản sử dụng</span> và{' '}
+                    <span className="text-[#C084FC] font-semibold">Chính sách bảo mật</span> của Thanox.
                   </span>
                 </label>
               </div>
@@ -318,22 +307,22 @@ export const StorefrontRegister: React.FC = () => {
                 type="submit"
                 variant="primary"
                 size="lg"
-                className="w-full justify-center font-bold text-xs sm:text-sm py-3.5 shadow-lg shadow-[#7C3AED]/25 cursor-pointer mt-2"
+                className="w-full justify-center font-black text-xs sm:text-sm py-3.5 shadow-lg shadow-[#7C3AED]/25 cursor-pointer mt-2 uppercase tracking-wide"
                 isLoading={isLoading}
                 rightIcon={<ArrowRight className="w-4 h-4" />}
               >
-                Tạo Tài Khoản Ngay
+                Đăng Ký Tài Khoản
               </Button>
             </form>
 
             {/* Login Link Footer */}
-            <div className="text-center text-xs text-[#8B84A8] pt-1">
+            <div className="text-center text-xs text-[#938EB5] pt-3 border-t border-white/6">
               Đã có tài khoản?{' '}
               <Link
                 to={`/login${searchParams.toString() ? `?${searchParams.toString()}` : ''}`}
-                className="font-bold text-[#9D5CF6] hover:text-[#C084FC] transition-colors"
+                className="font-bold text-[#C084FC] hover:text-white transition-colors"
               >
-                Đăng nhập tại đây
+                Đăng nhập ngay
               </Link>
             </div>
           </div>
