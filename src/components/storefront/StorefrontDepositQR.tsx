@@ -87,6 +87,7 @@ export const StorefrontDepositQR: React.FC = () => {
   // Dynamic Transaction Code for current valid amount session (STT<random_code>)
   const [transactionCode, setTransactionCode] = useState<string>('');
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [isManualChecking, setIsManualChecking] = useState<boolean>(false);
 
   // Success Modal State
   const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
@@ -118,24 +119,62 @@ export const StorefrontDepositQR: React.FC = () => {
     }
   }, [timeLeft, transactionCode, showToast]);
 
-  // Generate a fresh unique transaction code (STT + alphanumeric)
-  const generateNewTransactionCode = () => {
-    const prefix = (settings.transferPrefix || 'STT').trim();
-    const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
-    let randomPart = '';
-    for (let i = 0; i < 6; i++) {
-      randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+  // Server Topup Synchronizer
+  const syncTopupToServer = async (amt: number, code: string) => {
+    try {
+      const res = await fetch('/api/topup/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          userName: currentUser.name || currentUser.username,
+          amount: amt,
+          transferNote: code,
+          method: 'VietQR',
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.isInstantCredited || data.status === 'approved') {
+          setSuccessData({
+            amount: amt,
+            code,
+            balance: data.newBalance ?? (currentUser.balance + amt),
+          });
+          setShowSuccessModal(true);
+          window.dispatchEvent(new CustomEvent('thanox:balance_updated'));
+        }
+      }
+    } catch (err) {
+      console.warn('[Deposit] Server topup sync error:', err);
     }
-    return `${prefix}${randomPart}`;
   };
 
-  const DEPOSIT_REDIRECT = '/account/wallet/deposit';
-
-  const scrollToQrSection = () => {
-    setTimeout(() => {
-      const qrEl = document.getElementById('deposit-qr-section');
-      if (qrEl) qrEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 120);
+  const triggerManualCheck = async () => {
+    if (!transactionCode) return;
+    setIsManualChecking(true);
+    try {
+      const res = await fetch(`/api/topup/check-bank?note=${encodeURIComponent(transactionCode)}&userId=${encodeURIComponent(currentUser.id)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.matched || data.status === 'approved') {
+          setSuccessData({
+            amount: Number(data.amount) || activeAmount,
+            code: transactionCode,
+            balance: data.newBalance ?? (currentUser.balance + activeAmount),
+          });
+          setShowSuccessModal(true);
+          window.dispatchEvent(new CustomEvent('thanox:balance_updated'));
+          setIsManualChecking(false);
+          return;
+        }
+      }
+      showToast('Đang kết nối SePay & Ngân hàng kiểm tra... Tiền sẽ vào ví sau vài giây!', 'info');
+    } catch {
+      showToast('Đang kết nối SePay & Ngân hàng kiểm tra...', 'info');
+    } finally {
+      setIsManualChecking(false);
+    }
   };
 
   // ONE-CLICK PRESET SELECTION: Tự tạo topup + mở QR ngay lập tức
@@ -165,6 +204,7 @@ export const StorefrontDepositQR: React.FC = () => {
     }
 
     setTransactionCode(codeToUse);
+    syncTopupToServer(amt, codeToUse);
     scrollToQrSection();
   };
 
@@ -211,6 +251,7 @@ export const StorefrontDepositQR: React.FC = () => {
     const codeToUse = generateNewTransactionCode();
     createTopupRequest(activeAmount, 'Bank Transfer', codeToUse);
     setTransactionCode(codeToUse);
+    syncTopupToServer(activeAmount, codeToUse);
     scrollToQrSection();
   };
 
@@ -264,13 +305,25 @@ export const StorefrontDepositQR: React.FC = () => {
       )
       .subscribe();
 
-    // 2. POLLING FALLBACK (Ưu tiên Realtime WebSockets, kết hợp Supabase DB polling & SePay check hợp lý)
-    let pollCount = 0;
-    const checkDepositStatus = async () => {
+    // 2. POLLING SIÊU TỐC 1.5 GIÂY (Quét đồng bộ SePay + Bank Transactions + DB)
+    const checkDepositStatus = async (isManual = false) => {
       try {
-        pollCount++;
+        if (isManual) setIsManualChecking(true);
 
-        // Kiểm tra Supabase DB trước (siêu tốc, không tốn quota SePay)
+        // 2.1. Quét API Serverless check-bank với Service Role (Tự động cộng tiền nếu SePay đã nhận)
+        try {
+          const res = await fetch(`/api/topup/check-bank?note=${encodeURIComponent(transactionCode)}&userId=${encodeURIComponent(currentUser.id)}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (isSubscribed && (data.matched || data.status === 'approved')) {
+              handleSuccess(Number(data.amount) || activeAmount, data.newBalance);
+              if (isManual) setIsManualChecking(false);
+              return true;
+            }
+          }
+        } catch {}
+
+        // 2.2. Kiểm tra Supabase DB trực tiếp
         const { data: topupRow } = await supabase
           .from('topups')
           .select('id, status, amount, user_id')
@@ -284,35 +337,29 @@ export const StorefrontDepositQR: React.FC = () => {
             const { data: prof } = await supabase.from('profiles').select('balance').eq('id', currentUser.id).maybeSingle();
             if (prof?.balance !== undefined) updatedBal = Number(prof.balance);
           } catch {}
-          handleSuccess(topupRow.amount || activeAmount, updatedBal);
+          handleSuccess(Number(topupRow.amount) || activeAmount, updatedBal);
+          if (isManual) setIsManualChecking(false);
           return true;
         }
 
-        // Quét API SePay dự phòng (mỗi 2 chu kỳ ~ 5-6s/lần để tránh cạn rate limit SePay)
-        if (pollCount % 2 === 0) {
-          try {
-            const res = await fetch(`/api/topup/check-bank?note=${encodeURIComponent(transactionCode)}`);
-            if (res.ok) {
-              const data = await res.json();
-              if (isSubscribed && (data.matched || data.status === 'approved')) {
-                handleSuccess(activeAmount, data.newBalance);
-                return true;
-              }
-            }
-          } catch {}
+        if (isManual) {
+          setIsManualChecking(false);
+          showToast('Đang kết nối SePay & Ngân hàng kiểm tra... Tiền sẽ vào ví sau vài giây!', 'info');
         }
-      } catch {}
+      } catch {
+        if (isManual) setIsManualChecking(false);
+      }
       return false;
     };
 
-    // Chạy kiểm tra ban đầu
+    // Chạy kiểm tra ban đầu ngay lập tức
     checkDepositStatus();
 
-    // Quét định kỳ mỗi 2.8 giây (WebSockets vẫn bắt ngay tức thì < 50ms)
+    // Quét định kỳ mỗi 1.5 giây siêu tốc
     const interval = setInterval(async () => {
       const isDone = await checkDepositStatus();
       if (isDone) clearInterval(interval);
-    }, 2800);
+    }, 1500);
 
     return () => {
       isSubscribed = false;
@@ -900,14 +947,28 @@ export const StorefrontDepositQR: React.FC = () => {
                     </div>
 
                     {/* Automatic Reconciliation Notice */}
-                    <div className="p-4 rounded-2xl bg-[#161626]/60 border border-white/5 text-center space-y-1">
+                    <div className="p-4 rounded-2xl bg-[#161626]/60 border border-white/5 text-center space-y-2">
                       <div className="flex items-center justify-center gap-1.5 text-xs text-emerald-400 font-bold">
                         <Zap className="w-4 h-4 text-amber-300" />
-                        <span>Hệ thống tự động cộng tiền sau khi nhận chuyển khoản</span>
+                        <span>Hệ thống tự động cộng tiền sau khi nhận chuyển khoản (1-3s)</span>
                       </div>
                       <p className="text-[11px] text-[#8B84A8]">
-                        Bạn chỉ cần mở App ngân hàng quét mã QR hoặc chuyển đúng nội dung ở trên. Tiền sẽ tự động vào ví sau 3-10 giây mà không cần thao tác thêm.
+                        Bạn chỉ cần mở App ngân hàng quét mã QR hoặc chuyển đúng nội dung ở trên. Tiền sẽ tự động vào ví sau vài giây mà không cần thao tác thêm.
                       </p>
+
+                      <button
+                        type="button"
+                        onClick={triggerManualCheck}
+                        disabled={isManualChecking}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl btn-liquid-primary text-xs font-bold text-white shadow-md active:scale-95 transition-all cursor-pointer mx-auto mt-1"
+                      >
+                        {isManualChecking ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                        ) : (
+                          <Zap className="w-3.5 h-3.5 text-amber-300" />
+                        )}
+                        <span>{isManualChecking ? 'Đang kiểm tra SePay...' : '⚡ Đã Chuyển Khoản? Kiểm Tra Ngay'}</span>
+                      </button>
                     </div>
                   </div>
                 )}
