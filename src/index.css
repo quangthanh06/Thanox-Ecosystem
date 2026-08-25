@@ -476,6 +476,16 @@ html, body {
   pointer-events: none;
 }
 
+/* Thanox Mascot Float Animation */
+@keyframes thanoxFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(1deg);
+  }
+}
+
 .vietqr-corner-bracket {
   position: absolute;
   width: 14px;

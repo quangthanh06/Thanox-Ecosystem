@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   RefreshCw,
 } from 'lucide-react';
+import { ThanoxMascot } from '../ui/ThanoxMascot';
 
 interface ChatMessage {
   id: string;
@@ -338,11 +339,9 @@ export const StorefrontAIAssistant: React.FC = () => {
 
   return (
     <>
-      {/* 1. FLOATING MASCOT TRIGGER BUTTON (Cố định bên TRÁI, đứng im — giống nhau trên PC & Mobile) */}
-      <div
-        className="fixed bottom-24 sm:bottom-28 left-0 sm:left-6 z-[999999] pointer-events-auto select-none"
-      >
-        {/* Bong bóng đặt ABSOLUTE để không làm nút bị đẩy lệch khỏi rìa trái */}
+      {/* 1. THANОX AI GLASS ORB (Fixed Bottom-Left with Safe Margin) */}
+      <div className="fixed bottom-24 sm:bottom-8 left-3 sm:left-6 z-40 pointer-events-auto select-none">
+        {/* Tooltip speech bubble */}
         {!isOpen && !isBubbleDismissed && (
           <div
             onClick={(e) => {
@@ -350,12 +349,12 @@ export const StorefrontAIAssistant: React.FC = () => {
               setIsOpen(true);
               setIsBubbleDismissed(true);
             }}
-            className="absolute bottom-full left-0 mb-1.5 animate-bounce flex items-center gap-1.5 bg-gradient-to-r from-[#161626]/95 via-[#1E1B4B]/95 to-[#0E1726]/95 border border-cyan-400/50 text-white text-[11px] font-extrabold py-1.5 px-3 rounded-2xl shadow-xl shadow-cyan-500/20 backdrop-blur-xl cursor-pointer hover:scale-105 transition-all whitespace-nowrap"
+            className="absolute bottom-full left-0 mb-2 flex items-center gap-1.5 glass-prominent border border-cyan-400/40 text-white text-[11px] font-bold py-1.5 px-3 rounded-2xl shadow-xl backdrop-blur-xl cursor-pointer hover:scale-105 transition-all whitespace-nowrap animate-bounce"
           >
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
-            <span className="text-cyan-300 flex items-center gap-1 drop-shadow-[0_0_6px_rgba(6,182,212,0.8)]">
-              <Sparkles className="w-3 h-3 text-amber-300 animate-spin" />
-              <span>💬 THANOX AI - Tư vấn!</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
+            <span className="text-cyan-300 flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-amber-300" />
+              <span>THANOX AI Tư vấn 24/7</span>
             </span>
             <button
               type="button"
@@ -363,70 +362,61 @@ export const StorefrontAIAssistant: React.FC = () => {
                 e.stopPropagation();
                 setIsBubbleDismissed(true);
               }}
-              className="text-[#8B84A8] hover:text-white ml-1 p-0.5 rounded-md hover:bg-white/10 cursor-pointer"
+              className="text-[#938EB5] hover:text-white ml-1 p-0.5 rounded-md hover:bg-white/10 cursor-pointer"
               title="Đóng"
             >
               <X className="w-3 h-3" />
             </button>
-            {/* Tooltip Arrow — dưới bong bóng, ngay trên nút */}
-            <div className="absolute -bottom-1.5 left-3 w-2.5 h-2.5 bg-[#161626] border-b border-r border-cyan-400/50 transform rotate-45" />
+            <div className="absolute -bottom-1.5 left-4 w-2.5 h-2.5 bg-[#121226] border-b border-r border-cyan-400/40 transform rotate-45" />
           </div>
         )}
 
-        {/* 3D Cyber Mascot Avatar Button (Sleek Compact 44px) */}
+        {/* Morphing Thanox AI Glass Orb */}
         <button
           type="button"
+          aria-label="Mở trợ lý THANOX AI"
           onClick={() => {
             setIsOpen((prev) => !prev);
             setIsBubbleDismissed(true);
           }}
-          className={`relative group p-0.5 rounded-full transition-all duration-300 cursor-pointer shadow-xl ${
+          className={`relative group p-1 rounded-full glass-prominent border transition-all duration-300 cursor-pointer active:scale-95 flex items-center gap-2 ${
             isOpen
-              ? 'bg-gradient-to-r from-red-500 to-pink-600 scale-105 ring-2 ring-pink-500/40 shadow-red-500/30'
-              : 'bg-gradient-to-r from-[#7C3AED] via-[#06B6D4] to-[#3B82F6] hover:scale-110 ring-2 ring-cyan-400/50 hover:ring-cyan-300 shadow-[0_0_18px_rgba(6,182,212,0.5)]'
+              ? 'border-red-500/50 shadow-[0_8px_24px_rgba(239,68,68,0.3)]'
+              : 'border-cyan-400/40 hover:border-cyan-300 shadow-[0_10px_30px_rgba(6,182,212,0.35)]'
           }`}
-          title="Nhấp để mở AI tư vấn"
         >
           {isOpen ? (
-            <div className={`${sizeClass} flex items-center justify-center text-white bg-[#0F0F1A] rounded-full`}>
-              <X className="w-6 h-6" />
+            <div className="w-12 h-12 sm:w-13 sm:h-13 flex items-center justify-center text-white bg-red-500/20 rounded-full">
+              <X className="w-5 h-5 text-red-300" />
             </div>
           ) : (
-            <div className={`${sizeClass} rounded-full bg-gradient-to-br from-[#0F0F1A] via-[#161626] to-[#0A0A14] border border-cyan-400/80 flex items-center justify-center relative overflow-hidden`}>
-              {/* Glowing Laser Pulse */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-[#7C3AED]/30 via-cyan-400/20 to-[#06B6D4]/30 animate-pulse" />
-
-              {/* Compact High-tech Robot Mascot */}
-              <div className="relative z-10 flex flex-col items-center justify-center">
-                <Bot className="w-6 h-6 sm:w-6.5 sm:h-6.5 text-cyan-300 group-hover:scale-110 transition-transform drop-shadow-[0_0_8px_rgba(6,182,212,0.9)]" />
-                <span className="text-[7px] font-black tracking-widest text-[#F0EDFF] uppercase bg-cyan-950/90 px-1 py-0.1 rounded-full border border-cyan-400/30 -mt-0.5">
-                  AI
-                </span>
+            <div className="flex items-center gap-2 px-1">
+              <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-full flex items-center justify-center relative">
+                <ThanoxMascot size="sm" isAnimated className="relative z-10" />
+                <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#0B0B17] animate-pulse" />
               </div>
-
-              {/* Online Green Pulse Indicator */}
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border border-[#0F0F1A] shadow-sm shadow-emerald-400/80 animate-pulse" />
+              <span className="hidden md:group-hover:inline-block pr-3 font-bold text-xs text-[#F4F2FF] tracking-wide whitespace-nowrap animate-in fade-in slide-in-from-left-2 duration-200">
+                THANOX AI · Tư vấn
+              </span>
             </div>
           )}
         </button>
       </div>
 
-      {/* 2. MAIN AI ASSISTANT CHAT MODAL (Neo luôn bên trái theo bot) */}
+      {/* 2. MAIN AI ASSISTANT CHAT MODAL */}
       {isOpen && (
         <div
-          className="fixed bottom-24 sm:bottom-20 left-2 sm:left-6 w-[calc(100vw-16px)] sm:w-[410px] max-h-[76vh] h-[580px] z-[999999] flex flex-col bg-[#0B0B17]/95 backdrop-blur-2xl border-2 border-cyan-500/30 rounded-3xl shadow-2xl shadow-cyan-950/80 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+          className="fixed bottom-24 sm:bottom-8 left-2 sm:left-6 w-[calc(100vw-16px)] sm:w-[420px] max-h-[76vh] h-[580px] z-50 flex flex-col glass-prominent border border-white/14 rounded-3xl shadow-[0_24px_70px_rgba(0,0,0,0.85)] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         >
           {/* Header */}
-          <div className="p-4 sm:p-4.5 bg-gradient-to-r from-[#6366F1] via-[#7C3AED] to-[#4F46E5] flex items-center justify-between shadow-lg shrink-0">
+          <div className="p-4 glass-elevated border-b border-white/10 flex items-center justify-between shadow-md shrink-0 bg-gradient-to-r from-[#181830]/90 via-[#121226]/90 to-[#0A0A18]/90">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-white shadow-inner">
-                <Bot className="w-6 h-6 text-cyan-200" />
-              </div>
+              <ThanoxMascot size="sm" isAnimated className="shrink-0" />
               <div>
-                <h3 className="font-display font-extrabold text-sm sm:text-base text-white flex items-center gap-1.5">
-                  <span>Hỗ trợ {shopName}</span>
+                <h3 className="font-display font-black text-sm sm:text-base text-[#F4F2FF] flex items-center gap-1.5">
+                  <span>Trợ lý THANOX AI</span>
                 </h3>
-                <div className="flex items-center gap-1.5 text-[11px] text-emerald-200 font-semibold">
+                <div className="flex items-center gap-1.5 text-[11px] text-emerald-300 font-semibold">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   <span>Trực tuyến 24/7</span>
                 </div>
@@ -436,7 +426,7 @@ export const StorefrontAIAssistant: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl glass-subtle hover:bg-white/10 text-[#938EB5] hover:text-white transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -445,20 +435,18 @@ export const StorefrontAIAssistant: React.FC = () => {
           {/* Body / Chat Stream & Accordion Area */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs scrollbar-thin scrollbar-thumb-white/10">
             {/* Cyber Mascot Greeting Box */}
-            <div className="p-4 rounded-2xl bg-gradient-to-b from-[#18182E] to-[#101020] border border-white/10 text-center space-y-2 shadow-md">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#7C3AED] to-[#06B6D4] p-0.5 mx-auto shadow-lg shadow-cyan-500/20">
-                <div className="w-full h-full bg-[#0F0F1A] rounded-2xl flex items-center justify-center">
-                  <Bot className="w-7 h-7 text-cyan-300" />
-                </div>
+            <div className="p-4 rounded-2xl glass-subtle border border-white/10 text-center space-y-2 shadow-md">
+              <div className="w-14 h-14 mx-auto flex items-center justify-center">
+                <ThanoxMascot size="md" isAnimated />
               </div>
-              <div className="font-bold text-sm text-[#F0EDFF]">
-                Xin chào! 👋
+              <div className="font-bold text-sm text-[#F4F2FF]">
+                Xin chào quý khách! 👋
               </div>
-              <p className="text-xs text-[#CBC7E0] leading-relaxed">
-                Mình là <strong className="text-cyan-300">THANOX Bot</strong>, trợ lý thông minh của {shopName}.
+              <p className="text-xs text-[#938EB5] leading-relaxed">
+                Mình là <strong className="text-cyan-300">THANOX AI</strong>, trợ lý thông minh của {shopName}.
               </p>
-              <p className="text-[11px] text-[#8B84A8]">
-                Chọn một câu hỏi phổ biến bên dưới hoặc nhập nội dung để mình tư vấn:
+              <p className="text-[11px] text-[#5C567A]">
+                Bấm chọn câu hỏi nhanh bên dưới hoặc nhập nội dung để mình hỗ trợ ngay nhé:
               </p>
             </div>
 
@@ -614,8 +602,8 @@ export const StorefrontAIAssistant: React.FC = () => {
                   <div
                     className={`max-w-[88%] p-3.5 rounded-2xl text-xs leading-relaxed whitespace-pre-line ${
                       msg.sender === 'user'
-                        ? 'bg-gradient-to-r from-[#7C3AED] to-[#6366F1] text-white rounded-tr-none shadow-md shadow-purple-900/30'
-                        : 'bg-[#18182E] text-[#F0EDFF] border border-white/10 rounded-tl-none shadow-md'
+                        ? 'btn-liquid-primary text-white rounded-tr-none shadow-md shadow-purple-900/30'
+                        : 'glass-standard text-[#F4F2FF] border border-white/10 rounded-tl-none shadow-md'
                     }`}
                   >
                     {msg.text}
@@ -631,8 +619,8 @@ export const StorefrontAIAssistant: React.FC = () => {
                           onClick={opt.action}
                           className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-sm ${
                             opt.isPrimary
-                              ? 'bg-gradient-to-r from-[#7C3AED] to-[#06B6D4] text-white hover:scale-105'
-                              : 'bg-[#1E1E38] text-[#CBC7E0] hover:text-white border border-white/10 hover:border-white/30'
+                              ? 'btn-liquid-primary shadow-md hover:scale-105'
+                              : 'glass-subtle text-[#938EB5] hover:text-white border border-white/10 hover:border-white/25'
                           }`}
                         >
                           <span>{opt.label}</span>
@@ -641,7 +629,7 @@ export const StorefrontAIAssistant: React.FC = () => {
                     </div>
                   )}
 
-                  <span className="text-[9.5px] text-[#6B658E] mt-1 px-1">{msg.time}</span>
+                  <span className="text-[9.5px] text-[#5C567A] mt-1 px-1">{msg.time}</span>
                 </div>
               ))}
               <div ref={chatEndRef} />
@@ -649,19 +637,19 @@ export const StorefrontAIAssistant: React.FC = () => {
           </div>
 
           {/* Footer Interactive Chat Input */}
-          <div className="p-3 bg-[#0E0E1C] border-t border-white/10 space-y-2 shrink-0">
+          <div className="p-3 glass-elevated border-t border-white/10 space-y-2 shrink-0 bg-[#0A0A16]/90 backdrop-blur-md">
             <form onSubmit={handleSendMessage} className="flex items-center gap-2">
               <input
                 type="text"
                 value={inputQuery}
                 onChange={(e) => setInputQuery(e.target.value)}
                 placeholder="Nhập câu hỏi (VD: giá thanox adr, nạp tiền...)..."
-                className="flex-1 bg-[#161626] border border-white/10 rounded-2xl px-3.5 py-2.5 text-xs text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED]"
+                className="flex-1 glass-input rounded-2xl px-3.5 py-2.5 text-xs text-[#F4F2FF] placeholder-[#5C567A] focus:outline-none"
               />
               <button
                 type="submit"
                 disabled={!inputQuery.trim()}
-                className="p-2.5 rounded-2xl bg-gradient-to-r from-[#7C3AED] to-[#06B6D4] text-white disabled:opacity-40 hover:scale-105 transition-transform cursor-pointer shadow-md"
+                className="p-2.5 rounded-2xl btn-liquid-primary text-white disabled:opacity-40 hover:scale-105 transition-transform cursor-pointer shadow-md shrink-0"
                 title="Gửi tin nhắn"
               >
                 <Send className="w-4 h-4" />
@@ -669,7 +657,7 @@ export const StorefrontAIAssistant: React.FC = () => {
             </form>
 
             {/* Bottom Admin Zalo Bar */}
-            <div className="flex items-center justify-between text-[11px] text-[#8B84A8] pt-1 px-1">
+            <div className="flex items-center justify-between text-[11px] text-[#938EB5] pt-1 px-1">
               <span>Bạn cần hỗ trợ thêm?</span>
               <a
                 href={`https://zalo.me/${adminZalo}`}

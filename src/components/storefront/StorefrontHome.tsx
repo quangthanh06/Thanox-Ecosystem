@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { getThemeTypography } from '../../utils/themeStyles';
 import { useDragScroll } from '../../hooks/useDragScroll';
+import { ThanoxMascot } from '../ui/ThanoxMascot';
 
 export const StorefrontHome: React.FC = () => {
   const {
@@ -94,22 +95,37 @@ export const StorefrontHome: React.FC = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-[#07070D] via-transparent to-black/30" />
             <div className="absolute top-0 right-0 w-96 h-96 bg-[#8B5CF6]/15 rounded-full blur-[100px] pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none" />
+
+            {/* Background Display Watermark Typography (Subtle depth) */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden opacity-[0.045]">
+              <span className="font-display font-black text-[110px] sm:text-[180px] lg:text-[230px] text-white tracking-widest leading-none blur-[1px]">
+                THANOX
+              </span>
+            </div>
           </div>
 
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-center">
             {/* Left Content Column (7 cols on desktop) */}
             <div className="lg:col-span-7 flex flex-col justify-between h-full space-y-5">
               {/* 1. Dynamic Slide Content with stabilized height to prevent CTA jumping */}
-              <div className="min-h-[150px] sm:min-h-[180px] lg:min-h-[190px] flex flex-col justify-center">
+              <div className="min-h-[160px] sm:min-h-[190px] flex flex-col justify-center">
                 <div
                   key={`hero-text-${currentSlide.id}`}
-                  className="space-y-2.5 sm:space-y-3.5 animate-in fade-in slide-in-from-left-2 duration-300"
+                  className="space-y-2.5 sm:space-y-3 animate-in fade-in slide-in-from-left-2 duration-300"
                 >
-                  {/* Eyebrow / Category Indicator */}
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#06B6D4] shadow-[0_0_8px_#06B6D4]" />
-                    <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-[#22D3EE]">
-                      {currentSlide.category || 'BẢN QUYỀN CHÍNH HÃNG'}
+                  {/* Eyebrow / Mascot & AI Status Row */}
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <ThanoxMascot size="xs" isAnimated className="drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]" />
+
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full glass-subtle border border-white/8 text-[11px] font-semibold text-[#938EB5] shadow-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#06B6D4] shadow-[0_0_6px_#06B6D4] animate-pulse" />
+                      <span className="text-[#F4F2FF] font-bold">THANOX AI</span>
+                      <span className="text-white/20">•</span>
+                      <span className="text-[#22D3EE] font-bold">TRỰC TUYẾN</span>
+                    </div>
+
+                    <span className="text-[10.5px] font-bold uppercase tracking-wider text-[#C084FC] glass-subtle px-2.5 py-0.5 rounded-full border border-purple-500/20">
+                      {currentSlide.category || 'BẢN QUYỀN'}
                     </span>
                   </div>
 
@@ -121,7 +137,7 @@ export const StorefrontHome: React.FC = () => {
                   </h1>
 
                   {/* Price Display with Tabular Numbers */}
-                  <div className="flex items-baseline gap-2 pt-1">
+                  <div className="flex items-baseline gap-2 pt-0.5">
                     <span className="font-display font-black text-2xl sm:text-4xl lg:text-[38px] text-[#FBBF24] tabular-nums tracking-tight drop-shadow-sm">
                       {currentSlide.price.toLocaleString('vi-VN')}
                     </span>
@@ -154,21 +170,25 @@ export const StorefrontHome: React.FC = () => {
               </div>
             </div>
 
-            {/* Right Showcase Image Card (5 cols on desktop) */}
+            {/* Right Showcase Image Card (Floating Product Showcase) */}
             <div className="lg:col-span-5 flex justify-center items-center">
               <div
                 onClick={() => navigateToStorefront('product-detail', currentSlide.id)}
-                className="relative w-full max-w-md aspect-video rounded-3xl glass-standard p-2 shadow-2xl overflow-hidden group/card cursor-pointer border border-white/12 hover:border-[#7C3AED]/40 transition-all hover:scale-[1.01]"
+                className="relative w-full max-w-md aspect-video sm:aspect-[16/10] rounded-3xl glass-elevated p-3 sm:p-4 shadow-[0_24px_60px_rgba(0,0,0,0.85)] border border-white/14 group/showcase cursor-pointer overflow-hidden transition-all duration-300 hover:scale-[1.015] hover:-translate-y-1"
               >
+                {/* Ambient glow behind product image */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#1B1B38]/70 via-[#0F0F20]/80 to-[#07070D] z-0" />
+                <div className="absolute inset-4 rounded-2xl bg-[#7C3AED]/12 blur-2xl group-hover/showcase:bg-[#06B6D4]/18 transition-all duration-500 pointer-events-none" />
+
                 <div
                   key={`hero-img-${currentSlide.id}`}
-                  className="w-full h-full animate-in fade-in zoom-in-95 duration-300"
+                  className="w-full h-full relative z-10 flex items-center justify-center animate-in fade-in zoom-in-95 duration-300"
                 >
                   {currentSlide.image ? (
                     <img
                       src={currentSlide.image}
                       alt={currentSlide.name}
-                      className="w-full h-full object-cover rounded-2xl"
+                      className="w-full h-full object-contain rounded-2xl transition-transform duration-300 group-hover/showcase:scale-[1.03]"
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center glass-subtle rounded-2xl p-6 text-center space-y-2">
@@ -177,7 +197,9 @@ export const StorefrontHome: React.FC = () => {
                     </div>
                   )}
                 </div>
-                <div className="absolute top-3.5 right-3.5 px-3 py-1 rounded-xl glass-prominent text-[#22D3EE] text-[11px] font-bold border border-cyan-500/30">
+
+                {/* Floating Product Badge */}
+                <div className="absolute top-3.5 right-3.5 px-3 py-1 rounded-xl glass-prominent text-[#22D3EE] text-[11px] font-bold border border-cyan-500/30 shadow-md z-20">
                   {currentSlide.category}
                 </div>
               </div>
