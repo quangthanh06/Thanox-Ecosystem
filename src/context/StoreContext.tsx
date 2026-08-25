@@ -588,6 +588,37 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, []);
 
+  // Realtime Tab Favicon Synchronizer (Updates browser tab icon to match custom logo)
+  useEffect(() => {
+    const customLogo = settings.logoSettings?.logoUrl || '/thanox-logo.png';
+    if (!customLogo) return;
+
+    try {
+      const selectors = [
+        "link[rel='icon']",
+        "link[rel='shortcut icon']",
+        "link[rel='apple-touch-icon']",
+        "link[type='image/png']",
+        "link[type='image/svg+xml']",
+      ];
+      const iconElements = document.querySelectorAll(selectors.join(', '));
+
+      if (iconElements.length > 0) {
+        iconElements.forEach((el) => {
+          (el as HTMLLinkElement).href = customLogo;
+        });
+      } else {
+        const link = document.createElement('link');
+        link.rel = 'icon';
+        link.type = 'image/png';
+        link.href = customLogo;
+        document.head.appendChild(link);
+      }
+    } catch (e) {
+      console.warn('[StoreContext] Failed to update dynamic tab favicon:', e);
+    }
+  }, [settings.logoSettings?.logoUrl]);
+
   // Tự động load và sync profile mới nhất từ Supabase profiles khi đăng nhập (không giữ balance cũ ở localStorage)
   useEffect(() => {
     if (!currentUserId) return;
