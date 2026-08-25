@@ -49,7 +49,28 @@ function ScrollToTop() {
   const { pathname } = useLocation();
 
   useEffect(() => {
+    // Immediate scroll reset on window and document elements
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
+    // Multi-frame fallback for delayed DOM reflows
+    const t1 = setTimeout(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }, 20);
+
+    const t2 = setTimeout(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }, 100);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, [pathname]);
 
   return null;

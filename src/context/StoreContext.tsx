@@ -1129,7 +1129,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       target = param ? `/login?redirect=${encodeURIComponent(param)}` : '/login';
     }
     navigate(target);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
   };
 
   const navigateToAdmin = (page: PageId = 'dashboard') => {
@@ -1137,7 +1139,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCurrentPage(page);
     const target = page === 'dashboard' ? '/qtri' : `/qtri/${page}`;
     navigate(target);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
   };
 
   // Cart operations
