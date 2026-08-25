@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14142B" />
+      <stop offset="100%" stop-color="#07070D" />
+    </linearGradient>
+
+    <!-- Cyber Neon Flame Gradient -->
+    <linearGradient id="flameGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7C3AED" />
+      <stop offset="50%" stop-color="#A855F7" />
+      <stop offset="100%" stop-color="#06B6D4" />
+    </linearGradient>
+
+    <!-- Inner Core Cyan Glow -->
+    <linearGradient id="coreGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#22D3EE" />
+    </linearGradient>
+
+    <!-- Border Neon Gradient -->
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A855F7" stop-opacity="0.8" />
+      <stop offset="50%" stop-color="#06B6D4" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0.8" />
+    </linearGradient>
+
+    <!-- Glow Filter -->
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Squircle Base -->
+  <rect x="24" y="24" width="464" height="464" rx="128" fill="url(#bgGrad)" stroke="url(#borderGrad)" stroke-width="12" />
+
+  <!-- Ambient Glow -->
+  <circle cx="256" cy="270" r="140" fill="#7C3AED" opacity="0.25" filter="url(#neonGlow)" />
+  <circle cx="256" cy="230" r="100" fill="#06B6D4" opacity="0.3" filter="url(#neonGlow)" />
+
+  <!-- Outer Cyber Flame Icon -->
+  <path d="M256 96 C256 96 312 168 312 232 C312 254 304 274 290 288 C290 256 270 236 256 220 C242 236 222 256 222 288 C208 274 200 254 200 232 C200 168 256 96 256 96 Z" fill="url(#flameGrad)" filter="url(#neonGlow)" />
+
+  <!-- Main Flame Body -->
+  <path d="M256 128 C280 180 344 240 344 316 C344 374 298 416 256 416 C214 416 168 374 168 316 C168 240 232 180 256 128 Z" fill="url(#flameGrad)" />
+
+  <!-- Inner Cyan Core Flame -->
+  <path d="M256 230 C274 270 300 300 300 340 C300 370 278 392 256 392 C234 392 212 370 212 340 C212 300 238 270 256 230 Z" fill="url(#coreGrad)" />
+
+  <!-- Center Lightning Spark -->
+  <path d="M256 260 L244 320 L264 320 L250 376 L274 310 L254 310 Z" fill="#FFFFFF" opacity="0.95" />
+</svg>
