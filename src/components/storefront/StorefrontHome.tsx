@@ -174,21 +174,22 @@ export const StorefrontHome: React.FC = () => {
             <div className="lg:col-span-5 flex justify-center items-center">
               <div
                 onClick={() => navigateToStorefront('product-detail', currentSlide.id)}
-                className="relative w-full max-w-md aspect-video sm:aspect-[16/10] rounded-3xl glass-elevated p-3 sm:p-4 shadow-[0_24px_60px_rgba(0,0,0,0.85)] border border-white/14 group/showcase cursor-pointer overflow-hidden transition-all duration-300 hover:scale-[1.015] hover:-translate-y-1"
+                className="relative w-full max-w-md aspect-video sm:aspect-[16/10] rounded-3xl glass-elevated p-2 sm:p-2.5 shadow-[0_24px_60px_rgba(0,0,0,0.85)] border border-white/14 group/showcase cursor-pointer overflow-hidden transition-all duration-300 hover:scale-[1.015] hover:-translate-y-1"
               >
                 {/* Ambient glow behind product image */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[#1B1B38]/70 via-[#0F0F20]/80 to-[#07070D] z-0" />
-                <div className="absolute inset-4 rounded-2xl bg-[#7C3AED]/12 blur-2xl group-hover/showcase:bg-[#06B6D4]/18 transition-all duration-500 pointer-events-none" />
+                <div className="absolute inset-2 rounded-2xl bg-[#7C3AED]/12 blur-2xl group-hover/showcase:bg-[#06B6D4]/18 transition-all duration-500 pointer-events-none" />
 
                 <div
                   key={`hero-img-${currentSlide.id}`}
-                  className="w-full h-full relative z-10 flex items-center justify-center animate-in fade-in zoom-in-95 duration-300"
+                  className="w-full h-full relative z-10 rounded-2xl overflow-hidden bg-black/40 flex items-center justify-center animate-in fade-in zoom-in-95 duration-300"
                 >
                   {currentSlide.image ? (
                     <img
                       src={currentSlide.image}
                       alt={currentSlide.name}
-                      className="w-full h-full object-contain rounded-2xl transition-transform duration-300 group-hover/showcase:scale-[1.03]"
+                      className="w-full h-full object-cover rounded-2xl transition-transform duration-500 group-hover/showcase:scale-105"
+                      style={{ aspectRatio: '16 / 10', objectFit: 'cover' }}
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center glass-subtle rounded-2xl p-6 text-center space-y-2">

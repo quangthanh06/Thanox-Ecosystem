@@ -71,11 +71,41 @@ export const ProductsView: React.FC = () => {
   const [drawerTab, setDrawerTab] = useState<'basic' | 'pricing' | 'files' | 'packages' | 'images' | 'delivery'>('basic');
 
   // Package Form State
+  const [editingPkgId, setEditingPkgId] = useState<string | null>(null);
   const [pkgNameInput, setPkgNameInput] = useState('1 NGÀY');
   const [pkgPriceInput, setPkgPriceInput] = useState(90000);
   const [pkgOrigPriceInput, setPkgOrigPriceInput] = useState(120000);
   const [pkgSellerPriceInput, setPkgSellerPriceInput] = useState(60000);
   const [pkgKeysInput, setPkgKeysInput] = useState('');
+
+  const STANDARD_PKG_NAMES = ['1 GIỜ', '1 NGÀY', '3 NGÀY', '7 NGÀY', '15 NGÀY', '1 THÁNG', '3 THÁNG', '1 NĂM', 'VĨNH VIỄN'];
+
+  const getNextSuggestedPkgName = (currentPkgs: ProductPackage[]) => {
+    const existingNames = new Set((currentPkgs || []).map((p) => p.name.toUpperCase().trim()));
+    for (const name of STANDARD_PKG_NAMES) {
+      if (!existingNames.has(name)) return name;
+    }
+    return `GÓI ${(currentPkgs || []).length + 1}`;
+  };
+
+  const startEditPackage = (pkg: ProductPackage) => {
+    setEditingPkgId(pkg.id);
+    setPkgNameInput(pkg.name);
+    setPkgPriceInput(pkg.price);
+    setPkgOrigPriceInput(pkg.originalPrice || 0);
+    setPkgSellerPriceInput(pkg.sellerPrice || 0);
+    setPkgKeysInput(pkg.keys || '');
+    showToast(`Đang chỉnh sửa gói "${pkg.name}"`, 'info');
+  };
+
+  const cancelEditPackage = () => {
+    setEditingPkgId(null);
+    setPkgNameInput(getNextSuggestedPkgName(formData.packages || []));
+    setPkgPriceInput(90000);
+    setPkgOrigPriceInput(120000);
+    setPkgSellerPriceInput(60000);
+    setPkgKeysInput('');
+  };
 
   // Helper to determine if a product category is Account/Nick/Acc FF
   // (dùng chung qua utils/productAccount để storefront & admin nhận diện giống nhau)
@@ -225,6 +255,12 @@ export const ProductsView: React.FC = () => {
 
   const openCreateDrawer = () => {
     setEditingProduct(null);
+    setEditingPkgId(null);
+    setPkgNameInput('1 GIỜ');
+    setPkgPriceInput(50000);
+    setPkgOrigPriceInput(70000);
+    setPkgSellerPriceInput(35000);
+    setPkgKeysInput('');
     setDrawerTab('basic');
     setFormData({
       name: '',
@@ -258,6 +294,13 @@ export const ProductsView: React.FC = () => {
 
   const openEditDrawer = (product: Product) => {
     setEditingProduct(product);
+    setEditingPkgId(null);
+    const existingPkgs = product.packages || product.plans || [];
+    setPkgNameInput(getNextSuggestedPkgName(existingPkgs));
+    setPkgPriceInput(product.price || 90000);
+    setPkgOrigPriceInput(product.originalPrice || 120000);
+    setPkgSellerPriceInput(product.sellerPrice || 60000);
+    setPkgKeysInput('');
     setDrawerTab('basic');
 
     // Parse existing account / key if available
@@ -1534,30 +1577,44 @@ export const ProductsView: React.FC = () => {
                         <div>
                           <h4 className="font-bold text-xs text-[#F0EDFF] flex items-center gap-1.5">
                             <Key className="w-4 h-4 text-cyan-400" />
-                            <span>Thêm Gói Dịch Vụ / Thời Hạn Key Mới</span>
+                            <span>{editingPkgId ? `✏️ Đang Chỉnh Sửa Gói: "${pkgNameInput}"` : 'Thêm Gói Dịch Vụ / Thời Hạn Key Mới'}</span>
                           </h4>
                           <p className="text-[11px] text-[#8B84A8] mt-0.5">
-                            Thiết lập các gói thời gian (1 Giờ, 1 Ngày, 7 Ngày, 1 Tháng, Vĩnh Viễn...) và giá bán riêng
+                            Thiết lập các gói thời gian (1 Giờ, 1 Ngày, 7 Ngày, 1 Tháng, Vĩnh Viễn...) kèm giá bán & kho key riêng từng gói
                           </p>
                         </div>
+                        {editingPkgId && (
+                          <Badge variant="warning" size="xs">
+                            Đang sửa gói
+                          </Badge>
+                        )}
                       </div>
 
                       {/* Quick suggestion pills */}
                       <div className="space-y-1">
                         <span className="text-[10px] text-[#6B658E] font-semibold block">Gợi ý nhanh tên gói:</span>
                         <div className="flex flex-wrap gap-1.5">
-                          {['1 GIỜ', '1 NGÀY', '3 NGÀY', '7 NGÀY', '15 NGÀY', '1 THÁNG', '3 THÁNG', '1 NĂM', 'VĨNH VIỄN'].map((suggestName) => (
+                          {STANDARD_PKG_NAMES.map((suggestName) => (
                             <button
                               key={suggestName}
                               type="button"
-                              onClick={() => setPkgNameInput(suggestName)}
+                              onClick={() => {
+                                setPkgNameInput(suggestName);
+                                // If package already exists in current list, offer to edit it
+                                const matched = (formData.packages || []).find((p) => p.name.toUpperCase().trim() === suggestName);
+                                if (matched && !editingPkgId) {
+                                  startEditPackage(matched);
+                                }
+                              }}
                               className={`px-2.5 py-1 rounded-lg text-[10px] font-black border transition-all cursor-pointer ${
                                 pkgNameInput === suggestName
                                   ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300'
+                                  : (formData.packages || []).some((p) => p.name.toUpperCase().trim() === suggestName)
+                                  ? 'bg-[#7C3AED]/15 border-[#7C3AED]/30 text-[#C084FC] hover:border-[#7C3AED]'
                                   : 'bg-[#161626] border-white/10 text-[#8B84A8] hover:text-white hover:border-white/20'
                               }`}
                             >
-                              {suggestName}
+                              {suggestName} {(formData.packages || []).some((p) => p.name.toUpperCase().trim() === suggestName) ? '✓' : ''}
                             </button>
                           ))}
                         </div>
@@ -1621,55 +1678,154 @@ export const ProductsView: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="space-y-1">
-                        <label className="text-[10.5px] font-semibold text-[#8B84A8] uppercase">
-                          Nội Dung Giao Key / Link Tải Riêng Cho Gói Này (Tùy chọn)
-                        </label>
+                      {/* Package Key Pool (Mỗi dòng 1 key - FIFO) */}
+                      <div className="space-y-1.5 pt-1">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[10.5px] font-semibold text-amber-300 uppercase flex items-center gap-1.5">
+                            <Key className="w-3.5 h-3.5" />
+                            <span>Kho Key Riêng Cho Gói Này (Mỗi dòng 1 key — Giao lần lượt)</span>
+                          </label>
+                          <span className="text-[10.5px] text-emerald-400 font-bold">
+                            📦 {pkgKeysInput ? pkgKeysInput.split('\n').filter((l) => l.trim().length > 0).length : 0} Key trong kho
+                          </span>
+                        </div>
+                        <p className="text-[10.5px] text-[#8B84A8]">
+                          Dán danh sách key vào đây (<em>mỗi dòng 1 key</em>). Khi khách mua gói <strong>{pkgNameInput || 'này'}</strong>, hệ thống tự động cắt 1 key giao cho khách. Nếu để trống sẽ dùng nội dung ở Tab 6 (Giao Hàng).
+                        </p>
                         <textarea
-                          rows={2}
+                          rows={4}
                           value={pkgKeysInput}
                           onChange={(e) => setPkgKeysInput(e.target.value)}
-                          placeholder="Nếu để trống sẽ tự động lấy nội dung giao ở Tab 'Giao Hàng'..."
-                          className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl p-2.5 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
+                          placeholder={`TX-${(pkgNameInput || 'VIP').replace(/\s+/g, '')}-2026-KEY0001\nTX-${(pkgNameInput || 'VIP').replace(/\s+/g, '')}-2026-KEY0002\nTX-${(pkgNameInput || 'VIP').replace(/\s+/g, '')}-2026-KEY0003`}
+                          className="w-full bg-[#0F0F1A] border border-white/10 rounded-xl p-3 text-xs text-amber-200 font-mono focus:outline-none focus:border-[#7C3AED] leading-relaxed"
                         />
+                        <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5 text-[11px]">
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const prefix = `TX-${(pkgNameInput || 'VIP').replace(/\s+/g, '')}-${Date.now().toString().slice(-4)}`;
+                                const sampleKeys = [
+                                  `${prefix}-AAAA-0001`,
+                                  `${prefix}-BBBB-0002`,
+                                  `${prefix}-CCCC-0003`,
+                                  `${prefix}-DDDD-0004`,
+                                  `${prefix}-EEEE-0005`,
+                                ].join('\n');
+                                setPkgKeysInput((prev) => (prev ? `${prev.trim()}\n${sampleKeys}` : sampleKeys));
+                                showToast('Đã thêm 5 key mẫu vào kho gói này!', 'success');
+                              }}
+                              className="text-cyan-400 hover:underline cursor-pointer font-bold"
+                            >
+                              + Dán 5 key mẫu
+                            </button>
+                            <span className="text-white/20">•</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const cleaned = pkgKeysInput
+                                  .split('\n')
+                                  .map((l) => l.trim())
+                                  .filter((l) => l.length > 0)
+                                  .join('\n');
+                                setPkgKeysInput(cleaned);
+                                showToast('Đã chuẩn hóa danh sách key!', 'info');
+                              }}
+                              className="text-[#938EB5] hover:text-white cursor-pointer"
+                            >
+                              🧹 Lọc dòng trống
+                            </button>
+                          </div>
+                          {pkgKeysInput && (
+                            <button
+                              type="button"
+                              onClick={() => setPkgKeysInput('')}
+                              className="text-red-400 hover:underline cursor-pointer"
+                            >
+                              Xóa kho key gói này
+                            </button>
+                          )}
+                        </div>
                       </div>
 
                       <div className="flex gap-2 justify-end pt-1">
+                        {editingPkgId && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="xs"
+                            onClick={cancelEditPackage}
+                          >
+                            Hủy Chỉnh Sửa
+                          </Button>
+                        )}
                         <Button
                           type="button"
                           variant="primary"
                           size="xs"
                           onClick={() => {
-                            if (!pkgNameInput.trim()) {
+                            const trimmedName = pkgNameInput.trim().toUpperCase();
+                            if (!trimmedName) {
                               showToast('Vui lòng nhập tên gói', 'error');
-                              return;
-                            }
-                            if ((formData.packages || []).some((g) => g.name.toUpperCase() === pkgNameInput.trim().toUpperCase())) {
-                              showToast('Đã có gói trùng tên này — hãy dùng tên khác hoặc xóa gói cũ!', 'error');
                               return;
                             }
                             if (pkgPriceInput <= 0) {
                               showToast('Giá bán phải lớn hơn 0', 'error');
                               return;
                             }
-                            const newPkg: ProductPackage = {
-                              id: 'pkg-' + Date.now(),
-                              name: pkgNameInput.trim().toUpperCase(),
-                              price: pkgPriceInput,
-                              originalPrice: pkgOrigPriceInput > 0 ? pkgOrigPriceInput : undefined,
-                              sellerPrice: pkgSellerPriceInput > 0 ? pkgSellerPriceInput : undefined,
-                              keys: pkgKeysInput.trim() || undefined,
-                            };
-                            setFormData((prev) => ({
-                              ...prev,
-                              packages: [...(prev.packages || []), newPkg],
-                            }));
-                            showToast(`Đã thêm gói ${newPkg.name} thành công!`, 'success');
-                            setPkgKeysInput('');
+
+                            const currentPkgs = formData.packages || [];
+                            const duplicatePkg = currentPkgs.find(
+                              (g) => g.name.toUpperCase().trim() === trimmedName && g.id !== editingPkgId
+                            );
+
+                            if (duplicatePkg) {
+                              showToast(`Đã tồn tại gói "${trimmedName}"! Đã chuyển sang chỉnh sửa gói này.`, 'warning');
+                              startEditPackage(duplicatePkg);
+                              return;
+                            }
+
+                            if (editingPkgId) {
+                              // Update existing package
+                              const updatedPkgs = currentPkgs.map((p) =>
+                                p.id === editingPkgId
+                                  ? {
+                                      ...p,
+                                      name: trimmedName,
+                                      price: pkgPriceInput,
+                                      originalPrice: pkgOrigPriceInput > 0 ? pkgOrigPriceInput : undefined,
+                                      sellerPrice: pkgSellerPriceInput > 0 ? pkgSellerPriceInput : undefined,
+                                      keys: pkgKeysInput.trim() || undefined,
+                                    }
+                                  : p
+                              );
+                              setFormData((prev) => ({ ...prev, packages: updatedPkgs }));
+                              showToast(`Đã cập nhật gói "${trimmedName}" thành công!`, 'success');
+                              cancelEditPackage();
+                            } else {
+                              // Add new package
+                              const newPkg: ProductPackage = {
+                                id: 'pkg-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+                                name: trimmedName,
+                                price: pkgPriceInput,
+                                originalPrice: pkgOrigPriceInput > 0 ? pkgOrigPriceInput : undefined,
+                                sellerPrice: pkgSellerPriceInput > 0 ? pkgSellerPriceInput : undefined,
+                                keys: pkgKeysInput.trim() || undefined,
+                              };
+                              const nextList = [...currentPkgs, newPkg];
+                              setFormData((prev) => ({
+                                ...prev,
+                                packages: nextList,
+                              }));
+                              showToast(`Đã thêm gói ${newPkg.name} thành công!`, 'success');
+                              setEditingPkgId(null);
+                              setPkgNameInput(getNextSuggestedPkgName(nextList));
+                              setPkgKeysInput('');
+                            }
                           }}
-                          leftIcon={<Plus className="w-3.5 h-3.5" />}
+                          leftIcon={editingPkgId ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
                         >
-                          Thêm Gói Này
+                          {editingPkgId ? `💾 Lưu Gói "${pkgNameInput}"` : 'Thêm Gói Này'}
                         </Button>
                       </div>
                     </div>
@@ -1711,7 +1867,10 @@ export const ProductsView: React.FC = () => {
                         {(formData.packages || []).length > 0 && (
                           <button
                             type="button"
-                            onClick={() => setFormData((prev) => ({ ...prev, packages: [] }))}
+                            onClick={() => {
+                              setFormData((prev) => ({ ...prev, packages: [] }));
+                              cancelEditPackage();
+                            }}
                             className="text-[10px] text-red-400 hover:underline cursor-pointer"
                           >
                             Xóa tất cả
@@ -1725,54 +1884,85 @@ export const ProductsView: React.FC = () => {
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          {(formData.packages || []).map((pkg, idx) => (
-                            <div
-                              key={pkg.id}
-                              className="p-3 rounded-xl bg-[#161626] border border-white/5 hover:border-white/10 flex items-center justify-between gap-3 text-xs"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="w-6 h-6 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 flex items-center justify-center font-black text-[10px]">
-                                  {idx + 1}
-                                </div>
-                                <div>
-                                  <div className="font-black text-[#F0EDFF] uppercase">{pkg.name}</div>
-                                  {pkg.keys && (
-                                    <div className="text-[10px] text-[#6B658E] font-mono line-clamp-1">
-                                      Key riêng: {pkg.keys}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
+                          {(formData.packages || []).map((pkg, idx) => {
+                            const keyCount = pkg.keys ? pkg.keys.split('\n').filter((l) => l.trim().length > 0).length : 0;
+                            const isEditing = editingPkgId === pkg.id;
 
-                              <div className="flex items-center gap-4">
-                                <div className="text-right">
-                                  <div className="font-black text-emerald-400">
-                                    {pkg.price.toLocaleString('vi-VN')} VND
+                            return (
+                              <div
+                                key={pkg.id}
+                                className={`p-3 rounded-xl border flex items-center justify-between gap-3 text-xs transition-all ${
+                                  isEditing
+                                    ? 'bg-[#7C3AED]/15 border-[#7C3AED] ring-1 ring-[#7C3AED]'
+                                    : 'bg-[#161626] border-white/5 hover:border-white/10'
+                                }`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="w-6 h-6 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 flex items-center justify-center font-black text-[10px]">
+                                    {idx + 1}
                                   </div>
-                                  {pkg.sellerPrice && (
-                                    <div className="text-[10px] text-cyan-300">
-                                      CTV: {pkg.sellerPrice.toLocaleString('vi-VN')}đ
+                                  <div>
+                                    <div className="font-black text-[#F0EDFF] uppercase flex items-center gap-2">
+                                      <span>{pkg.name}</span>
+                                      {keyCount > 0 ? (
+                                        <span className="px-1.5 py-0.2 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">
+                                          📦 {keyCount} key
+                                        </span>
+                                      ) : (
+                                        <span className="px-1.5 py-0.2 rounded-md bg-white/5 text-[#8B84A8] text-[10px]">
+                                          Chung
+                                        </span>
+                                      )}
                                     </div>
-                                  )}
+                                    {pkg.keys && (
+                                      <div className="text-[10px] text-amber-300/80 font-mono line-clamp-1">
+                                        Key đầu: {pkg.keys.split('\n')[0]}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
 
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      packages: (prev.packages || []).filter((p) => p.id !== pkg.id),
-                                    }));
-                                    showToast(`Đã xóa gói ${pkg.name}`, 'info');
-                                  }}
-                                  className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 cursor-pointer"
-                                  title="Xóa gói"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
+                                <div className="flex items-center gap-3">
+                                  <div className="text-right">
+                                    <div className="font-black text-emerald-400">
+                                      {pkg.price.toLocaleString('vi-VN')} VND
+                                    </div>
+                                    {pkg.sellerPrice && (
+                                      <div className="text-[10px] text-cyan-300">
+                                        CTV: {pkg.sellerPrice.toLocaleString('vi-VN')}đ
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => startEditPackage(pkg)}
+                                      className="p-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 cursor-pointer transition-colors"
+                                      title="Chỉnh sửa gói này"
+                                    >
+                                      <Edit2 className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          packages: (prev.packages || []).filter((p) => p.id !== pkg.id),
+                                        }));
+                                        if (editingPkgId === pkg.id) cancelEditPackage();
+                                        showToast(`Đã xóa gói ${pkg.name}`, 'info');
+                                      }}
+                                      className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 cursor-pointer transition-colors"
+                                      title="Xóa gói"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -1993,14 +2183,22 @@ export const ProductsView: React.FC = () => {
                       )}
                     </div>
 
-                    {/* 2. License Key / Auto Delivery Content */}
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider flex items-center gap-1.5 text-amber-300">
-                        <Key className="w-3.5 h-3.5" />
-                        <span>Mã License Key / Khóa Kích Hoạt Tự Động (Tùy chọn)</span>
-                      </label>
+                    {/* 2. License Key / Auto Delivery Content (FIFO Pool) */}
+                    <div className="space-y-2 p-4 rounded-2xl bg-[#0F0F1A] border border-amber-500/20">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-semibold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                          <Key className="w-3.5 h-3.5" />
+                          <span>Kho Key Bản Quyền / Mã Kích Hoạt Tự Động (Mỗi dòng 1 key — Giao lần lượt)</span>
+                        </label>
+                        <span className="text-[10.5px] text-emerald-400 font-bold">
+                          📦 {formData.licenseKeys ? formData.licenseKeys.split('\n').filter((l) => l.trim().length > 0).length : (formData.downloadLinkOrKeys ? formData.downloadLinkOrKeys.split('\n').filter((l) => l.trim().length > 0).length : 0)} Key sẵn sàng
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#8B84A8]">
+                        Nhập danh sách mã key hoặc license, <strong>mỗi dòng 1 key</strong>. Khi khách thanh toán, hệ thống sẽ <strong>tự động lấy lần lượt từng key từ trên xuống dưới (FIFO)</strong> bàn giao cho khách và trừ dần số lượng tồn kho.
+                      </p>
                       <textarea
-                        rows={3}
+                        rows={4}
                         value={formData.licenseKeys || formData.downloadLinkOrKeys || ''}
                         onChange={(e) =>
                           setFormData({
@@ -2009,12 +2207,72 @@ export const ProductsView: React.FC = () => {
                             downloadLinkOrKeys: e.target.value,
                           })
                         }
-                        placeholder="VD: TX-PRO-2026-889922 (Mỗi key 1 dòng hoặc ghi chú kích hoạt)"
-                        className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-amber-300 placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED] font-mono"
+                        placeholder="TX-PRO-2026-AAAA-0001&#10;TX-PRO-2026-BBBB-0002&#10;TX-PRO-2026-CCCC-0003&#10;TX-PRO-2026-DDDD-0004"
+                        className="w-full bg-[#161626] border border-white/10 rounded-xl p-3 text-xs text-amber-200 placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED] font-mono leading-relaxed"
                       />
-                      <span className="text-[10px] text-[#6B658E]">
-                        Khách hàng có thể bấm 1 nút để sao chép mã Key này ngay sau khi thanh toán.
-                      </span>
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5 text-[11px]">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const sampleKeys = [
+                                `TX-PRO-${Date.now().toString().slice(-4)}-KEY-0001`,
+                                `TX-PRO-${Date.now().toString().slice(-4)}-KEY-0002`,
+                                `TX-PRO-${Date.now().toString().slice(-4)}-KEY-0003`,
+                                `TX-PRO-${Date.now().toString().slice(-4)}-KEY-0004`,
+                                `TX-PRO-${Date.now().toString().slice(-4)}-KEY-0005`,
+                              ].join('\n');
+                              const current = formData.licenseKeys || formData.downloadLinkOrKeys || '';
+                              const combined = current ? `${current.trim()}\n${sampleKeys}` : sampleKeys;
+                              setFormData((prev) => ({
+                                ...prev,
+                                licenseKeys: combined,
+                                downloadLinkOrKeys: combined,
+                              }));
+                              showToast('Đã thêm 5 key mẫu vào kho chung!', 'success');
+                            }}
+                            className="text-cyan-400 hover:underline cursor-pointer font-bold"
+                          >
+                            + Dán 5 key mẫu
+                          </button>
+                          <span className="text-white/20">•</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const raw = formData.licenseKeys || formData.downloadLinkOrKeys || '';
+                              const cleaned = raw
+                                .split('\n')
+                                .map((l) => l.trim())
+                                .filter((l) => l.length > 0)
+                                .join('\n');
+                              setFormData((prev) => ({
+                                ...prev,
+                                licenseKeys: cleaned,
+                                downloadLinkOrKeys: cleaned,
+                              }));
+                              showToast('Đã chuẩn hóa danh sách key!', 'info');
+                            }}
+                            className="text-[#938EB5] hover:text-white cursor-pointer"
+                          >
+                            🧹 Lọc dòng trống
+                          </button>
+                        </div>
+                        {(formData.licenseKeys || formData.downloadLinkOrKeys) && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                licenseKeys: '',
+                                downloadLinkOrKeys: '',
+                              }))
+                            }
+                            className="text-red-400 hover:underline cursor-pointer"
+                          >
+                            Xóa kho key
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {/* 3. Setup Instructions */}

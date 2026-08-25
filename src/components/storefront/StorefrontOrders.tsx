@@ -173,8 +173,8 @@ export const StorefrontOrders: React.FC = () => {
                 const urlMatch = !isAcc ? (prod?.downloadUrl || rawContent).match(/https?:\/\/[^\s]+/) : null;
                 const downloadLink = !isAcc ? (prod?.downloadUrl || (urlMatch ? urlMatch[0] : null)) : null;
                 
-                // Extract clean key
-                const cleanKey = !isAcc ? (prod?.licenseKeys || rawContent.replace(/https?:\/\/[^\s]+/g, '').trim() || rawContent) : '';
+                // Extract clean key from delivered content
+                const cleanKey = !isAcc ? (rawContent.replace(/https?:\/\/[^\s]+/g, '').trim() || rawContent) : '';
 
                 if (isAcc) {
                   return (
@@ -337,34 +337,68 @@ export const StorefrontOrders: React.FC = () => {
                     )}
 
                     {/* Delivered License Key Box */}
-                    {cleanKey && (
-                      <div className="p-3.5 rounded-2xl glass-subtle border border-white/8 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] uppercase font-bold text-[#C084FC] flex items-center gap-1.5">
-                            <Key className="w-3.5 h-3.5" />
-                            Mã Bản Quyền / License Key Kích Hoạt
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleCopyKey(cleanKey)}
-                            className="text-xs font-bold text-[#E2DEFA] hover:text-white flex items-center gap-1 transition-colors cursor-pointer glass-subtle hover:bg-white/10 px-2.5 py-1 rounded-xl active:scale-95"
-                          >
-                            {copiedKey === cleanKey ? (
-                              <span className="text-emerald-300 flex items-center gap-1">
-                                <Check className="w-3.5 h-3.5" /> Đã sao chép!
-                              </span>
-                            ) : (
-                              <span className="flex items-center gap-1">
-                                <Copy className="w-3.5 h-3.5" /> Sao chép Key
-                              </span>
-                            )}
-                          </button>
+                    {cleanKey && (() => {
+                      const keyLines = cleanKey.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
+                      const isMultiKey = keyLines.length > 1;
+
+                      return (
+                        <div className="p-3.5 rounded-2xl glass-subtle border border-white/8 space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] uppercase font-bold text-[#C084FC] flex items-center gap-1.5">
+                              <Key className="w-3.5 h-3.5" />
+                              Mã Bản Quyền / License Key Kích Hoạt {isMultiKey ? `(${keyLines.length} Key)` : ''}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleCopyKey(cleanKey)}
+                              className="text-xs font-bold text-[#E2DEFA] hover:text-white flex items-center gap-1 transition-colors cursor-pointer glass-subtle hover:bg-white/10 px-2.5 py-1 rounded-xl active:scale-95"
+                            >
+                              {copiedKey === cleanKey ? (
+                                <span className="text-emerald-300 flex items-center gap-1">
+                                  <Check className="w-3.5 h-3.5" /> {isMultiKey ? 'Đã sao chép tất cả!' : 'Đã sao chép!'}
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1">
+                                  <Copy className="w-3.5 h-3.5" /> {isMultiKey ? 'Sao chép tất cả Key' : 'Sao chép Key'}
+                                </span>
+                              )}
+                            </button>
+                          </div>
+
+                          {isMultiKey ? (
+                            <div className="space-y-1.5">
+                              {keyLines.map((kLine, kIdx) => (
+                                <div
+                                  key={kIdx}
+                                  className="p-2.5 rounded-xl glass-subtle border border-white/6 flex items-center justify-between gap-2"
+                                >
+                                  <div className="font-mono text-xs font-bold text-amber-300 select-all truncate">
+                                    <span className="text-[#938EB5] text-[10px] font-sans mr-2 font-bold">Key #{kIdx + 1}:</span>
+                                    {kLine}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCopyKey(kLine)}
+                                    className="text-[11px] font-bold text-[#E2DEFA] hover:text-white px-2.5 py-1 rounded-lg glass-subtle hover:bg-white/10 flex items-center gap-1 cursor-pointer shrink-0 active:scale-95"
+                                  >
+                                    {copiedKey === kLine ? (
+                                      <Check className="w-3 h-3 text-emerald-300" />
+                                    ) : (
+                                      <Copy className="w-3 h-3" />
+                                    )}
+                                    <span>{copiedKey === kLine ? 'Đã chép' : 'Chép'}</span>
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="font-mono text-xs font-bold text-amber-300 glass-subtle p-3 rounded-xl border border-white/6 select-all whitespace-pre-wrap break-all leading-relaxed">
+                              {cleanKey}
+                            </div>
+                          )}
                         </div>
-                        <div className="font-mono text-xs font-bold text-amber-300 glass-subtle p-3 rounded-xl border border-white/6 select-all whitespace-pre-wrap break-all leading-relaxed">
-                          {cleanKey}
-                        </div>
-                      </div>
-                    )}
+                      );
+                    })()}
 
                     {/* Instructions if available */}
                     {prod?.instructions && (

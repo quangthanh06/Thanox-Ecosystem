@@ -182,14 +182,17 @@ const isMissingColumnError = (err: unknown): boolean => {
   return code === 'PGRST204' || code === '42703' || /does not exist|Could not find the '(packages|product_type|is_sale|sale_price|instructions|accounts_list|images|download_url)'/i.test(msg);
 };
 
-// Payload các cột mở rộng (chỉ gửi khi migration đã được áp dụng)
-// Strip key/link bí mật khỏi packages trước khi lưu lên cloud (cột packages
-// public cho UI; key giao hàng chỉ nằm trong hidden_keys_or_links đã bị thu quyền)
+// Payload các cột mở rộng (lưu giữ đầy đủ keys/downloadUrl của từng gói để RPC create_order_atomic cấp phát tự động)
 const sanitizePackages = (pkgs?: ProductPackage[]): ProductPackage[] =>
-  (pkgs || []).map((x) => {
-    const { keys, downloadUrl, ...rest } = x;
-    return rest as ProductPackage;
-  });
+  (pkgs || []).map((x) => ({
+    id: x.id,
+    name: x.name,
+    price: x.price,
+    originalPrice: x.originalPrice,
+    sellerPrice: x.sellerPrice,
+    keys: x.keys,
+    downloadUrl: x.downloadUrl,
+  } as ProductPackage));
 
 const buildExtendedProductPayload = (p: Product): Record<string, unknown> => ({
   packages: sanitizePackages(p.packages && p.packages.length > 0 ? p.packages : p.plans),

@@ -507,6 +507,11 @@ export const StorefrontProductDetail: React.FC = () => {
   const [quantity, setQuantity] = useState<number>(1);
 
   const activeIdOrSlug = idOrSlug || selectedProductSlugOrId;
+
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [activeIdOrSlug]);
+
   const product =
     products.find(
       (p) => p.id === activeIdOrSlug || p.name.toLowerCase().replace(/\s+/g, '-') === activeIdOrSlug

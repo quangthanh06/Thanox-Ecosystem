@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../../context/StoreContext';
 import { Button } from '../ui/Button';
 import { Toast } from '../Toast';
@@ -45,6 +45,7 @@ export const StorefrontLayout: React.FC = () => {
   const themeTypo = getThemeTypography(settings);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
 
@@ -121,22 +122,23 @@ export const StorefrontLayout: React.FC = () => {
           {/* Logo */}
           <div className="flex items-center gap-6">
             <button
+              type="button"
               onClick={() => navigateToStorefront('home')}
               className="flex items-center gap-2.5 cursor-pointer text-left group select-none"
             >
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#7C3AED] via-[#9D5CF6] to-[#06B6D4] p-0.5 shadow-lg shadow-[#7C3AED]/25 group-hover:shadow-[0_0_20px_rgba(124,58,237,0.5)] transition-all">
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#7C3AED] via-[#9D5CF6] to-[#06B6D4] p-0.5 shadow-lg shadow-[#7C3AED]/25 group-hover:shadow-[0_0_20px_rgba(124,58,237,0.5)] transition-all shrink-0">
                 <div className="w-full h-full bg-[#0B0B14] rounded-[14px] flex items-center justify-center text-[#C084FC] group-hover:text-white transition-colors">
                   <Flame className="w-4.5 h-4.5 text-[#C084FC] group-hover:text-[#22D3EE] transition-colors" />
                 </div>
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col justify-center">
                 <span
                   className={`${themeTypo.logoClass} text-xl sm:text-[22px] tracking-wider uppercase leading-tight font-black`}
                   style={themeTypo.fontStyle}
                 >
                   THANOX.VN
                 </span>
-                <span className="hidden sm:block text-[9px] uppercase tracking-widest text-[#938EB5] font-extrabold -mt-0.5">
+                <span className="hidden sm:block text-[9px] uppercase tracking-widest text-[#938EB5] font-extrabold -mt-0.5 leading-none">
                   Digital Gaming Hub
                 </span>
               </div>
@@ -146,68 +148,64 @@ export const StorefrontLayout: React.FC = () => {
             <nav className="hidden xl:flex items-center gap-1 glass-subtle border border-white/8 rounded-2xl p-1 shadow-md shrink-0">
               <Link
                 to="/"
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                  storefrontPage === 'home'
-                    ? 'btn-liquid-primary shadow-md'
+                className={`h-8 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center justify-center gap-1.5 leading-none ${
+                  location.pathname === '/' || storefrontPage === 'home'
+                    ? 'btn-liquid-primary shadow-md text-white'
                     : 'text-[#938EB5] hover:text-[#F4F2FF] hover:bg-white/[0.05]'
                 }`}
-                style={themeTypo.fontStyle}
               >
                 <span>Trang Chủ</span>
               </Link>
               <Link
                 to="/products"
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                  storefrontPage === 'products'
-                    ? 'btn-liquid-primary shadow-md'
+                className={`h-8 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center justify-center gap-1.5 leading-none ${
+                  location.pathname.startsWith('/products') || location.pathname.startsWith('/categories') || storefrontPage === 'products'
+                    ? 'btn-liquid-primary shadow-md text-white'
                     : 'text-[#938EB5] hover:text-[#F4F2FF] hover:bg-white/[0.05]'
                 }`}
-                style={themeTypo.fontStyle}
               >
                 <span>Sản Phẩm</span>
               </Link>
               <Link
                 to="/account/wallet/deposit"
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                  storefrontPage === 'account-wallet-deposit'
-                    ? 'btn-liquid-primary shadow-md'
+                className={`h-8 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center justify-center gap-1.5 leading-none ${
+                  location.pathname.startsWith('/account/wallet') || storefrontPage === 'account-wallet-deposit'
+                    ? 'btn-liquid-primary shadow-md text-white'
                     : 'text-[#938EB5] hover:text-[#F4F2FF] hover:bg-white/[0.05]'
                 }`}
-                style={themeTypo.fontStyle}
               >
-                <Zap className="w-3.5 h-3.5 text-amber-300" />
-                <span className="text-amber-300">Nạp Tiền VietQR</span>
+                <Zap className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                <span className={location.pathname.startsWith('/account/wallet') || storefrontPage === 'account-wallet-deposit' ? 'text-white' : 'text-amber-300'}>
+                  Nạp Tiền VietQR
+                </span>
               </Link>
               <Link
                 to="/account/orders"
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                  storefrontPage === 'account-orders'
-                    ? 'btn-liquid-primary shadow-md'
+                className={`h-8 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center justify-center gap-1.5 leading-none ${
+                  location.pathname.startsWith('/account/orders') || storefrontPage === 'account-orders'
+                    ? 'btn-liquid-primary shadow-md text-white'
                     : 'text-[#938EB5] hover:text-[#F4F2FF] hover:bg-white/[0.05]'
                 }`}
-                style={themeTypo.fontStyle}
               >
                 <span>Đơn Hàng & Key</span>
               </Link>
               <Link
                 to="/affiliate"
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                  storefrontPage === 'affiliate'
-                    ? 'btn-liquid-primary shadow-md'
+                className={`h-8 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center justify-center gap-1.5 leading-none ${
+                  location.pathname.startsWith('/affiliate') || storefrontPage === 'affiliate'
+                    ? 'btn-liquid-primary shadow-md text-white'
                     : 'text-[#938EB5] hover:text-[#F4F2FF] hover:bg-white/[0.05]'
                 }`}
-                style={themeTypo.fontStyle}
               >
                 <span>Giới Thiệu</span>
               </Link>
               <Link
                 to="/support"
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                  storefrontPage === 'support'
-                    ? 'btn-liquid-primary shadow-md'
+                className={`h-8 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center justify-center gap-1.5 leading-none ${
+                  location.pathname.startsWith('/support') || storefrontPage === 'support'
+                    ? 'btn-liquid-primary shadow-md text-white'
                     : 'text-[#938EB5] hover:text-[#F4F2FF] hover:bg-white/[0.05]'
                 }`}
-                style={themeTypo.fontStyle}
               >
                 <span>Hỗ Trợ</span>
               </Link>
@@ -215,21 +213,21 @@ export const StorefrontLayout: React.FC = () => {
           </div>
 
           {/* Right Action Bar */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             {/* Customer Wallet Pill */}
             {isAuthenticated && currentUser ? (
-              <div className="hidden sm:flex items-center glass-subtle border border-white/8 rounded-2xl p-1.5 pl-3.5 gap-2.5 shrink-0 whitespace-nowrap shadow-sm">
-                <div className="text-left whitespace-nowrap">
-                  <div className="text-[9.5px] uppercase font-bold text-[#938EB5] whitespace-nowrap leading-none mb-0.5">Số dư ví</div>
-                  <div className="font-display font-black text-xs text-emerald-300 whitespace-nowrap leading-none">
-                    {(currentUser?.balance ?? 0).toLocaleString('vi-VN')} <span className="text-[10px] font-bold">VND</span>
-                  </div>
+              <div className="hidden sm:flex items-center h-9 px-3 py-1 rounded-xl glass-subtle border border-white/8 gap-2.5 shrink-0 whitespace-nowrap shadow-sm">
+                <div className="flex flex-col justify-center text-left leading-none">
+                  <span className="text-[9px] uppercase font-bold text-[#938EB5] tracking-wider leading-none mb-0.5">Số dư ví</span>
+                  <span className="font-display font-black text-xs text-emerald-300 tabular-nums leading-none">
+                    {(currentUser?.balance ?? 0).toLocaleString('vi-VN')} <span className="text-[10px] font-bold text-emerald-400/80">đ</span>
+                  </span>
                 </div>
                 <Link
                   to="/account/wallet/deposit"
-                  className="px-2.5 py-1.5 rounded-xl bg-[#7C3AED] hover:bg-[#8B5CF6] text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-sm shrink-0 whitespace-nowrap active:scale-95"
+                  className="inline-flex items-center justify-center gap-1 h-6.5 px-2 rounded-lg bg-[#7C3AED] hover:bg-[#8B5CF6] text-white text-[11px] font-bold transition-all cursor-pointer shadow-sm shrink-0 whitespace-nowrap active:scale-95 leading-none"
                 >
-                  <Zap className="w-3 h-3 text-amber-300" />
+                  <Zap className="w-3 h-3 text-amber-300 shrink-0" />
                   <span>Nạp</span>
                 </Link>
               </div>
@@ -237,15 +235,15 @@ export const StorefrontLayout: React.FC = () => {
 
             {/* Cart Button */}
             <button
+              type="button"
               onClick={() => navigateToStorefront('cart')}
-              className="relative p-2.5 sm:px-3 sm:py-2 rounded-2xl glass-subtle hover:bg-white/10 border border-white/8 hover:border-[#7C3AED]/50 text-[#E2DEFA] hover:text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-sm group active:scale-95"
-              style={themeTypo.fontStyle}
+              className="relative h-9 px-3 rounded-xl glass-subtle hover:bg-white/10 border border-white/8 hover:border-[#7C3AED]/50 text-[#E2DEFA] hover:text-white transition-all cursor-pointer inline-flex items-center justify-center gap-1.5 shadow-sm group active:scale-95 shrink-0"
               title="Giỏ hàng"
             >
-              <ShoppingCart className={`w-4 h-4 transition-transform group-hover:scale-110 ${themeTypo.isFlowEnabled ? 'text-[#22D3EE]' : 'text-white'}`} />
-              <span className={`hidden md:inline-block text-xs font-bold ${themeTypo.navClass}`}>Giỏ Hàng</span>
+              <ShoppingCart className="w-4 h-4 text-[#22D3EE] transition-transform group-hover:scale-110 shrink-0" />
+              <span className="hidden md:inline-block text-xs font-bold leading-none text-[#F4F2FF]">Giỏ Hàng</span>
               {cartItemsCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white text-[9.5px] font-black flex items-center justify-center shadow-md animate-pulse">
+                <span className="min-w-[16px] h-4 px-1 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white text-[9.5px] font-black inline-flex items-center justify-center shadow-md leading-none animate-pulse shrink-0">
                   {cartItemsCount}
                 </span>
               )}
@@ -253,18 +251,19 @@ export const StorefrontLayout: React.FC = () => {
 
             {/* Account area / Auth Buttons */}
             {isAuthenticated ? (
-              <div className="relative">
+              <div className="relative shrink-0">
                 <button
+                  type="button"
                   onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
-                  className="flex items-center gap-2 p-1.5 pr-2.5 rounded-2xl glass-subtle hover:bg-white/10 border border-white/8 transition-all cursor-pointer active:scale-95"
+                  className="h-9 px-2 sm:px-2.5 rounded-xl glass-subtle hover:bg-white/10 border border-white/8 transition-all cursor-pointer inline-flex items-center justify-center gap-2 active:scale-95 shrink-0"
                 >
-                  <div className="w-7 h-7 rounded-xl bg-[#7C3AED]/20 border border-[#7C3AED]/40 flex items-center justify-center text-[#C084FC] font-bold text-xs">
+                  <div className="w-6.5 h-6.5 rounded-lg bg-[#7C3AED]/20 border border-[#7C3AED]/40 flex items-center justify-center text-[#C084FC] font-bold text-xs shrink-0 leading-none">
                     {(currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase()}
                   </div>
-                  <span className="hidden md:block text-xs font-bold text-[#F4F2FF] max-w-[90px] truncate">
+                  <span className="hidden md:inline-block text-xs font-bold text-[#F4F2FF] max-w-[90px] truncate leading-none">
                     {currentUser.name || currentUser.username}
                   </span>
-                  <ChevronDown className="w-3.5 h-3.5 text-[#938EB5]" />
+                  <ChevronDown className="w-3.5 h-3.5 text-[#938EB5] shrink-0" />
                 </button>
 
                 {accountDropdownOpen && (
@@ -275,6 +274,7 @@ export const StorefrontLayout: React.FC = () => {
                     </div>
 
                     <button
+                      type="button"
                       onClick={() => {
                         navigateToStorefront('account');
                         setAccountDropdownOpen(false);
@@ -285,6 +285,7 @@ export const StorefrontLayout: React.FC = () => {
                       <span>Tổng quan tài khoản</span>
                     </button>
                     <button
+                      type="button"
                       onClick={() => {
                         navigateToStorefront('account-orders');
                         setAccountDropdownOpen(false);
@@ -295,6 +296,7 @@ export const StorefrontLayout: React.FC = () => {
                       <span>Đơn hàng & License Key</span>
                     </button>
                     <button
+                      type="button"
                       onClick={() => {
                         navigateToStorefront('account-wallet-deposit');
                         setAccountDropdownOpen(false);
@@ -305,6 +307,7 @@ export const StorefrontLayout: React.FC = () => {
                       <span>Nạp tiền</span>
                     </button>
                     <button
+                      type="button"
                       onClick={() => {
                         navigateToStorefront('account-transactions');
                         setAccountDropdownOpen(false);
@@ -318,6 +321,7 @@ export const StorefrontLayout: React.FC = () => {
                     <div className="border-t border-white/8 pt-1 mt-1 space-y-1">
                       {currentUser?.role === 'admin' && (
                         <button
+                          type="button"
                           onClick={() => {
                             navigateToAdmin();
                             setAccountDropdownOpen(false);
@@ -330,6 +334,7 @@ export const StorefrontLayout: React.FC = () => {
                       )}
 
                       <button
+                        type="button"
                         onClick={handleLogout}
                         className="w-full text-left px-3 py-2 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer font-semibold flex items-center gap-2"
                       >
@@ -341,19 +346,19 @@ export const StorefrontLayout: React.FC = () => {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <Link
                   to="/login"
-                  className="px-3 py-1.5 rounded-xl glass-subtle hover:bg-white/10 text-xs font-semibold text-[#F4F2FF] transition-all flex items-center gap-1.5 active:scale-95"
+                  className="h-9 px-3 rounded-xl glass-subtle hover:bg-white/10 text-xs font-semibold text-[#F4F2FF] transition-all inline-flex items-center justify-center gap-1.5 active:scale-95 leading-none shrink-0"
                 >
-                  <LogIn className="w-3.5 h-3.5" />
+                  <LogIn className="w-3.5 h-3.5 shrink-0" />
                   <span className="hidden sm:inline">Đăng Nhập</span>
                 </Link>
                 <Link
                   to="/register"
-                  className="px-3 py-1.5 rounded-xl btn-liquid-primary text-xs font-bold text-white transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+                  className="h-9 px-3 rounded-xl btn-liquid-primary text-xs font-bold text-white transition-all inline-flex items-center justify-center gap-1.5 shadow-sm active:scale-95 leading-none shrink-0"
                 >
-                  <UserPlus className="w-3.5 h-3.5" />
+                  <UserPlus className="w-3.5 h-3.5 shrink-0" />
                   <span className="hidden sm:inline">Đăng Ký</span>
                 </Link>
               </div>
@@ -361,21 +366,22 @@ export const StorefrontLayout: React.FC = () => {
 
             {/* Desktop Switch to Admin Button (Admin only) */}
             {isAuthenticated && currentUser?.role === 'admin' && (
-              <Button
-                variant="secondary"
-                size="xs"
+              <button
+                type="button"
                 onClick={() => navigateToAdmin()}
-                leftIcon={<Shield className="w-3.5 h-3.5 text-[#C084FC]" />}
-                className="hidden xl:flex font-bold border-[#7C3AED]/30 hover:border-[#7C3AED] shrink-0 whitespace-nowrap"
+                className="hidden xl:inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-xl btn-liquid-secondary border border-[#7C3AED]/40 hover:border-[#7C3AED] hover:bg-[#7C3AED]/15 text-[#C084FC] hover:text-white text-xs font-bold transition-all cursor-pointer shadow-sm shrink-0 whitespace-nowrap active:scale-95 leading-none"
+                title="Chuyển sang bảng quản trị Admin"
               >
-                Vào Admin
-              </Button>
+                <Shield className="w-3.5 h-3.5 text-[#C084FC] shrink-0" />
+                <span>Vào Admin</span>
+              </button>
             )}
 
             {/* Mobile Menu Toggle */}
             <button
+              type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-xl glass-subtle hover:bg-white/10 text-white cursor-pointer active:scale-90 transition-all shadow-sm"
+              className="xl:hidden h-9 w-9 rounded-xl glass-subtle hover:bg-white/10 text-white cursor-pointer active:scale-90 transition-all shadow-sm flex items-center justify-center shrink-0 border border-white/8"
               aria-label="Menu"
             >
               {mobileMenuOpen ? (
@@ -389,7 +395,7 @@ export const StorefrontLayout: React.FC = () => {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden glass-prominent border-b border-white/8 px-4 py-4 space-y-2 animate-in fade-in slide-in-from-top-2 duration-150">
+          <div className="xl:hidden glass-prominent border-b border-white/8 px-4 py-4 space-y-2 animate-in fade-in slide-in-from-top-2 duration-150">
             {isAuthenticated && currentUser ? (
               <div className="p-3 glass-subtle rounded-2xl flex items-center justify-between mb-3 border border-white/8">
                 <div>
@@ -426,6 +432,13 @@ export const StorefrontLayout: React.FC = () => {
             )}
 
             <Link
+              to="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5 hover:text-white"
+            >
+              Trang Chủ
+            </Link>
+            <Link
               to="/products"
               onClick={() => setMobileMenuOpen(false)}
               className="block py-2 px-3 rounded-xl text-xs font-semibold text-[#CBC7E0] hover:bg-white/5 hover:text-white"
@@ -461,6 +474,7 @@ export const StorefrontLayout: React.FC = () => {
 
             {isAuthenticated && (
               <button
+                type="button"
                 onClick={handleLogout}
                 className="w-full text-left py-2 px-3 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-500/10 cursor-pointer"
               >
@@ -471,6 +485,7 @@ export const StorefrontLayout: React.FC = () => {
             {isAuthenticated && currentUser?.role === 'admin' && (
               <div className="pt-2 border-t border-white/8">
                 <button
+                  type="button"
                   onClick={() => {
                     navigateToAdmin();
                     setMobileMenuOpen(false);

@@ -594,44 +594,62 @@ export const StorefrontAIAssistant: React.FC = () => {
 
             {/* CHAT MESSAGES STREAM */}
             <div className="space-y-3 pt-2">
-              {chatMessages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
-                >
+              {chatMessages.map((msg) => {
+                // Parse markdown bold **text** into clean styled elements
+                const renderContent = (content: string) => {
+                  const parts = content.split(/(\*\*[^*]+\*\*)/g);
+                  return parts.map((part, idx) => {
+                    if (part.startsWith('**') && part.endsWith('**')) {
+                      const inner = part.slice(2, -2);
+                      return (
+                        <strong key={idx} className="font-bold text-cyan-300">
+                          {inner}
+                        </strong>
+                      );
+                    }
+                    return <React.Fragment key={idx}>{part}</React.Fragment>;
+                  });
+                };
+
+                return (
                   <div
-                    className={`max-w-[88%] p-3.5 rounded-2xl text-xs leading-relaxed whitespace-pre-line ${
-                      msg.sender === 'user'
-                        ? 'btn-liquid-primary text-white rounded-tr-none shadow-md shadow-purple-900/30'
-                        : 'glass-standard text-[#F4F2FF] border border-white/10 rounded-tl-none shadow-md'
-                    }`}
+                    key={msg.id}
+                    className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
                   >
-                    {msg.text}
-                  </div>
-
-                  {/* Interactive Option Buttons from Bot */}
-                  {msg.options && msg.options.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-2 max-w-[95%]">
-                      {msg.options.map((opt, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={opt.action}
-                          className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-sm ${
-                            opt.isPrimary
-                              ? 'btn-liquid-primary shadow-md hover:scale-105'
-                              : 'glass-subtle text-[#938EB5] hover:text-white border border-white/10 hover:border-white/25'
-                          }`}
-                        >
-                          <span>{opt.label}</span>
-                        </button>
-                      ))}
+                    <div
+                      className={`max-w-[88%] p-3.5 rounded-2xl text-xs leading-relaxed whitespace-pre-line ${
+                        msg.sender === 'user'
+                          ? 'btn-liquid-primary text-white rounded-tr-none shadow-md shadow-purple-900/30'
+                          : 'glass-standard text-[#F4F2FF] border border-white/10 rounded-tl-none shadow-md'
+                      }`}
+                    >
+                      {renderContent(msg.text)}
                     </div>
-                  )}
 
-                  <span className="text-[9.5px] text-[#5C567A] mt-1 px-1">{msg.time}</span>
-                </div>
-              ))}
+                    {/* Interactive Option Buttons from Bot */}
+                    {msg.options && msg.options.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2 max-w-[95%]">
+                        {msg.options.map((opt, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={opt.action}
+                            className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-sm ${
+                              opt.isPrimary
+                                ? 'btn-liquid-primary shadow-md hover:scale-105'
+                                : 'glass-subtle text-[#938EB5] hover:text-white border border-white/10 hover:border-white/25'
+                            }`}
+                          >
+                            <span>{opt.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    <span className="text-[9.5px] text-[#5C567A] mt-1 px-1">{msg.time}</span>
+                  </div>
+                );
+              })}
               <div ref={chatEndRef} />
             </div>
           </div>
