@@ -820,10 +820,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                       {/* Preset Background Choices */}
                       <div className="space-y-1.5 pt-2 border-t border-white/5">
                         <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">
-                          Ảnh mẫu chất lượng cao sẵn có:
+                          Ảnh mẫu chuyển động 4K sẵn có:
                         </label>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {[
+                            {
+                              name: '👁️ Gojo Six Eyes (Ảnh Của Bạn)',
+                              url: '/gojo-eyes-banner.jpg',
+                            },
                             {
                               name: '🐉 Master Cyber Dragon',
                               url: '/thanox-master-banner.jpg',

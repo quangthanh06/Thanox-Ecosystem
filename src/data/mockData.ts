@@ -391,7 +391,7 @@ export const INITIAL_SETTINGS: StoreSettings = {
     networkMatrix: DEFAULT_CARD_MATRIX,
   },
   heroBanner: {
-    backgroundImage: '/thanox-master-banner.jpg',
+    backgroundImage: '/gojo-eyes-banner.jpg',
     backgroundVideo: '',
     backgroundType: 'image',
     brightness: 65,

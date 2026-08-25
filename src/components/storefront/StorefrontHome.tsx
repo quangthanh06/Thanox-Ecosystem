@@ -39,9 +39,21 @@ export const StorefrontHome: React.FC = () => {
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
   const [localSearch, setLocalSearch] = useState<string>('');
   const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
+  const [heroMousePos, setHeroMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  const handleHeroMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 16;
+    const y = ((e.clientY - rect.top) / rect.height - 0.5) * 16;
+    setHeroMousePos({ x, y });
+  };
+
+  const handleHeroMouseLeave = () => {
+    setHeroMousePos({ x: 0, y: 0 });
+  };
 
   // Dynamic Banner Customizer Settings from Admin Panel
-  const bannerBg = settings.heroBanner?.backgroundImage || '/thanox-master-banner.jpg';
+  const bannerBg = settings.heroBanner?.backgroundImage || '/gojo-eyes-banner.jpg';
   const bannerVideo = settings.heroBanner?.backgroundVideo || '';
   const isVideoBanner = (settings.heroBanner?.backgroundType === 'video' || (bannerBg && (bannerBg.endsWith('.mp4') || bannerBg.endsWith('.webm')))) && (bannerVideo || bannerBg);
   const activeVideoSrc = bannerVideo || bannerBg;
@@ -75,44 +87,88 @@ export const StorefrontHome: React.FC = () => {
 
   return (
     <div className="space-y-10 sm:space-y-12">
-      {/* 1. iOS 27 LIQUID GLASS HERO PRODUCT SLIDER */}
+      {/* 1. iOS 27 LIQUID GLASS HERO PRODUCT SLIDER WITH 4K LIVE MOTION */}
       {currentSlide && (
-        <section className="relative overflow-hidden rounded-3xl glass-prominent border border-white/14 shadow-[0_30px_70px_rgba(0,0,0,0.85)] p-6 sm:p-10 lg:p-12 min-h-[340px] sm:min-h-[400px] flex flex-col justify-between group">
-          {/* Master Backdrop Image/Video & Atmospheric Diffusion */}
+        <section
+          onMouseMove={handleHeroMouseMove}
+          onMouseLeave={handleHeroMouseLeave}
+          className="relative overflow-hidden rounded-3xl glass-prominent border border-white/14 shadow-[0_30px_70px_rgba(0,0,0,0.85)] p-6 sm:p-10 lg:p-12 min-h-[340px] sm:min-h-[400px] flex flex-col justify-between group"
+        >
+          {/* Master 4K Live Motion Backdrop */}
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-            {isVideoBanner ? (
-              <video
-                key={activeVideoSrc}
-                src={activeVideoSrc}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-cover object-center contrast-125 scale-105 group-hover:scale-100 transition-transform duration-1000 opacity-60"
-                style={{
-                  filter: `brightness(${bannerBrightness}) blur(${bannerBlur}px)`,
-                }}
-              />
-            ) : (
-              <img
-                src={bannerBg}
-                alt="Thanox Master Background"
-                className="w-full h-full object-cover object-center contrast-125 scale-105 group-hover:scale-100 transition-transform duration-1000 opacity-60"
-                style={{
-                  filter: `brightness(${bannerBrightness}) blur(${bannerBlur}px)`,
-                }}
-              />
-            )}
-            {/* Darkened Gradient Overlays for Readability */}
             <div
-              className="absolute inset-0 bg-gradient-to-r from-[#07070D] via-[#0D0D1A] to-[#07070D]"
+              className="w-full h-full relative transition-transform duration-700 ease-out"
+              style={{
+                transform: `translate3d(${heroMousePos.x}px, ${heroMousePos.y}px, 0)`,
+              }}
+            >
+              {isVideoBanner ? (
+                <video
+                  key={activeVideoSrc}
+                  src={activeVideoSrc}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover object-center contrast-125 scale-105"
+                  style={{
+                    filter: `brightness(${bannerBrightness}) blur(${bannerBlur}px)`,
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full relative">
+                  <img
+                    src={bannerBg}
+                    alt="Thanox Master 4K Live Background"
+                    className="w-full h-full object-cover object-center contrast-125 live-motion-image-4k"
+                    style={{
+                      filter: `brightness(${bannerBrightness}) blur(${bannerBlur}px)`,
+                    }}
+                  />
+
+                  {/* Dynamic Glowing Energy Points (Six Eyes & Neon Aura) */}
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    {/* Left Eye Cyan Energy Orb */}
+                    <div
+                      className="absolute top-[42%] left-[28%] sm:left-[32%] w-24 sm:w-36 h-24 sm:h-36 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/40 blur-xl six-eyes-glow-fx mix-blend-screen pointer-events-none"
+                    />
+                    {/* Right Eye Cyan Energy Orb */}
+                    <div
+                      className="absolute top-[40%] left-[62%] sm:left-[58%] w-24 sm:w-36 h-24 sm:h-36 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/40 blur-xl six-eyes-glow-fx mix-blend-screen pointer-events-none"
+                      style={{ animationDelay: '0.4s' }}
+                    />
+                    {/* Purple Ambient Corona Aura */}
+                    <div
+                      className="absolute top-[25%] left-[45%] w-64 h-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#8B5CF6]/25 blur-3xl mix-blend-screen pointer-events-none animate-pulse"
+                      style={{ animationDuration: '6s' }}
+                    />
+                  </div>
+
+                  {/* 4K Liquid Light Sweep Highlight */}
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-cyan-300/15 to-transparent light-sweep-fx pointer-events-none" />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Darkened Gradient Overlays for Readability & Seamless Tablet Framing */}
+            <div
+              className="absolute inset-0 bg-gradient-to-r from-[#07070D] via-[#0D0D1A]/85 to-[#07070D]/75"
               style={{
                 opacity: bannerOverlayOpacity,
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#07070D] via-transparent to-black/30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#07070D] via-transparent to-black/35" />
             <div className="absolute top-0 right-0 w-96 h-96 bg-[#8B5CF6]/15 rounded-full blur-[100px] pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none" />
+
+            {/* Floating Cyber Dust Sparks */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
+              <div className="absolute w-1.5 h-1.5 rounded-full bg-cyan-300 shadow-[0_0_8px_#22D3EE] animate-bounce top-1/4 left-1/5" style={{ animationDuration: '4s' }} />
+              <div className="absolute w-1 h-1 rounded-full bg-purple-300 shadow-[0_0_6px_#C084FC] animate-bounce top-3/4 left-2/3" style={{ animationDuration: '6s', animationDelay: '1s' }} />
+              <div className="absolute w-1.5 h-1.5 rounded-full bg-cyan-200 shadow-[0_0_10px_#06B6D4] animate-bounce top-1/2 left-3/4" style={{ animationDuration: '5s', animationDelay: '2s' }} />
+            </div>
 
             {/* Background Display Watermark Typography (Subtle depth) */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden opacity-[0.045]">
