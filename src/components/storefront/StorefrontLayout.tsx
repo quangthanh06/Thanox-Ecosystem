@@ -59,9 +59,9 @@ export const StorefrontLayout: React.FC = () => {
     navigate('/');
   };
 
-  // If maintenance mode is active and user is not admin, exempt auth routes so admin can log in
-  const isAuthRoute = ['/login', '/register', '/forgot-password'].includes(location.pathname);
-  if (settings.maintenanceMode && currentUser?.role !== 'admin' && !isAuthRoute) {
+  // If maintenance mode is active and user is not admin, ONLY allow /login (so Admin can sign in to manage)
+  const isLoginRoute = location.pathname === '/login';
+  if (settings.maintenanceMode && currentUser?.role !== 'admin' && !isLoginRoute) {
     return (
       <div className="min-h-screen bg-[#07070D] text-[#F4F2FF] flex flex-col justify-center items-center font-sans">
         <StorefrontMaintenanceScreen />

@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   KeyRound,
   Home,
+  Wrench,
 } from 'lucide-react';
 import { verifyTotpCode } from '../../utils/totp';
 
@@ -142,17 +143,18 @@ export const StorefrontLogin: React.FC = () => {
               </Link>
             </div>
 
-            {/* Title */}
-            <div className="space-y-1.5">
-              <h1 className="font-display text-2xl sm:text-3xl font-black text-[#F4F2FF] tracking-tight">
-                {step === 'credentials' ? 'Chào mừng trở lại 👋' : 'Xác Thực Google Authenticator 📱'}
-              </h1>
-              <p className="text-xs sm:text-sm text-[#938EB5]">
-                {step === 'credentials'
-                  ? 'Đăng nhập để xem License Key, số dư ví và nạp tiền tự động'
-                  : 'Nhập mã OTP 6 số từ ứng dụng Google Authenticator trên điện thoại của bạn để đăng nhập quản trị'}
-              </p>
-            </div>
+            {/* Maintenance Mode Notice for Admin Only */}
+            {settings.maintenanceMode && (
+              <div className="p-4 rounded-2xl bg-amber-500/15 border border-amber-500/35 text-amber-200 text-xs flex items-start gap-3 shadow-lg">
+                <Wrench className="w-5 h-5 text-amber-400 shrink-0 mt-0.5 animate-spin" style={{ animationDuration: '8s' }} />
+                <div className="space-y-1">
+                  <div className="font-bold text-amber-300">Cửa hàng đang BẬT CHẾ ĐỘ BẢO TRÌ ⚠️</div>
+                  <div className="text-[11.5px] text-amber-200/85 leading-relaxed">
+                    Cổng đăng nhập này tạm thời chỉ dành riêng cho <strong>Ban Quản Trị (Admin)</strong> để vào quản lý hệ thống. Khách hàng thông thường vui lòng quay lại sau hoặc liên hệ Zalo Admin để mua hàng.
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Error Alert */}
             {errorMessage && (

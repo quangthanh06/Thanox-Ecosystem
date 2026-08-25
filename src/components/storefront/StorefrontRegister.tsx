@@ -4,6 +4,7 @@ import { useStore } from '../../context/StoreContext';
 import { Button } from '../ui/Button';
 import { PasswordStrengthMeter } from '../ui/PasswordStrengthMeter';
 import { AuthVisualSide } from './AuthVisualSide';
+import { StorefrontMaintenanceScreen } from './StorefrontMaintenanceScreen';
 import {
   Lock,
   User,
@@ -17,10 +18,19 @@ import {
 } from 'lucide-react';
 
 export const StorefrontRegister: React.FC = () => {
-  const { register, isAuthenticated, activeReferralCode } = useStore();
+  const { register, isAuthenticated, activeReferralCode, settings, currentUser } = useStore();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectPath = searchParams.get('redirect') || '/account';
+
+  // Strict maintenance mode block
+  if (settings.maintenanceMode && currentUser?.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-[#07070D] text-[#F4F2FF] flex flex-col justify-center items-center font-sans">
+        <StorefrontMaintenanceScreen />
+      </div>
+    );
+  }
 
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');

@@ -527,6 +527,67 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => subscription.unsubscribe();
   }, []);
 
+  // Realtime Cloud Settings Synchronizer (Sync maintenanceMode, music, payments, etc. across all devices)
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('store_settings')
+          .select('settings_data')
+          .eq('id', 'default')
+          .maybeSingle();
+
+        if (data?.settings_data && !error) {
+          const cloudSettings = data.settings_data;
+          setSettings((prev) => {
+            const merged = { ...prev, ...cloudSettings };
+            try {
+              localStorage.setItem('thanox_settings', JSON.stringify(merged));
+            } catch {}
+            return merged;
+          });
+        }
+      } catch (err) {
+        console.warn('[StoreContext] Settings sync error:', err);
+      }
+    };
+
+    fetchSettings();
+
+    // Supabase Realtime channel for store_settings
+    const settingsChannel = supabase
+      .channel('store-settings-global-sync')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'store_settings',
+          filter: 'id=eq.default',
+        },
+        (payload: any) => {
+          if (payload?.new?.settings_data) {
+            const newCloudSettings = payload.new.settings_data;
+            setSettings((prev) => {
+              const merged = { ...prev, ...newCloudSettings };
+              try {
+                localStorage.setItem('thanox_settings', JSON.stringify(merged));
+              } catch {}
+              return merged;
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    const interval = setInterval(fetchSettings, 4000);
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(settingsChannel);
+    };
+  }, []);
+
   // Tự động load và sync profile mới nhất từ Supabase profiles khi đăng nhập (không giữ balance cũ ở localStorage)
   useEffect(() => {
     if (!currentUserId) return;

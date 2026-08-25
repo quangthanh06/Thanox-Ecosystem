@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../../context/StoreContext';
 import { Button } from '../ui/Button';
 import { AuthVisualSide } from './AuthVisualSide';
+import { StorefrontMaintenanceScreen } from './StorefrontMaintenanceScreen';
 import {
   Lock,
   Mail,
@@ -18,8 +19,17 @@ import {
 } from 'lucide-react';
 
 export const StorefrontForgotPassword: React.FC = () => {
-  const { requestPasswordReset, resetPassword, showToast } = useStore();
+  const { requestPasswordReset, resetPassword, showToast, settings, currentUser } = useStore();
   const navigate = useNavigate();
+
+  // Strict maintenance mode block
+  if (settings.maintenanceMode && currentUser?.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-[#07070D] text-[#F4F2FF] flex flex-col justify-center items-center font-sans">
+        <StorefrontMaintenanceScreen />
+      </div>
+    );
+  }
 
   const [step, setStep] = useState<'request' | 'reset'>('request');
   const [email, setEmail] = useState('');
