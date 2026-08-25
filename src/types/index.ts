@@ -292,8 +292,17 @@ export interface StoreEffects {
   sparkles?: boolean;
   shootingStars?: boolean;
   matrixRain?: boolean;
-  rgbBorder?: boolean;
   glowCursor?: boolean;
+  autumnLeaves?: boolean;
+  fireflies?: boolean;
+  plexus?: boolean;
+  volcanoEmbers?: boolean;
+  cyberRain?: boolean;
+  bubbles?: boolean;
+  goldCoins?: boolean;
+  fireworks?: boolean;
+  lightning?: boolean;
+  butterflies?: boolean;
   particleDensity?: 'low' | 'medium' | 'high';
 }
 

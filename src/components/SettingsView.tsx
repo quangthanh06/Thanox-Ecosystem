@@ -313,7 +313,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
           >
             <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
             <span>✨ Hiệu Ứng Web Gaming</span>
-            {(formData.effects?.snow || formData.effects?.cherryBlossom || formData.effects?.neonParticles || formData.effects?.matrixRain || formData.effects?.rgbBorder || formData.effects?.glowCursor) && (
+            {(formData.effects?.snow || formData.effects?.cherryBlossom || formData.effects?.neonParticles || formData.effects?.matrixRain || formData.effects?.autumnLeaves || formData.effects?.fireflies || formData.effects?.glowCursor) && (
               <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
             )}
           </button>
@@ -1123,12 +1123,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                         effects: {
                           ...(prev.effects || {}),
                           cherryBlossom: true,
-                          rgbBorder: true,
+                          autumnLeaves: false,
+                          fireflies: true,
+                          plexus: false,
+                          volcanoEmbers: false,
+                          cyberRain: false,
+                          bubbles: false,
+                          goldCoins: false,
+                          fireworks: false,
+                          lightning: false,
+                          butterflies: false,
                           glowCursor: true,
                           snow: false,
                           neonParticles: false,
                           matrixRain: false,
                           shootingStars: true,
+                          sparkles: true,
                           particleDensity: 'medium',
                         },
                       }))
@@ -1147,12 +1157,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                         ...prev,
                         effects: {
                           cherryBlossom: false,
+                          autumnLeaves: false,
+                          fireflies: false,
+                          plexus: false,
+                          volcanoEmbers: false,
+                          cyberRain: false,
+                          bubbles: false,
+                          goldCoins: false,
+                          fireworks: false,
+                          lightning: false,
+                          butterflies: false,
                           snow: false,
                           neonParticles: false,
                           sparkles: false,
                           shootingStars: false,
                           matrixRain: false,
-                          rgbBorder: false,
                           glowCursor: false,
                           particleDensity: 'medium',
                         },
@@ -1202,7 +1221,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
               </div>
             </Card>
 
-            {/* Effects Toggle Cards Grid */}
+            {/* Effects Toggle Cards Grid (17 Open-Source Codex Effects) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* 1. Sakura Petals */}
               <div
@@ -1226,15 +1245,315 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                     <span className="text-2xl">🌸</span>
                     <span className={`w-3 h-3 rounded-full ${formData.effects?.cherryBlossom ? 'bg-pink-400 shadow-[0_0_10px_#F472B6]' : 'bg-zinc-700'}`} />
                   </div>
-                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Hoa Anh Đào Rơi</h4>
-                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Cánh hoa hồng sakura rơi xoay mượt mà chuẩn anime & gaming.</p>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Hoa Anh Đào Rơi (Sakura)</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Cánh hoa hồng xoay 3D lượn sóng mượt mà chuẩn phong cách anime.</p>
                 </div>
                 <div className="text-[10px] font-bold text-pink-400 uppercase">
                   {formData.effects?.cherryBlossom ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
                 </div>
               </div>
 
-              {/* 2. Snow */}
+              {/* 2. Autumn Leaves */}
+              <div
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    effects: {
+                      ...(prev.effects || {}),
+                      autumnLeaves: !prev.effects?.autumnLeaves,
+                    },
+                  }))
+                }
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                  formData.effects?.autumnLeaves
+                    ? 'bg-orange-500/10 border-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.25)]'
+                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">🍁</span>
+                    <span className={`w-3 h-3 rounded-full ${formData.effects?.autumnLeaves ? 'bg-orange-400 shadow-[0_0_10px_#FB923C]' : 'bg-zinc-700'}`} />
+                  </div>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Lá Phong Rơi Mùa Thu</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Lá phong đỏ vàng chao đảo trong gió thu lãng mạn.</p>
+                </div>
+                <div className="text-[10px] font-bold text-orange-400 uppercase">
+                  {formData.effects?.autumnLeaves ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
+                </div>
+              </div>
+
+              {/* 3. Fireflies */}
+              <div
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    effects: {
+                      ...(prev.effects || {}),
+                      fireflies: !prev.effects?.fireflies,
+                    },
+                  }))
+                }
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                  formData.effects?.fireflies
+                    ? 'bg-lime-500/10 border-lime-400 shadow-[0_0_20px_rgba(163,230,53,0.25)]'
+                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">🪲</span>
+                    <span className={`w-3 h-3 rounded-full ${formData.effects?.fireflies ? 'bg-lime-400 shadow-[0_0_10px_#A3E635]' : 'bg-zinc-700'}`} />
+                  </div>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Đom Đóm Đêm Huyền Ảo</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Đom đóm dạ quang xanh lá thở nhịp nhàng bồng bềnh trong đêm.</p>
+                </div>
+                <div className="text-[10px] font-bold text-lime-400 uppercase">
+                  {formData.effects?.fireflies ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
+                </div>
+              </div>
+
+              {/* 4. Plexus Constellation */}
+              <div
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    effects: {
+                      ...(prev.effects || {}),
+                      plexus: !prev.effects?.plexus,
+                    },
+                  }))
+                }
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                  formData.effects?.plexus
+                    ? 'bg-cyan-500/10 border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.25)]'
+                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">🕸️</span>
+                    <span className={`w-3 h-3 rounded-full ${formData.effects?.plexus ? 'bg-cyan-400 shadow-[0_0_10px_#06B6D4]' : 'bg-zinc-700'}`} />
+                  </div>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Mạng Nơ-ron Tơ Vũ Trụ (Plexus)</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Các điểm kết nối bằng tia sáng tơ nhện và tương tác khi rê chuột.</p>
+                </div>
+                <div className="text-[10px] font-bold text-cyan-400 uppercase">
+                  {formData.effects?.plexus ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
+                </div>
+              </div>
+
+              {/* 5. Volcano Embers */}
+              <div
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    effects: {
+                      ...(prev.effects || {}),
+                      volcanoEmbers: !prev.effects?.volcanoEmbers,
+                    },
+                  }))
+                }
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                  formData.effects?.volcanoEmbers
+                    ? 'bg-red-500/10 border-red-400 shadow-[0_0_20px_rgba(239,68,68,0.25)]'
+                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">🌋</span>
+                    <span className={`w-3 h-3 rounded-full ${formData.effects?.volcanoEmbers ? 'bg-red-400 shadow-[0_0_10px_#EF4444]' : 'bg-zinc-700'}`} />
+                  </div>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Tàn Tro Núi Lửa (Fire Embers)</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Đốm lửa đỏ cam bốc lên từ đáy màn hình nóng bỏng rực lửa.</p>
+                </div>
+                <div className="text-[10px] font-bold text-red-400 uppercase">
+                  {formData.effects?.volcanoEmbers ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
+                </div>
+              </div>
+
+              {/* 6. Cyber Rain */}
+              <div
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    effects: {
+                      ...(prev.effects || {}),
+                      cyberRain: !prev.effects?.cyberRain,
+                    },
+                  }))
+                }
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                  formData.effects?.cyberRain
+                    ? 'bg-blue-500/10 border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.25)]'
+                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">⚡</span>
+                    <span className={`w-3 h-3 rounded-full ${formData.effects?.cyberRain ? 'bg-cyan-400 shadow-[0_0_10px_#22D3EE]' : 'bg-zinc-700'}`} />
+                  </div>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Mưa Cyberpunk Laser</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Mưa vệt laser neon tốc độ cao rạch ngang màn đêm kỳ ảo.</p>
+                </div>
+                <div className="text-[10px] font-bold text-cyan-400 uppercase">
+                  {formData.effects?.cyberRain ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
+                </div>
+              </div>
+
+              {/* 7. Aquarium Bubbles */}
+              <div
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    effects: {
+                      ...(prev.effects || {}),
+                      bubbles: !prev.effects?.bubbles,
+                    },
+                  }))
+                }
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                  formData.effects?.bubbles
+                    ? 'bg-sky-500/10 border-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.25)]'
+                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">🫧</span>
+                    <span className={`w-3 h-3 rounded-full ${formData.effects?.bubbles ? 'bg-sky-400 shadow-[0_0_10px_#38BDF8]' : 'bg-zinc-700'}`} />
+                  </div>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Bong Bóng Thủy Cung</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Bong bóng nước trong suốt bập bùng trôi lơ lửng mát mắt.</p>
+                </div>
+                <div className="text-[10px] font-bold text-sky-400 uppercase">
+                  {formData.effects?.bubbles ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
+                </div>
+              </div>
+
+              {/* 8. Gold Coins */}
+              <div
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    effects: {
+                      ...(prev.effects || {}),
+                      goldCoins: !prev.effects?.goldCoins,
+                    },
+                  }))
+                }
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                  formData.effects?.goldCoins
+                    ? 'bg-amber-500/10 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.25)]'
+                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">💰</span>
+                    <span className={`w-3 h-3 rounded-full ${formData.effects?.goldCoins ? 'bg-amber-400 shadow-[0_0_10px_#FBBF24]' : 'bg-zinc-700'}`} />
+                  </div>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Mưa Đồng Xu Vàng (Gold Coins)</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Đồng tiền vàng 3D xoay lấp lánh mang tài lộc và may mắn.</p>
+                </div>
+                <div className="text-[10px] font-bold text-amber-400 uppercase">
+                  {formData.effects?.goldCoins ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
+                </div>
+              </div>
+
+              {/* 9. Fireworks */}
+              <div
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    effects: {
+                      ...(prev.effects || {}),
+                      fireworks: !prev.effects?.fireworks,
+                    },
+                  }))
+                }
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                  formData.effects?.fireworks
+                    ? 'bg-purple-500/10 border-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.25)]'
+                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">🎆</span>
+                    <span className={`w-3 h-3 rounded-full ${formData.effects?.fireworks ? 'bg-purple-400 shadow-[0_0_10px_#A855F7]' : 'bg-zinc-700'}`} />
+                  </div>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Pháo Hoa Rực Rỡ (Fireworks)</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Pháo hoa nở bung tỏa nhiều sắc màu lễ hội hoành tráng.</p>
+                </div>
+                <div className="text-[10px] font-bold text-purple-400 uppercase">
+                  {formData.effects?.fireworks ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
+                </div>
+              </div>
+
+              {/* 10. Cyber Lightning */}
+              <div
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    effects: {
+                      ...(prev.effects || {}),
+                      lightning: !prev.effects?.lightning,
+                    },
+                  }))
+                }
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                  formData.effects?.lightning
+                    ? 'bg-blue-500/10 border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.25)]'
+                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">🌩️</span>
+                    <span className={`w-3 h-3 rounded-full ${formData.effects?.lightning ? 'bg-blue-400 shadow-[0_0_10px_#60A5FA]' : 'bg-zinc-700'}`} />
+                  </div>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Sấm Sét Cyber (Lightning)</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Tia chớp sấm sét điện quang đánh ngang bầu trời ấn tượng.</p>
+                </div>
+                <div className="text-[10px] font-bold text-blue-400 uppercase">
+                  {formData.effects?.lightning ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
+                </div>
+              </div>
+
+              {/* 11. Glowing Butterflies */}
+              <div
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    effects: {
+                      ...(prev.effects || {}),
+                      butterflies: !prev.effects?.butterflies,
+                    },
+                  }))
+                }
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                  formData.effects?.butterflies
+                    ? 'bg-teal-500/10 border-teal-400 shadow-[0_0_20px_rgba(20,184,166,0.25)]'
+                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">🦋</span>
+                    <span className={`w-3 h-3 rounded-full ${formData.effects?.butterflies ? 'bg-teal-400 shadow-[0_0_10px_#2DD4BF]' : 'bg-zinc-700'}`} />
+                  </div>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Bướm Dạ Quang Vỗ Cánh</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Bướm phát sáng vỗ cánh bay lượn mềm mại như cổ tích.</p>
+                </div>
+                <div className="text-[10px] font-bold text-teal-400 uppercase">
+                  {formData.effects?.butterflies ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
+                </div>
+              </div>
+
+              {/* 12. Snow */}
               <div
                 onClick={() =>
                   setFormData((prev) => ({
@@ -1256,7 +1575,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                     <span className="text-2xl">❄️</span>
                     <span className={`w-3 h-3 rounded-full ${formData.effects?.snow ? 'bg-blue-400 shadow-[0_0_10px_#60A5FA]' : 'bg-zinc-700'}`} />
                   </div>
-                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Tuyết Rơi Cyber</h4>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Tuyết Rơi Mùa Đông</h4>
                   <p className="text-[11px] text-[#8B84A8] mt-0.5">Bông tuyết trắng nhẹ nhàng rơi trên nền đen sâu thẳm.</p>
                 </div>
                 <div className="text-[10px] font-bold text-blue-400 uppercase">
@@ -1264,7 +1583,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                 </div>
               </div>
 
-              {/* 3. Neon Particles */}
+              {/* 13. Neon Particles */}
               <div
                 onClick={() =>
                   setFormData((prev) => ({
@@ -1294,7 +1613,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                 </div>
               </div>
 
-              {/* 4. Sparkles */}
+              {/* 14. Sparkles */}
               <div
                 onClick={() =>
                   setFormData((prev) => ({
@@ -1324,7 +1643,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                 </div>
               </div>
 
-              {/* 5. Shooting Stars */}
+              {/* 15. Shooting Stars */}
               <div
                 onClick={() =>
                   setFormData((prev) => ({
@@ -1354,7 +1673,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                 </div>
               </div>
 
-              {/* 6. Matrix Rain */}
+              {/* 16. Matrix Rain */}
               <div
                 onClick={() =>
                   setFormData((prev) => ({
@@ -1384,37 +1703,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
                 </div>
               </div>
 
-              {/* 7. RGB Rainbow Border */}
-              <div
-                onClick={() =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    effects: {
-                      ...(prev.effects || {}),
-                      rgbBorder: !prev.effects?.rgbBorder,
-                    },
-                  }))
-                }
-                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
-                  formData.effects?.rgbBorder
-                    ? 'bg-red-500/10 border-rose-400 shadow-[0_0_20px_rgba(244,63,94,0.25)]'
-                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl">🌈</span>
-                    <span className={`w-3 h-3 rounded-full ${formData.effects?.rgbBorder ? 'bg-rose-400 shadow-[0_0_10px_#FB7185]' : 'bg-zinc-700'}`} />
-                  </div>
-                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Viền LED RGB Gaming</h4>
-                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Viền phát sáng RGB đổi 7 màu chạy quanh khung màn hình.</p>
-                </div>
-                <div className="text-[10px] font-bold text-rose-400 uppercase">
-                  {formData.effects?.rgbBorder ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
-                </div>
-              </div>
-
-              {/* 8. Cyber Glow Cursor */}
+              {/* 17. Cyber Glow Cursor */}
               <div
                 onClick={() =>
                   setFormData((prev) => ({
