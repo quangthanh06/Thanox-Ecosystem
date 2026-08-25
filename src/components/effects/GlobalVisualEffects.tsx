@@ -39,15 +39,27 @@ export const GlobalVisualEffects: React.FC = () => {
     if (!ctx) return;
 
     let animationFrameId: number;
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
+    let width = window.innerWidth || document.documentElement.clientWidth;
+    let height = window.innerHeight || document.documentElement.clientHeight;
 
-    const handleResize = () => {
-      if (!canvas) return;
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
+    const resizeCanvas = () => {
+      if (!canvas || !ctx) return;
+      const dpr = window.devicePixelRatio || 1;
+      width = window.innerWidth || document.documentElement.clientWidth;
+      height = window.innerHeight || document.documentElement.clientHeight;
+
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
     };
-    window.addEventListener('resize', handleResize, { passive: true });
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas, { passive: true });
+    window.addEventListener('orientationchange', resizeCanvas, { passive: true });
 
     // Smooth Mouse tracking in memory
     const mousePos = { x: -500, y: -500, targetX: -500, targetY: -500, isOver: false };
@@ -132,16 +144,16 @@ export const GlobalVisualEffects: React.FC = () => {
       c.fill();
       c.shadowBlur = 0;
 
-      // Realistic Leaf Veins (Gân lá)
+      // Leaf veins
       c.strokeStyle = 'rgba(255, 255, 255, 0.25)';
       c.lineWidth = 1;
       c.beginPath();
       c.moveTo(0, size * 0.9);
-      c.lineTo(0, -size * 0.85); // Central vein
+      c.lineTo(0, -size * 0.85);
       c.moveTo(0, size * 0.1);
-      c.lineTo(-size * 0.6, -size * 0.2); // Left vein
+      c.lineTo(-size * 0.6, -size * 0.2);
       c.moveTo(0, size * 0.1);
-      c.lineTo(size * 0.6, -size * 0.2); // Right vein
+      c.lineTo(size * 0.6, -size * 0.2);
       c.stroke();
 
       c.restore();
@@ -154,7 +166,6 @@ export const GlobalVisualEffects: React.FC = () => {
       c.beginPath();
       c.moveTo(0, size);
       c.bezierCurveTo(-size * 0.8, size * 0.4, -size * 0.9, -size * 0.5, -size * 0.2, -size * 0.9);
-      // Notched tip
       c.lineTo(0, -size * 0.7);
       c.lineTo(size * 0.2, -size * 0.9);
       c.bezierCurveTo(size * 0.9, -size * 0.5, size * 0.8, size * 0.4, 0, size);
@@ -202,7 +213,7 @@ export const GlobalVisualEffects: React.FC = () => {
       c.fill();
       c.restore();
 
-      // Body & glow center
+      // Body
       c.beginPath();
       c.ellipse(0, 0, 1.5, size * 0.35, 0, 0, Math.PI * 2);
       c.fillStyle = '#FFFFFF';
@@ -237,7 +248,7 @@ export const GlobalVisualEffects: React.FC = () => {
       c.lineWidth = 1;
       c.stroke();
 
-      // Currency icon
+      // Symbol
       c.fillStyle = '#92400E';
       c.font = `bold ${Math.round(size * 0.9)}px sans-serif`;
       c.textAlign = 'center';
@@ -252,7 +263,6 @@ export const GlobalVisualEffects: React.FC = () => {
       c.save();
       c.globalAlpha = opacity;
 
-      // Bubble Body
       c.beginPath();
       c.arc(0, 0, size, 0, Math.PI * 2);
       c.strokeStyle = 'rgba(56, 189, 248, 0.7)';
@@ -261,7 +271,6 @@ export const GlobalVisualEffects: React.FC = () => {
       c.fill();
       c.stroke();
 
-      // Glossy Glint Arc
       c.beginPath();
       c.arc(-size * 0.35, -size * 0.35, size * 0.3, 0, Math.PI * 1.5);
       c.strokeStyle = 'rgba(255, 255, 255, 0.85)';
@@ -275,14 +284,14 @@ export const GlobalVisualEffects: React.FC = () => {
 
     interface NaturalParticle {
       type: string;
-      baseX: number; // Anchor horizontal position
-      y: number; // Vertical position
+      baseX: number;
+      y: number;
       size: number;
-      speedX: number; // Wind drift speed
-      speedY: number; // Fall / rise speed
-      swayRadius: number; // S-curve amplitude in pixels
-      swayFreq: number; // S-curve frequency
-      phase: number; // Individual wave offset
+      speedX: number;
+      speedY: number;
+      swayRadius: number;
+      swayFreq: number;
+      phase: number;
       rotation: number;
       rotationSpeed: number;
       flipPhase: number;
@@ -301,10 +310,10 @@ export const GlobalVisualEffects: React.FC = () => {
         particles.push({
           type: 'sakura',
           baseX: Math.random() * (width + 100) - 50,
-          y: Math.random() * (height + 100) - 50,
+          y: Math.random() * (height + 160) - 80,
           size: Math.random() * 5 + 6,
-          speedX: Math.random() * 0.4 + 0.2, // Gentle right drift
-          speedY: Math.random() * 0.8 + 0.6, // Soft float down
+          speedX: Math.random() * 0.4 + 0.2,
+          speedY: Math.random() * 0.8 + 0.6,
           swayRadius: Math.random() * 25 + 15,
           swayFreq: Math.random() * 0.008 + 0.004,
           phase: Math.random() * Math.PI * 2,
@@ -326,7 +335,7 @@ export const GlobalVisualEffects: React.FC = () => {
         particles.push({
           type: 'autumn_leaf',
           baseX: Math.random() * (width + 150) - 75,
-          y: Math.random() * (height + 100) - 50,
+          y: Math.random() * (height + 160) - 80,
           size: Math.random() * 7 + 9,
           speedX: Math.random() * 0.5 + 0.3,
           speedY: Math.random() * 1.0 + 0.7,
@@ -400,10 +409,10 @@ export const GlobalVisualEffects: React.FC = () => {
         particles.push({
           type: 'volcano_ember',
           baseX: Math.random() * width,
-          y: Math.random() * height,
+          y: Math.random() * (height + 160) - 80,
           size: Math.random() * 2.5 + 1.2,
           speedX: (Math.random() - 0.5) * 0.3,
-          speedY: -(Math.random() * 1.2 + 0.6), // Float upwards
+          speedY: -(Math.random() * 1.2 + 0.6),
           swayRadius: Math.random() * 15 + 5,
           swayFreq: Math.random() * 0.01 + 0.005,
           phase: Math.random() * Math.PI * 2,
@@ -425,7 +434,7 @@ export const GlobalVisualEffects: React.FC = () => {
         particles.push({
           type: 'cyber_rain',
           baseX: Math.random() * width,
-          y: Math.random() * height,
+          y: Math.random() * (height + 160) - 80,
           size: Math.random() * 22 + 16,
           speedX: -0.4,
           speedY: Math.random() * 6 + 10,
@@ -449,7 +458,7 @@ export const GlobalVisualEffects: React.FC = () => {
         particles.push({
           type: 'bubble',
           baseX: Math.random() * width,
-          y: Math.random() * height,
+          y: Math.random() * (height + 160) - 80,
           size: Math.random() * 5 + 3.5,
           speedX: 0,
           speedY: -(Math.random() * 0.8 + 0.5),
@@ -473,7 +482,7 @@ export const GlobalVisualEffects: React.FC = () => {
         particles.push({
           type: 'gold_coin',
           baseX: Math.random() * width,
-          y: Math.random() * height,
+          y: Math.random() * (height + 160) - 80,
           size: Math.random() * 5 + 7,
           speedX: (Math.random() - 0.5) * 0.3,
           speedY: Math.random() * 1.3 + 0.8,
@@ -522,7 +531,7 @@ export const GlobalVisualEffects: React.FC = () => {
         particles.push({
           type: 'snow',
           baseX: Math.random() * (width + 80) - 40,
-          y: Math.random() * height,
+          y: Math.random() * (height + 160) - 80,
           size: Math.random() * 2.2 + 1.2,
           speedX: (Math.random() - 0.5) * 0.3,
           speedY: Math.random() * 0.7 + 0.4,
@@ -547,7 +556,7 @@ export const GlobalVisualEffects: React.FC = () => {
         particles.push({
           type: 'neon',
           baseX: Math.random() * width,
-          y: Math.random() * height,
+          y: Math.random() * (height + 160) - 80,
           size: Math.random() * 2.5 + 1.2,
           speedX: (Math.random() - 0.5) * 0.3,
           speedY: -(Math.random() * 0.8 + 0.4),
@@ -596,7 +605,7 @@ export const GlobalVisualEffects: React.FC = () => {
         particles.push({
           type: 'matrix',
           baseX: Math.random() * width,
-          y: Math.random() * height,
+          y: Math.random() * (height + 160) - 80,
           size: Math.random() * 4 + 11,
           speedX: 0,
           speedY: Math.random() * 1.5 + 1.2,
@@ -680,7 +689,7 @@ export const GlobalVisualEffects: React.FC = () => {
     const shootingStars: ShootingStar[] = [];
     let lastStarTime = performance.now();
 
-    // --- MASTER 60-120 FPS ANIMATION LOOP (NATURAL ORGANIC FLUID PHYSICS) ---
+    // --- MASTER 60-120 FPS ANIMATION LOOP ---
     let lastTime = performance.now();
 
     const render = (currentTime: number) => {
@@ -885,9 +894,11 @@ export const GlobalVisualEffects: React.FC = () => {
         }
       }
 
-      // F. Smooth Continuous Particle Flow
+      // F. Smooth Continuous Particle Flow (Falls all the way through bottom of viewport)
+      const bottomPadding = 90; // Fall deep beyond the bottom of the screen
+      const topPadding = 90;
+
       for (const p of particles) {
-        // Continuous trajectory advancement
         p.baseX += p.speedX * delta;
         p.y += p.speedY * delta;
         p.phase += (p.swayFreq || 0.005) * 16.667 * delta;
@@ -897,29 +908,27 @@ export const GlobalVisualEffects: React.FC = () => {
           p.rotation += p.rotationSpeed * delta;
         }
 
-        // Natural Sinusoidal Sway (Zero Jerk, Zero Jitter)
+        // Natural Sinusoidal Sway
         const renderX = p.swayRadius ? p.baseX + Math.sin(p.phase) * p.swayRadius : p.baseX;
         const renderY = p.y;
 
-        // Seamless Off-Screen Boundary Wrapping (No abrupt teleports in sight)
-        const padding = 70;
-        if (p.speedY > 0 && p.y > height + padding) {
-          p.y = -padding - Math.random() * 50;
-          p.baseX = Math.random() * (width + 100) - 50;
-        } else if (p.speedY < 0 && p.y < -padding) {
-          p.y = height + padding + Math.random() * 50;
-          p.baseX = Math.random() * (width + 100) - 50;
+        // Fall all the way down past the bottom of the screen before re-entering at the top
+        if (p.speedY > 0 && p.y > height + bottomPadding) {
+          p.y = -topPadding - Math.random() * 80;
+          p.baseX = Math.random() * (width + 120) - 60;
+        } else if (p.speedY < 0 && p.y < -topPadding) {
+          p.y = height + bottomPadding + Math.random() * 80;
+          p.baseX = Math.random() * (width + 120) - 60;
         }
 
-        if (p.baseX > width + padding + 50) {
-          p.baseX = -padding;
-        } else if (p.baseX < -padding - 50) {
-          p.baseX = width + padding;
+        if (p.baseX > width + 100) {
+          p.baseX = -80;
+        } else if (p.baseX < -100) {
+          p.baseX = width + 80;
         }
 
         // Draw particle based on authentic vector shaders
         if (p.type === 'autumn_leaf') {
-          // REAL 5-POINTED SERRATED MAPLE LEAF WITH 3D TUMBLE
           ctx.save();
           ctx.translate(renderX, renderY);
           const leafTilt = Math.sin(p.phase) * 0.4;
@@ -929,7 +938,6 @@ export const GlobalVisualEffects: React.FC = () => {
           drawMapleLeaf(ctx, p.size, p.color, p.opacity);
           ctx.restore();
         } else if (p.type === 'sakura') {
-          // REAL NOTCHED CHERRY BLOSSOM PETAL WITH 3D FLUTTER
           ctx.save();
           ctx.translate(renderX, renderY);
           const petal3DFlip = Math.cos(p.flipPhase);
@@ -938,7 +946,6 @@ export const GlobalVisualEffects: React.FC = () => {
           drawSakuraPetal(ctx, p.size, p.opacity);
           ctx.restore();
         } else if (p.type === 'butterfly') {
-          // REAL LUMINESCENT BUTTERFLY WITH FLAPPING WINGS
           ctx.save();
           ctx.translate(renderX, renderY);
           const flap = Math.cos(p.flipPhase);
@@ -947,20 +954,17 @@ export const GlobalVisualEffects: React.FC = () => {
           drawButterfly(ctx, p.size, p.color, flap, p.opacity);
           ctx.restore();
         } else if (p.type === 'gold_coin') {
-          // REAL 3D ROTATING GOLD COIN
           ctx.save();
           ctx.translate(renderX, renderY);
           ctx.rotate((p.rotation * Math.PI) / 180);
           drawGoldCoin(ctx, p.size, p.flipPhase, p.opacity);
           ctx.restore();
         } else if (p.type === 'bubble') {
-          // REAL TRANSLUCENT WATER BUBBLE WITH REFLECTION
           ctx.save();
           ctx.translate(renderX, renderY);
           drawBubble(ctx, p.size, p.opacity);
           ctx.restore();
         } else if (p.type === 'firefly') {
-          // REAL BIOLUMINESCENT FIREFLY WITH BREATHING GLOW
           const breathingPulse = Math.sin(p.phase * 3) * 0.35 + 0.65;
           ctx.beginPath();
           ctx.arc(renderX, renderY, p.size * breathingPulse, 0, Math.PI * 2);
@@ -972,7 +976,6 @@ export const GlobalVisualEffects: React.FC = () => {
           ctx.globalAlpha = 1.0;
           ctx.shadowBlur = 0;
         } else if (p.type === 'cyber_rain') {
-          // HIGH SPEED CYBER RAIN STREAKS
           ctx.beginPath();
           ctx.moveTo(renderX, renderY);
           ctx.lineTo(renderX - 1.5, renderY + p.size);
@@ -982,7 +985,6 @@ export const GlobalVisualEffects: React.FC = () => {
           ctx.stroke();
           ctx.globalAlpha = 1.0;
         } else if (p.type === 'matrix') {
-          // MATRIX GREEN CODE
           ctx.font = `${p.size}px monospace`;
           ctx.fillStyle = `rgba(16, 185, 129, ${p.opacity})`;
           ctx.fillText(p.char || '0', renderX, renderY);
@@ -990,7 +992,6 @@ export const GlobalVisualEffects: React.FC = () => {
             p.char = matrixChars[Math.floor(Math.random() * matrixChars.length)];
           }
         } else {
-          // Snow / Neon Embers / Sparkles / Plexus Nodes
           ctx.beginPath();
           ctx.arc(renderX, renderY, p.size, 0, Math.PI * 2);
           ctx.fillStyle = p.color;
@@ -1014,7 +1015,8 @@ export const GlobalVisualEffects: React.FC = () => {
 
     return () => {
       cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', resizeCanvas);
+      window.removeEventListener('orientationchange', resizeCanvas);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseleave', handleMouseLeave);
       window.removeEventListener('click', handleClick);
@@ -1026,8 +1028,7 @@ export const GlobalVisualEffects: React.FC = () => {
       {hasCanvasEffect && (
         <canvas
           ref={canvasRef}
-          className="fixed inset-0 pointer-events-none z-30 transition-opacity duration-500"
-          style={{ width: '100vw', height: '100vh' }}
+          className="fixed inset-0 pointer-events-none z-30 transition-opacity duration-500 w-full h-full"
         />
       )}
     </>
