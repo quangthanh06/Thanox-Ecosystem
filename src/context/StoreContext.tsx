@@ -1812,6 +1812,38 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       setOrders((prev) => [newOrder, ...prev]);
 
+      // 0. Tự động xóa key đã giao ra khỏi kho gói sản phẩm (FIFO Key Pool)
+      setProducts((prev) =>
+        prev.map((p) => {
+          if (p.id !== productId) return p;
+          const updated = { ...p };
+          const qty = Number(o.quantity ?? 1);
+
+          if (selectedPackage && updated.packages && updated.packages.length > 0) {
+            updated.packages = updated.packages.map((pkg) => {
+              if (pkg.id === selectedPackage.id || pkg.name === selectedPackage.name) {
+                const lines = (pkg.keys || '').split('\n').filter((l) => l.trim().length > 0);
+                const remaining = lines.slice(qty).join('\n');
+                return { ...pkg, keys: remaining };
+              }
+              return pkg;
+            });
+            updated.plans = updated.packages;
+          } else if (updated.licenseKeys || updated.downloadLinkOrKeys) {
+            const currentKeys = updated.licenseKeys || updated.downloadLinkOrKeys || '';
+            const lines = currentKeys.split('\n').filter((l) => l.trim().length > 0);
+            const remaining = lines.slice(qty).join('\n');
+            updated.licenseKeys = remaining;
+            updated.downloadLinkOrKeys = remaining;
+          } else if (updated.accountsList) {
+            const lines = updated.accountsList.split('\n').filter((l) => l.trim().length > 0);
+            const remaining = lines.slice(qty).join('\n');
+            updated.accountsList = remaining;
+          }
+          return updated;
+        })
+      );
+
       // 1. Cập nhật số dư mới nhất từ server trả về ngay lập tức
       const targetId = currentUserId || buyer.id;
       const newBal = (o.newBalance !== undefined && o.newBalance !== null)

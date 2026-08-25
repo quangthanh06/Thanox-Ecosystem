@@ -964,7 +964,7 @@ export const ProductsView: React.FC = () => {
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>6. Giao Hàng</span>
+                <span>6. Tệp & Hướng Dẫn</span>
               </button>
             </div>
 
@@ -2161,110 +2161,53 @@ export const ProductsView: React.FC = () => {
                       )}
                     </div>
 
-                    {/* 2. License Key / Auto Delivery Content (FIFO Pool) */}
-                    <div className="space-y-2 p-4 rounded-2xl bg-[#0F0F1A] border border-amber-500/20">
+                    {/* 2. License Key Info Banner (Key is managed per package in Tab 4) */}
+                    <div className="p-4 rounded-2xl bg-[#0F0F1A] border border-amber-500/20 space-y-2.5">
                       <div className="flex items-center justify-between">
                         <label className="text-[11px] font-semibold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
                           <Key className="w-3.5 h-3.5" />
-                          <span>Kho Key Bản Quyền / Mã Kích Hoạt Tự Động (Mỗi dòng 1 key — Giao lần lượt)</span>
+                          <span>Mã Key Bản Quyền (Tự động lấy theo từng Gói ở Tab 4)</span>
                         </label>
-                        <span className="text-[10.5px] text-emerald-400 font-bold">
-                          📦 {formData.licenseKeys ? formData.licenseKeys.split('\n').filter((l) => l.trim().length > 0).length : (formData.downloadLinkOrKeys ? formData.downloadLinkOrKeys.split('\n').filter((l) => l.trim().length > 0).length : 0)} Key sẵn sàng
-                        </span>
+                        <Badge variant="warning" size="sm">
+                          {(formData.packages || []).reduce((acc, p) => acc + (p.keys ? p.keys.split('\n').filter((l) => l.trim().length > 0).length : 0), 0)} Key sẵn có
+                        </Badge>
                       </div>
-                      <p className="text-[11px] text-[#8B84A8]">
-                        Nhập danh sách mã key hoặc license, <strong>mỗi dòng 1 key</strong>. Khi khách thanh toán, hệ thống sẽ <strong>tự động lấy lần lượt từng key từ trên xuống dưới (FIFO)</strong> bàn giao cho khách và trừ dần số lượng tồn kho.
+                      <p className="text-[11px] text-[#8B84A8] leading-relaxed">
+                        Hệ thống sẽ <strong>tự động lấy lần lượt 1 key tương ứng với gói thời hạn</strong> mà khách đặt mua tại <strong>Tab 4. Gói Key</strong>, giao ngay trong đơn hàng và tự động xóa key đó ra khỏi kho (FIFO).
                       </p>
-                      <textarea
-                        rows={4}
-                        value={formData.licenseKeys || formData.downloadLinkOrKeys || ''}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            licenseKeys: e.target.value,
-                            downloadLinkOrKeys: e.target.value,
-                          })
-                        }
-                        placeholder="TX-PRO-2026-AAAA-0001&#10;TX-PRO-2026-BBBB-0002&#10;TX-PRO-2026-CCCC-0003&#10;TX-PRO-2026-DDDD-0004"
-                        className="w-full bg-[#161626] border border-white/10 rounded-xl p-3 text-xs text-amber-200 placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED] font-mono leading-relaxed"
-                      />
-                      <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5 text-[11px]">
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const sampleKeys = [
-                                `TX-PRO-${Date.now().toString().slice(-4)}-KEY-0001`,
-                                `TX-PRO-${Date.now().toString().slice(-4)}-KEY-0002`,
-                                `TX-PRO-${Date.now().toString().slice(-4)}-KEY-0003`,
-                                `TX-PRO-${Date.now().toString().slice(-4)}-KEY-0004`,
-                                `TX-PRO-${Date.now().toString().slice(-4)}-KEY-0005`,
-                              ].join('\n');
-                              const current = formData.licenseKeys || formData.downloadLinkOrKeys || '';
-                              const combined = current ? `${current.trim()}\n${sampleKeys}` : sampleKeys;
-                              setFormData((prev) => ({
-                                ...prev,
-                                licenseKeys: combined,
-                                downloadLinkOrKeys: combined,
-                              }));
-                              showToast('Đã thêm 5 key mẫu vào kho chung!', 'success');
-                            }}
-                            className="text-cyan-400 hover:underline cursor-pointer font-bold"
-                          >
-                            + Dán 5 key mẫu
-                          </button>
-                          <span className="text-white/20">•</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const raw = formData.licenseKeys || formData.downloadLinkOrKeys || '';
-                              const cleaned = raw
-                                .split('\n')
-                                .map((l) => l.trim())
-                                .filter((l) => l.length > 0)
-                                .join('\n');
-                              setFormData((prev) => ({
-                                ...prev,
-                                licenseKeys: cleaned,
-                                downloadLinkOrKeys: cleaned,
-                              }));
-                              showToast('Đã chuẩn hóa danh sách key!', 'info');
-                            }}
-                            className="text-[#938EB5] hover:text-white cursor-pointer"
-                          >
-                            🧹 Lọc dòng trống
-                          </button>
+                      {(formData.packages || []).length > 0 ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
+                          {formData.packages.map((pkg) => {
+                            const count = pkg.keys ? pkg.keys.split('\n').filter((l) => l.trim().length > 0).length : 0;
+                            return (
+                              <div key={pkg.id} className="p-2 rounded-xl bg-[#161626] border border-white/5 text-[11px] flex items-center justify-between">
+                                <span className="font-bold text-[#F0EDFF] uppercase truncate">{pkg.name}</span>
+                                <span className={`font-mono font-bold ${count > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                  {count} key
+                                </span>
+                              </div>
+                            );
+                          })}
                         </div>
-                        {(formData.licenseKeys || formData.downloadLinkOrKeys) && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                licenseKeys: '',
-                                downloadLinkOrKeys: '',
-                              }))
-                            }
-                            className="text-red-400 hover:underline cursor-pointer"
-                          >
-                            Xóa kho key
-                          </button>
-                        )}
-                      </div>
+                      ) : (
+                        <div className="text-[10.5px] text-amber-400/80 italic">
+                          Chưa có gói thời hạn nào. Bạn hãy qua <strong>Tab 4. Gói Key</strong> để thêm gói và dán danh sách key vào nhé!
+                        </div>
+                      )}
                     </div>
 
                     {/* 3. Setup Instructions */}
                     <div className="space-y-1">
                       <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider flex items-center gap-1.5 text-emerald-400">
                         <Sparkles className="w-3.5 h-3.5" />
-                        <span>Hướng Dẫn Cài Đặt & Kích Hoạt (Tùy chọn)</span>
+                        <span>Hướng Dẫn Cài Đặt & Sử Dụng (Khách hàng sẽ nhận kèm theo)</span>
                       </label>
                       <textarea
-                        rows={3}
+                        rows={4}
                         value={formData.instructions || ''}
                         onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
-                        placeholder="VD: 1. Cài đặt file APK -> 2. Cấp quyền Root / Magisk -> 3. Dán key để kích hoạt..."
-                        className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED]"
+                        placeholder="VD: 1. Cài đặt file APK hoặc cấu hình theo link trên.&#10;2. Mở ứng dụng và nhập Key bản quyền được cấp.&#10;3. Liên hệ hỗ trợ nếu cần giải đáp thắc mắc!"
+                        className="w-full bg-[#161626] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-[#F0EDFF] placeholder-[#6B658E] focus:outline-none focus:border-[#7C3AED] leading-relaxed"
                       />
                     </div>
                   </div>
