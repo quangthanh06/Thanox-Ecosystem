@@ -125,11 +125,15 @@ export const StorefrontLayout: React.FC = () => {
             <button
               type="button"
               onClick={() => navigateToStorefront('home')}
-              className="flex items-center gap-2.5 cursor-pointer text-left group select-none"
+              className="flex items-center gap-3 cursor-pointer text-left group select-none"
             >
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#7C3AED] via-[#9D5CF6] to-[#06B6D4] p-0.5 shadow-lg shadow-[#7C3AED]/25 group-hover:shadow-[0_0_20px_rgba(124,58,237,0.5)] transition-all shrink-0">
-                <div className="w-full h-full bg-[#0B0B14] rounded-[14px] flex items-center justify-center p-1 overflow-hidden">
-                  <img src="/favicon.svg" alt="Thanox Flame 3D" className="w-full h-full object-contain" />
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-[#7C3AED] via-[#9D5CF6] to-[#06B6D4] p-[1.5px] shadow-lg shadow-[#7C3AED]/30 group-hover:shadow-[0_0_25px_rgba(124,58,237,0.6)] group-hover:scale-105 transition-all shrink-0">
+                <div className="w-full h-full bg-[#080811] rounded-[14px] flex items-center justify-center overflow-hidden">
+                  <img
+                    src="/thanox-logo.png"
+                    alt="Thanox Store"
+                    className="w-full h-full object-cover object-center transform scale-110 group-hover:scale-125 transition-transform duration-300"
+                  />
                 </div>
               </div>
               <div className="flex flex-col justify-center">
@@ -701,8 +705,8 @@ export const StorefrontLayout: React.FC = () => {
             {/* Brand column */}
             <div className="space-y-4 md:col-span-1">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#06B6D4] p-0.5 shadow-md shadow-[#7C3AED]/25 flex items-center justify-center">
-                  <Flame className="w-4 h-4 text-cyan-300" />
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7C3AED] to-[#06B6D4] p-[1.5px] shadow-md shadow-[#7C3AED]/25 flex items-center justify-center overflow-hidden">
+                  <img src="/thanox-logo.png" alt="Thanox Logo" className="w-full h-full object-cover object-center rounded-[10px] transform scale-110" />
                 </div>
                 <span className="thanox-animated-logo text-base font-black tracking-wider uppercase">
                   THANOX.VN
