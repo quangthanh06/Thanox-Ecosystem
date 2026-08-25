@@ -100,32 +100,32 @@ export const StorefrontHome: React.FC = () => {
             {/* Left Content Column (7 cols on desktop) */}
             <div className="lg:col-span-7 flex flex-col justify-between h-full space-y-5">
               {/* 1. Dynamic Slide Content with stabilized height to prevent CTA jumping */}
-              <div className="min-h-[120px] sm:min-h-[140px] flex flex-col justify-center">
+              <div className="min-h-[150px] sm:min-h-[180px] lg:min-h-[190px] flex flex-col justify-center">
                 <div
                   key={`hero-text-${currentSlide.id}`}
-                  className="space-y-2 sm:space-y-2.5 animate-in fade-in slide-in-from-left-2 duration-300"
+                  className="space-y-2.5 sm:space-y-3.5 animate-in fade-in slide-in-from-left-2 duration-300"
                 >
                   {/* Eyebrow / Category Indicator */}
                   <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#06B6D4] shadow-[0_0_6px_#06B6D4]" />
-                    <span className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[#22D3EE]">
+                    <span className="w-2 h-2 rounded-full bg-[#06B6D4] shadow-[0_0_8px_#06B6D4]" />
+                    <span className="text-xs sm:text-sm font-bold uppercase tracking-widest text-[#22D3EE]">
                       {currentSlide.category || 'BẢN QUYỀN CHÍNH HÃNG'}
                     </span>
                   </div>
 
-                  {/* Refined Apple-style Title */}
+                  {/* High-Impact Bold Title */}
                   <h1
-                    className="text-2xl sm:text-3xl lg:text-[34px] font-bold text-[#F4F2FF] tracking-tight leading-[1.2] line-clamp-2 drop-shadow-sm font-sans"
+                    className="text-3xl sm:text-5xl lg:text-[46px] font-black text-[#F4F2FF] tracking-tight leading-[1.12] line-clamp-2 drop-shadow-md uppercase"
                   >
                     {currentSlide.name}
                   </h1>
 
                   {/* Price Display with Tabular Numbers */}
-                  <div className="flex items-baseline gap-1.5 pt-0.5">
-                    <span className="font-display font-black text-xl sm:text-2xl text-amber-300 tabular-nums">
+                  <div className="flex items-baseline gap-2 pt-1">
+                    <span className="font-display font-black text-2xl sm:text-4xl lg:text-[38px] text-[#FBBF24] tabular-nums tracking-tight drop-shadow-sm">
                       {currentSlide.price.toLocaleString('vi-VN')}
                     </span>
-                    <span className="text-xs sm:text-sm font-bold text-amber-400/90 tracking-wide">
+                    <span className="text-sm sm:text-xl font-black text-amber-400 tracking-wide">
                       VNĐ
                     </span>
                   </div>
