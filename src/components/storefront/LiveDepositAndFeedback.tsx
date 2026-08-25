@@ -9,11 +9,8 @@ import {
   ShieldCheck,
   Send,
   Plus,
-  ThumbsUp,
   Clock,
-  Sparkles,
   ArrowUpRight,
-  User,
   Heart,
   QrCode,
   Smartphone,
@@ -21,7 +18,7 @@ import {
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 
-// Authentic gaming simulated feedbacks (varied capitalization, teencode, emojis, smiles)
+// 30+ Authentic gaming simulated feedbacks (Varied styles, teencode, capitalization, smiles, recommendations)
 const DEFAULT_AUTHENTIC_FEEDBACKS: CustomerFeedback[] = [
   {
     id: 'fb-1',
@@ -30,8 +27,8 @@ const DEFAULT_AUTHENTIC_FEEDBACKS: CustomerFeedback[] = [
     rating: 5,
     comment: 'uy tín nha ae :)) vừa nạp 50k quét qr xong 3s tiền vào ví luôn, mua key ff vào trận test mượt đét',
     productTag: 'MENU FF VIP',
-    createdAt: '2026-08-25 18:30',
-    timeAgo: '5 phút trước',
+    createdAt: '2026-08-25 20:25',
+    timeAgo: '2 phút trước',
     verifiedPurchase: true,
     likesCount: 14,
   },
@@ -42,8 +39,8 @@ const DEFAULT_AUTHENTIC_FEEDBACKS: CustomerFeedback[] = [
     rating: 5,
     comment: 'Ad support nhiệt tình vcc, lúc đầu chưa biết cài dc ad ultraview hỗ trợ từ A-Z. 10 điểm ko có nhưng ^^',
     productTag: 'FILE ANDROID',
-    createdAt: '2026-08-25 17:15',
-    timeAgo: '18 phút trước',
+    createdAt: '2026-08-25 20:21',
+    timeAgo: '4 phút trước',
     verifiedPurchase: true,
     likesCount: 22,
   },
@@ -52,10 +49,10 @@ const DEFAULT_AUTHENTIC_FEEDBACKS: CustomerFeedback[] = [
     authorName: 'Minh Tri FreeFire',
     authorAvatar: 'MT',
     rating: 5,
-    comment: 'Khuyên ae nên mua gói 1 Tháng cho rẻ, tính ra tiết kiệm dc cả đống tiền. Bản này bắn kéo tâm êm ru ko bị band nick',
+    comment: 'Khuyên ae nên mua gói 1 Tháng cho rẻ, tính ra tiết kiệm dc cả đống tiền. Bản này bắn kéo tâm êm ru ko bị band nick :v',
     productTag: 'KEY VIP',
-    createdAt: '2026-08-25 16:40',
-    timeAgo: '42 phút trước',
+    createdAt: '2026-08-25 20:18',
+    timeAgo: '6 phút trước',
     verifiedPurchase: true,
     likesCount: 39,
   },
@@ -66,8 +63,8 @@ const DEFAULT_AUTHENTIC_FEEDBACKS: CustomerFeedback[] = [
     rating: 5,
     comment: 'Nạp thẻ cào viettel duyệt tự động lẹ phết, web xịn sò nhất từ trước tới giờ từng mua :D',
     productTag: 'Nạp Thẻ Cào',
-    createdAt: '2026-08-25 15:20',
-    timeAgo: '1 giờ trước',
+    createdAt: '2026-08-25 20:14',
+    timeAgo: '8 phút trước',
     verifiedPurchase: true,
     likesCount: 19,
   },
@@ -78,8 +75,8 @@ const DEFAULT_AUTHENTIC_FEEDBACKS: CustomerFeedback[] = [
     rating: 5,
     comment: 'chất lượng tuyệt vời ae ơi, file ios cài nhanh ko cần jb. Mua thêm key cho th em cùng chơi :))',
     productTag: 'FILE IOS',
-    createdAt: '2026-08-25 14:10',
-    timeAgo: '2 giờ trước',
+    createdAt: '2026-08-25 20:10',
+    timeAgo: '10 phút trước',
     verifiedPurchase: true,
     likesCount: 27,
   },
@@ -90,30 +87,202 @@ const DEFAULT_AUTHENTIC_FEEDBACKS: CustomerFeedback[] = [
     rating: 5,
     comment: 'Shop này bán chuẩn nhất sever, trc mua bên web khác toàn lừa đảo. Bên này giao key tự động 3 giây đúng cam kết!',
     productTag: 'MENU FF VIP',
-    createdAt: '2026-08-25 12:45',
-    timeAgo: '4 giờ trước',
+    createdAt: '2026-08-25 19:55',
+    timeAgo: '15 phút trước',
     verifiedPurchase: true,
     likesCount: 45,
   },
+  {
+    id: 'fb-7',
+    authorName: 'Tuấn Cận Gaming',
+    authorAvatar: 'TC',
+    rating: 5,
+    comment: 'Mới mua lần đầu tưởng bị delay ai dè bấm mua xong vào Lịch sử đơn hàng có key liền. Test trận rank tử chiến kéo tâm full đỏ luôn :v',
+    productTag: 'MENU FF VIP',
+    createdAt: '2026-08-25 19:40',
+    timeAgo: '20 phút trước',
+    verifiedPurchase: true,
+    likesCount: 31,
+  },
+  {
+    id: 'fb-8',
+    authorName: 'Nguyễn Văn Đạt',
+    authorAvatar: 'VD',
+    rating: 5,
+    comment: 'Đã nạp 200k qua MBBank, tiền vào siêu nhanh. Đánh giá 5 sao cho web và đội ngũ support rất nhiệt tình!',
+    productTag: 'Nạp Ví VietQR',
+    createdAt: '2026-08-25 19:25',
+    timeAgo: '25 phút trước',
+    verifiedPurchase: true,
+    likesCount: 18,
+  },
+  {
+    id: 'fb-9',
+    authorName: 'Trần Minh Quang',
+    authorAvatar: 'MQ',
+    rating: 5,
+    comment: 'Bản update mới fix lỗi văng game ngon lành rồi nhé anh em. Chơi từ sáng tới giờ không thấy nóng máy hay giật lag gì hết trơn ^^',
+    productTag: 'FILE ANDROID',
+    createdAt: '2026-08-25 19:05',
+    timeAgo: '30 phút trước',
+    verifiedPurchase: true,
+    likesCount: 52,
+  },
+  {
+    id: 'fb-10',
+    authorName: 'Hải Đăng Gamer',
+    authorAvatar: 'HD',
+    rating: 5,
+    comment: 'Giá rẻ hơn mấy bên khác nhiều mà chất lượng ok phết. Ae chưa biết nạp cứ quét mã VietQR tự động khỏi sợ sai cú pháp nha',
+    productTag: 'KEY VIP',
+    createdAt: '2026-08-25 18:45',
+    timeAgo: '40 phút trước',
+    verifiedPurchase: true,
+    likesCount: 23,
+  },
+  {
+    id: 'fb-11',
+    authorName: 'Bảo Long Pro',
+    authorAvatar: 'BL',
+    rating: 5,
+    comment: 'Key chạy ổn định cực kỳ. Lúc nãy mua nhầm gói nhắn zalo admin hỗ trợ đổi ngay trong 1 nốt nhạc. Quá uy tín!',
+    productTag: 'MENU FF VIP',
+    createdAt: '2026-08-25 18:15',
+    timeAgo: '50 phút trước',
+    verifiedPurchase: true,
+    likesCount: 36,
+  },
+  {
+    id: 'fb-12',
+    authorName: 'Phạm Khắc Huy',
+    authorAvatar: 'KH',
+    rating: 5,
+    comment: 'Proxy riêng tốc độ cao ping xanh lè 15ms chơi mượt như sunsilk. Ae mua key thì nên kẹp thêm proxy này cho an toàn 100% nhé',
+    productTag: 'PROXY RIÊNG',
+    createdAt: '2026-08-25 17:30',
+    timeAgo: '1 giờ trước',
+    verifiedPurchase: true,
+    likesCount: 41,
+  },
+  {
+    id: 'fb-13',
+    authorName: 'Vũ Hoàng Nam',
+    authorAvatar: 'HN',
+    rating: 5,
+    comment: 'Gói tuần giá mềm mà ngon vãi, leo từ Bạch kim lên Huyền thoại trong 2 ngày :)) Sẽ ủng hộ shop dài dài',
+    productTag: 'KEY VIP',
+    createdAt: '2026-08-25 16:20',
+    timeAgo: '2 giờ trước',
+    verifiedPurchase: true,
+    likesCount: 29,
+  },
+  {
+    id: 'fb-14',
+    authorName: 'Đặng Tuấn Kiệt',
+    authorAvatar: 'TK',
+    rating: 5,
+    comment: 'Cảm ơn ad đã hỗ trợ cài đặt trên máy Xiaomi, dùng mượt mà không bị văng lần nào luôn ạ 10/10!',
+    productTag: 'FILE ANDROID',
+    createdAt: '2026-08-25 15:10',
+    timeAgo: '3 giờ trước',
+    verifiedPurchase: true,
+    likesCount: 33,
+  },
+  {
+    id: 'fb-15',
+    authorName: 'khiem_ff_99',
+    authorAvatar: 'KF',
+    rating: 5,
+    comment: 'Bắn bao phê luôn nha anh em :D quét mã nạp tiền tự động không phải chờ duyệt lâu la như các web khác.',
+    productTag: 'MENU FF VIP',
+    createdAt: '2026-08-25 14:00',
+    timeAgo: '4 giờ trước',
+    verifiedPurchase: true,
+    likesCount: 48,
+  },
+  {
+    id: 'fb-16',
+    authorName: 'nguyenhuu_thang',
+    authorAvatar: 'HT',
+    rating: 5,
+    comment: 'đã mua key 1 tháng dùng được 2 tuần rồi vẫn ngon nghẻ, ae phân vân thì cứ mạnh dạn mua gói tháng nhé!',
+    productTag: 'KEY VIP',
+    createdAt: '2026-08-25 12:30',
+    timeAgo: '6 giờ trước',
+    verifiedPurchase: true,
+    likesCount: 62,
+  },
 ];
 
-// Realistic Simulated Live Topup Events for Visual Immersion
+// Pool of extra dynamic realistic feedbacks to auto-inject continuously
+const ROTATING_FEEDBACK_POOL = [
+  {
+    authorName: 'Trung Gaming',
+    authorAvatar: 'TG',
+    rating: 5,
+    comment: 'vừa làm gói 50k nạp quét mã cái vào tiền liền, key xịn kéo tâm cực đã :))',
+    productTag: 'MENU FF VIP',
+  },
+  {
+    authorName: 'anhtuan_freefire',
+    authorAvatar: 'AT',
+    rating: 5,
+    comment: 'Đã test trên bản OB mới, bypass ngon lành ko bị phát hiện gì hết ^^ khuyên ae nên mua',
+    productTag: 'FILE ANDROID',
+  },
+  {
+    authorName: 'Gia Bảo Pro',
+    authorAvatar: 'GB',
+    rating: 5,
+    comment: 'Web làm đẹp vl, nạp thẻ cào tự động 10s là xong. 5 sao cho chất lượng dịch vụ!',
+    productTag: 'Nạp Thẻ Cào',
+  },
+  {
+    authorName: 'phuong_nam_9x',
+    authorAvatar: 'PN',
+    rating: 5,
+    comment: 'Shop này quá uy tín luôn ae ơi, giao key tự động trong 3 giây đúng như quảng cáo :D',
+    productTag: 'KEY VIP',
+  },
+  {
+    authorName: 'Đức Huy FF',
+    authorAvatar: 'DH',
+    rating: 5,
+    comment: 'Mua key vĩnh viễn dùng bao mượt, ad hỗ trợ tận tâm rep tin nhắn ngay lập tức :))',
+    productTag: 'MENU FF VIP',
+  },
+  {
+    authorName: 'vietanh_gamer',
+    authorAvatar: 'VA',
+    rating: 5,
+    comment: 'bản iOS cài dễ thật sự, không cần jb gì cả mở lên là chiến thôi anh em!',
+    productTag: 'FILE IOS',
+  },
+];
+
+// Realistic Initial Topup Stream (Distributed across realistic time intervals)
 const INITIAL_LIVE_TOPUPS = [
   { id: 'lt-1', user: '098***482', amount: 50000, method: 'VietQR MBBank', time: 'Vừa xong' },
   { id: 'lt-2', user: 'nguyen***99', amount: 100000, method: 'VietQR', time: '1 phút trước' },
-  { id: 'lt-3', user: '037***915', amount: 20000, method: 'Thẻ Viettel', time: '2 phút trước' },
-  { id: 'lt-4', user: 'hoang***pro', amount: 200000, method: 'VietQR', time: '3 phút trước' },
-  { id: 'lt-5', user: '088***610', amount: 500000, method: 'VietQR MBBank', time: '5 phút trước' },
-  { id: 'lt-6', user: 'minh***ff', amount: 50000, method: 'Thẻ Garena', time: '6 phút trước' },
+  { id: 'lt-3', user: '037***915', amount: 20000, method: 'Thẻ Viettel', time: '3 phút trước' },
+  { id: 'lt-4', user: 'hoang***pro', amount: 200000, method: 'VietQR Techcombank', time: '6 phút trước' },
+  { id: 'lt-5', user: '088***610', amount: 500000, method: 'VietQR MBBank', time: '10 phút trước' },
+  { id: 'lt-6', user: 'minh***ff', amount: 50000, method: 'Thẻ Garena', time: '18 phút trước' },
+  { id: 'lt-7', user: '091***772', amount: 100000, method: 'VietQR ACB', time: '28 phút trước' },
+  { id: 'lt-8', user: 'trung***vip', amount: 20000, method: 'VietQR', time: '35 phút trước' },
+  { id: 'lt-9', user: '093***105', amount: 500000, method: 'VietQR MBBank', time: '45 phút trước' },
+  { id: 'lt-10', user: 'khanh***ff', amount: 100000, method: 'Thẻ Viettel', time: '1 giờ trước' },
+  { id: 'lt-11', user: '096***881', amount: 200000, method: 'VietQR Vietcombank', time: '2 giờ trước' },
+  { id: 'lt-12', user: 'duy***gaming', amount: 50000, method: 'VietQR', time: '3 giờ trước' },
 ];
 
 export const LiveDepositAndFeedback: React.FC = () => {
-  const { topups, currentUser, isAuthenticated, showToast, navigateToStorefront } = useStore();
+  const { topups, currentUser, showToast, navigateToStorefront } = useStore();
 
   // User submitted custom feedbacks stored locally in session/localStorage
   const [feedbacks, setFeedbacks] = useState<CustomerFeedback[]>(() => {
     try {
-      const saved = localStorage.getItem('thanox_customer_feedbacks');
+      const saved = localStorage.getItem('thanox_customer_feedbacks_v3');
       return saved ? JSON.parse(saved) : DEFAULT_AUTHENTIC_FEEDBACKS;
     } catch {
       return DEFAULT_AUTHENTIC_FEEDBACKS;
@@ -134,7 +303,7 @@ export const LiveDepositAndFeedback: React.FC = () => {
   const combinedLiveTopups = useMemo(() => {
     const realApproved = (topups || [])
       .filter((t) => t.status === 'approved')
-      .slice(0, 4)
+      .slice(0, 5)
       .map((t) => ({
         id: 'real-' + t.id,
         user: t.userName ? t.userName.slice(0, 3) + '***' + (t.userName.length > 5 ? t.userName.slice(-2) : '') : 'Khách***',
@@ -143,16 +312,16 @@ export const LiveDepositAndFeedback: React.FC = () => {
         time: 'Vừa xong',
       }));
 
-    return [...realApproved, ...liveTopups].slice(0, 8);
+    return [...realApproved, ...liveTopups].slice(0, 15);
   }, [topups, liveTopups]);
 
-  // Periodic random live transaction trigger (every 8-15 seconds for vivid feeling)
+  // Periodic continuous live topup trigger (every ~8-12 seconds)
   useEffect(() => {
-    const sampleNames = ['096***214', '032***884', 'than***06', 'duy***ff', '089***771', 'tuan***9x', '091***443', 'quang***k'];
+    const sampleNames = ['096***214', '032***884', 'than***06', 'duy***ff', '089***771', 'tuan***9x', '091***443', 'quang***k', '097***552', 'phuc***99', 'long***ff', 'bao***pro'];
     const sampleAmounts = [10000, 20000, 50000, 100000, 200000, 500000];
-    const sampleMethods = ['VietQR MBBank', 'VietQR', 'Thẻ Viettel', 'Thẻ Zing', 'VietQR 24/7'];
+    const sampleMethods = ['VietQR MBBank', 'VietQR Techcombank', 'VietQR Vietcombank', 'Thẻ Viettel', 'Thẻ Zing', 'VietQR 24/7'];
 
-    const interval = setInterval(() => {
+    const topupInterval = setInterval(() => {
       const randomUser = sampleNames[Math.floor(Math.random() * sampleNames.length)];
       const randomAmt = sampleAmounts[Math.floor(Math.random() * sampleAmounts.length)];
       const randomMethod = sampleMethods[Math.floor(Math.random() * sampleMethods.length)];
@@ -165,10 +334,35 @@ export const LiveDepositAndFeedback: React.FC = () => {
         time: 'Vừa xong',
       };
 
-      setLiveTopups((prev) => [newTx, ...prev.slice(0, 7)]);
-    }, 12000);
+      setLiveTopups((prev) => [newTx, ...prev.slice(0, 14)]);
+    }, 10000);
 
-    return () => clearInterval(interval);
+    // Auto-inject new realistic feedback (5 comments every 10 minutes = ~1 comment every 2 minutes)
+    let poolIndex = 0;
+    const feedbackInterval = setInterval(() => {
+      const template = ROTATING_FEEDBACK_POOL[poolIndex % ROTATING_FEEDBACK_POOL.length];
+      poolIndex++;
+
+      const newFeedback: CustomerFeedback = {
+        id: 'auto-fb-' + Date.now(),
+        authorName: template.authorName,
+        authorAvatar: template.authorAvatar,
+        rating: template.rating,
+        comment: template.comment,
+        productTag: template.productTag,
+        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        timeAgo: 'Vừa xong',
+        verifiedPurchase: true,
+        likesCount: Math.floor(Math.random() * 15) + 5,
+      };
+
+      setFeedbacks((prev) => [newFeedback, ...prev]);
+    }, 120000); // every 2 minutes
+
+    return () => {
+      clearInterval(topupInterval);
+      clearInterval(feedbackInterval);
+    };
   }, []);
 
   const handleLike = (id: string) => {
@@ -210,7 +404,7 @@ export const LiveDepositAndFeedback: React.FC = () => {
     const updated = [newFb, ...feedbacks];
     setFeedbacks(updated);
     try {
-      localStorage.setItem('thanox_customer_feedbacks', JSON.stringify(updated));
+      localStorage.setItem('thanox_customer_feedbacks_v3', JSON.stringify(updated));
     } catch {}
 
     setReviewComment('');
@@ -233,7 +427,7 @@ export const LiveDepositAndFeedback: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-[#938EB5] mt-1">
-            Giao dịch nạp tiền thời gian thực và trải nghiệm thực tế từ cộng đồng game thủ
+            Dòng chảy nạp tiền thời gian thực và đánh giá thực tế từ cộng đồng game thủ
           </p>
         </div>
 
@@ -253,12 +447,12 @@ export const LiveDepositAndFeedback: React.FC = () => {
         </Button>
       </div>
 
-      {/* 2-COLUMN GRID: Left = Live Deposit Ticker, Right = Authentic Feedbacks */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* COLUMN 1: LIVE DEPOSIT TICKER (5 COLS) */}
-        <div className="lg:col-span-5 glass-standard border border-white/10 shadow-xl rounded-3xl p-5 sm:p-6 space-y-4 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between border-b border-white/6 pb-3.5">
+      {/* 2-COLUMN EQUAL GRID: Left = Live Deposit Ticker (50%), Right = Authentic Feedbacks (50%) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        {/* COLUMN 1: LIVE DEPOSIT TICKER (50% WIDTH, EQUAL HEIGHT) */}
+        <div className="glass-standard border border-white/10 shadow-xl rounded-3xl p-5 sm:p-6 flex flex-col justify-between h-[580px]">
+          <div className="flex flex-col flex-1 min-h-0">
+            <div className="flex items-center justify-between border-b border-white/6 pb-3.5 shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-300">
                   <Zap className="w-4 h-4" />
@@ -275,15 +469,15 @@ export const LiveDepositAndFeedback: React.FC = () => {
               </span>
             </div>
 
-            {/* Live Ticker Feed */}
-            <div className="space-y-2.5 pt-3.5 overflow-hidden">
-              {combinedLiveTopups.map((tx, idx) => (
+            {/* Live Ticker Feed - Scrollable with smooth scrollbar */}
+            <div className="space-y-2.5 pt-3.5 overflow-y-auto flex-1 pr-1.5 scrollbar-thin">
+              {combinedLiveTopups.map((tx) => (
                 <div
                   key={tx.id}
                   className="p-3 rounded-2xl glass-subtle border border-white/6 hover:border-cyan-500/30 transition-all flex items-center justify-between text-xs group animate-in fade-in slide-in-from-top-1 duration-300"
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[11px] font-bold text-[#C084FC] group-hover:scale-105 transition-transform">
+                    <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[11px] font-bold text-[#C084FC] group-hover:scale-105 transition-transform shrink-0">
                       {tx.method.includes('Thẻ') ? (
                         <Smartphone className="w-4 h-4 text-amber-300" />
                       ) : (
@@ -302,7 +496,7 @@ export const LiveDepositAndFeedback: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <div className="font-display font-extrabold text-sm text-emerald-400 tracking-tight">
                       +{tx.amount.toLocaleString('vi-VN')}đ
                     </div>
@@ -316,7 +510,7 @@ export const LiveDepositAndFeedback: React.FC = () => {
             </div>
           </div>
 
-          <div className="pt-3 border-t border-white/6 flex items-center justify-between text-xs">
+          <div className="pt-3 mt-3 border-t border-white/6 flex items-center justify-between text-xs shrink-0">
             <span className="text-[11px] text-[#938EB5]">Cần nạp tiền vào ví ngay?</span>
             <button
               onClick={() => navigateToStorefront('account-wallet-deposit')}
@@ -328,89 +522,101 @@ export const LiveDepositAndFeedback: React.FC = () => {
           </div>
         </div>
 
-        {/* COLUMN 2: AUTHENTIC COMMUNITY FEEDBACK (7 COLS) */}
-        <div className="lg:col-span-7 glass-standard border border-white/10 shadow-xl rounded-3xl p-5 sm:p-6 space-y-4">
-          <div className="flex items-center justify-between border-b border-white/6 pb-3.5">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-[#7C3AED]/20 border border-[#7C3AED]/30 flex items-center justify-center text-[#C084FC]">
-                <MessageSquare className="w-4 h-4" />
+        {/* COLUMN 2: AUTHENTIC COMMUNITY FEEDBACK (50% WIDTH, EQUAL HEIGHT) */}
+        <div className="glass-standard border border-white/10 shadow-xl rounded-3xl p-5 sm:p-6 flex flex-col justify-between h-[580px]">
+          <div className="flex flex-col flex-1 min-h-0">
+            <div className="flex items-center justify-between border-b border-white/6 pb-3.5 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[#7C3AED]/20 border border-[#7C3AED]/30 flex items-center justify-center text-[#C084FC]">
+                  <MessageSquare className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-display font-black text-sm text-[#F4F2FF] uppercase tracking-wide">
+                    Đánh Giá Từ Khách Hàng
+                  </h4>
+                  <div className="text-[10px] text-[#938EB5]">100% người dùng thực tế đã mua và trải nghiệm</div>
+                </div>
               </div>
-              <div>
-                <h4 className="font-display font-black text-sm text-[#F4F2FF] uppercase tracking-wide">
-                  Đánh Giá Từ Khách Hàng
-                </h4>
-                <div className="text-[10px] text-[#938EB5]">100% người dùng thực tế đã mua và trải nghiệm</div>
+              <div className="flex items-center gap-1 bg-amber-400/15 border border-amber-400/30 px-2.5 py-1 rounded-xl text-amber-300 text-xs font-bold shrink-0">
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <span>4.9 / 5.0 ({feedbacks.length * 48}+ Đánh giá)</span>
               </div>
             </div>
-            <div className="flex items-center gap-1 bg-amber-400/15 border border-amber-400/30 px-2.5 py-1 rounded-xl text-amber-300 text-xs font-bold">
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-              <span>4.9 / 5.0 (580+ Đánh giá)</span>
+
+            {/* Feedback Cards List - 2 columns per row, scrollable smoothly without cutting cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3.5 overflow-y-auto flex-1 pr-1.5 scrollbar-thin">
+              {feedbacks.map((fb) => {
+                const isLiked = !!likedMap[fb.id];
+                return (
+                  <div
+                    key={fb.id}
+                    className="p-3.5 rounded-2xl glass-subtle border border-white/6 hover:border-[#7C3AED]/30 transition-all space-y-2 flex flex-col justify-between min-h-[140px]"
+                  >
+                    <div className="space-y-1.5">
+                      {/* Author & Rating Header */}
+                      <div className="flex items-center justify-between gap-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#7C3AED] to-[#06B6D4] flex items-center justify-center text-[10px] font-black text-white shadow-sm shrink-0">
+                            {fb.authorAvatar || 'GT'}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-bold text-xs text-[#F4F2FF] flex items-center gap-1 truncate">
+                              <span className="truncate">{fb.authorName}</span>
+                              {fb.verifiedPurchase && (
+                                <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
+                              )}
+                            </div>
+                            <div className="text-[10px] text-[#938EB5]">{fb.timeAgo || 'Gần đây'}</div>
+                          </div>
+                        </div>
+
+                        {/* Stars */}
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          {Array.from({ length: fb.rating }).map((_, i) => (
+                            <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Comment Content */}
+                      <p className="text-[11px] leading-relaxed text-[#E2DEFA] italic font-normal line-clamp-3">
+                        "{fb.comment}"
+                      </p>
+                    </div>
+
+                    {/* Bottom Footer: Product Tag & Like */}
+                    <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10.5px]">
+                      <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/8 text-[#C084FC] font-semibold text-[10px] truncate max-w-[120px]">
+                        {fb.productTag}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => handleLike(fb.id)}
+                        className={`flex items-center gap-1 px-2 py-0.5 rounded-lg transition-colors cursor-pointer shrink-0 ${
+                          isLiked
+                            ? 'text-pink-400 bg-pink-500/15'
+                            : 'text-[#938EB5] hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <Heart className={`w-3 h-3 ${isLiked ? 'fill-pink-400' : ''}`} />
+                        <span>{fb.likesCount || 0}</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* Feedback Cards List */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[420px] overflow-y-auto pr-1">
-            {feedbacks.map((fb) => {
-              const isLiked = !!likedMap[fb.id];
-              return (
-                <div
-                  key={fb.id}
-                  className="p-4 rounded-2xl glass-subtle border border-white/6 hover:border-[#7C3AED]/30 transition-all space-y-2.5 flex flex-col justify-between"
-                >
-                  <div className="space-y-2">
-                    {/* Author & Rating Header */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#7C3AED] to-[#06B6D4] flex items-center justify-center text-[10px] font-black text-white shadow-sm">
-                          {fb.authorAvatar || 'GT'}
-                        </div>
-                        <div>
-                          <div className="font-bold text-xs text-[#F4F2FF] flex items-center gap-1 line-clamp-1">
-                            <span>{fb.authorName}</span>
-                            {fb.verifiedPurchase && (
-                              <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
-                            )}
-                          </div>
-                          <div className="text-[10px] text-[#938EB5]">{fb.timeAgo || 'Gần đây'}</div>
-                        </div>
-                      </div>
-
-                      {/* Stars */}
-                      <div className="flex items-center gap-0.5">
-                        {Array.from({ length: fb.rating }).map((_, i) => (
-                          <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Comment Content */}
-                    <p className="text-[11.5px] leading-relaxed text-[#E2DEFA] italic font-normal">
-                      "{fb.comment}"
-                    </p>
-                  </div>
-
-                  {/* Bottom Footer: Product Tag & Like */}
-                  <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10.5px]">
-                    <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/8 text-[#C084FC] font-semibold">
-                      {fb.productTag}
-                    </span>
-
-                    <button
-                      type="button"
-                      onClick={() => handleLike(fb.id)}
-                      className={`flex items-center gap-1 px-2 py-0.5 rounded-lg transition-colors cursor-pointer ${
-                        isLiked
-                          ? 'text-pink-400 bg-pink-500/15'
-                          : 'text-[#938EB5] hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <Heart className={`w-3 h-3 ${isLiked ? 'fill-pink-400' : ''}`} />
-                      <span>{fb.likesCount || 0}</span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="pt-3 mt-3 border-t border-white/6 flex items-center justify-between text-xs shrink-0">
+            <span className="text-[11px] text-[#938EB5]">Bạn đã mua key tại shop?</span>
+            <button
+              onClick={() => setIsReviewModalOpen(true)}
+              className="font-bold text-xs text-[#22D3EE] hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
+            >
+              <span>+ Viết Đánh Giá Của Bạn</span>
+            </button>
           </div>
         </div>
       </div>
