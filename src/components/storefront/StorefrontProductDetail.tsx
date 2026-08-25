@@ -14,6 +14,8 @@ import {
   Loader2,
 } from 'lucide-react';
 
+import { ProductImage } from '../ui/SafeImage';
+
 // ============================================================================
 // 1. SUBCOMPONENT: BREADCRUMB
 // ============================================================================
@@ -91,22 +93,13 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ product, isSeller, disc
           </div>
 
           {/* Locked aspect-ratio container and cover image */}
-          {productImage ? (
-            <img
-              src={productImage}
-              alt={product.name}
-              className="product-main-image w-full h-full object-cover block transition-transform duration-500 hover:scale-[1.03] image-skeleton-shimmer"
-              decoding="async"
-              style={{ aspectRatio: '16 / 9', objectFit: 'cover' }}
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center p-6 text-center select-none">
-              <div className="w-14 h-14 rounded-2xl bg-[#7C3AED]/20 border border-[#7C3AED]/35 flex items-center justify-center text-[#C084FC] mb-2 shadow-lg shadow-[#7C3AED]/15">
-                <Key className="w-7 h-7" />
-              </div>
-              <span className="text-[11px] font-medium text-[#938EB5]">Bản Quyền Chính Hãng Thanox</span>
-            </div>
-          )}
+          <ProductImage
+            src={productImage}
+            alt={product.name}
+            fallbackCategory={product.category}
+            className="product-main-image w-full h-full object-cover block transition-transform duration-500 hover:scale-[1.03]"
+            style={{ aspectRatio: '16 / 9', objectFit: 'cover' }}
+          />
         </div>
       </div>
 

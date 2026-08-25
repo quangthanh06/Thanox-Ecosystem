@@ -22,6 +22,7 @@ import { useDragScroll } from '../../hooks/useDragScroll';
 import { ThanoxMascot } from '../ui/ThanoxMascot';
 import { LiveDepositAndFeedback } from './LiveDepositAndFeedback';
 import { preloadProductImageList } from '../../utils/imageOptimizer';
+import { ProductImage, CategoryIcon } from '../ui/SafeImage';
 
 export const StorefrontHome: React.FC = () => {
   const {
@@ -346,11 +347,7 @@ export const StorefrontHome: React.FC = () => {
               className="p-4 rounded-2xl glass-subtle hover:glass-standard border border-white/8 hover:border-[#7C3AED]/40 transition-all cursor-pointer text-center group active:scale-95"
             >
               <div className="w-10 h-10 mx-auto mb-2 rounded-xl glass-pill flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform shadow-sm">
-                {cat.image || (cat.icon && (cat.icon.startsWith('http') || cat.icon.startsWith('data:image'))) ? (
-                  <img src={cat.image || cat.icon} alt={cat.name} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-xl">{cat.icon || '📱'}</span>
-                )}
+                <CategoryIcon icon={cat.icon} image={cat.image} name={cat.name} className="w-full h-full" />
               </div>
               <div className="font-bold text-xs text-[#F4F2FF] group-hover:text-[#C084FC] transition-colors line-clamp-1">
                 {cat.name}
@@ -400,19 +397,12 @@ export const StorefrontHome: React.FC = () => {
                       onClick={() => navigateToStorefront('product-detail', product.id)}
                       className="relative w-full aspect-video rounded-2xl overflow-hidden cursor-pointer group-hover:border-[#7C3AED]/40 transition-colors"
                     >
-                      {product.image ? (
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          loading="lazy"
-                          decoding="async"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 image-skeleton-shimmer"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center glass-subtle text-[#938EB5]">
-                          <Package className="w-8 h-8 text-[#C084FC]/60" />
-                        </div>
-                      )}
+                      <ProductImage
+                        src={product.image}
+                        alt={product.name}
+                        fallbackCategory={product.category}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
                       {/* Badges on Image */}
                       <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-lg text-[10px] font-bold glass-prominent text-[#C084FC] border border-purple-500/30">
                         {product.category}
@@ -559,11 +549,9 @@ export const StorefrontHome: React.FC = () => {
                   : 'glass-subtle text-[#938EB5] hover:text-white border border-white/8'
               }`}
             >
-              {c.image || (c.icon && (c.icon.startsWith('http') || c.icon.startsWith('data:image'))) ? (
-                <img src={c.image || c.icon} alt={c.name} className="w-3.5 h-3.5 rounded-full object-cover" />
-              ) : (
-                <span>{c.icon}</span>
-              )}
+              <div className="w-4 h-4 rounded-full overflow-hidden flex items-center justify-center">
+                <CategoryIcon icon={c.icon} image={c.image} name={c.name} className="w-full h-full" />
+              </div>
               <span>{c.name}</span>
             </button>
           ))}
@@ -587,18 +575,12 @@ export const StorefrontHome: React.FC = () => {
                     onClick={() => navigateToStorefront('product-detail', prod.id)}
                     className="relative w-full aspect-video rounded-2xl overflow-hidden cursor-pointer group-hover:border-[#7C3AED]/40 transition-colors"
                   >
-                    {prod.image ? (
-                      <img
-                        src={prod.image}
-                        alt={prod.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center glass-subtle text-[#938EB5]">
-                        <Package className="w-7 h-7 text-[#C084FC]/50" />
-                      </div>
-                    )}
+                    <ProductImage
+                      src={prod.image}
+                      alt={prod.name}
+                      fallbackCategory={prod.category}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                     <span className="absolute top-2 left-2 px-2 py-0.5 rounded-lg text-[9.5px] font-bold glass-prominent text-[#C084FC] border border-purple-500/30">
                       {prod.category}
                     </span>

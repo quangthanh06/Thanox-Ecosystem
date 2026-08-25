@@ -2,6 +2,7 @@ import { uploadMediaToSupabase } from '../lib/supabase';
 import React, { useState, useRef } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Category } from '../types';
+import { CategoryIcon } from './ui/SafeImage';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
@@ -188,11 +189,7 @@ export const CategoriesView: React.FC = () => {
               >
                 <div className="flex items-start justify-between">
                   <div className="w-12 h-12 rounded-2xl glass-subtle border border-white/10 flex items-center justify-center overflow-hidden shadow-sm">
-                    {hasImage ? (
-                      <img src={cat.image || cat.icon} alt={cat.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-2xl">{cat.icon || '📱'}</span>
-                    )}
+                    <CategoryIcon icon={cat.icon} image={cat.image} name={cat.name} className="w-full h-full" />
                   </div>
 
                   <div className="flex items-center gap-1">

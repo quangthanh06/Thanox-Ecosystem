@@ -12,6 +12,7 @@ import {
 import { getThemeTypography } from '../../utils/themeStyles';
 import { useDragScroll } from '../../hooks/useDragScroll';
 import { preloadProductImageList } from '../../utils/imageOptimizer';
+import { ProductImage, CategoryIcon } from '../ui/SafeImage';
 
 const SORT_OPTIONS = [
   { value: 'popular', label: 'Bán Chạy Nhất', icon: '🔥' },
@@ -203,11 +204,9 @@ export const StorefrontProducts: React.FC = () => {
                 : 'glass-subtle text-[#938EB5] hover:text-white border border-white/8'
             }`}
           >
-            {cat.image || (cat.icon && (cat.icon.startsWith('http') || cat.icon.startsWith('data:image'))) ? (
-              <img src={cat.image || cat.icon} alt={cat.name} className="w-3.5 h-3.5 rounded-full object-cover" />
-            ) : (
-              <span>{cat.icon || '📁'}</span>
-            )}
+            <div className="w-4 h-4 rounded-full overflow-hidden flex items-center justify-center">
+              <CategoryIcon icon={cat.icon} image={cat.image} name={cat.name} className="w-full h-full" />
+            </div>
             <span>{cat.name}</span>
             <span className="text-[10px] opacity-70">
               ({products.filter((p) => p.category === cat.name && p.status !== 'hidden').length})
@@ -246,19 +245,12 @@ export const StorefrontProducts: React.FC = () => {
                     onClick={() => navigateToStorefront('product-detail', product.id)}
                     className="relative aspect-video rounded-2xl overflow-hidden flex items-center justify-center cursor-pointer group-hover:border-[#7C3AED]/30 transition-colors"
                   >
-                    {product.image ? (
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 image-skeleton-shimmer"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-2xl glass-subtle flex items-center justify-center text-[#C084FC] font-bold">
-                        <Package className="w-6 h-6" />
-                      </div>
-                    )}
+                    <ProductImage
+                      src={product.image}
+                      alt={product.name}
+                      fallbackCategory={product.category}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
 
                     {/* Top Badges */}
                     <div className="absolute top-2 left-2 flex gap-1.5 z-10">

@@ -3,6 +3,7 @@ import { isAccountLikeCategory } from '../utils/productAccount';
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Product, ProductStatus, ProductPackage } from '../types';
+import { ProductImage } from './ui/SafeImage';
 import { Card, CardHeader } from './ui/Card';
 import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
@@ -608,11 +609,12 @@ export const ProductsView: React.FC = () => {
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7C3AED]/20 to-[#06B6D4]/20 border border-white/10 flex items-center justify-center text-[#9D5CF6] shrink-0 overflow-hidden font-bold shadow-sm">
-                          {product.image ? (
-                            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <Package className="w-4 h-4" />
-                          )}
+                          <ProductImage
+                            src={product.image}
+                            alt={product.name}
+                            fallbackCategory={product.category}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
                         <div className="min-w-0">
                           <div className="font-semibold text-[#F0EDFF] flex items-center gap-2 truncate">
@@ -763,13 +765,12 @@ export const ProductsView: React.FC = () => {
                   onClick={() => openEditDrawer(product)}
                   className="relative w-full aspect-[16/9] rounded-2xl bg-[#161626] border border-white/10 overflow-hidden cursor-pointer group-hover:border-[#7C3AED]/50 transition-colors shadow-inner"
                 >
-                  {product.image ? (
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[#6B658E]">
-                      <Package className="w-7 h-7 text-[#9D5CF6]/50" />
-                    </div>
-                  )}
+                  <ProductImage
+                    src={product.image}
+                    alt={product.name}
+                    fallbackCategory={product.category}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  />
                   <span className="absolute top-2 left-2 px-2 py-0.5 rounded-lg text-[9.5px] font-bold bg-black/80 backdrop-blur-md text-[#9D5CF6] border border-purple-500/30">
                     {product.category}
                   </span>
