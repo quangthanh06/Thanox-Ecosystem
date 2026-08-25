@@ -17,10 +17,13 @@ import {
   Image as ImageIcon,
   Link as LinkIcon,
   X,
+  Cloud,
+  RefreshCw,
 } from 'lucide-react';
 
 export const CategoriesView: React.FC = () => {
-  const { categories, products, addCategory, updateCategory, deleteCategory, showToast } = useStore();
+  const { categories, products, addCategory, updateCategory, deleteCategory, syncAllCategoriesToCloud, showToast } = useStore();
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCat, setEditingCat] = useState<Category | null>(null);
@@ -142,9 +145,24 @@ export const CategoriesView: React.FC = () => {
           </p>
         </div>
 
-        <Button variant="primary" size="sm" onClick={openCreateModal} leftIcon={<Plus className="w-4 h-4" />}>
-          Thêm Danh Mục
-        </Button>
+        <div className="flex items-center gap-2.5">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={async () => {
+              setIsSyncing(true);
+              await syncAllCategoriesToCloud(categories);
+              setIsSyncing(false);
+            }}
+            disabled={isSyncing}
+            leftIcon={isSyncing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Cloud className="w-4 h-4 text-cyan-400" />}
+          >
+            {isSyncing ? 'Đang đồng bộ...' : 'Đồng Bộ Lên Cloud'}
+          </Button>
+          <Button variant="primary" size="sm" onClick={openCreateModal} leftIcon={<Plus className="w-4 h-4" />}>
+            Thêm Danh Mục
+          </Button>
+        </div>
       </div>
 
       {/* Grid of Categories */}

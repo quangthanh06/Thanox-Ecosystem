@@ -120,6 +120,7 @@ interface StoreContextType {
   addCategory: (category: Omit<Category, 'id' | 'count'>) => void;
   updateCategory: (id: string, updates: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
+  syncAllCategoriesToCloud: (customCategories?: Category[]) => Promise<void>;
 
   updateOrderStatus: (id: string, status: Order['status']) => void;
   createOrder: (productId: string, quantity: number, paymentMethod: Order['paymentMethod'], selectedPackage?: ProductPackage) => Promise<{ success: boolean; order?: Order; error?: string }>;
@@ -547,6 +548,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             } catch {}
             return merged;
           });
+
+          // Sync Categories to all devices (phones & PCs)
+          if (Array.isArray(cloudSettings.categories) && cloudSettings.categories.length > 0) {
+            setCategories(cloudSettings.categories);
+            try {
+              localStorage.setItem('thanox_categories', JSON.stringify(cloudSettings.categories));
+            } catch {}
+          }
         }
       } catch (err) {
         console.warn('[StoreContext] Settings sync error:', err);
@@ -576,6 +585,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               } catch {}
               return merged;
             });
+
+            if (Array.isArray(newCloudSettings.categories) && newCloudSettings.categories.length > 0) {
+              setCategories(newCloudSettings.categories);
+              try {
+                localStorage.setItem('thanox_categories', JSON.stringify(newCloudSettings.categories));
+              } catch {}
+            }
           }
         }
       )
@@ -1735,7 +1751,49 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  // Categories CRUD
+  // Categories CRUD & Global Multi-Device Sync
+  const syncAllCategoriesToCloud = async (categoriesToSync?: Category[]) => {
+    const list = categoriesToSync || categories;
+    try {
+      // 1. Sync to store_settings table (JSON store - guaranteed cross-device real-time sync)
+      const { data: currentSettingsRow } = await supabase
+        .from('store_settings')
+        .select('settings_data')
+        .eq('id', 'default')
+        .maybeSingle();
+
+      const existingData = currentSettingsRow?.settings_data || {};
+      await supabase.from('store_settings').upsert({
+        id: 'default',
+        settings_data: {
+          ...existingData,
+          categories: list,
+        },
+        updated_at: new Date().toISOString(),
+      });
+
+      // 2. Also try upsert to categories table if available
+      for (const cat of list) {
+        await supabase
+          .from('categories')
+          .upsert({
+            id: cat.id,
+            name: cat.name,
+            slug: cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-'),
+            icon: cat.icon || '📱',
+            image: cat.image || '',
+            count: cat.count || 0,
+            status: cat.status || 'active',
+          })
+          .catch(() => {});
+      }
+
+      showToast('Đã đồng bộ toàn bộ danh mục lên Cloud!', 'success');
+    } catch (err) {
+      console.warn('[Categories] Bulk sync error:', err);
+    }
+  };
+
   const addCategory = async (catData: Omit<Category, 'id' | 'count'>) => {
     const sanitizedName = catData.name.trim();
     const sanitizedSlug = (catData.slug || sanitizedName.toLowerCase().replace(/\s+/g, '-')).trim();
@@ -1747,23 +1805,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       id: 'cat-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
       count: 0,
     };
-    setCategories((prev) => [...prev, newCat]);
+    const updatedList = [...categories, newCat];
+    setCategories(updatedList);
     showToast(`Đã thêm danh mục "${newCat.name}"`, 'success');
 
-    // Đồng bộ lên Supabase Cloud Database để điện thoại và các thiết bị khác nhận ngay
-    try {
-      await supabase.from('categories').upsert({
-        id: newCat.id,
-        name: newCat.name,
-        slug: newCat.slug,
-        icon: newCat.icon || '📱',
-        image: newCat.image || '',
-        count: newCat.count || 0,
-        status: newCat.status || 'active',
-      });
-    } catch (err) {
-      console.warn('[Categories] Supabase sync error:', err);
-    }
+    // Đồng bộ lên Supabase Cloud Database & store_settings để điện thoại nhận ngay lập tức
+    await syncAllCategoriesToCloud(updatedList);
   };
 
   const updateCategory = async (id: string, updates: Partial<Category>) => {
@@ -1773,7 +1820,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       ...updates,
     };
 
-    setCategories((prev) => prev.map((c) => (c.id === id ? updatedCat : c)));
+    const updatedList = categories.map((c) => (c.id === id ? updatedCat : c));
+    setCategories(updatedList);
 
     // If category name was updated, keep products category name synced
     if (oldCat && updates.name && updates.name !== oldCat.name) {
@@ -1784,20 +1832,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     showToast('Đã cập nhật danh mục', 'success');
 
-    // Đồng bộ lên Supabase Cloud Database để điện thoại và các thiết bị khác nhận ngay
-    try {
-      await supabase.from('categories').upsert({
-        id: id,
-        name: updatedCat.name,
-        slug: updatedCat.slug || (updatedCat.name ? updatedCat.name.toLowerCase().replace(/\s+/g, '-') : id),
-        icon: updatedCat.icon || '📱',
-        image: updatedCat.image || '',
-        count: updatedCat.count || 0,
-        status: updatedCat.status || 'active',
-      });
-    } catch (err) {
-      console.warn('[Categories] Supabase update error:', err);
-    }
+    // Đồng bộ lên Supabase Cloud Database & store_settings để điện thoại nhận ngay lập tức
+    await syncAllCategoriesToCloud(updatedList);
   };
 
   const deleteCategory = async (id: string) => {
@@ -1816,12 +1852,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCategories(remainingCats);
     showToast(`Đã xóa danh mục "${targetCat.name}"`, 'error');
 
-    // Xóa khỏi Supabase Cloud Database
-    try {
-      await supabase.from('categories').delete().eq('id', id);
-    } catch (err) {
-      console.warn('[Categories] Supabase delete error:', err);
-    }
+    // Đồng bộ xóa lên Supabase Cloud Database & store_settings
+    await syncAllCategoriesToCloud(remainingCats);
   };
 
   // Orders CRUD
@@ -2988,6 +3020,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addCategory,
         updateCategory,
         deleteCategory,
+        syncAllCategoriesToCloud,
         updateOrderStatus,
         createOrder,
         approveTopup,
