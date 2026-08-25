@@ -18,8 +18,8 @@ import {
   Zap,
   Shield,
   Sparkles,
-  X,
   Music,
+  QrCode,
   Wrench,
 } from 'lucide-react';
 import { BrandLogo } from './ui/BrandLogo';
