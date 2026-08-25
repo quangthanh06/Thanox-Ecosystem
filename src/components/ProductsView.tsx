@@ -2177,7 +2177,7 @@ export const ProductsView: React.FC = () => {
                       </p>
                       {(formData.packages || []).length > 0 ? (
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
-                          {formData.packages.map((pkg) => {
+                          {(formData.packages || []).map((pkg) => {
                             const count = pkg.keys ? pkg.keys.split('\n').filter((l) => l.trim().length > 0).length : 0;
                             return (
                               <div key={pkg.id} className="p-2 rounded-xl bg-[#161626] border border-white/5 text-[11px] flex items-center justify-between">

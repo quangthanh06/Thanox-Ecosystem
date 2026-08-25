@@ -1774,9 +1774,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       // 2. Also try upsert to categories table if available
       for (const cat of list) {
-        await supabase
-          .from('categories')
-          .upsert({
+        try {
+          await supabase.from('categories').upsert({
             id: cat.id,
             name: cat.name,
             slug: cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-'),
@@ -1784,8 +1783,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             image: cat.image || '',
             count: cat.count || 0,
             status: cat.status || 'active',
-          })
-          .catch(() => {});
+          });
+        } catch {}
       }
 
       showToast('Đã đồng bộ toàn bộ danh mục lên Cloud!', 'success');

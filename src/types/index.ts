@@ -314,7 +314,7 @@ export interface TypographySettings {
 }
 
 export interface HeroBannerSettings {
-  backgroundImage: string;
+  backgroundImage?: string;
   backgroundVideo?: string;
   backgroundType?: 'image' | 'video';
   brightness: number; // 10 - 100%

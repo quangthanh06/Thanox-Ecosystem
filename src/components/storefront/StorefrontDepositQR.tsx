@@ -49,6 +49,8 @@ const CARD_DENOMINATIONS = [
   1000000,
 ];
 
+const DEPOSIT_REDIRECT = '/account/wallet/deposit';
+
 export const StorefrontDepositQR: React.FC = () => {
   const {
     settings,
@@ -76,16 +78,31 @@ export const StorefrontDepositQR: React.FC = () => {
   const maxDeposit = settings.maxDeposit || 10000000;
 
   // Selected or typed amount
-  const [selectedPreset, setSelectedPreset] = useState<number | null>(null);
-  const [customAmountText, setCustomAmountText] = useState<string>('');
-  const [activeAmount, setActiveAmount] = useState<number>(0);
+  const [selectedPreset, setSelectedPreset] = useState<number | null>(50000);
+  const [customAmountText, setCustomAmountText] = useState<string>('50.000');
+  const [activeAmount, setActiveAmount] = useState<number>(50000);
   const [isTyping, setIsTyping] = useState<boolean>(false);
 
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [qrLoadError, setQrLoadError] = useState<boolean>(false);
 
+  // Dynamic Transaction Code generator
+  const generateNewTransactionCode = () => {
+    const prefix = (settings.transferPrefix || 'NAP').toUpperCase().trim();
+    const cleanUser = ((currentUser && (currentUser.username || currentUser.name)) || 'USER').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    return `${prefix} ${cleanUser} ${randomSuffix}`.trim();
+  };
+
+  const scrollToQrSection = () => {
+    const el = document.getElementById('deposit-qr-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  };
+
   // Dynamic Transaction Code for current valid amount session (STT<random_code>)
-  const [transactionCode, setTransactionCode] = useState<string>('');
+  const [transactionCode, setTransactionCode] = useState<string>(() => generateNewTransactionCode());
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isManualChecking, setIsManualChecking] = useState<boolean>(false);
 
@@ -96,6 +113,14 @@ export const StorefrontDepositQR: React.FC = () => {
     code: string;
     balance?: number;
   } | null>(null);
+
+  // Tự động đồng bộ đơn 50.000đ mặc định lên Cloud khi vào trang
+  useEffect(() => {
+    if (isAuthenticated && transactionCode && activeAmount > 0) {
+      createTopupRequest(activeAmount, 'Bank Transfer', transactionCode);
+      syncTopupToServer(activeAmount, transactionCode);
+    }
+  }, [isAuthenticated]);
 
   // Countdown timer (5 minutes)
   useEffect(() => {
@@ -179,11 +204,6 @@ export const StorefrontDepositQR: React.FC = () => {
 
   // ONE-CLICK PRESET SELECTION: Tự tạo topup + mở QR ngay lập tức
   const handleSelectPreset = (amt: number) => {
-    if (!isAuthenticated) {
-      showToast('Vui lòng đăng nhập tài khoản trước khi nạp tiền!', 'warning');
-      navigateToStorefront('login', DEPOSIT_REDIRECT);
-      return;
-    }
     setIsTyping(false);
     setSelectedPreset(amt);
     setCustomAmountText(amt.toLocaleString('vi-VN'));
@@ -200,11 +220,17 @@ export const StorefrontDepositQR: React.FC = () => {
       codeToUse = existing.transferNote;
     } else {
       codeToUse = generateNewTransactionCode();
-      createTopupRequest(amt, 'Bank Transfer', codeToUse);
+      if (isAuthenticated) {
+        createTopupRequest(amt, 'Bank Transfer', codeToUse);
+      }
     }
 
     setTransactionCode(codeToUse);
-    syncTopupToServer(amt, codeToUse);
+    if (isAuthenticated) {
+      syncTopupToServer(amt, codeToUse);
+    } else {
+      showToast('Bạn chưa đăng nhập. Vui lòng đăng nhập để hệ thống tự động cộng số dư vào ví!', 'info');
+    }
     scrollToQrSection();
   };
 
@@ -227,16 +253,20 @@ export const StorefrontDepositQR: React.FC = () => {
       setCustomAmountText(num.toLocaleString('vi-VN'));
       setActiveAmount(num);
       setSelectedPreset(PRESET_AMOUNTS.includes(num) ? num : null);
+
+      if (num >= minDeposit && num <= maxDeposit) {
+        const codeToUse = generateNewTransactionCode();
+        setTransactionCode(codeToUse);
+        if (isAuthenticated) {
+          createTopupRequest(num, 'Bank Transfer', codeToUse);
+          syncTopupToServer(num, codeToUse);
+        }
+      }
     }
   };
 
   // Custom Amount generate QR button
   const handleGenerateCustomQR = () => {
-    if (!isAuthenticated) {
-      showToast('Vui lòng đăng nhập tài khoản trước khi nạp tiền!', 'warning');
-      navigateToStorefront('login', DEPOSIT_REDIRECT);
-      return;
-    }
     if (!isValidAmount) {
       if (activeAmount < minDeposit) {
         showToast(`Số tiền nạp tối thiểu là ${minDeposit.toLocaleString('vi-VN')}đ`, 'error');
@@ -249,9 +279,13 @@ export const StorefrontDepositQR: React.FC = () => {
     }
 
     const codeToUse = generateNewTransactionCode();
-    createTopupRequest(activeAmount, 'Bank Transfer', codeToUse);
     setTransactionCode(codeToUse);
-    syncTopupToServer(activeAmount, codeToUse);
+    if (isAuthenticated) {
+      createTopupRequest(activeAmount, 'Bank Transfer', codeToUse);
+      syncTopupToServer(activeAmount, codeToUse);
+    } else {
+      showToast('Bạn chưa đăng nhập. Vui lòng đăng nhập để hệ thống tự động cộng số dư vào ví!', 'info');
+    }
     scrollToQrSection();
   };
 
