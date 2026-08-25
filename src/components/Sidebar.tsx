@@ -18,6 +18,7 @@ import {
   Zap,
   Shield,
   Sparkles,
+  X,
   Music,
   QrCode,
   Wrench,
