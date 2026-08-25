@@ -71,13 +71,13 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   if (!showBorder || borderStyle === 'none') {
     return (
       <div
-        className={`${sizeClasses} ${shapeClass} overflow-hidden bg-[#080811] flex items-center justify-center shrink-0 shadow-md ${className}`}
+        className={`${sizeClasses} ${shapeClass} overflow-hidden bg-transparent flex items-center justify-center shrink-0 ${className}`}
       >
         <img
           src={logoUrl}
           alt="Thanox Logo"
           style={{ transform: `scale(${scalePercent / 100})` }}
-          className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-125"
+          className={`w-full h-full object-cover object-center ${shapeClass} transition-transform duration-300 group-hover:scale-125`}
         />
       </div>
     );
