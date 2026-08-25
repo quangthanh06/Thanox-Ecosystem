@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useStore } from '../../context/StoreContext';
 import { Button } from '../ui/Button';
+import { PasswordStrengthMeter } from '../ui/PasswordStrengthMeter';
 import { AuthVisualSide } from './AuthVisualSide';
 import {
   Lock,
@@ -47,22 +48,6 @@ export const StorefrontRegister: React.FC = () => {
       navigate(redirectPath, { replace: true });
     }
   }, [isAuthenticated, navigate, redirectPath]);
-
-  // Password strength calculation
-  const getPasswordStrength = () => {
-    if (!password) return { score: 0, label: '', color: '' };
-    let score = 0;
-    if (password.length >= 6) score += 1;
-    if (password.length >= 8) score += 1;
-    if (/[A-Z]/.test(password) || /[0-9]/.test(password)) score += 1;
-    if (/[^A-Za-z0-9]/.test(password)) score += 1;
-
-    if (score <= 1) return { score: 1, label: 'Yếu', color: 'bg-red-500 text-red-300' };
-    if (score === 2) return { score: 2, label: 'Trung bình', color: 'bg-amber-500 text-amber-300' };
-    return { score: 3, label: 'Mạnh & An toàn', color: 'bg-emerald-500 text-emerald-300' };
-  };
-
-  const strength = getPasswordStrength();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,20 +236,8 @@ export const StorefrontRegister: React.FC = () => {
                 </div>
               </div>
 
-              {/* Password Strength Indicator */}
-              {password && (
-                <div className="space-y-1 pt-0.5">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-[#938EB5]">Độ mạnh mật khẩu:</span>
-                    <span className={`font-bold ${strength.color}`}>{strength.label}</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-1.5 h-1">
-                    <div className={`rounded-full ${strength.score >= 1 ? 'bg-red-500' : 'bg-white/10'}`} />
-                    <div className={`rounded-full ${strength.score >= 2 ? 'bg-amber-500' : 'bg-white/10'}`} />
-                    <div className={`rounded-full ${strength.score >= 3 ? 'bg-emerald-500' : 'bg-white/10'}`} />
-                  </div>
-                </div>
-              )}
+              {/* Ultra-Modern Cyber Password Strength Meter */}
+              <PasswordStrengthMeter password={password} />
 
               {/* Referral Code (Optional) */}
               <div className="space-y-1.5 pt-1">
