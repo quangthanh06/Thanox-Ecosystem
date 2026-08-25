@@ -20,6 +20,7 @@ import {
 import { getThemeTypography } from '../../utils/themeStyles';
 import { useDragScroll } from '../../hooks/useDragScroll';
 import { ThanoxMascot } from '../ui/ThanoxMascot';
+import { LiveDepositAndFeedback } from './LiveDepositAndFeedback';
 
 export const StorefrontHome: React.FC = () => {
   const {
@@ -395,7 +396,9 @@ export const StorefrontHome: React.FC = () => {
                         <img
                           src={product.image}
                           alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 image-skeleton-shimmer"
                         />
                       ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center glass-subtle text-[#938EB5]">
@@ -736,6 +739,9 @@ export const StorefrontHome: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* 7. LIVE DEPOSIT STREAM & COMMUNITY FEEDBACK */}
+      <LiveDepositAndFeedback />
     </div>
   );
 };

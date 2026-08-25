@@ -202,7 +202,7 @@ export const StorefrontDepositQR: React.FC = () => {
     }
   };
 
-  // ONE-CLICK PRESET SELECTION: Tự tạo topup + mở QR ngay lập tức
+  // ONE-CLICK PRESET SELECTION: Cập nhật số tiền trên mã QR hiện tại hoặc tạo mới nếu đã hết hạn
   const handleSelectPreset = (amt: number) => {
     setIsTyping(false);
     setSelectedPreset(amt);
@@ -210,28 +210,28 @@ export const StorefrontDepositQR: React.FC = () => {
     setActiveAmount(amt);
     setQrLoadError(false);
 
-    // Kiểm tra xem đã có đơn pending tương ứng chưa, nếu chưa thì tạo mới
-    const existing = topups.find(
-      (t) => t.userId === currentUser.id && t.status === 'pending' && t.amount === amt
-    );
-
-    let codeToUse = '';
-    if (existing && existing.transferNote) {
-      codeToUse = existing.transferNote;
-    } else {
+    let codeToUse = transactionCode;
+    if (!codeToUse || !timeLeft || timeLeft <= 0) {
       codeToUse = generateNewTransactionCode();
-      if (isAuthenticated) {
-        createTopupRequest(amt, 'Bank Transfer', codeToUse);
-      }
+      setTransactionCode(codeToUse);
+      setTimeLeft(300);
     }
 
-    setTransactionCode(codeToUse);
     if (isAuthenticated) {
       syncTopupToServer(amt, codeToUse);
-    } else {
-      showToast('Bạn chưa đăng nhập. Vui lòng đăng nhập để hệ thống tự động cộng số dư vào ví!', 'info');
     }
     scrollToQrSection();
+  };
+
+  // Reset current session to generate a fresh transaction code
+  const handleResetSession = () => {
+    const freshCode = generateNewTransactionCode();
+    setTransactionCode(freshCode);
+    setTimeLeft(300);
+    if (isAuthenticated && activeAmount > 0) {
+      syncTopupToServer(activeAmount, freshCode);
+    }
+    showToast('Đã tạo mới mã giao dịch VietQR!', 'info');
   };
 
   // Custom Amount change
@@ -255,10 +255,13 @@ export const StorefrontDepositQR: React.FC = () => {
       setSelectedPreset(PRESET_AMOUNTS.includes(num) ? num : null);
 
       if (num >= minDeposit && num <= maxDeposit) {
-        const codeToUse = generateNewTransactionCode();
-        setTransactionCode(codeToUse);
+        let codeToUse = transactionCode;
+        if (!codeToUse || !timeLeft || timeLeft <= 0) {
+          codeToUse = generateNewTransactionCode();
+          setTransactionCode(codeToUse);
+          setTimeLeft(300);
+        }
         if (isAuthenticated) {
-          createTopupRequest(num, 'Bank Transfer', codeToUse);
           syncTopupToServer(num, codeToUse);
         }
       }
@@ -278,13 +281,15 @@ export const StorefrontDepositQR: React.FC = () => {
       return;
     }
 
-    const codeToUse = generateNewTransactionCode();
-    setTransactionCode(codeToUse);
+    let codeToUse = transactionCode;
+    if (!codeToUse || !timeLeft || timeLeft <= 0) {
+      codeToUse = generateNewTransactionCode();
+      setTransactionCode(codeToUse);
+      setTimeLeft(300);
+    }
+
     if (isAuthenticated) {
-      createTopupRequest(activeAmount, 'Bank Transfer', codeToUse);
       syncTopupToServer(activeAmount, codeToUse);
-    } else {
-      showToast('Bạn chưa đăng nhập. Vui lòng đăng nhập để hệ thống tự động cộng số dư vào ví!', 'info');
     }
     scrollToQrSection();
   };
@@ -500,7 +505,9 @@ export const StorefrontDepositQR: React.FC = () => {
   };
 
   const userTopups = useMemo(() => {
-    return topups.filter((t) => t.userId === currentUser.id);
+    return topups.filter(
+      (t) => t.userId === currentUser.id && t.status === 'approved'
+    );
   }, [topups, currentUser.id]);
 
   const currentNetworkKey = (cardNetwork || 'VIETTEL').toUpperCase();
@@ -845,9 +852,18 @@ export const StorefrontDepositQR: React.FC = () => {
                         <Loader2 className="w-4 h-4 animate-spin text-amber-400 flex-shrink-0" />
                         <span>Đang chờ nhận chuyển khoản từ ngân hàng...</span>
                       </div>
-                      <span className="text-[11px] font-mono font-bold text-amber-200">
-                        Hết hạn: {timeLeft ? `${Math.floor(timeLeft / 60)}:${String(timeLeft % 60).padStart(2, '0')}` : '05:00'}
-                      </span>
+                      <div className="flex items-center gap-2.5 self-end sm:self-auto">
+                        <span className="text-[11px] font-mono font-bold text-amber-200">
+                          Hết hạn: {timeLeft ? `${Math.floor(timeLeft / 60)}:${String(timeLeft % 60).padStart(2, '0')}` : '05:00'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleResetSession}
+                          className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[10.5px] font-bold border border-amber-500/40 transition-colors cursor-pointer"
+                        >
+                          Đổi Mã Mới
+                        </button>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">

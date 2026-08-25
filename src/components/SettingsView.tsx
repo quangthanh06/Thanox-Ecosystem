@@ -56,14 +56,14 @@ import {
 import { generateTotpUri, generateGoogleAuthQrUrl, verifyTotpCode } from '../utils/totp';
 
 interface SettingsViewProps {
-  initialTab?: 'banner' | 'typography' | 'payments' | 'general' | 'maintenance' | 'security' | 'affiliate' | 'music' | 'data';
+  initialTab?: 'banner' | 'effects' | 'typography' | 'payments' | 'general' | 'maintenance' | 'security' | 'affiliate' | 'music' | 'data';
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
   const { settings, updateSettings, resetToDefaultData, resetToZeroData, showToast } = useStore();
   const [searchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState<'banner' | 'typography' | 'payments' | 'general' | 'maintenance' | 'security' | 'affiliate' | 'music' | 'data'>(
+  const [activeTab, setActiveTab] = useState<'banner' | 'effects' | 'typography' | 'payments' | 'general' | 'maintenance' | 'security' | 'affiliate' | 'music' | 'data'>(
     initialTab || 'banner'
   );
   const [formData, setFormData] = useState<StoreSettings>({ ...settings });
@@ -300,6 +300,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
           >
             <Sparkles className="w-3.5 h-3.5 text-[#C084FC]" />
             <span>🎨 Banner Hero</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('effects')}
+            className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 active:scale-95 ${
+              activeTab === 'effects'
+                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                : 'glass-subtle text-[#938EB5] hover:text-white border border-white/8'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <span>✨ Hiệu Ứng Web Gaming</span>
+            {(formData.effects?.snow || formData.effects?.cherryBlossom || formData.effects?.neonParticles || formData.effects?.matrixRain || formData.effects?.rgbBorder || formData.effects?.glowCursor) && (
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+            )}
           </button>
 
           <button
@@ -1075,6 +1091,364 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ initialTab }) => {
             <div className="flex justify-end pt-2">
               <Button type="submit" variant="primary" size="md" leftIcon={<Save className="w-4 h-4" />}>
                 💾 Lưu Cài Đặt Banner & Giao Diện
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* 0.2. VISUAL EFFECTS CONTROL PANEL (PROXYVIPFF STYLE) */}
+        {activeTab === 'effects' && (
+          <div className="space-y-6">
+            {/* Quick Actions & Density Bar */}
+            <Card className="p-5 space-y-4 border-cyan-500/30 bg-gradient-to-b from-[#121226] to-[#0A0A14]" variant="default">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
+                <div>
+                  <h3 className="font-bold text-sm text-[#F0EDFF] flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-cyan-400" />
+                    <span>Bộ Sưu Tập Hiệu Ứng Web Động (Gaming & Cyberpunk)</span>
+                  </h3>
+                  <p className="text-xs text-[#8B84A8] mt-0.5">
+                    Tùy chọn bật/tắt từng hiệu ứng sống động trên website. Tối ưu cực nhẹ (Canvas 60FPS) không gây giật lag.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        effects: {
+                          ...(prev.effects || {}),
+                          cherryBlossom: true,
+                          rgbBorder: true,
+                          glowCursor: true,
+                          snow: false,
+                          neonParticles: false,
+                          matrixRain: false,
+                          shootingStars: true,
+                          particleDensity: 'medium',
+                        },
+                      }))
+                    }
+                    className="font-bold text-xs border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20"
+                  >
+                    ✨ Bật Khuyên Dùng
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        effects: {
+                          cherryBlossom: false,
+                          snow: false,
+                          neonParticles: false,
+                          sparkles: false,
+                          shootingStars: false,
+                          matrixRain: false,
+                          rgbBorder: false,
+                          glowCursor: false,
+                          particleDensity: 'medium',
+                        },
+                      }))
+                    }
+                    className="text-xs text-red-400 hover:text-red-300"
+                  >
+                    🚫 Tắt Toàn Bộ
+                  </Button>
+                </div>
+              </div>
+
+              {/* Particle Density Selector */}
+              <div className="space-y-1.5 pt-1">
+                <label className="text-xs font-semibold text-[#CBC7E0]">Mật Độ Hạt & Tốc Độ Xuất Hiện (Particle Density):</label>
+                <div className="grid grid-cols-3 gap-2 max-w-md">
+                  {[
+                    { id: 'low', label: 'Thấp (Tiết kiệm Pin)' },
+                    { id: 'medium', label: 'Vừa (Khuyên Dùng)' },
+                    { id: 'high', label: 'Dày Đặc (Rực Rỡ)' },
+                  ].map((d) => {
+                    const isSelected = (formData.effects?.particleDensity || 'medium') === d.id;
+                    return (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            effects: {
+                              ...(prev.effects || {}),
+                              particleDensity: d.id as any,
+                            },
+                          }))
+                        }
+                        className={`py-2 rounded-xl text-center text-xs font-bold transition-all border ${
+                          isSelected
+                            ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
+                            : 'bg-[#161626] border-white/5 text-[#8B84A8] hover:border-white/20 hover:text-white'
+                        }`}
+                      >
+                        {d.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </Card>
+
+            {/* Effects Toggle Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* 1. Sakura Petals */}
+              <div
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    effects: {
+                      ...(prev.effects || {}),
+                      cherryBlossom: !prev.effects?.cherryBlossom,
+                    },
+                  }))
+                }
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                  formData.effects?.cherryBlossom
+                    ? 'bg-pink-500/10 border-pink-400 shadow-[0_0_20px_rgba(244,114,182,0.25)]'
+                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">🌸</span>
+                    <span className={`w-3 h-3 rounded-full ${formData.effects?.cherryBlossom ? 'bg-pink-400 shadow-[0_0_10px_#F472B6]' : 'bg-zinc-700'}`} />
+                  </div>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Hoa Anh Đào Rơi</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Cánh hoa hồng sakura rơi xoay mượt mà chuẩn anime & gaming.</p>
+                </div>
+                <div className="text-[10px] font-bold text-pink-400 uppercase">
+                  {formData.effects?.cherryBlossom ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
+                </div>
+              </div>
+
+              {/* 2. Snow */}
+              <div
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    effects: {
+                      ...(prev.effects || {}),
+                      snow: !prev.effects?.snow,
+                    },
+                  }))
+                }
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                  formData.effects?.snow
+                    ? 'bg-blue-500/10 border-blue-400 shadow-[0_0_20px_rgba(96,165,250,0.25)]'
+                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">❄️</span>
+                    <span className={`w-3 h-3 rounded-full ${formData.effects?.snow ? 'bg-blue-400 shadow-[0_0_10px_#60A5FA]' : 'bg-zinc-700'}`} />
+                  </div>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Tuyết Rơi Cyber</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Bông tuyết trắng nhẹ nhàng rơi trên nền đen sâu thẳm.</p>
+                </div>
+                <div className="text-[10px] font-bold text-blue-400 uppercase">
+                  {formData.effects?.snow ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
+                </div>
+              </div>
+
+              {/* 3. Neon Particles */}
+              <div
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    effects: {
+                      ...(prev.effects || {}),
+                      neonParticles: !prev.effects?.neonParticles,
+                    },
+                  }))
+                }
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                  formData.effects?.neonParticles
+                    ? 'bg-cyan-500/10 border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.25)]'
+                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">🌌</span>
+                    <span className={`w-3 h-3 rounded-full ${formData.effects?.neonParticles ? 'bg-cyan-400 shadow-[0_0_10px_#06B6D4]' : 'bg-zinc-700'}`} />
+                  </div>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Đốm Sáng Neon Bay</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Hạt phát sáng Cyan & Tím bay lơ lửng từ dưới lên huyền ảo.</p>
+                </div>
+                <div className="text-[10px] font-bold text-cyan-400 uppercase">
+                  {formData.effects?.neonParticles ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
+                </div>
+              </div>
+
+              {/* 4. Sparkles */}
+              <div
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    effects: {
+                      ...(prev.effects || {}),
+                      sparkles: !prev.effects?.sparkles,
+                    },
+                  }))
+                }
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                  formData.effects?.sparkles
+                    ? 'bg-amber-500/10 border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.25)]'
+                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">✨</span>
+                    <span className={`w-3 h-3 rounded-full ${formData.effects?.sparkles ? 'bg-amber-400 shadow-[0_0_10px_#FBBF24]' : 'bg-zinc-700'}`} />
+                  </div>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Tia Sáng Lấp Lánh</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Ngôi sao vàng nhỏ lấp lánh như kim cương trong vũ trụ.</p>
+                </div>
+                <div className="text-[10px] font-bold text-amber-400 uppercase">
+                  {formData.effects?.sparkles ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
+                </div>
+              </div>
+
+              {/* 5. Shooting Stars */}
+              <div
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    effects: {
+                      ...(prev.effects || {}),
+                      shootingStars: !prev.effects?.shootingStars,
+                    },
+                  }))
+                }
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                  formData.effects?.shootingStars
+                    ? 'bg-purple-500/10 border-[#7C3AED] shadow-[0_0_20px_rgba(124,58,237,0.25)]'
+                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">☄️</span>
+                    <span className={`w-3 h-3 rounded-full ${formData.effects?.shootingStars ? 'bg-purple-400 shadow-[0_0_10px_#C084FC]' : 'bg-zinc-700'}`} />
+                  </div>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Sao Băng Lướt Qua</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Vệt sao băng phóng chéo qua màn hình với đuôi phát sáng.</p>
+                </div>
+                <div className="text-[10px] font-bold text-purple-400 uppercase">
+                  {formData.effects?.shootingStars ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
+                </div>
+              </div>
+
+              {/* 6. Matrix Rain */}
+              <div
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    effects: {
+                      ...(prev.effects || {}),
+                      matrixRain: !prev.effects?.matrixRain,
+                    },
+                  }))
+                }
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                  formData.effects?.matrixRain
+                    ? 'bg-emerald-500/10 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.25)]'
+                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">🟢</span>
+                    <span className={`w-3 h-3 rounded-full ${formData.effects?.matrixRain ? 'bg-emerald-400 shadow-[0_0_10px_#10B981]' : 'bg-zinc-700'}`} />
+                  </div>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Ma Trận Matrix Rain</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Dòng mã số xanh lá rơi xuống phong cách Hacker & Tech Pro.</p>
+                </div>
+                <div className="text-[10px] font-bold text-emerald-400 uppercase">
+                  {formData.effects?.matrixRain ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
+                </div>
+              </div>
+
+              {/* 7. RGB Rainbow Border */}
+              <div
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    effects: {
+                      ...(prev.effects || {}),
+                      rgbBorder: !prev.effects?.rgbBorder,
+                    },
+                  }))
+                }
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                  formData.effects?.rgbBorder
+                    ? 'bg-red-500/10 border-rose-400 shadow-[0_0_20px_rgba(244,63,94,0.25)]'
+                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">🌈</span>
+                    <span className={`w-3 h-3 rounded-full ${formData.effects?.rgbBorder ? 'bg-rose-400 shadow-[0_0_10px_#FB7185]' : 'bg-zinc-700'}`} />
+                  </div>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Viền LED RGB Gaming</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Viền phát sáng RGB đổi 7 màu chạy quanh khung màn hình.</p>
+                </div>
+                <div className="text-[10px] font-bold text-rose-400 uppercase">
+                  {formData.effects?.rgbBorder ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
+                </div>
+              </div>
+
+              {/* 8. Cyber Glow Cursor */}
+              <div
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    effects: {
+                      ...(prev.effects || {}),
+                      glowCursor: !prev.effects?.glowCursor,
+                    },
+                  }))
+                }
+                className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-3 flex flex-col justify-between ${
+                  formData.effects?.glowCursor
+                    ? 'bg-cyan-500/10 border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.25)]'
+                    : 'bg-[#161626]/70 border-white/5 hover:border-white/20'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">🖱️</span>
+                    <span className={`w-3 h-3 rounded-full ${formData.effects?.glowCursor ? 'bg-cyan-400 shadow-[0_0_10px_#06B6D4]' : 'bg-zinc-700'}`} />
+                  </div>
+                  <h4 className="font-bold text-xs text-[#F4F2FF] mt-2">Chuột Neon & Click Ripple</h4>
+                  <p className="text-[11px] text-[#8B84A8] mt-0.5">Vệt sáng theo sau con trỏ chuột và sóng lan tỏa khi bấm click.</p>
+                </div>
+                <div className="text-[10px] font-bold text-cyan-400 uppercase">
+                  {formData.effects?.glowCursor ? '🟢 Đang Bật' : '⚪ Đang Tắt'}
+                </div>
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="flex justify-end pt-2">
+              <Button type="submit" variant="primary" size="md" leftIcon={<Save className="w-4 h-4" />}>
+                💾 Lưu Cấu Hình Hiệu Ứng Web
               </Button>
             </div>
           </div>

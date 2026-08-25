@@ -243,8 +243,9 @@ export const StorefrontProducts: React.FC = () => {
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 image-skeleton-shimmer"
                         loading="lazy"
+                        decoding="async"
                       />
                     ) : (
                       <div className="w-12 h-12 rounded-2xl glass-subtle flex items-center justify-center text-[#C084FC] font-bold">

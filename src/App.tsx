@@ -27,6 +27,7 @@ import { StorefrontLogin } from './components/storefront/StorefrontLogin';
 import { StorefrontRegister } from './components/storefront/StorefrontRegister';
 import { StorefrontForgotPassword } from './components/storefront/StorefrontForgotPassword';
 import { StorefrontAIAssistant } from './components/storefront/StorefrontAIAssistant';
+import { GlobalVisualEffects } from './components/effects/GlobalVisualEffects';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Admin Views
@@ -149,6 +150,9 @@ export default function App() {
 
         {/* 🤖 24/7 AI Smart Assistant Mascot Widget */}
         <StorefrontAIAssistant />
+
+        {/* 🌸❄️✨ Global Visual Effects Layer (Snow, Sakura, Neon Particles, RGB Border, Glow Cursor) */}
+        <GlobalVisualEffects />
       </StoreProvider>
     </BrowserRouter>
   );

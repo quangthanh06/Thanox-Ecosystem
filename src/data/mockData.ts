@@ -380,10 +380,6 @@ export const INITIAL_SETTINGS: StoreSettings = {
       url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
     },
   ],
-  effects: {
-    snow: false,
-    cherryBlossom: false,
-  },
   minDeposit: 10000,
   maxDeposit: 10000000,
   scratchCardEnabled: true,
@@ -419,5 +415,16 @@ export const INITIAL_SETTINGS: StoreSettings = {
     enableChunkyTitles: false,
     applyToNavAndButtons: true,
     applyToSectionHeadings: true,
+  },
+  effects: {
+    cherryBlossom: false,
+    snow: false,
+    neonParticles: false,
+    sparkles: false,
+    shootingStars: false,
+    matrixRain: false,
+    rgbBorder: false,
+    glowCursor: false,
+    particleDensity: 'medium',
   },
 };

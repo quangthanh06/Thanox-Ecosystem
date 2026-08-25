@@ -288,6 +288,27 @@ export interface StoreEffects {
   autoMusic?: boolean;
   snow?: boolean;
   cherryBlossom?: boolean;
+  neonParticles?: boolean;
+  sparkles?: boolean;
+  shootingStars?: boolean;
+  matrixRain?: boolean;
+  rgbBorder?: boolean;
+  glowCursor?: boolean;
+  particleDensity?: 'low' | 'medium' | 'high';
+}
+
+export interface CustomerFeedback {
+  id: string;
+  authorName: string;
+  authorAvatar?: string;
+  rating: number;
+  comment: string;
+  productTag: string;
+  createdAt: string;
+  timeAgo?: string;
+  verifiedPurchase: boolean;
+  isSimulated?: boolean;
+  likesCount?: number;
 }
 
 export interface TypographySettings {
