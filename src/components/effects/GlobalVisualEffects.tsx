@@ -1,36 +1,291 @@
 import React, { useEffect, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
+import { StoreEffects } from '../../types';
+
+interface SmoothParticle {
+  id: number;
+  type: string;
+  baseX: number;
+  y: number;
+  size: number;
+  speedX: number;
+  speedY: number;
+  swayRadius: number;
+  swayStep: number;
+  phase: number;
+  rotation: number;
+  rotationSpeed: number;
+  flipPhase: number;
+  flipSpeed: number;
+  opacity: number;
+  color: string;
+  char?: string;
+}
+
+interface ShootingStar {
+  x: number;
+  y: number;
+  length: number;
+  speed: number;
+  angle: number;
+  life: number;
+}
 
 export const GlobalVisualEffects: React.FC = () => {
   const { settings } = useStore();
-  const effects = settings.effects || {};
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Check if any visual effect is active
-  const hasCanvasEffect =
+  // Store latest effects and density in mutable refs so the animation loop NEVER restarts or resets coordinates
+  const effectsRef = useRef<StoreEffects>(settings.effects || {});
+  effectsRef.current = settings.effects || {};
+
+  const densityMultiplierRef = useRef<number>(1.0);
+  densityMultiplierRef.current =
+    settings.effects?.particleDensity === 'high'
+      ? 1.4
+      : settings.effects?.particleDensity === 'low'
+      ? 0.6
+      : 1.0;
+
+  // Persistent Particle Pool across all re-renders
+  const particlesRef = useRef<SmoothParticle[]>([]);
+  const shootingStarsRef = useRef<ShootingStar[]>([]);
+  const nextParticleId = useRef<number>(1);
+  const isInitializedRef = useRef<boolean>(false);
+
+  // Check if any canvas effect is active
+  const effects = settings.effects || {};
+  const hasCanvasEffect = Boolean(
     effects.snow ||
-    effects.cherryBlossom ||
-    effects.autumnLeaves ||
-    effects.rosePetals ||
-    effects.angelFeathers ||
-    effects.diamondShards ||
-    effects.fairyStardust ||
-    effects.floatingHearts ||
-    effects.neonParticles ||
-    effects.sparkles ||
-    effects.shootingStars ||
-    effects.matrixRain ||
-    effects.glowCursor ||
-    effects.fireflies ||
-    effects.plexus ||
-    effects.fireworks ||
-    effects.lightning ||
-    effects.butterflies;
+      effects.cherryBlossom ||
+      effects.autumnLeaves ||
+      effects.rosePetals ||
+      effects.angelFeathers ||
+      effects.diamondShards ||
+      effects.fairyStardust ||
+      effects.floatingHearts ||
+      effects.neonParticles ||
+      effects.sparkles ||
+      effects.shootingStars ||
+      effects.matrixRain ||
+      effects.glowCursor ||
+      effects.fireflies ||
+      effects.plexus ||
+      effects.fireworks ||
+      effects.lightning ||
+      effects.butterflies
+  );
 
-  // Particle Density Multiplier
-  const densityMultiplier =
-    effects.particleDensity === 'high' ? 1.4 : effects.particleDensity === 'low' ? 0.6 : 1.0;
+  // Sync particle pool when active effect toggles change WITHOUT resetting existing particles' positions
+  useEffect(() => {
+    const currentEff = effectsRef.current;
+    const density = densityMultiplierRef.current;
+    const currentParticles = particlesRef.current;
+    const width = window.innerWidth || 1920;
+    const height = window.innerHeight || 1080;
 
+    const targets: Record<string, number> = {
+      sakura: currentEff.cherryBlossom ? Math.floor(28 * density) : 0,
+      autumn_leaf: currentEff.autumnLeaves ? Math.floor(22 * density) : 0,
+      rose_petal: currentEff.rosePetals ? Math.floor(22 * density) : 0,
+      angel_feather: currentEff.angelFeathers ? Math.floor(18 * density) : 0,
+      diamond_shard: currentEff.diamondShards ? Math.floor(22 * density) : 0,
+      fairy_stardust: currentEff.fairyStardust ? Math.floor(35 * density) : 0,
+      floating_heart: currentEff.floatingHearts ? Math.floor(18 * density) : 0,
+      firefly: currentEff.fireflies ? Math.floor(30 * density) : 0,
+      butterfly: currentEff.butterflies ? Math.floor(14 * density) : 0,
+      snow: currentEff.snow ? Math.floor(45 * density) : 0,
+      neon: currentEff.neonParticles ? Math.floor(35 * density) : 0,
+      sparkle: currentEff.sparkles ? Math.floor(30 * density) : 0,
+      matrix: currentEff.matrixRain ? Math.floor(30 * density) : 0,
+      plexus: currentEff.plexus ? Math.floor(38 * density) : 0,
+    };
+
+    const leafColors = ['#EA580C', '#DC2626', '#F59E0B', '#B45309', '#EF4444'];
+    const stardustColors = ['#FACC15', '#C084FC', '#38BDF8', '#F472B6'];
+    const bColors = ['#06B6D4', '#EC4899', '#A855F7', '#38BDF8'];
+    const neonColors = ['#06B6D4', '#7C3AED', '#C084FC', '#22D3EE', '#F43F5E'];
+    const fireflyColors = ['#A3E635', '#FACC15', '#4ADE80', '#38BDF8'];
+    const matrixChars = '0123456789ABCDEFTHAN0XVIP';
+
+    const newPool: SmoothParticle[] = [];
+
+    // Retain existing active particles of each type up to the target count
+    Object.keys(targets).forEach((type) => {
+      const targetCount = targets[type];
+      const existing = currentParticles.filter((p) => p.type === type);
+      const toKeep = existing.slice(0, targetCount);
+      newPool.push(...toKeep);
+
+      // Add missing particles if target count increased
+      const needed = targetCount - toKeep.length;
+      for (let i = 0; i < needed; i++) {
+        // If initial load, scatter vertically across full screen. If dynamic toggle, spawn at top.
+        const spawnY = isInitializedRef.current
+          ? -80 - Math.random() * 60
+          : Math.random() * (height + 160) - 80;
+
+        let p: SmoothParticle = {
+          id: nextParticleId.current++,
+          type,
+          baseX: Math.random() * width,
+          y: spawnY,
+          size: 6,
+          speedX: 0,
+          speedY: 0.5,
+          swayRadius: 15,
+          swayStep: 0.01,
+          phase: Math.random() * Math.PI * 2,
+          rotation: Math.random() * 360,
+          rotationSpeed: 0,
+          flipPhase: Math.random() * Math.PI * 2,
+          flipSpeed: 0.008,
+          opacity: 0.8,
+          color: '#FFFFFF',
+        };
+
+        if (type === 'sakura') {
+          p.size = Math.random() * 4 + 6;
+          p.speedX = Math.random() * 0.2 + 0.05;
+          p.speedY = Math.random() * 0.5 + 0.4;
+          p.swayRadius = Math.random() * 16 + 8;
+          p.swayStep = 0.012;
+          p.rotationSpeed = (Math.random() - 0.5) * 0.6;
+          p.opacity = Math.random() * 0.35 + 0.55;
+          p.color = '#FFB7C5';
+        } else if (type === 'autumn_leaf') {
+          p.size = Math.random() * 6 + 9;
+          p.speedX = Math.random() * 0.2 + 0.1;
+          p.speedY = Math.random() * 0.6 + 0.4;
+          p.swayRadius = Math.random() * 20 + 10;
+          p.swayStep = 0.01;
+          p.rotationSpeed = (Math.random() - 0.5) * 0.7;
+          p.opacity = Math.random() * 0.3 + 0.7;
+          p.color = leafColors[Math.floor(Math.random() * leafColors.length)];
+        } else if (type === 'rose_petal') {
+          p.size = Math.random() * 5 + 7;
+          p.speedX = Math.random() * 0.2 + 0.05;
+          p.speedY = Math.random() * 0.5 + 0.4;
+          p.swayRadius = Math.random() * 16 + 8;
+          p.swayStep = 0.012;
+          p.rotationSpeed = (Math.random() - 0.5) * 0.6;
+          p.opacity = Math.random() * 0.3 + 0.7;
+          p.color = '#E11D48';
+        } else if (type === 'angel_feather') {
+          p.size = Math.random() * 5 + 8;
+          p.speedX = Math.random() * 0.15 + 0.05;
+          p.speedY = Math.random() * 0.4 + 0.25;
+          p.swayRadius = Math.random() * 25 + 12;
+          p.swayStep = 0.009;
+          p.rotationSpeed = (Math.random() - 0.5) * 0.4;
+          p.flipSpeed = 0.006;
+          p.opacity = Math.random() * 0.25 + 0.75;
+          p.color = '#FFFFFF';
+        } else if (type === 'diamond_shard') {
+          p.size = Math.random() * 4 + 5;
+          p.speedX = (Math.random() - 0.5) * 0.15;
+          p.speedY = Math.random() * 0.6 + 0.4;
+          p.swayRadius = Math.random() * 10 + 4;
+          p.swayStep = 0.015;
+          p.rotationSpeed = Math.random() * 1.0 + 0.5;
+          p.flipSpeed = 0.015;
+          p.opacity = Math.random() * 0.3 + 0.7;
+          p.color = '#38BDF8';
+        } else if (type === 'fairy_stardust') {
+          p.size = Math.random() * 2 + 1.2;
+          p.speedX = (Math.random() - 0.5) * 0.15;
+          p.speedY = -(Math.random() * 0.4 + 0.2);
+          p.swayRadius = Math.random() * 12 + 4;
+          p.swayStep = 0.012;
+          p.opacity = Math.random() * 0.6 + 0.4;
+          p.color = stardustColors[Math.floor(Math.random() * stardustColors.length)];
+        } else if (type === 'floating_heart') {
+          p.size = Math.random() * 4 + 6;
+          p.speedX = (Math.random() - 0.5) * 0.15;
+          p.speedY = -(Math.random() * 0.5 + 0.25);
+          p.swayRadius = Math.random() * 14 + 6;
+          p.swayStep = 0.01;
+          p.opacity = Math.random() * 0.3 + 0.7;
+          p.color = '#EC4899';
+        } else if (type === 'firefly') {
+          p.size = Math.random() * 2 + 1.5;
+          p.speedX = (Math.random() - 0.5) * 0.2;
+          p.speedY = (Math.random() - 0.5) * 0.2;
+          p.swayRadius = Math.random() * 15 + 8;
+          p.swayStep = 0.012;
+          p.opacity = Math.random() * 0.6 + 0.4;
+          p.color = fireflyColors[Math.floor(Math.random() * fireflyColors.length)];
+        } else if (type === 'butterfly') {
+          p.size = Math.random() * 4 + 6;
+          p.speedX = Math.random() * 0.4 + 0.2;
+          p.speedY = (Math.random() - 0.5) * 0.15;
+          p.swayRadius = Math.random() * 20 + 10;
+          p.swayStep = 0.01;
+          p.flipSpeed = 0.04;
+          p.opacity = Math.random() * 0.3 + 0.7;
+          p.color = bColors[Math.floor(Math.random() * bColors.length)];
+        } else if (type === 'snow') {
+          p.size = Math.random() * 2 + 1;
+          p.speedX = (Math.random() - 0.5) * 0.15;
+          p.speedY = Math.random() * 0.5 + 0.3;
+          p.swayRadius = Math.random() * 10 + 4;
+          p.swayStep = 0.01;
+          p.opacity = Math.random() * 0.5 + 0.35;
+          p.color = '#FFFFFF';
+        } else if (type === 'neon') {
+          p.size = Math.random() * 2 + 1;
+          p.speedX = (Math.random() - 0.5) * 0.15;
+          p.speedY = -(Math.random() * 0.5 + 0.3);
+          p.swayRadius = Math.random() * 10 + 4;
+          p.swayStep = 0.012;
+          p.opacity = Math.random() * 0.6 + 0.35;
+          p.color = neonColors[Math.floor(Math.random() * neonColors.length)];
+        } else if (type === 'sparkle') {
+          p.size = Math.random() * 2 + 1;
+          p.speedX = (Math.random() - 0.5) * 0.05;
+          p.speedY = (Math.random() - 0.5) * 0.05;
+          p.opacity = Math.random() * 0.7 + 0.2;
+          p.color = '#FDE047';
+        } else if (type === 'matrix') {
+          p.size = Math.random() * 3 + 11;
+          p.speedX = 0;
+          p.speedY = Math.random() * 1.2 + 1.0;
+          p.opacity = Math.random() * 0.6 + 0.3;
+          p.color = '#10B981';
+          p.char = matrixChars[Math.floor(Math.random() * matrixChars.length)];
+        } else if (type === 'plexus') {
+          p.size = Math.random() * 1.8 + 1.2;
+          p.speedX = (Math.random() - 0.5) * 0.35;
+          p.speedY = (Math.random() - 0.5) * 0.35;
+          p.opacity = Math.random() * 0.5 + 0.4;
+          p.color = '#22D3EE';
+        }
+
+        newPool.push(p);
+      }
+    });
+
+    particlesRef.current = newPool;
+    isInitializedRef.current = true;
+  }, [
+    effects.cherryBlossom,
+    effects.autumnLeaves,
+    effects.rosePetals,
+    effects.angelFeathers,
+    effects.diamondShards,
+    effects.fairyStardust,
+    effects.floatingHearts,
+    effects.fireflies,
+    effects.butterflies,
+    effects.snow,
+    effects.neonParticles,
+    effects.sparkles,
+    effects.matrixRain,
+    effects.plexus,
+    effects.particleDensity,
+  ]);
+
+  // Main Persistent Canvas Lifecycle (Runs ONLY ONCE on mount / resize)
   useEffect(() => {
     if (!hasCanvasEffect) return;
 
@@ -78,9 +333,7 @@ export const GlobalVisualEffects: React.FC = () => {
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
     window.addEventListener('mouseleave', handleMouseLeave, { passive: true });
 
-    // --- REALISTIC & LIGHTWEIGHT VECTOR DRAWING FUNCTIONS ---
-
-    // 1. Maple Autumn Leaf (5-pointed serrated leaf)
+    // --- DRAWING FUNCTIONS ---
     const drawMapleLeaf = (
       c: CanvasRenderingContext2D,
       size: number,
@@ -95,31 +348,26 @@ export const GlobalVisualEffects: React.FC = () => {
       c.moveTo(0, size * 0.85);
       c.lineTo(0, size * 0.35);
 
-      // Left lower lobe
       c.lineTo(-size * 0.35, size * 0.4);
       c.lineTo(-size * 0.5, size * 0.18);
       c.lineTo(-size * 0.35, size * 0.08);
 
-      // Left middle main lobe
       c.lineTo(-size * 0.65, 0);
       c.lineTo(-size * 0.85, -size * 0.22);
       c.lineTo(-size * 0.6, -size * 0.22);
       c.lineTo(-size * 0.7, -size * 0.52);
       c.lineTo(-size * 0.45, -size * 0.38);
 
-      // Top main central lobe
       c.lineTo(-size * 0.25, -size * 0.72);
       c.lineTo(0, -size * 1.0);
       c.lineTo(size * 0.25, -size * 0.72);
 
-      // Right middle main lobe
       c.lineTo(size * 0.45, -size * 0.38);
       c.lineTo(size * 0.7, -size * 0.52);
       c.lineTo(size * 0.6, -size * 0.22);
       c.lineTo(size * 0.85, -size * 0.22);
       c.lineTo(size * 0.65, 0);
 
-      // Right lower lobe
       c.lineTo(size * 0.35, size * 0.08);
       c.lineTo(size * 0.5, size * 0.18);
       c.lineTo(size * 0.35, size * 0.4);
@@ -143,7 +391,6 @@ export const GlobalVisualEffects: React.FC = () => {
       c.restore();
     };
 
-    // 2. Sakura Petal
     const drawSakuraPetal = (c: CanvasRenderingContext2D, size: number, opacity: number) => {
       c.save();
       c.fillStyle = `rgba(255, 183, 197, ${opacity})`;
@@ -158,7 +405,6 @@ export const GlobalVisualEffects: React.FC = () => {
       c.restore();
     };
 
-    // 3. Velvet Red Rose Petal
     const drawRosePetal = (c: CanvasRenderingContext2D, size: number, opacity: number) => {
       c.save();
       c.globalAlpha = opacity;
@@ -173,7 +419,6 @@ export const GlobalVisualEffects: React.FC = () => {
       c.restore();
     };
 
-    // 4. White Angel Feather
     const drawAngelFeather = (c: CanvasRenderingContext2D, size: number, opacity: number) => {
       c.save();
       c.globalAlpha = opacity;
@@ -185,7 +430,6 @@ export const GlobalVisualEffects: React.FC = () => {
       c.fillStyle = 'rgba(255, 255, 255, 0.8)';
       c.fill();
 
-      // Quill spine
       c.beginPath();
       c.moveTo(0, size * 1.1);
       c.lineTo(0, -size * 1.0);
@@ -195,7 +439,6 @@ export const GlobalVisualEffects: React.FC = () => {
       c.restore();
     };
 
-    // 5. Diamond Crystal Shard
     const drawDiamondShard = (c: CanvasRenderingContext2D, size: number, opacity: number) => {
       c.save();
       c.globalAlpha = opacity;
@@ -214,7 +457,6 @@ export const GlobalVisualEffects: React.FC = () => {
       c.restore();
     };
 
-    // 6. Floating Heart
     const drawFloatingHeart = (c: CanvasRenderingContext2D, size: number, opacity: number) => {
       c.save();
       c.globalAlpha = opacity;
@@ -230,7 +472,6 @@ export const GlobalVisualEffects: React.FC = () => {
       c.restore();
     };
 
-    // 7. Glowing Butterfly
     const drawButterfly = (
       c: CanvasRenderingContext2D,
       size: number,
@@ -241,7 +482,6 @@ export const GlobalVisualEffects: React.FC = () => {
       c.save();
       c.globalAlpha = opacity;
 
-      // Left wing
       c.save();
       c.scale(flap, 1);
       c.beginPath();
@@ -252,7 +492,6 @@ export const GlobalVisualEffects: React.FC = () => {
       c.fill();
       c.restore();
 
-      // Right wing
       c.save();
       c.scale(-flap, 1);
       c.beginPath();
@@ -263,7 +502,6 @@ export const GlobalVisualEffects: React.FC = () => {
       c.fill();
       c.restore();
 
-      // Body
       c.beginPath();
       c.ellipse(0, 0, 1.5, size * 0.35, 0, 0, Math.PI * 2);
       c.fillStyle = '#FFFFFF';
@@ -271,390 +509,16 @@ export const GlobalVisualEffects: React.FC = () => {
       c.restore();
     };
 
-    // --- PARTICLE MODEL ---
-
-    interface SmoothParticle {
-      type: string;
-      baseX: number;
-      y: number;
-      size: number;
-      speedX: number;
-      speedY: number;
-      swayRadius: number;
-      swayStep: number;
-      phase: number;
-      rotation: number;
-      rotationSpeed: number;
-      flipPhase: number;
-      flipSpeed: number;
-      opacity: number;
-      color: string;
-      char?: string;
-    }
-
-    const particles: SmoothParticle[] = [];
-
-    // Sakura Petals
-    if (effects.cherryBlossom) {
-      const count = Math.floor(28 * densityMultiplier);
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'sakura',
-          baseX: Math.random() * width,
-          y: Math.random() * (height + 160) - 80,
-          size: Math.random() * 4 + 6,
-          speedX: Math.random() * 0.2 + 0.05,
-          speedY: Math.random() * 0.5 + 0.4,
-          swayRadius: Math.random() * 16 + 8,
-          swayStep: 0.012,
-          phase: Math.random() * Math.PI * 2,
-          rotation: Math.random() * 360,
-          rotationSpeed: (Math.random() - 0.5) * 0.6,
-          flipPhase: Math.random() * Math.PI * 2,
-          flipSpeed: 0.008,
-          opacity: Math.random() * 0.35 + 0.55,
-          color: '#FFB7C5',
-        });
-      }
-    }
-
-    // Autumn Leaves (Lá Phong 5 Cánh)
-    if (effects.autumnLeaves) {
-      const count = Math.floor(22 * densityMultiplier);
-      const leafColors = ['#EA580C', '#DC2626', '#F59E0B', '#B45309', '#EF4444'];
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'autumn_leaf',
-          baseX: Math.random() * width,
-          y: Math.random() * (height + 160) - 80,
-          size: Math.random() * 6 + 9,
-          speedX: Math.random() * 0.2 + 0.1,
-          speedY: Math.random() * 0.6 + 0.4,
-          swayRadius: Math.random() * 20 + 10,
-          swayStep: 0.01,
-          phase: Math.random() * Math.PI * 2,
-          rotation: Math.random() * 360,
-          rotationSpeed: (Math.random() - 0.5) * 0.7,
-          flipPhase: Math.random() * Math.PI * 2,
-          flipSpeed: 0.008,
-          opacity: Math.random() * 0.3 + 0.7,
-          color: leafColors[Math.floor(Math.random() * leafColors.length)],
-        });
-      }
-    }
-
-    // Rose Petals (Cánh Hoa Hồng Đỏ)
-    if (effects.rosePetals) {
-      const count = Math.floor(22 * densityMultiplier);
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'rose_petal',
-          baseX: Math.random() * width,
-          y: Math.random() * (height + 160) - 80,
-          size: Math.random() * 5 + 7,
-          speedX: Math.random() * 0.2 + 0.05,
-          speedY: Math.random() * 0.5 + 0.4,
-          swayRadius: Math.random() * 16 + 8,
-          swayStep: 0.012,
-          phase: Math.random() * Math.PI * 2,
-          rotation: Math.random() * 360,
-          rotationSpeed: (Math.random() - 0.5) * 0.6,
-          flipPhase: Math.random() * Math.PI * 2,
-          flipSpeed: 0.008,
-          opacity: Math.random() * 0.3 + 0.7,
-          color: '#E11D48',
-        });
-      }
-    }
-
-    // Angel Feathers (Lông Vũ Thiên Thần)
-    if (effects.angelFeathers) {
-      const count = Math.floor(18 * densityMultiplier);
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'angel_feather',
-          baseX: Math.random() * width,
-          y: Math.random() * (height + 160) - 80,
-          size: Math.random() * 5 + 8,
-          speedX: Math.random() * 0.15 + 0.05,
-          speedY: Math.random() * 0.4 + 0.25,
-          swayRadius: Math.random() * 25 + 12,
-          swayStep: 0.009,
-          phase: Math.random() * Math.PI * 2,
-          rotation: Math.random() * 360,
-          rotationSpeed: (Math.random() - 0.5) * 0.4,
-          flipPhase: Math.random() * Math.PI * 2,
-          flipSpeed: 0.006,
-          opacity: Math.random() * 0.25 + 0.75,
-          color: '#FFFFFF',
-        });
-      }
-    }
-
-    // Diamond Shards (Kim Cương Pha Lê)
-    if (effects.diamondShards) {
-      const count = Math.floor(22 * densityMultiplier);
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'diamond_shard',
-          baseX: Math.random() * width,
-          y: Math.random() * (height + 160) - 80,
-          size: Math.random() * 4 + 5,
-          speedX: (Math.random() - 0.5) * 0.15,
-          speedY: Math.random() * 0.6 + 0.4,
-          swayRadius: Math.random() * 10 + 4,
-          swayStep: 0.015,
-          phase: Math.random() * Math.PI * 2,
-          rotation: Math.random() * 360,
-          rotationSpeed: Math.random() * 1.0 + 0.5,
-          flipPhase: Math.random() * Math.PI * 2,
-          flipSpeed: 0.015,
-          opacity: Math.random() * 0.3 + 0.7,
-          color: '#38BDF8',
-        });
-      }
-    }
-
-    // Fairy Magic Stardust (Bụi Tiên Tộc)
-    if (effects.fairyStardust) {
-      const count = Math.floor(35 * densityMultiplier);
-      const stardustColors = ['#FACC15', '#C084FC', '#38BDF8', '#F472B6'];
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'fairy_stardust',
-          baseX: Math.random() * width,
-          y: Math.random() * (height + 160) - 80,
-          size: Math.random() * 2 + 1.2,
-          speedX: (Math.random() - 0.5) * 0.15,
-          speedY: -(Math.random() * 0.4 + 0.2), // Float up
-          swayRadius: Math.random() * 12 + 4,
-          swayStep: 0.012,
-          phase: Math.random() * Math.PI * 2,
-          rotation: 0,
-          rotationSpeed: 0,
-          flipPhase: 0,
-          flipSpeed: 0,
-          opacity: Math.random() * 0.6 + 0.4,
-          color: stardustColors[Math.floor(Math.random() * stardustColors.length)],
-        });
-      }
-    }
-
-    // Floating Hearts (Trái Tim Tình Yêu)
-    if (effects.floatingHearts) {
-      const count = Math.floor(18 * densityMultiplier);
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'floating_heart',
-          baseX: Math.random() * width,
-          y: Math.random() * (height + 160) - 80,
-          size: Math.random() * 4 + 6,
-          speedX: (Math.random() - 0.5) * 0.15,
-          speedY: -(Math.random() * 0.5 + 0.25),
-          swayRadius: Math.random() * 14 + 6,
-          swayStep: 0.01,
-          phase: Math.random() * Math.PI * 2,
-          rotation: 0,
-          rotationSpeed: 0,
-          flipPhase: Math.random() * Math.PI * 2,
-          flipSpeed: 0.01,
-          opacity: Math.random() * 0.3 + 0.7,
-          color: '#EC4899',
-        });
-      }
-    }
-
-    // Fireflies (Đom Đóm)
-    if (effects.fireflies) {
-      const count = Math.floor(30 * densityMultiplier);
-      const colors = ['#A3E635', '#FACC15', '#4ADE80', '#38BDF8'];
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'firefly',
-          baseX: Math.random() * width,
-          y: Math.random() * height,
-          size: Math.random() * 2 + 1.5,
-          speedX: (Math.random() - 0.5) * 0.2,
-          speedY: (Math.random() - 0.5) * 0.2,
-          swayRadius: Math.random() * 15 + 8,
-          swayStep: 0.012,
-          phase: Math.random() * Math.PI * 2,
-          rotation: 0,
-          rotationSpeed: 0,
-          flipPhase: 0,
-          flipSpeed: 0,
-          opacity: Math.random() * 0.6 + 0.4,
-          color: colors[Math.floor(Math.random() * colors.length)],
-        });
-      }
-    }
-
-    // Glowing Butterflies (Bướm Dạ Quang)
-    if (effects.butterflies) {
-      const count = Math.floor(14 * densityMultiplier);
-      const bColors = ['#06B6D4', '#EC4899', '#A855F7', '#38BDF8'];
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'butterfly',
-          baseX: Math.random() * width,
-          y: Math.random() * height,
-          size: Math.random() * 4 + 6,
-          speedX: Math.random() * 0.4 + 0.2,
-          speedY: (Math.random() - 0.5) * 0.15,
-          swayRadius: Math.random() * 20 + 10,
-          swayStep: 0.01,
-          phase: Math.random() * Math.PI * 2,
-          rotation: Math.random() * 360,
-          rotationSpeed: 0,
-          flipPhase: Math.random() * Math.PI * 2,
-          flipSpeed: 0.04,
-          opacity: Math.random() * 0.3 + 0.7,
-          color: bColors[Math.floor(Math.random() * bColors.length)],
-        });
-      }
-    }
-
-    // Snow (Tuyết Rơi)
-    if (effects.snow) {
-      const count = Math.floor(45 * densityMultiplier);
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'snow',
-          baseX: Math.random() * width,
-          y: Math.random() * (height + 160) - 80,
-          size: Math.random() * 2 + 1,
-          speedX: (Math.random() - 0.5) * 0.15,
-          speedY: Math.random() * 0.5 + 0.3,
-          swayRadius: Math.random() * 10 + 4,
-          swayStep: 0.01,
-          phase: Math.random() * Math.PI * 2,
-          rotation: 0,
-          rotationSpeed: 0,
-          flipPhase: 0,
-          flipSpeed: 0,
-          opacity: Math.random() * 0.5 + 0.35,
-          color: '#FFFFFF',
-        });
-      }
-    }
-
-    // Neon Particles
-    if (effects.neonParticles) {
-      const count = Math.floor(35 * densityMultiplier);
-      const colors = ['#06B6D4', '#7C3AED', '#C084FC', '#22D3EE', '#F43F5E'];
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'neon',
-          baseX: Math.random() * width,
-          y: Math.random() * (height + 160) - 80,
-          size: Math.random() * 2 + 1,
-          speedX: (Math.random() - 0.5) * 0.15,
-          speedY: -(Math.random() * 0.5 + 0.3),
-          swayRadius: Math.random() * 10 + 4,
-          swayStep: 0.012,
-          phase: Math.random() * Math.PI * 2,
-          rotation: 0,
-          rotationSpeed: 0,
-          flipPhase: 0,
-          flipSpeed: 0,
-          opacity: Math.random() * 0.6 + 0.35,
-          color: colors[Math.floor(Math.random() * colors.length)],
-        });
-      }
-    }
-
-    // Sparkles
-    if (effects.sparkles) {
-      const count = Math.floor(30 * densityMultiplier);
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'sparkle',
-          baseX: Math.random() * width,
-          y: Math.random() * height,
-          size: Math.random() * 2 + 1,
-          speedX: (Math.random() - 0.5) * 0.05,
-          speedY: (Math.random() - 0.5) * 0.05,
-          swayRadius: 0,
-          swayStep: 0,
-          phase: Math.random() * Math.PI * 2,
-          rotation: 0,
-          rotationSpeed: 0,
-          flipPhase: 0,
-          flipSpeed: 0,
-          opacity: Math.random() * 0.7 + 0.2,
-          color: '#FDE047',
-        });
-      }
-    }
-
-    // Matrix Rain
-    const matrixChars = '0123456789ABCDEFTHAN0XVIP';
-    if (effects.matrixRain) {
-      const count = Math.floor(30 * densityMultiplier);
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'matrix',
-          baseX: Math.random() * width,
-          y: Math.random() * (height + 160) - 80,
-          size: Math.random() * 3 + 11,
-          speedX: 0,
-          speedY: Math.random() * 1.2 + 1.0,
-          swayRadius: 0,
-          swayStep: 0,
-          phase: 0,
-          rotation: 0,
-          rotationSpeed: 0,
-          flipPhase: 0,
-          flipSpeed: 0,
-          opacity: Math.random() * 0.6 + 0.3,
-          color: '#10B981',
-          char: matrixChars[Math.floor(Math.random() * matrixChars.length)],
-        });
-      }
-    }
-
-    // Plexus Nodes
-    if (effects.plexus) {
-      const count = Math.floor(38 * densityMultiplier);
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          type: 'plexus',
-          baseX: Math.random() * width,
-          y: Math.random() * height,
-          size: Math.random() * 1.8 + 1.2,
-          speedX: (Math.random() - 0.5) * 0.35,
-          speedY: (Math.random() - 0.5) * 0.35,
-          swayRadius: 0,
-          swayStep: 0,
-          phase: 0,
-          rotation: 0,
-          rotationSpeed: 0,
-          flipPhase: 0,
-          flipSpeed: 0,
-          opacity: Math.random() * 0.5 + 0.4,
-          color: '#22D3EE',
-        });
-      }
-    }
-
-    // Shooting Stars
-    interface ShootingStar {
-      x: number;
-      y: number;
-      length: number;
-      speed: number;
-      angle: number;
-      life: number;
-    }
-    const shootingStars: ShootingStar[] = [];
     let lastStarTime = performance.now();
+    const matrixChars = '0123456789ABCDEFTHAN0XVIP';
 
-    // --- ROCK-SOLID 60-120 FPS FLUID ANIMATION LOOP ---
+    // --- CONTINUOUS PERPETUAL FLUID LOOP ---
     const render = () => {
+      const curEff = effectsRef.current;
       ctx.clearRect(0, 0, width, height);
 
-      // A. Smooth Mouse Aura (Glow Cursor)
-      if (effects.glowCursor && mousePos.isOver) {
+      // A. Smooth Mouse Aura
+      if (curEff.glowCursor && mousePos.isOver) {
         mousePos.x += (mousePos.targetX - mousePos.x) * 0.2;
         mousePos.y += (mousePos.targetY - mousePos.y) * 0.2;
 
@@ -682,8 +546,8 @@ export const GlobalVisualEffects: React.FC = () => {
       }
 
       // B. Plexus Constellation Line Network
-      if (effects.plexus) {
-        const plexusNodes = particles.filter((p) => p.type === 'plexus');
+      if (curEff.plexus) {
+        const plexusNodes = particlesRef.current.filter((p) => p.type === 'plexus');
         ctx.lineWidth = 0.75;
 
         for (let i = 0; i < plexusNodes.length; i++) {
@@ -724,11 +588,11 @@ export const GlobalVisualEffects: React.FC = () => {
       }
 
       // C. Shooting Stars
-      if (effects.shootingStars) {
+      if (curEff.shootingStars) {
         const now = performance.now();
-        if (now - lastStarTime > 3000 && shootingStars.length < 2) {
+        if (now - lastStarTime > 3000 && shootingStarsRef.current.length < 2) {
           lastStarTime = now;
-          shootingStars.push({
+          shootingStarsRef.current.push({
             x: Math.random() * (width * 0.7) + 50,
             y: Math.random() * (height * 0.35),
             length: Math.random() * 60 + 40,
@@ -738,14 +602,14 @@ export const GlobalVisualEffects: React.FC = () => {
           });
         }
 
-        for (let i = shootingStars.length - 1; i >= 0; i--) {
-          const star = shootingStars[i];
+        for (let i = shootingStarsRef.current.length - 1; i >= 0; i--) {
+          const star = shootingStarsRef.current[i];
           star.x += Math.cos(star.angle) * star.speed;
           star.y += Math.sin(star.angle) * star.speed;
           star.life -= 0.012;
 
           if (star.life <= 0 || star.x > width || star.y > height) {
-            shootingStars.splice(i, 1);
+            shootingStarsRef.current.splice(i, 1);
             continue;
           }
 
@@ -766,25 +630,24 @@ export const GlobalVisualEffects: React.FC = () => {
         }
       }
 
-      // D. Main Particle Physics Engine (Ultra-Smooth Constant Step)
+      // D. Main Particle Loop
+      const particles = particlesRef.current;
       const bottomPadding = 90;
       const topPadding = 90;
 
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
 
-        // 1. Advance position smoothly
         p.baseX += p.speedX;
         p.y += p.speedY;
         p.phase += p.swayStep;
         p.flipPhase += p.flipSpeed;
         p.rotation += p.rotationSpeed;
 
-        // 2. Smooth gentle sway coordinate
         const renderX = p.swayRadius ? p.baseX + Math.sin(p.phase) * p.swayRadius : p.baseX;
         const renderY = p.y;
 
-        // 3. Falling particles ONLY reset when reaching 90px past bottom of screen
+        // Falling particles ONLY reset when reaching 90px past bottom of screen
         if (p.speedY > 0 && p.y > height + bottomPadding) {
           p.y = -topPadding - Math.random() * 60;
           p.baseX = Math.random() * width;
@@ -793,7 +656,7 @@ export const GlobalVisualEffects: React.FC = () => {
           p.baseX = Math.random() * width;
         }
 
-        // 4. Draw particle based on type
+        // Draw particle
         if (p.type === 'autumn_leaf') {
           ctx.save();
           ctx.translate(renderX, renderY);
@@ -895,7 +758,7 @@ export const GlobalVisualEffects: React.FC = () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [hasCanvasEffect, effects, densityMultiplier]);
+  }, [hasCanvasEffect]);
 
   return (
     <>
