@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../context/StoreContext';
 import { CommandPalette } from './ui/CommandPalette';
+import { MenuIcon } from './ui/MenuIcon';
 import {
-  Menu,
   Search,
   Bell,
   CheckCheck,
@@ -84,9 +84,9 @@ export const Topbar: React.FC = () => {
           <button
             onClick={toggleSidebar}
             aria-label="Mở thanh điều hướng"
-            className="lg:hidden w-9 h-9 rounded-2xl glass-subtle hover:bg-white/10 flex items-center justify-center text-[#938EB5] hover:text-white cursor-pointer active:scale-90 transition-all border border-white/8"
+            className="lg:hidden w-9 h-9 rounded-2xl glass-subtle hover:bg-white/10 flex items-center justify-center text-[#938EB5] hover:text-white cursor-pointer active:scale-90 transition-all border border-white/8 group"
           >
-            <Menu className="w-4.5 h-4.5" />
+            <MenuIcon size={18} strokeWidth={2.2} animateOnHover />
           </button>
 
           <div className="flex flex-col min-w-0">

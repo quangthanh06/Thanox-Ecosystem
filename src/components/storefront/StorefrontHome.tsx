@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Button } from '../ui/Button';
+import { GlassButton } from '../ui/GlassButton';
 import {
   ShieldCheck,
   Headphones,
@@ -185,19 +186,20 @@ export const StorefrontHome: React.FC = () => {
 
               {/* 2. Desktop Persistent Fixed CTA Action Row (Never re-mounts / Never jumps) */}
               <div className="hidden lg:flex items-center gap-3 pt-1">
-                <button
+                <GlassButton
                   type="button"
+                  size="default"
                   onClick={() => navigateToStorefront('product-detail', currentSlide.id)}
-                  className="px-6 py-3 rounded-2xl btn-liquid-primary font-bold text-xs sm:text-sm flex items-center gap-2 cursor-pointer shadow-md active:scale-95 transition-all min-h-[44px]"
+                  contentClassName="flex items-center gap-2 font-black"
                 >
-                  <ShoppingBag className="w-4 h-4" />
+                  <ShoppingBag className="w-4 h-4 text-cyan-300" />
                   <span>Xem Sản Phẩm</span>
-                </button>
+                </GlassButton>
 
                 <button
                   type="button"
                   onClick={() => navigateToStorefront('support')}
-                  className="px-6 py-3 rounded-2xl btn-liquid-secondary font-bold text-xs sm:text-sm flex items-center gap-2 cursor-pointer active:scale-95 transition-all min-h-[44px] border border-white/10"
+                  className="px-6 py-3 rounded-full btn-liquid-secondary font-bold text-xs sm:text-sm flex items-center gap-2 cursor-pointer active:scale-95 transition-all min-h-[44px] border border-white/10"
                 >
                   <Headphones className="w-4 h-4 text-[#22D3EE]" />
                   <span>Hỗ Trợ Ngay</span>
@@ -243,19 +245,21 @@ export const StorefrontHome: React.FC = () => {
 
             {/* Mobile Persistent Fixed CTA Action Row (< lg) */}
             <div className="lg:hidden flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1 w-full">
-              <button
+              <GlassButton
                 type="button"
+                size="default"
                 onClick={() => navigateToStorefront('product-detail', currentSlide.id)}
-                className="w-full sm:w-auto flex-1 px-5 py-3 rounded-2xl btn-liquid-primary font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-95 transition-all min-h-[44px]"
+                className="w-full sm:w-auto flex-1"
+                contentClassName="flex items-center justify-center gap-2 font-black"
               >
-                <ShoppingBag className="w-4 h-4" />
+                <ShoppingBag className="w-4 h-4 text-cyan-300" />
                 <span>Xem Sản Phẩm</span>
-              </button>
+              </GlassButton>
 
               <button
                 type="button"
                 onClick={() => navigateToStorefront('support')}
-                className="w-full sm:w-auto flex-1 px-5 py-3 rounded-2xl btn-liquid-secondary font-bold text-xs flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all min-h-[44px] border border-white/10"
+                className="w-full sm:w-auto flex-1 px-5 py-3 rounded-full btn-liquid-secondary font-bold text-xs flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all min-h-[44px] border border-white/10"
               >
                 <Headphones className="w-4 h-4 text-[#22D3EE]" />
                 <span>Hỗ Trợ Ngay</span>

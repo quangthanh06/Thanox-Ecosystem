@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../../context/StoreContext';
 import { Button } from '../ui/Button';
+import { MenuIcon } from '../ui/MenuIcon';
 import { Toast } from '../Toast';
 import {
   Flame,
@@ -381,14 +382,15 @@ export const StorefrontLayout: React.FC = () => {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="xl:hidden h-9 w-9 rounded-xl glass-subtle hover:bg-white/10 text-white cursor-pointer active:scale-90 transition-all shadow-sm flex items-center justify-center shrink-0 border border-white/8"
+              className="xl:hidden h-9 w-9 rounded-xl glass-subtle hover:bg-white/10 text-white cursor-pointer active:scale-90 transition-all shadow-sm flex items-center justify-center shrink-0 border border-white/8 group"
               aria-label="Menu"
             >
-              {mobileMenuOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <Menu className={`w-5 h-5 ${themeTypo.isFlowEnabled ? 'text-[#22D3EE]' : 'text-white'}`} />
-              )}
+              <MenuIcon
+                isOpen={mobileMenuOpen}
+                size={20}
+                strokeWidth={2.2}
+                className={themeTypo.isFlowEnabled ? 'text-[#22D3EE]' : 'text-white'}
+              />
             </button>
           </div>
         </div>

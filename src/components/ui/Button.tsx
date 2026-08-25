@@ -1,7 +1,7 @@
 import React from 'react';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'glass' | 'outline' | 'ghost' | 'danger' | 'success';
+  variant?: 'primary' | 'secondary' | 'glass' | 'glass-3d' | 'outline' | 'ghost' | 'danger' | 'success';
   size?: 'xs' | 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -36,6 +36,8 @@ export const Button: React.FC<ButtonProps> = ({
       'btn-liquid-secondary focus-visible:ring-white/20',
     glass:
       'glass-subtle hover:bg-white/10 text-[#F4F2FF] border border-white/12 hover:border-white/20 shadow-md focus-visible:ring-white/20',
+    'glass-3d':
+      'glass-button text-white border border-white/25 hover:border-white/40 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)] focus-visible:ring-white/30',
     outline:
       'bg-transparent hover:bg-white/5 text-[#F4F2FF] border border-white/15 hover:border-white/30 focus-visible:ring-white/20',
     ghost:
