@@ -571,36 +571,37 @@ export const StorefrontDepositQR: React.FC = () => {
       </div>
 
       {/* Channel Switcher */}
-      <div className="flex items-center gap-3 border-b border-white/8 pb-4">
+      <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-3 border-b border-white/8 pb-4">
         <button
           type="button"
           onClick={() => setDepositChannel('vietqr')}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer border active:scale-95 ${
+          className={`flex items-center justify-center sm:justify-start gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer border active:scale-95 min-h-[44px] ${
             depositChannel === 'vietqr'
               ? 'btn-liquid-primary shadow-md'
               : 'glass-subtle text-[#938EB5] border-white/8 hover:text-white hover:bg-white/5'
           }`}
         >
-          <QrCode className="w-4 h-4" />
-          <span>Chuyển Khoản Ngân Hàng (VietQR)</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-400/20 text-emerald-300 font-bold ml-1">
-            Khuyên Dùng
+          <QrCode className="w-4 h-4 shrink-0 text-[#22D3EE]" />
+          <span className="sm:hidden">VietQR / Bank</span>
+          <span className="hidden sm:inline">Chuyển Khoản VietQR</span>
+          <span className="hidden md:inline-flex px-2 py-0.5 rounded-full text-[10px] bg-emerald-400/20 text-emerald-300 font-bold ml-1">
+            Tự Động 24/7
           </span>
         </button>
 
         <button
           type="button"
           onClick={() => setDepositChannel('card')}
-          className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer border active:scale-95 ${
+          className={`flex items-center justify-center sm:justify-start gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer border active:scale-95 min-h-[44px] ${
             depositChannel === 'card'
               ? 'btn-liquid-primary shadow-md'
               : 'glass-subtle text-[#938EB5] border-white/8 hover:text-white hover:bg-white/5'
           }`}
         >
-          <Smartphone className="w-4 h-4" />
-          <span>Nạp Thẻ Cào Điện Thoại / Game</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-400/20 text-amber-300 font-bold ml-1">
-            Chiết khấu {cardFeePercent}%
+          <Smartphone className="w-4 h-4 shrink-0 text-amber-300" />
+          <span>Nạp Thẻ Cào</span>
+          <span className="hidden md:inline-flex px-2 py-0.5 rounded-full text-[10px] bg-amber-400/20 text-amber-300 font-bold ml-1">
+            Phí {cardFeePercent}%
           </span>
         </button>
       </div>

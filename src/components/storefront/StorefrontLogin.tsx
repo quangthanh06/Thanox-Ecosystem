@@ -13,6 +13,7 @@ import {
   Smartphone,
   ShieldCheck,
   KeyRound,
+  Home,
 } from 'lucide-react';
 import { verifyTotpCode } from '../../utils/totp';
 
@@ -114,28 +115,30 @@ export const StorefrontLogin: React.FC = () => {
         {/* Right Form Card Side */}
         <div className="lg:col-span-7 xl:col-span-6 flex flex-col justify-center">
           <div className="glass-prominent border border-white/12 shadow-[0_30px_70px_rgba(0,0,0,0.85)] rounded-3xl p-6 sm:p-10 space-y-6">
-            {/* Top Switcher Tabs (Login / Register) */}
-            <div className="flex items-center justify-between border-b border-white/8 pb-4">
-              <div className="flex items-center gap-2 p-1 rounded-2xl glass-subtle border border-white/6">
+            {/* Top Switcher Tabs (Login / Register) & Back to Home */}
+            <div className="flex items-center justify-between gap-2 border-b border-white/8 pb-4">
+              <div className="flex items-center gap-1.5 p-1 rounded-2xl glass-subtle border border-white/6">
                 <Link
                   to={`/login${searchParams.toString() ? `?${searchParams.toString()}` : ''}`}
-                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all btn-liquid-primary shadow-md"
+                  className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all btn-liquid-primary shadow-md"
                 >
                   Đăng Nhập
                 </Link>
                 <Link
                   to={`/register${searchParams.toString() ? `?${searchParams.toString()}` : ''}`}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold transition-all text-[#938EB5] hover:text-white"
+                  className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-semibold transition-all text-[#938EB5] hover:text-white"
                 >
-                  Tạo Tài Khoản
+                  Đăng Ký
                 </Link>
               </div>
 
               <Link
                 to="/"
-                className="text-xs text-[#938EB5] hover:text-[#C084FC] transition-colors font-medium"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-subtle hover:glass-standard text-xs text-[#938EB5] hover:text-[#F4F2FF] border border-white/8 transition-all font-medium shrink-0 active:scale-95 shadow-sm"
               >
-                Về Trang Chủ &rarr;
+                <Home className="w-3.5 h-3.5 text-[#22D3EE]" />
+                <span className="hidden sm:inline">Trang Chủ</span>
+                <span className="sm:hidden">Home</span>
               </Link>
             </div>
 
