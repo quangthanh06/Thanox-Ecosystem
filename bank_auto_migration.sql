@@ -316,31 +316,6 @@ BEGIN
 END;
 $$;
 
--- Overload hỗ trợ TEXT timestamp cho Supabase RPC client
-CREATE OR REPLACE FUNCTION public.process_bank_webhook(
-    p_provider TEXT,
-    p_transaction_id TEXT,
-    p_amount BIGINT,
-    p_content TEXT,
-    p_transfer_time TEXT
-)
-RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-    v_time TIMESTAMP WITH TIME ZONE;
-BEGIN
-    BEGIN
-        v_time := p_transfer_time::TIMESTAMP WITH TIME ZONE;
-    EXCEPTION WHEN OTHERS THEN
-        v_time := NOW();
-    END;
-    RETURN public.process_bank_webhook(p_provider, p_transaction_id, p_amount, p_content, v_time);
-END;
-$$;
-
 -- ============================================================================
 -- 6. HÀM BỔ TRỢ: retry_bank_matching (Khớp bù khi user tạo đơn sau khi đã chuyển)
 -- ============================================================================
@@ -422,10 +397,8 @@ $$;
 -- ============================================================================
 REVOKE ALL ON FUNCTION public._bank_match_and_credit(UUID, TEXT, TEXT, BIGINT, TEXT) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.process_bank_webhook(TEXT, TEXT, BIGINT, TEXT, TIMESTAMP WITH TIME ZONE) FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION public.process_bank_webhook(TEXT, TEXT, BIGINT, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.retry_bank_matching(TEXT) FROM PUBLIC, anon, authenticated;
 
 GRANT EXECUTE ON FUNCTION public._bank_match_and_credit(UUID, TEXT, TEXT, BIGINT, TEXT) TO service_role;
 GRANT EXECUTE ON FUNCTION public.process_bank_webhook(TEXT, TEXT, BIGINT, TEXT, TIMESTAMP WITH TIME ZONE) TO service_role;
-GRANT EXECUTE ON FUNCTION public.process_bank_webhook(TEXT, TEXT, BIGINT, TEXT, TEXT) TO service_role;
 GRANT EXECUTE ON FUNCTION public.retry_bank_matching(TEXT) TO service_role;
