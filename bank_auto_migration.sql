@@ -22,29 +22,9 @@ CREATE TABLE IF NOT EXISTS public.bank_transactions (
 );
 
 -- Đảm bảo bảng topups có các cột cần thiết
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_schema = 'public' AND table_name = 'topups' AND column_name = 'bank_transaction_id'
-    ) THEN
-        ALTER TABLE public.topups ADD COLUMN bank_transaction_id UUID REFERENCES public.bank_transactions(id);
-    END IF;
-
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_schema = 'public' AND table_name = 'topups' AND column_name = 'transfer_note'
-    ) THEN
-        ALTER TABLE public.topups ADD COLUMN transfer_note TEXT;
-    END IF;
-
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_schema = 'public' AND table_name = 'topups' AND column_name = 'request_code'
-    ) THEN
-        ALTER TABLE public.topups ADD COLUMN request_code TEXT;
-    END IF;
-END $$;
+ALTER TABLE public.topups ADD COLUMN IF NOT EXISTS bank_transaction_id UUID;
+ALTER TABLE public.topups ADD COLUMN IF NOT EXISTS transfer_note TEXT;
+ALTER TABLE public.topups ADD COLUMN IF NOT EXISTS request_code TEXT;
 
 -- Đặt giá trị mặc định an toàn cho bảng topups
 DO $$
