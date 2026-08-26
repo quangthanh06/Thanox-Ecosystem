@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Button } from '../ui/Button';
+import { ProductImage } from '../ui/SafeImage';
 import {
   Trash2,
   ArrowLeft,
@@ -139,27 +140,32 @@ export const StorefrontCart: React.FC = () => {
                 key={cartItemKey}
                 className="glass-standard rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-white/8 shadow-md"
               >
-                <div className="space-y-1 sm:max-w-md">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] uppercase font-bold text-[#C084FC]">
-                      {item.product.category}
-                    </span>
-                    {item.selectedPackage?.name && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 font-bold border border-amber-500/25">
-                        {item.selectedPackage.name}
-                      </span>
-                    )}
-                    {isSellerDiscount && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 font-bold border border-cyan-500/25">
-                        Giá Đại Lý
-                      </span>
-                    )}
+                <div className="flex items-center gap-3.5 sm:max-w-md">
+                  <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0 border border-white/10 shadow-sm bg-[#121124]">
+                    <ProductImage product={item.product} className="w-full h-full object-cover" />
                   </div>
-                  <h3 className="font-display font-bold text-sm sm:text-base text-[#F4F2FF] line-clamp-1">
-                    {item.product.name}
-                  </h3>
-                  <div className="font-display font-black text-sm text-emerald-300">
-                    {itemPrice.toLocaleString('vi-VN')}đ
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] uppercase font-bold text-[#C084FC]">
+                        {item.product.category}
+                      </span>
+                      {item.selectedPackage?.name && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 font-bold border border-amber-500/25">
+                          {item.selectedPackage.name}
+                        </span>
+                      )}
+                      {isSellerDiscount && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 font-bold border border-cyan-500/25">
+                          Giá Đại Lý
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-display font-bold text-sm sm:text-base text-[#F4F2FF] line-clamp-1">
+                      {item.product.name}
+                    </h3>
+                    <div className="font-display font-black text-sm text-emerald-300">
+                      {itemPrice.toLocaleString('vi-VN')}đ
+                    </div>
                   </div>
                 </div>
 

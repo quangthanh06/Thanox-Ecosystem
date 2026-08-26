@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { OptimizedImage } from './OptimizedImage';
+import { Product } from '../../types';
 
-interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+export interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   fallbackCategory?: string;
   fallbackText?: string;
   priority?: boolean;
+  product?: Partial<Product> | null;
 }
 
 // Local high-speed zero-latency gaming banners (AVIF / WebP ready)
@@ -18,43 +18,69 @@ export const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
   'TÀI KHOẢN GAME': '/thanox-original-banner.webp',
   'KEY VIP': '/gojo-eyes-banner.webp',
   'LIÊN QUÂN IOS': '/thanox-master-banner.webp',
-  DEFAULT: '/thanox-master-banner.webp',
+  DEFAULT: '/placeholder-product.webp',
 };
 
-export const CATEGORY_EMOJIS: Record<string, string> = {
-  'FILE ANDROID': '🤖',
-  'FILE IOS': '🍎',
-  'MENU FF': '🎯',
-  'PROXY IOS': '🌐',
-  'PROXY RIÊNG': '⚡',
-  'ACC CLONE': '🎮',
-  'TÀI KHOẢN GAME': '💎',
-  'KEY VIP': '🔑',
-  'LIÊN QUÂN IOS': '⚔️',
-};
+/**
+ * Universal helper to resolve product image URL with infallible fallbacks.
+ * Sources checked in order:
+ * 1. product.image
+ * 2. product.imageUrl
+ * 3. product.image_url
+ * 4. product.images[0]
+ * 5. Category banner fallback
+ * 6. /placeholder-product.webp
+ */
+export function getProductImageSrc(product?: Partial<Product> | null): string {
+  if (!product) return '/placeholder-product.webp';
+
+  const candidates = [
+    product.image,
+    product.imageUrl,
+    product.image_url,
+    ...(Array.isArray(product.images) ? product.images : []),
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim().length > 0) {
+      return candidate.trim();
+    }
+  }
+
+  const normalizedCategory = (product.category || '').toUpperCase().trim();
+  return (
+    CATEGORY_FALLBACK_IMAGES[normalizedCategory] ||
+    CATEGORY_FALLBACK_IMAGES['DEFAULT'] ||
+    '/placeholder-product.webp'
+  );
+}
 
 /**
  * High-Performance Product Image with AVIF/WebP Next-Gen formats, responsive srcset, and 0ms Cyber Gradient
  */
 export const ProductImage: React.FC<SafeImageProps> = ({
   src,
+  product,
   alt,
-  fallbackCategory = 'DEFAULT',
+  fallbackCategory,
   fallbackText,
   className = '',
   priority = false,
   ...props
 }) => {
-  const normalizedCategory = (fallbackCategory || '').toUpperCase().trim();
+  const effectiveCategory = fallbackCategory || product?.category || 'DEFAULT';
+  const normalizedCategory = (effectiveCategory || '').toUpperCase().trim();
   const fallbackUrl =
     CATEGORY_FALLBACK_IMAGES[normalizedCategory] ||
     CATEGORY_FALLBACK_IMAGES['DEFAULT'] ||
-    '/thanox-master-banner.webp';
+    '/placeholder-product.webp';
+
+  const effectiveSrc = src || (product ? getProductImageSrc(product) : fallbackUrl);
 
   return (
     <OptimizedImage
-      src={src}
-      alt={alt || 'Product Image'}
+      src={effectiveSrc}
+      alt={alt || product?.name || 'Product Image'}
       fallbackSrc={fallbackUrl}
       priority={priority}
       className={className}

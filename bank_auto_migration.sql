@@ -455,3 +455,30 @@ REVOKE ALL ON FUNCTION public.retry_bank_matching(TEXT) FROM PUBLIC, anon, authe
 GRANT EXECUTE ON FUNCTION public._bank_match_and_credit(UUID, TEXT, TEXT, BIGINT, TEXT) TO service_role;
 GRANT EXECUTE ON FUNCTION public.process_bank_webhook(TEXT, TEXT, BIGINT, TEXT, TIMESTAMP WITH TIME ZONE) TO service_role;
 GRANT EXECUTE ON FUNCTION public.retry_bank_matching(TEXT) TO service_role;
+
+-- ============================================================================
+-- 8. STORAGE BUCKET CHO ẢNH SẢN PHẨM & TỆP TIN (store_media)
+-- ============================================================================
+DO $$
+BEGIN
+    INSERT INTO storage.buckets (id, name, public)
+    VALUES ('store_media', 'store_media', true)
+    ON CONFLICT (id) DO UPDATE SET public = true;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+    DROP POLICY IF EXISTS "store_media_public_read" ON storage.objects;
+    CREATE POLICY "store_media_public_read" ON storage.objects FOR SELECT USING (bucket_id = 'store_media');
+
+    DROP POLICY IF EXISTS "store_media_public_insert" ON storage.objects;
+    CREATE POLICY "store_media_public_insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'store_media');
+
+    DROP POLICY IF EXISTS "store_media_public_update" ON storage.objects;
+    CREATE POLICY "store_media_public_update" ON storage.objects FOR UPDATE USING (bucket_id = 'store_media');
+
+    DROP POLICY IF EXISTS "store_media_public_delete" ON storage.objects;
+    CREATE POLICY "store_media_public_delete" ON storage.objects FOR DELETE USING (bucket_id = 'store_media');
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;

@@ -54,6 +54,8 @@ export interface Product {
   featured: boolean;
   isLocked?: boolean; // Khóa sản phẩm chống ghi đè khi nâng cấp hệ thống / reset
   image?: string;
+  imageUrl?: string;
+  image_url?: string;
   images?: string[];
   primaryImage?: string;
   updatedAt?: string;

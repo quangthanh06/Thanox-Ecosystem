@@ -275,49 +275,58 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const localPkgs = local?.packages || local?.plans || [];
             const packages = dbPackages.length > 0 ? dbPackages : settingsPkgs.length > 0 ? settingsPkgs : localPkgs;
 
+            // Database ALWAYS wins for image / image_url!
+            const dbImageUrl = p.image_url || (Array.isArray(p.images) && p.images[0]) || '';
+            const finalImage = dbImageUrl || local?.image || '/placeholder-product.webp';
+            const finalImages = Array.isArray(p.images) && p.images.length > 0
+              ? p.images
+              : (finalImage ? [finalImage] : (local?.images || []));
+
             return {
-            id: p.id,
-            name: p.name,
-            category: p.category,
-            price: p.price,
-            sellerPrice: p.sellerPrice ?? p.seller_price,
-            basePrice: p.original_price,
-            stock: p.stock === 'unlimited' ? 'unlimited' : Number(p.stock) || 0,
-            status: p.status as ProductStatus,
-            description: p.description || '',
-            image: p.image_url || local?.image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80',
-            // ONLY LOAD FOR ADMIN! We will fix this in RLS later.
-            downloadLinkOrKeys: p.hidden_keys_or_links || local?.downloadLinkOrKeys || '',
-            soldCount: (() => {
-              const raw = p.sold_count ?? local?.soldCount;
-              if (raw && raw > 0) return raw;
-              let hash = 0;
-              for (let i = 0; i < p.id.length; i++) hash = (hash << 5) - hash + p.id.charCodeAt(i);
-              return (Math.abs(hash) % 28) + 18;
-            })(),
-            sold: (() => {
-              const raw = p.sold_count ?? local?.soldCount;
-              if (raw && raw > 0) return raw;
-              let hash = 0;
-              for (let i = 0; i < p.id.length; i++) hash = (hash << 5) - hash + p.id.charCodeAt(i);
-              return (Math.abs(hash) % 28) + 18;
-            })(),
-            featured: p.featured ?? local?.featured ?? true,
-            // === Trường mở rộng: ưu tiên DB, fallback về bản localStorage ===
-            packages,
-            plans: packages,
-            productType: (p.product_type as Product['productType']) || local?.productType,
-            isSale: p.is_sale ?? local?.isSale,
-            saleActive: p.is_sale ?? local?.saleActive,
-            salePrice: p.sale_price ?? local?.salePrice,
-            instructions: p.instructions || local?.instructions || '',
-            accountsList: p.accounts_list || local?.accountsList || '',
-            images: Array.isArray(p.images) ? (p.images as string[]) : local?.images,
-            downloadUrl: p.download_url || local?.downloadUrl || '',
-            licenseKeys: local?.licenseKeys || '',
-            attachedFileName: local?.attachedFileName || '',
-            attachedFileSize: local?.attachedFileSize || '',
-            attachedFileData: local?.attachedFileData || '',
+              id: p.id,
+              name: p.name,
+              category: p.category,
+              price: p.price,
+              sellerPrice: p.sellerPrice ?? p.seller_price,
+              basePrice: p.original_price,
+              stock: p.stock === 'unlimited' ? 'unlimited' : Number(p.stock) || 0,
+              status: p.status as ProductStatus,
+              description: p.description || '',
+              image: finalImage,
+              imageUrl: finalImage,
+              image_url: finalImage,
+              images: finalImages,
+              // ONLY LOAD FOR ADMIN! We will fix this in RLS later.
+              downloadLinkOrKeys: p.hidden_keys_or_links || local?.downloadLinkOrKeys || '',
+              soldCount: (() => {
+                const raw = p.sold_count ?? local?.soldCount;
+                if (raw && raw > 0) return raw;
+                let hash = 0;
+                for (let i = 0; i < p.id.length; i++) hash = (hash << 5) - hash + p.id.charCodeAt(i);
+                return (Math.abs(hash) % 28) + 18;
+              })(),
+              sold: (() => {
+                const raw = p.sold_count ?? local?.soldCount;
+                if (raw && raw > 0) return raw;
+                let hash = 0;
+                for (let i = 0; i < p.id.length; i++) hash = (hash << 5) - hash + p.id.charCodeAt(i);
+                return (Math.abs(hash) % 28) + 18;
+              })(),
+              featured: p.featured ?? local?.featured ?? true,
+              // === Trường mở rộng: ưu tiên DB, fallback về bản localStorage ===
+              packages,
+              plans: packages,
+              productType: (p.product_type as Product['productType']) || local?.productType,
+              isSale: p.is_sale ?? local?.isSale,
+              saleActive: p.is_sale ?? local?.saleActive,
+              salePrice: p.sale_price ?? local?.salePrice,
+              instructions: p.instructions || local?.instructions || '',
+              accountsList: p.accounts_list || local?.accountsList || '',
+              downloadUrl: p.download_url || local?.downloadUrl || '',
+              licenseKeys: local?.licenseKeys || '',
+              attachedFileName: local?.attachedFileName || '',
+              attachedFileSize: local?.attachedFileSize || '',
+              attachedFileData: local?.attachedFileData || '',
             };
           });
           
@@ -1607,11 +1616,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Use UUID to match Supabase
     const newId = crypto.randomUUID ? crypto.randomUUID() : 'prod-' + Date.now();
 
+    const finalImage = prodData.image || prodData.imageUrl || (prodData.images && prodData.images[0]) || '';
+    const finalImages = Array.isArray(prodData.images) && prodData.images.length > 0
+      ? prodData.images
+      : (finalImage ? [finalImage] : []);
+
     const newProduct: Product = {
       ...prodData,
       name: sanitizedName,
       price: sanitizedPrice,
       originalPrice: sanitizedOriginalPrice,
+      image: finalImage,
+      imageUrl: finalImage,
+      image_url: finalImage,
+      images: finalImages,
       id: newId,
       soldCount: Math.floor(Math.random() * 21) + 18,
       sold: Math.floor(Math.random() * 21) + 18,
@@ -1637,7 +1655,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         stock: newProduct.stock?.toString() || 'unlimited',
         status: newProduct.status,
         description: newProduct.description,
-        image_url: newProduct.image,
+        image_url: finalImage,
+        images: finalImages,
         hidden_keys_or_links: newProduct.downloadLinkOrKeys
       };
       const extendedPayload = productsExtendedReady === true ? buildExtendedProductPayload(newProduct) : {};
@@ -1662,11 +1681,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     let updatedProduct: Product | null = null;
     const updatedList = products.map((p) => {
       if (p.id === id) {
+        const finalImage = updates.image || updates.imageUrl || (updates.images && updates.images[0]) || p.image || p.imageUrl || (p.images && p.images[0]) || '';
+        const finalImages = Array.isArray(updates.images)
+          ? updates.images
+          : (Array.isArray(p.images) && p.images.length > 0 ? p.images : (finalImage ? [finalImage] : []));
+
         updatedProduct = {
           ...p,
           ...updates,
           name: updates.name !== undefined ? updates.name.trim() : p.name,
           price: updates.price !== undefined ? Math.max(0, updates.price) : p.price,
+          image: finalImage,
+          imageUrl: finalImage,
+          image_url: finalImage,
+          images: finalImages,
           isLocked: updates.isLocked !== undefined ? updates.isLocked : true,
           updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
         };
@@ -1679,6 +1707,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (updatedProduct) {
       const p = updatedProduct as Product;
       try {
+        const finalImg = p.image || p.imageUrl || (p.images && p.images[0]) || '';
+        const finalImgs = Array.isArray(p.images) && p.images.length > 0 ? p.images : (finalImg ? [finalImg] : []);
+
         const baseUpdate = {
           name: p.name,
           category: p.category,
@@ -1688,7 +1719,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           stock: p.stock?.toString() || 'unlimited',
           status: p.status,
           description: p.description,
-          image_url: p.image,
+          image_url: finalImg,
+          images: finalImgs,
           hidden_keys_or_links: p.downloadLinkOrKeys
         };
         const extendedPayload = productsExtendedReady === true ? buildExtendedProductPayload(p) : {};

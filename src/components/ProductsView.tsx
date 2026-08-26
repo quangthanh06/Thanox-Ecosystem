@@ -208,30 +208,44 @@ export const ProductsView: React.FC = () => {
   };
 
   const handleImageFilesUpload = async (files: FileList | null) => {
-      if (!files || files.length === 0) return;
+    if (!files || files.length === 0) return;
+    setIsUploading(true);
+    try {
+      const fileList = Array.from(files);
+      const uploadedUrls: string[] = [];
 
-      Array.from(files).forEach(async (file) => {
+      for (const file of fileList) {
         if (!file.type.startsWith('image/')) {
-          showToast('Vui lòng chọn file hình ảnh (PNG, JPG, WEBP)', 'error');
-          return;
+          showToast(`File "${file.name}" không phải là ảnh hợp lệ (PNG, JPG, WEBP, GIF)`, 'error');
+          continue;
         }
         try {
           const url = await uploadMediaToSupabase(file, 'products');
-          setFormData((prev) => {
-            const currentImages = prev.images || [];
-            const newImages = [...currentImages, url];
-            return {
-              ...prev,
-              images: newImages,
-              image: prev.image || url,
-            };
-          });
-          showToast('Đã tải ảnh lên Cloud thành công!', 'success');
-        } catch (e: any) {
-          showToast('Đã tải ảnh lên Cloud thành công!', 'success');
+          if (url) {
+            uploadedUrls.push(url);
+          }
+        } catch (uploadErr: any) {
+          console.error('Upload image error:', uploadErr);
+          showToast(`Lỗi tải ảnh "${file.name}": ${uploadErr.message || 'Thất bại'}`, 'error');
         }
-      });
-    };
+      }
+
+      if (uploadedUrls.length > 0) {
+        setFormData((prev) => {
+          const currentImages = prev.images || [];
+          const newImages = [...currentImages, ...uploadedUrls];
+          return {
+            ...prev,
+            images: newImages,
+            image: prev.image || uploadedUrls[0],
+          };
+        });
+        showToast(`Đã tải lên Cloud thành công ${uploadedUrls.length} hình ảnh!`, 'success');
+      }
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
     const removeImage = (indexToRemove: number) => {
     setFormData((prev) => {
@@ -408,11 +422,24 @@ export const ProductsView: React.FC = () => {
       finalDelivery = formData.licenseKeys || formData.downloadUrl || formData.downloadLinkOrKeys;
     }
 
+    if (isUploading) {
+      showToast('Đang tải hình ảnh/tệp lên Cloud, vui lòng đợi trong giây lát...', 'info');
+      return;
+    }
+
     const finalSalePrice = formData.isSale && formData.salePrice && formData.salePrice > 0 ? formData.salePrice : undefined;
     const finalSellerPrice = formData.sellerPrice && formData.sellerPrice > 0 ? formData.sellerPrice : formData.price;
+    const finalImage = formData.image || (formData.images && formData.images[0]) || '';
+    const finalImages = Array.isArray(formData.images) && formData.images.length > 0
+      ? formData.images
+      : (finalImage ? [finalImage] : []);
 
     const payload: Partial<Product> = {
       ...formData,
+      image: finalImage,
+      imageUrl: finalImage,
+      image_url: finalImage,
+      images: finalImages,
       isSale: formData.isSale,
       saleActive: formData.isSale,
       salePrice: finalSalePrice,
@@ -1986,24 +2013,45 @@ export const ProductsView: React.FC = () => {
                   <div className="flex gap-2">
                     <input
                       type="url"
-                      placeholder="https://..."
+                      id="direct-image-url-input"
+                      placeholder="https://... (dán link ảnh và bấm Thêm)"
                       className="flex-1 bg-[#161626] border border-white/10 rounded-xl px-3 py-2 text-xs text-[#F0EDFF] focus:outline-none focus:border-[#7C3AED]"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
-                          const val = (e.target as HTMLInputElement).value.trim();
+                          const input = e.target as HTMLInputElement;
+                          const val = input.value.trim();
                           if (val) {
                             setFormData((prev) => ({
                               ...prev,
                               images: [...(prev.images || []), val],
                               image: prev.image || val,
                             }));
-                            (e.target as HTMLInputElement).value = '';
-                            showToast('Đã thêm link ảnh!', 'success');
+                            input.value = '';
+                            showToast('Đã thêm link ảnh vào sản phẩm!', 'success');
                           }
                         }
                       }}
                     />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const input = document.getElementById('direct-image-url-input') as HTMLInputElement | null;
+                        const val = input?.value?.trim();
+                        if (val) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            images: [...(prev.images || []), val],
+                            image: prev.image || val,
+                          }));
+                          input.value = '';
+                          showToast('Đã thêm link ảnh vào sản phẩm!', 'success');
+                        }
+                      }}
+                      className="px-3 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer"
+                    >
+                      Thêm
+                    </button>
                   </div>
                 </div>
 

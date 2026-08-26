@@ -246,6 +246,7 @@ export const StorefrontProducts: React.FC = () => {
                     className="relative aspect-video rounded-2xl overflow-hidden flex items-center justify-center cursor-pointer group-hover:border-[#7C3AED]/30 transition-colors"
                   >
                     <ProductImage
+                      product={product}
                       src={product.image}
                       alt={product.name}
                       fallbackCategory={product.category}

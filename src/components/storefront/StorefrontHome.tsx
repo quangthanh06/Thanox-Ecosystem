@@ -236,6 +236,7 @@ export const StorefrontHome: React.FC = () => {
                 >
                   {currentSlide.image ? (
                     <ProductImage
+                      product={currentSlide}
                       src={currentSlide.image}
                       alt={currentSlide.name}
                       fallbackCategory={currentSlide.category}
@@ -403,6 +404,7 @@ export const StorefrontHome: React.FC = () => {
                       className="relative w-full aspect-video rounded-2xl overflow-hidden cursor-pointer group-hover:border-[#7C3AED]/40 transition-colors"
                     >
                       <ProductImage
+                        product={product}
                         src={product.image}
                         alt={product.name}
                         fallbackCategory={product.category}
@@ -582,6 +584,7 @@ export const StorefrontHome: React.FC = () => {
                     className="relative w-full aspect-video rounded-2xl overflow-hidden cursor-pointer group-hover:border-[#7C3AED]/40 transition-colors"
                   >
                     <ProductImage
+                      product={prod}
                       src={prod.image}
                       alt={prod.name}
                       fallbackCategory={prod.category}

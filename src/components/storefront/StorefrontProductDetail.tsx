@@ -56,9 +56,8 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
   </nav>
 );
 
-// ============================================================================
-// 2. SUBCOMPONENT: PRODUCT GALLERY / IMAGE SLOT
-// ============================================================================
+import { ProductImage, getProductImageSrc } from '../ui/SafeImage';
+
 interface ProductGalleryProps {
   product: Product;
   isSeller: boolean;
@@ -66,7 +65,7 @@ interface ProductGalleryProps {
 }
 
 const ProductGallery: React.FC<ProductGalleryProps> = ({ product, isSeller, discountPercent }) => {
-  const productImage = product.image || (product.images && product.images[0]) || '';
+  const productImage = getProductImageSrc(product);
 
   return (
     <div className="space-y-2.5 w-full">
