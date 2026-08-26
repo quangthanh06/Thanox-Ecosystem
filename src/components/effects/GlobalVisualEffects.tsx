@@ -39,13 +39,16 @@ export const GlobalVisualEffects: React.FC = () => {
   const effectsRef = useRef<StoreEffects>(settings.effects || {});
   effectsRef.current = settings.effects || {};
 
-  const densityMultiplierRef = useRef<number>(1.0);
-  densityMultiplierRef.current =
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const baseDensity =
     settings.effects?.particleDensity === 'high'
       ? 1.4
       : settings.effects?.particleDensity === 'low'
       ? 0.6
       : 1.0;
+
+  const densityMultiplierRef = useRef<number>(1.0);
+  densityMultiplierRef.current = isMobile ? baseDensity * 0.5 : baseDensity;
 
   // Persistent Particle Pool across all re-renders
   const particlesRef = useRef<SmoothParticle[]>([]);

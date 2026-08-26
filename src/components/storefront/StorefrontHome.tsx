@@ -23,6 +23,7 @@ import { ThanoxMascot } from '../ui/ThanoxMascot';
 import { LiveDepositAndFeedback } from './LiveDepositAndFeedback';
 import { preloadProductImageList } from '../../utils/imageOptimizer';
 import { ProductImage, CategoryIcon } from '../ui/SafeImage';
+import { OptimizedImage } from '../ui/OptimizedImage';
 
 export const StorefrontHome: React.FC = () => {
   const {
@@ -127,9 +128,11 @@ export const StorefrontHome: React.FC = () => {
                   }}
                 />
               ) : (
-                <img
+                <OptimizedImage
                   src={bannerBg}
                   alt="Thanox Master 4K Live Background"
+                  priority={true}
+                  sizes="100vw"
                   className="w-full h-full object-cover object-center contrast-125 live-motion-image-4k"
                   style={{
                     filter: `brightness(${bannerBrightness}) blur(${bannerBlur}px)`,
@@ -232,9 +235,11 @@ export const StorefrontHome: React.FC = () => {
                   className="w-full h-full relative z-10 rounded-2xl overflow-hidden bg-black/40 flex items-center justify-center animate-in fade-in zoom-in-95 duration-300"
                 >
                   {currentSlide.image ? (
-                    <img
+                    <ProductImage
                       src={currentSlide.image}
                       alt={currentSlide.name}
+                      fallbackCategory={currentSlide.category}
+                      priority={true}
                       className="w-full h-full object-cover rounded-2xl transition-transform duration-500 group-hover/showcase:scale-105"
                       style={{ aspectRatio: '16 / 10', objectFit: 'cover' }}
                     />
@@ -381,7 +386,7 @@ export const StorefrontHome: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {featuredProducts.slice(0, 3).map((product) => {
+            {featuredProducts.slice(0, 3).map((product, pIdx) => {
               const discount = product.originalPrice
                 ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
                 : null;
@@ -401,6 +406,7 @@ export const StorefrontHome: React.FC = () => {
                         src={product.image}
                         alt={product.name}
                         fallbackCategory={product.category}
+                        priority={pIdx < 3}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       {/* Badges on Image */}

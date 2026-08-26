@@ -878,22 +878,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [settings.antiInspectEnabled]);
 
-  // Load Categories from Supabase Cloud (with fallback to local)
+  // Load Categories from Supabase Cloud (safe fallback to categories table only if empty)
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const { data, error } = await supabase.from('categories').select('*');
         if (!error && data && data.length > 0) {
-          const mapped: Category[] = data.map((c: any) => ({
-            id: c.id,
-            name: c.name,
-            slug: c.slug || c.name.toLowerCase().replace(/\s+/g, '-'),
-            icon: c.icon || '📱',
-            image: c.image || '',
-            count: Number(c.count) || 0,
-            status: (c.status as 'active' | 'hidden') || 'active',
-          }));
-          setCategories(mapped);
+          setCategories((prev) => {
+            // Only use fallback if current categories list is empty or default
+            if (prev.length > 0 && prev !== INITIAL_CATEGORIES) return prev;
+            const mapped: Category[] = data.map((c: any) => ({
+              id: c.id,
+              name: c.name,
+              slug: c.slug || c.name.toLowerCase().replace(/\s+/g, '-'),
+              icon: c.icon || '📱',
+              image: c.image || '',
+              count: Number(c.count) || 0,
+              status: (c.status as 'active' | 'hidden') || 'active',
+            }));
+            return mapped;
+          });
         }
       } catch {}
     };

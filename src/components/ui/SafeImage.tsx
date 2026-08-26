@@ -1,22 +1,24 @@
-import React, { useState } from 'react';
-import { Package, Smartphone, Zap, Shield, Key, Gamepad2, Layers } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { OptimizedImage } from './OptimizedImage';
 
 interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   fallbackCategory?: string;
   fallbackText?: string;
+  priority?: boolean;
 }
 
-// Curated high-res, reliable CDN gaming & tech banners matched by category
+// Local high-speed zero-latency gaming banners (AVIF / WebP ready)
 export const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
-  'MENU FF': 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80',
-  'FILE ANDROID': 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80',
-  'FILE IOS': 'https://images.unsplash.com/photo-1512499617640-c74ae3a79d37?auto=format&fit=crop&w=800&q=80',
-  'PROXY IOS': 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80',
-  'PROXY RIÊNG': 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80',
-  'ACC CLONE': 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=800&q=80',
-  'TÀI KHOẢN GAME': 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=800&q=80',
-  'KEY VIP': 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80',
-  DEFAULT: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80',
+  'MENU FF': '/thanox-master-banner.webp',
+  'FILE ANDROID': '/thanox-original-banner.webp',
+  'FILE IOS': '/gojo-eyes-banner.webp',
+  'PROXY IOS': '/thanox-master-banner.webp',
+  'PROXY RIÊNG': '/thanox-original-banner.webp',
+  'ACC CLONE': '/thanox-master-banner.webp',
+  'TÀI KHOẢN GAME': '/thanox-original-banner.webp',
+  'KEY VIP': '/gojo-eyes-banner.webp',
+  'LIÊN QUÂN IOS': '/thanox-master-banner.webp',
+  DEFAULT: '/thanox-master-banner.webp',
 };
 
 export const CATEGORY_EMOJIS: Record<string, string> = {
@@ -28,10 +30,11 @@ export const CATEGORY_EMOJIS: Record<string, string> = {
   'ACC CLONE': '🎮',
   'TÀI KHOẢN GAME': '💎',
   'KEY VIP': '🔑',
+  'LIÊN QUÂN IOS': '⚔️',
 };
 
 /**
- * Product Image with smart fallback to high-resolution category artwork
+ * High-Performance Product Image with AVIF/WebP Next-Gen formats, responsive srcset, and 0ms Cyber Gradient
  */
 export const ProductImage: React.FC<SafeImageProps> = ({
   src,
@@ -39,52 +42,30 @@ export const ProductImage: React.FC<SafeImageProps> = ({
   fallbackCategory = 'DEFAULT',
   fallbackText,
   className = '',
+  priority = false,
   ...props
 }) => {
-  const [hasError, setHasError] = useState(false);
   const normalizedCategory = (fallbackCategory || '').toUpperCase().trim();
-
   const fallbackUrl =
     CATEGORY_FALLBACK_IMAGES[normalizedCategory] ||
-    CATEGORY_FALLBACK_IMAGES['DEFAULT'];
-
-  // Check if URL is clearly empty, broken or invalid
-  const isInvalidUrl = !src || src.trim() === '' || src === 'null' || src === 'undefined';
-
-  if (isInvalidUrl || hasError) {
-    return (
-      <div className={`relative w-full h-full overflow-hidden bg-[#121224] flex items-center justify-center ${className}`}>
-        <img
-          src={fallbackUrl}
-          alt={alt || 'Product Image'}
-          className="w-full h-full object-cover brightness-90 contrast-105"
-          onError={(e) => {
-            // Absolute fallback to pure styled CSS gradient
-            const target = e.currentTarget;
-            target.style.display = 'none';
-          }}
-        />
-        {/* Subtle Cyber Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A14] via-transparent to-black/30 pointer-events-none" />
-      </div>
-    );
-  }
+    CATEGORY_FALLBACK_IMAGES['DEFAULT'] ||
+    '/thanox-master-banner.webp';
 
   return (
-    <img
+    <OptimizedImage
       src={src}
       alt={alt || 'Product Image'}
-      onError={() => setHasError(true)}
+      fallbackSrc={fallbackUrl}
+      priority={priority}
       className={className}
-      loading="lazy"
-      decoding="async"
+      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
       {...props}
     />
   );
 };
 
 /**
- * Category Icon with auto-fallback to Emoji / Gradient Badge
+ * Category Icon with instant display and auto-fallback to Emoji
  */
 export const CategoryIcon: React.FC<{
   icon?: string;
@@ -97,7 +78,17 @@ export const CategoryIcon: React.FC<{
   const normalizedName = (name || '').toUpperCase().trim();
   const defaultEmoji = CATEGORY_EMOJIS[normalizedName] || '📱';
 
-  const potentialImgUrl = image || (icon && (icon.startsWith('http://') || icon.startsWith('https://') || icon.startsWith('data:image')) ? icon : null);
+  const potentialImgUrl =
+    image && image.trim() !== ''
+      ? image
+      : icon && (icon.startsWith('http://') || icon.startsWith('https://') || icon.startsWith('data:image') || icon.startsWith('/'))
+      ? icon
+      : null;
+
+  // Reset error when url changes
+  useEffect(() => {
+    setImgError(false);
+  }, [potentialImgUrl]);
 
   if (potentialImgUrl && !imgError) {
     return (
@@ -106,16 +97,22 @@ export const CategoryIcon: React.FC<{
         alt={name}
         onError={() => setImgError(true)}
         className={`${className} object-cover rounded-xl`}
-        loading="lazy"
+        loading="eager"
+        decoding="async"
       />
     );
   }
 
-  // If icon is a simple emoji
-  if (icon && !icon.startsWith('http') && icon.length <= 4) {
-    return <span className="text-xl leading-none">{icon}</span>;
-  }
+  // If icon is a simple emoji or text
+  const displayIcon =
+    icon && !icon.startsWith('http') && !icon.startsWith('/') && icon.trim().length > 0 && icon.length <= 4
+      ? icon
+      : defaultEmoji;
 
-  // Fallback Emoji based on name
-  return <span className="text-xl leading-none">{defaultEmoji}</span>;
+  return (
+    <div className="w-full h-full flex items-center justify-center select-none leading-none">
+      <span className="text-xl sm:text-2xl leading-none flex items-center justify-center">{displayIcon}</span>
+    </div>
+  );
 };
+

@@ -15,7 +15,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
 }) => {
   const { settings } = useStore();
   const logoCfg: LogoSettings = settings.logoSettings || {
-    logoUrl: '/thanox-logo.png',
+    logoUrl: '/thanox-logo.webp',
     showBorder: false,
     borderStyle: 'purple_cyan',
     borderGlow: false,
@@ -28,7 +28,8 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   const size = sizeOverride || logoCfg.size || 'md';
   const shape = logoCfg.shape || 'squircle';
   const borderStyle = logoCfg.borderStyle || 'purple_cyan';
-  const logoUrl = logoCfg.logoUrl || '/thanox-logo.png';
+  const rawLogoUrl = logoCfg.logoUrl || '/thanox-logo.webp';
+  const logoUrl = rawLogoUrl === '/thanox-logo.png' ? '/thanox-logo.webp' : rawLogoUrl;
   const scalePercent = logoCfg.scale || 110;
 
   // Size classes
@@ -68,17 +69,32 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   const borderGrad = borderGradients[borderStyle] || borderGradients.purple_cyan;
   const glowShadow = logoCfg.borderGlow && showBorder ? 'shadow-[0_0_20px_rgba(124,58,237,0.6)]' : 'shadow-md';
 
+  const logoElement = (
+    <picture className="w-full h-full flex items-center justify-center">
+      {logoUrl.includes('thanox-logo') && (
+        <>
+          <source type="image/avif" srcSet="/thanox-logo.avif" />
+          <source type="image/webp" srcSet="/thanox-logo.webp" />
+        </>
+      )}
+      <img
+        src={logoUrl}
+        alt="Thanox Logo"
+        loading="eager"
+        decoding="async"
+        fetchPriority="high"
+        style={{ transform: `scale(${scalePercent / 100})` }}
+        className={`w-full h-full object-cover object-center ${shapeClass} transition-transform duration-300 group-hover:scale-125`}
+      />
+    </picture>
+  );
+
   if (!showBorder || borderStyle === 'none') {
     return (
       <div
         className={`${sizeClasses} ${shapeClass} overflow-hidden bg-transparent flex items-center justify-center shrink-0 ${className}`}
       >
-        <img
-          src={logoUrl}
-          alt="Thanox Logo"
-          style={{ transform: `scale(${scalePercent / 100})` }}
-          className={`w-full h-full object-cover object-center ${shapeClass} transition-transform duration-300 group-hover:scale-125`}
-        />
+        {logoElement}
       </div>
     );
   }
@@ -90,12 +106,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       <div
         className={`w-full h-full bg-[#080811] ${innerShapeClass} flex items-center justify-center overflow-hidden`}
       >
-        <img
-          src={logoUrl}
-          alt="Thanox Logo"
-          style={{ transform: `scale(${scalePercent / 100})` }}
-          className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-125"
-        />
+        {logoElement}
       </div>
     </div>
   );
