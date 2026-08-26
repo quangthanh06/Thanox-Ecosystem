@@ -83,10 +83,10 @@ export const StorefrontDepositQR: React.FC = () => {
   const minDeposit = settings.minDeposit || 10000;
   const maxDeposit = settings.maxDeposit || 10000000;
 
-  // Selected or typed amount
-  const [selectedPreset, setSelectedPreset] = useState<number | null>(50000);
-  const [customAmountText, setCustomAmountText] = useState<string>('50.000');
-  const [activeAmount, setActiveAmount] = useState<number>(50000);
+  // Selected or typed amount - Initially empty, only generated when user clicks or types
+  const [selectedPreset, setSelectedPreset] = useState<number | null>(null);
+  const [customAmountText, setCustomAmountText] = useState<string>('');
+  const [activeAmount, setActiveAmount] = useState<number>(0);
   const [isTyping, setIsTyping] = useState<boolean>(false);
 
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -108,7 +108,7 @@ export const StorefrontDepositQR: React.FC = () => {
   };
 
   // Dynamic Transaction Code for current valid amount session (STT<random_code>)
-  const [transactionCode, setTransactionCode] = useState<string>(() => generateNewTransactionCode());
+  const [transactionCode, setTransactionCode] = useState<string>('');
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isManualChecking, setIsManualChecking] = useState<boolean>(false);
 
