@@ -50,17 +50,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // 1. Authentication (Fail-Closed)
-  const expectedApiKey = process.env.SEPAY_API_KEY;
-  if (!expectedApiKey || expectedApiKey.trim() === '') {
+  const expectedApiKey = (process.env.SEPAY_API_KEY || '').trim().replace(/^["']|["']$/g, '');
+  if (!expectedApiKey) {
     console.error('[SEPAY Webhook] Server configuration error: SEPAY_API_KEY is missing');
     return res.status(500).json({ success: false, error: 'Server authentication configuration missing' });
   }
 
-  const rawAuth = req.headers?.['authorization'] || req.headers?.['apikey'] || req.headers?.['x-api-key'];
-  const authStr = (Array.isArray(rawAuth) ? rawAuth[0] : rawAuth) || '';
-  const providedToken = authStr.replace(/^(Bearer|Apikey)\s+/i, '').trim();
+  const rawAuth =
+    req.headers?.['authorization'] ||
+    req.headers?.['apikey'] ||
+    req.headers?.['x-api-key'] ||
+    req.headers?.['api-key'] ||
+    req.headers?.['sepay-api-key'] ||
+    (req as any).query?.api_key ||
+    (req as any).query?.apiKey ||
+    (req as any).query?.token;
 
-  if (!providedToken || !timingSafeEqual(providedToken, expectedApiKey.trim())) {
+  const authStr = (Array.isArray(rawAuth) ? rawAuth[0] : rawAuth) || '';
+  const providedToken = String(authStr)
+    .replace(/^(Bearer|Apikey|Token)\s+/i, '')
+    .replace(/^["']|["']$/g, '')
+    .trim();
+
+  if (!providedToken || !timingSafeEqual(providedToken, expectedApiKey)) {
+    console.warn('[SEPAY Webhook] Authentication failed: Provided token does not match SEPAY_API_KEY');
     return res.status(401).json({ success: false, error: 'Unauthorized: Invalid or missing API key' });
   }
 
