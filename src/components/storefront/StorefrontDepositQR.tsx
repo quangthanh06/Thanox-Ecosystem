@@ -442,21 +442,6 @@ export const StorefrontDepositQR: React.FC = () => {
     };
   }, [transactionCode, isValidAmount, activeAmount, currentUser.id]);
 
-  // 3. BALANCE INCREASE WATCHER: Vừa thấy số dư ví nhảy lên là bật Popup chúc mừng tức thì
-  const prevBalanceRef = useRef(currentUser.balance);
-  useEffect(() => {
-    if (transactionCode && isValidAmount && currentUser.balance > prevBalanceRef.current) {
-      const added = currentUser.balance - prevBalanceRef.current;
-      setSuccessData({
-        amount: activeAmount || added,
-        code: transactionCode,
-        balance: currentUser.balance,
-      });
-      setShowSuccessModal(true);
-    }
-    prevBalanceRef.current = currentUser.balance;
-  }, [currentUser.balance, transactionCode, isValidAmount, activeAmount]);
-
   // Auto-close Success Modal after 15 seconds
   useEffect(() => {
     if (!showSuccessModal) return;
