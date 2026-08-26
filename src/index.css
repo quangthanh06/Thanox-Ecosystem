@@ -590,26 +590,24 @@ html, body {
 /* ============================================================================
    4K CINEMATIC LIVE MOTION ENGINE (Ken-Burns Breathing, Six Eyes Glow, Light Sweeps)
    ============================================================================ */
+/* GPU-composited transform-only Ken-Burns: animating `filter` here forces a full
+   repaint of the hero image every frame and tanks FPS on mobile. Brightness /
+   contrast are applied statically via inline style instead. */
 @keyframes liveBreathing4k {
   0% {
     transform: scale(1.04) translate(0%, 0%);
-    filter: brightness(1) contrast(1.1);
   }
   25% {
     transform: scale(1.12) translate(-1.2%, -0.8%);
-    filter: brightness(1.05) contrast(1.15);
   }
   50% {
     transform: scale(1.08) translate(1%, -1.2%);
-    filter: brightness(0.98) contrast(1.1);
   }
   75% {
     transform: scale(1.14) translate(-0.8%, 0.8%);
-    filter: brightness(1.06) contrast(1.18);
   }
   100% {
     transform: scale(1.04) translate(0%, 0%);
-    filter: brightness(1) contrast(1.1);
   }
 }
 
@@ -660,7 +658,7 @@ html, body {
 .live-motion-image-4k {
   animation: liveBreathing4k 16s ease-in-out infinite;
   transform-origin: 50% 45%;
-  will-change: transform, filter;
+  will-change: transform;
 }
 
 .six-eyes-glow-fx {
@@ -718,4 +716,3 @@ html, body {
   background-size: 200% 100%;
   animation: skeletonShimmer 1.8s infinite;
 }
-

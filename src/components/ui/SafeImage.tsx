@@ -97,7 +97,7 @@ export const CategoryIcon: React.FC<{
         alt={name}
         onError={() => setImgError(true)}
         className={`${className} object-cover rounded-xl`}
-        loading="eager"
+        loading="lazy"
         decoding="async"
       />
     );
@@ -115,4 +115,3 @@ export const CategoryIcon: React.FC<{
     </div>
   );
 };
-

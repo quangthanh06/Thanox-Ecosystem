@@ -654,14 +654,28 @@ app.post(['/api/webhook/bank', '/api/webhook/sepay', '/api/webhook/thueapi'], (r
 
 // ================= STATIC FILES & SPA FALLBACK =================
 
-// Serve built frontend assets
+// Serve built frontend assets with layered caching strategy:
+// - Hashed Vite bundles (/assets/*): 1 year immutable
+// - Static images & fonts (avif/webp/png/jpg/svg/ico/woff2): 1 year immutable
+// - index.html & SPA fallback: always revalidated so deploys ship instantly
+const IMMUTABLE_RE = /\.(avif|webp|png|jpe?g|gif|svg|ico|woff2?|ttf)$/i;
+
 app.use(express.static(distPath, {
-  maxAge: '1h',
   etag: true,
+  setHeaders(res, filePath) {
+    if (filePath.includes(`${path.sep}assets${path.sep}`) || IMMUTABLE_RE.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else if (/index\.html$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'no-cache');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+    }
+  },
 }));
 
 // Fallback to index.html for React Router SPA
 app.get('*', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache');
   res.sendFile(path.join(distPath, 'index.html'));
 });
 

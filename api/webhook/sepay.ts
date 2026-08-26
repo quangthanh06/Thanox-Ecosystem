@@ -1,9 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-
-/**
- * SEPAY WEBHOOK (sepay.vn)
- * POST /api/webhook/sepay
- */
+import crypto from 'crypto';
 
 interface VercelRequest {
   method?: string;
@@ -15,80 +11,118 @@ interface VercelResponse {
   status(code: number): { json(data: unknown): void };
 }
 
-const safeEqual = (a: string, b: string): boolean => {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-};
+/**
+ * Constant-time comparison to prevent timing attacks on API key verification.
+ */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const bufA = Buffer.from(a, 'utf8');
+  const bufB = Buffer.from(b, 'utf8');
+  if (bufA.length !== bufB.length) {
+    // Run dummy comparison on length mismatch to mitigate timing leaks
+    crypto.timingSafeEqual(bufA, bufA);
+    return false;
+  }
+  return crypto.timingSafeEqual(bufA, bufB);
+}
 
-const parseDate = (raw?: string): string => {
+/**
+ * Parse incoming date to ISO-8601 string safely.
+ */
+function parseDate(raw: unknown): string {
   if (!raw) return new Date().toISOString();
-  const asIso = new Date(raw).getTime();
+  const asIso = new Date(String(raw)).getTime();
   return Number.isFinite(asIso) ? new Date(asIso).toISOString() : new Date().toISOString();
-};
+}
 
+/**
+ * SePay Bank Transfer Webhook Handler (Production Grade)
+ * 
+ * - Fail-closed Authentication with Timing-Safe Comparison
+ * - Service-Role ONLY Supabase Client (No Anon Fallback)
+ * - 100% Atomic RPC Execution via process_bank_webhook
+ * - Zero Client-Side Balance Crediting / No Race Conditions
+ */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Only accept POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, error: 'Method Not Allowed' });
   }
 
-  // 1. Kiểm tra xác thực SePay Webhook (Fail-closed)
-  const authHeader = req.headers?.['authorization'] || req.headers?.['apikey'] || req.headers?.['x-api-key'];
-  const provided = (Array.isArray(authHeader) ? authHeader[0] : authHeader)?.replace(/^Bearer\s+/i, '').replace(/^Apikey\s+/i, '').trim() || '';
-  const expectedKey = process.env.SEPAY_API_KEY;
-
-  if (expectedKey) {
-    if (!provided || !safeEqual(provided, expectedKey)) {
-      console.warn('[SEPAY] Unauthorized webhook request with missing or invalid key');
-      return res.status(401).json({ success: false, error: 'Unauthorized: Invalid or missing API key' });
-    }
+  // 1. Authentication (Fail-Closed)
+  const expectedApiKey = process.env.SEPAY_API_KEY;
+  if (!expectedApiKey || expectedApiKey.trim() === '') {
+    console.error('[SEPAY Webhook] Server configuration error: SEPAY_API_KEY is missing');
+    return res.status(500).json({ success: false, error: 'Server authentication configuration missing' });
   }
 
-  try {
-    const body = req.body || {};
-    console.log('[SEPAY Webhook] Received payload:', JSON.stringify(body));
+  const rawAuth = req.headers?.['authorization'] || req.headers?.['apikey'] || req.headers?.['x-api-key'];
+  const authStr = (Array.isArray(rawAuth) ? rawAuth[0] : rawAuth) || '';
+  const providedToken = authStr.replace(/^(Bearer|Apikey)\s+/i, '').trim();
 
-    // Hỗ trợ cả payload đơn hoặc danh sách mảng
-    const rawList = Array.isArray(body) ? body : (body.transactions || [body]);
+  if (!providedToken || !timingSafeEqual(providedToken, expectedApiKey.trim())) {
+    return res.status(401).json({ success: false, error: 'Unauthorized: Invalid or missing API key' });
+  }
+
+  // 2. Database Connection (Service Role ONLY - Fail-Closed)
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('[SEPAY Webhook] Server configuration error: SUPABASE_SERVICE_ROLE_KEY or SUPABASE_URL is missing');
+    return res.status(500).json({ success: false, error: 'Database service configuration missing' });
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  try {
+    const body = req.body;
+    if (!body || typeof body !== 'object') {
+      return res.status(400).json({ success: false, error: 'Invalid payload: JSON body is required' });
+    }
+
+    // 3. Payload Normalization (Support single transaction object or batch array)
+    const rawList = Array.isArray(body)
+      ? body
+      : (Array.isArray(body.transactions) ? body.transactions : [body]);
+
     const validTxs: Array<{ id: string; amount: number; content: string; time: string }> = [];
 
     for (const item of rawList) {
       if (!item || typeof item !== 'object') continue;
 
-      const rawAmount = item.amountIn !== undefined ? item.amountIn : (item.amount_in !== undefined ? item.amount_in : (item.amount ?? 0));
-      const amountNum = typeof rawAmount === 'number' ? rawAmount : Number(String(rawAmount).replace(/[,\s]/g, ''));
-      const content = String(item.transactionContent || item.transaction_content || item.content || item.description || '').trim();
-      const txId = String(item.id || item.referenceNumber || item.reference_number || item.code || '').trim();
-      const time = parseDate(item.transactionDate || item.transaction_date || item.transferTime);
+      const rawId = item.id ?? item.referenceNumber ?? item.reference_number ?? item.referenceCode ?? item.code;
+      const txId = String(rawId || '').trim();
 
-      if (amountNum > 0 && content && txId) {
-        validTxs.push({ id: txId, amount: Math.round(amountNum), content, time });
+      const rawAmount = item.amountIn ?? item.amount_in ?? item.transferAmount ?? item.amount;
+      const numAmount = typeof rawAmount === 'number'
+        ? rawAmount
+        : Number(String(rawAmount ?? '').replace(/[,\s]/g, ''));
+      const amount = Math.round(numAmount);
+
+      const rawContent = item.transactionContent ?? item.transaction_content ?? item.content ?? item.description ?? '';
+      const content = String(rawContent).trim().slice(0, 500);
+
+      const time = parseDate(item.transactionDate ?? item.transaction_date ?? item.transferTime ?? item.created_at);
+
+      if (txId && Number.isFinite(amount) && amount > 0 && amount <= 1_000_000_000 && content) {
+        validTxs.push({ id: txId, amount, content, time });
       }
     }
 
     if (validTxs.length === 0) {
-      return res.status(200).json({ success: true, processed: 0, message: 'No valid deposit transactions' });
+      return res.status(400).json({
+        success: false,
+        error: 'No valid deposit transactions found in payload (requires id, amount > 0, content)',
+      });
     }
 
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('[SEPAY] Missing Supabase credentials in ENV');
-      return res.status(500).json({ success: false, error: 'Database credentials missing' });
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-
-    const results = [];
-    for (const tx of validTxs) {
-      console.log(`[SEPAY] Processing tx: ${tx.amount}đ - "${tx.content}" (ID: ${tx.id})`);
-
-      // 1. Thực thi Stored Procedure RPC
-      const { data: rpcData, error: rpcError } = await supabase.rpc('process_bank_webhook', {
+    // 4. Atomic Execution via process_bank_webhook RPC
+    if (validTxs.length === 1) {
+      const tx = validTxs[0];
+      const { data, error } = await supabase.rpc('process_bank_webhook', {
         p_provider: 'sepay',
         p_transaction_id: tx.id,
         p_amount: tx.amount,
@@ -96,113 +130,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         p_transfer_time: tx.time,
       });
 
-      if (!rpcError && rpcData?.status === 'success') {
-        results.push({ txId: tx.id, status: 'success', rpc: rpcData });
-        continue;
+      if (error) {
+        console.error('[SEPAY Webhook] RPC Execution Error:', error.message);
+        return res.status(500).json({ success: false, error: 'Database execution failed' });
       }
 
-      // 2. Intelligent Fallback: Nếu RPC chưa khớp (do topup chưa kịp tạo hoặc sai định dạng), tự động khớp ngay
-      console.log('[SEPAY] RPC did not directly succeed, running smart fallback match for:', tx.content);
+      // Return exact RPC result: { status: 'success' | 'ignored' | 'manual_review', ... }
+      return res.status(200).json(data);
+    }
 
-      // Lưu transaction vào bank_transactions nếu chưa có
-      await supabase
-        .from('bank_transactions')
-        .upsert(
-          {
-            provider: 'sepay',
-            provider_transaction_id: tx.id,
-            amount: tx.amount,
-            content: tx.content,
-            transfer_time: tx.time,
-            status: 'pending',
-          },
-          { onConflict: 'provider,provider_transaction_id' }
-        );
+    // Batch transaction processing
+    const results = [];
+    for (const tx of validTxs) {
+      const { data, error } = await supabase.rpc('process_bank_webhook', {
+        p_provider: 'sepay',
+        p_transaction_id: tx.id,
+        p_amount: tx.amount,
+        p_content: tx.content,
+        p_transfer_time: tx.time,
+      });
 
-      // Tìm topup pending khớp nội dung
-      const { data: pendingTopups } = await supabase
-        .from('topups')
-        .select('*')
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
-
-      let matchedTopup: any = null;
-      if (pendingTopups && pendingTopups.length > 0) {
-        matchedTopup = pendingTopups.find((t: any) => {
-          if (!t.transfer_note) return false;
-          const noteClean = t.transfer_note.trim().toLowerCase();
-          const contentClean = tx.content.toLowerCase();
-          return contentClean.includes(noteClean) || noteClean.includes(contentClean);
-        });
-      }
-
-      if (matchedTopup) {
-        console.log(`[SEPAY Fallback] Matched topup ${matchedTopup.id} for user ${matchedTopup.user_id}`);
-        // Cộng tiền cho User
-        const { data: prof } = await supabase
-          .from('profiles')
-          .select('balance')
-          .eq('id', matchedTopup.user_id)
-          .maybeSingle();
-
-        const newBal = (Number(prof?.balance) || 0) + tx.amount;
-        await supabase
-          .from('profiles')
-          .update({ balance: newBal })
-          .eq('id', matchedTopup.user_id);
-
-        await supabase
-          .from('topups')
-          .update({ status: 'approved', amount: tx.amount })
-          .eq('id', matchedTopup.id);
-
-        await supabase
-          .from('bank_transactions')
-          .update({ status: 'completed', matched_topup_id: matchedTopup.id, matched_user_id: matchedTopup.user_id })
-          .eq('provider_transaction_id', tx.id);
-
-        results.push({ txId: tx.id, status: 'fallback_success', userId: matchedTopup.user_id, amount: tx.amount });
+      if (error) {
+        console.error(`[SEPAY Webhook] RPC Execution Error for tx ${tx.id}:`, error.message);
+        results.push({ id: tx.id, status: 'error', error: error.message });
       } else {
-        // Tìm theo username trong nội dung chuyển khoản
-        const { data: allProfiles } = await supabase
-          .from('profiles')
-          .select('id, username, balance');
-
-        let matchedProfile: any = null;
-        if (allProfiles && allProfiles.length > 0) {
-          matchedProfile = allProfiles.find((p: any) => {
-            if (!p.username || p.username.length < 3) return false;
-            return tx.content.toLowerCase().includes(p.username.toLowerCase());
-          });
-        }
-
-        if (matchedProfile) {
-          console.log(`[SEPAY Fallback] Matched username ${matchedProfile.username} directly from bank content!`);
-          const newBal = (Number(matchedProfile.balance) || 0) + tx.amount;
-          await supabase
-            .from('profiles')
-            .update({ balance: newBal })
-            .eq('id', matchedProfile.id);
-
-          await supabase.from('topups').insert({
-            user_id: matchedProfile.id,
-            user_name: matchedProfile.username,
-            amount: tx.amount,
-            status: 'approved',
-            method: 'VietQR',
-            transfer_note: tx.content,
-            request_code: '#NAP-' + Math.floor(10000 + Math.random() * 90000),
-          });
-
-          await supabase
-            .from('bank_transactions')
-            .update({ status: 'completed', matched_user_id: matchedProfile.id })
-            .eq('provider_transaction_id', tx.id);
-
-          results.push({ txId: tx.id, status: 'username_direct_match', userId: matchedProfile.id, amount: tx.amount });
-        } else {
-          results.push({ txId: tx.id, status: 'manual_review', reason: 'no_matching_topup_or_user' });
-        }
+        results.push({ id: tx.id, ...data });
       }
     }
 
@@ -212,7 +164,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       results,
     });
   } catch (error: any) {
-    console.error('[SEPAY] Webhook processing exception:', error);
-    return res.status(500).json({ success: false, error: error?.message || 'Internal Server Error' });
+    console.error('[SEPAY Webhook] Unexpected Exception:', error);
+    return res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 }

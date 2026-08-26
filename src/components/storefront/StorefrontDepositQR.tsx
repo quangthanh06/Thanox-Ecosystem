@@ -210,29 +210,17 @@ export const StorefrontDepositQR: React.FC = () => {
     }
   };
 
-  // ONE-CLICK PRESET SELECTION WITH ANTI-SPAM LOCK
+  // ONE-CLICK PRESET SELECTION
   const handleSelectPreset = (amt: number) => {
-    // ANTI-SPAM: If an active QR session is running with a different amount, block and notify
-    if (isSessionActive && amt !== activeAmount) {
-      showToast(
-        'Mã QR hiện tại đang chờ thanh toán! Bấm "Đổi Mệnh Giá" nếu bạn muốn chuyển sang số tiền khác.',
-        'warning'
-      );
-      return;
-    }
-
     setIsTyping(false);
     setSelectedPreset(amt);
     setCustomAmountText(amt.toLocaleString('vi-VN'));
     setActiveAmount(amt);
     setQrLoadError(false);
 
-    let codeToUse = transactionCode;
-    if (!codeToUse || !timeLeft || timeLeft <= 0) {
-      codeToUse = generateNewTransactionCode();
-      setTransactionCode(codeToUse);
-      setTimeLeft(300);
-    }
+    let codeToUse = generateNewTransactionCode();
+    setTransactionCode(codeToUse);
+    setTimeLeft(300);
 
     if (isAuthenticated) {
       syncTopupToServer(amt, codeToUse);
@@ -240,14 +228,14 @@ export const StorefrontDepositQR: React.FC = () => {
     scrollToQrSection();
   };
 
-  // Explicitly unlock to choose another denomination
+  // Explicitly reset/clear amount to choose another denomination
   const handleUnlockToChangeAmount = () => {
     setTransactionCode('');
     setTimeLeft(null);
     setSelectedPreset(null);
     setActiveAmount(0);
     setCustomAmountText('');
-    showToast('Đã hủy mã cũ. Vui lòng bấm chọn mệnh giá mới bạn muốn nạp!', 'info');
+    showToast('Đã hủy mã cũ. Vui lòng bấm chọn mệnh giá bạn muốn nạp!', 'info');
   };
 
   // Reset current session to generate a fresh transaction code for same amount
@@ -261,16 +249,8 @@ export const StorefrontDepositQR: React.FC = () => {
     showToast('Đã tạo mới mã giao dịch VietQR!', 'info');
   };
 
-  // Custom Amount change with Anti-Spam protection
+  // Custom Amount change
   const handleCustomAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isSessionActive) {
-      showToast(
-        'Mã QR hiện tại đang chờ thanh toán. Vui lòng bấm "Đổi Mệnh Giá" để nhập số tiền khác!',
-        'warning'
-      );
-      return;
-    }
-
     setIsTyping(true);
     const raw = e.target.value.replace(/\D/g, '');
     if (!raw) {
@@ -836,11 +816,10 @@ export const StorefrontDepositQR: React.FC = () => {
                   </p>
                 </div>
 
-                {/* 1-Click Preset Buttons with Anti-Spam Lock Indicator */}
+                {/* 1-Click Preset Buttons */}
                 <div className="grid grid-cols-3 sm:grid-cols-3 gap-2.5 pt-1">
                   {PRESET_AMOUNTS.map((amt) => {
                     const active = selectedPreset === amt;
-                    const isLockedOther = isSessionActive && !active;
                     const label =
                       amt >= 1000000
                         ? `${amt / 1000000}M`
@@ -855,14 +834,11 @@ export const StorefrontDepositQR: React.FC = () => {
                         className={`py-3 px-2 rounded-2xl text-center font-bold text-xs transition-all border ${
                           active
                             ? 'btn-liquid-primary border-cyan-400/50 shadow-lg shadow-[#7C3AED]/35 scale-[1.03]'
-                            : isLockedOther
-                            ? 'glass-subtle text-[#E2DEFA]/40 border-white/5 opacity-50 hover:opacity-80 hover:border-amber-400/30 cursor-not-allowed'
                             : 'glass-subtle text-[#E2DEFA] border-white/8 hover:border-white/20 hover:text-white hover:bg-white/10 cursor-pointer active:scale-95'
                         }`}
                       >
                         <div className="flex items-center justify-center gap-1">
                           <span className="text-sm font-black">{label}</span>
-                          {isLockedOther && <Lock className="w-2.5 h-2.5 text-amber-400/60" />}
                         </div>
                         <span className="text-[10px] font-normal text-white/70 block mt-0.5">
                           {amt.toLocaleString('vi-VN')}đ
@@ -872,16 +848,12 @@ export const StorefrontDepositQR: React.FC = () => {
                   })}
                 </div>
 
-                {/* Custom Amount Field - Instant Auto QR with Anti-Spam Lock */}
+                {/* Custom Amount Field */}
                 <div className="space-y-2 pt-3 border-t border-white/5">
                   <div className="flex items-center justify-between">
                     <label className="text-[11px] font-semibold text-[#8B84A8] uppercase tracking-wider block">
                       Hoặc nhập số tiền tùy chọn
                     </label>
-                    <span className="text-[10.5px] text-emerald-400 font-bold flex items-center gap-1">
-                      <Zap className="w-3 h-3 text-cyan-400" />
-                      <span>Tự động tạo QR ngay khi gõ</span>
-                    </span>
                   </div>
                   <div className="relative">
                     <input
@@ -889,28 +861,24 @@ export const StorefrontDepositQR: React.FC = () => {
                       inputMode="numeric"
                       value={customAmountText}
                       onChange={handleCustomAmountChange}
-                      disabled={isSessionActive}
                       placeholder={`Tối thiểu ${minDeposit.toLocaleString('vi-VN')}đ`}
-                      className={`w-full glass-input rounded-2xl pl-4 pr-12 py-3 text-xs text-[#F4F2FF] font-bold border-white/15 focus:border-[#7C3AED] ${
-                        isSessionActive ? 'opacity-60 cursor-not-allowed bg-black/40' : ''
-                      }`}
+                      className="w-full glass-input rounded-2xl pl-4 pr-12 py-3 text-xs text-[#F4F2FF] font-bold border-white/15 focus:border-[#7C3AED]"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-[#C084FC]">
                       VND
                     </span>
                   </div>
-                  {isSessionActive && (
-                    <div className="flex items-center justify-between text-[11px] text-amber-300/90 pt-0.5">
+                  {activeAmount > 0 && (
+                    <div className="flex items-center justify-between text-[11px] text-[#A78BFA] pt-0.5">
                       <span className="flex items-center gap-1 font-medium">
-                        <Lock className="w-3 h-3 text-amber-400" />
-                        <span>Đang có mã QR {activeAmount.toLocaleString('vi-VN')}đ chờ nạp</span>
+                        <span>Đang chọn nạp: <strong>{activeAmount.toLocaleString('vi-VN')}đ</strong></span>
                       </span>
                       <button
                         type="button"
                         onClick={handleUnlockToChangeAmount}
                         className="underline font-bold text-amber-300 hover:text-white cursor-pointer"
                       >
-                        Đổi Mệnh Giá Khác
+                        Xóa & Chọn Lại
                       </button>
                     </div>
                   )}
