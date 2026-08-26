@@ -124,7 +124,8 @@ CREATE POLICY "categories_admin_all" ON public.categories FOR ALL TO service_rol
 ALTER TABLE public.store_settings ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "store_settings_read_all" ON public.store_settings;
 CREATE POLICY "store_settings_read_all" ON public.store_settings FOR SELECT USING (true);
-DROP POLICY IF EXISTS "store_settings_admin_all" ON public.store_settings FOR ALL TO service_role USING (true);
+DROP POLICY IF EXISTS "store_settings_admin_all" ON public.store_settings;
+CREATE POLICY "store_settings_admin_all" ON public.store_settings FOR ALL TO service_role USING (true);
 
 -- ============================================================================
 -- 3. XÓA TRIỆT ĐỂ TẤT CẢ PHIÊN BẢN CŨ CỦA CÁC HÀM (TRÁNH LỖI OVERLOAD PGRST203)
