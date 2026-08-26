@@ -1,5 +1,5 @@
 -- ============================================================================
--- SEPAY PRODUCTION HARDENED BANK MIGRATION
+-- SEPAY PRODUCTION HARDENED BANK & SCHEMA MIGRATION
 -- Thanox Ecosystem - Atomic, Idempotent, Fail-Closed Bank Auto Credit System
 -- Deploy: Supabase Dashboard -> SQL Editor -> Dán toàn bộ & Bấm RUN
 -- ============================================================================
@@ -57,6 +57,25 @@ EXCEPTION WHEN OTHERS THEN
     NULL;
 END $$;
 
+-- Đảm bảo bảng categories tồn tại
+CREATE TABLE IF NOT EXISTS public.categories (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    slug TEXT NOT NULL,
+    icon TEXT DEFAULT '📁',
+    image TEXT DEFAULT '',
+    count INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'active',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+);
+
+-- Đảm bảo bảng store_settings tồn tại
+CREATE TABLE IF NOT EXISTS public.store_settings (
+    id TEXT PRIMARY KEY DEFAULT 'default',
+    settings_data JSONB NOT NULL DEFAULT '{}'::jsonb,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+);
+
 -- Tạo Indexes tối ưu tốc độ tra cứu và đối soát
 CREATE INDEX IF NOT EXISTS idx_bank_transactions_provider_tx
 ON public.bank_transactions (provider, provider_transaction_id);
@@ -96,8 +115,19 @@ CREATE POLICY "bank_tx_admin_read" ON public.bank_transactions
   FOR SELECT TO service_role
   USING (true);
 
+ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "categories_read_all" ON public.categories;
+CREATE POLICY "categories_read_all" ON public.categories FOR SELECT USING (true);
+DROP POLICY IF EXISTS "categories_admin_all" ON public.categories;
+CREATE POLICY "categories_admin_all" ON public.categories FOR ALL TO service_role USING (true);
+
+ALTER TABLE public.store_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "store_settings_read_all" ON public.store_settings;
+CREATE POLICY "store_settings_read_all" ON public.store_settings FOR SELECT USING (true);
+DROP POLICY IF EXISTS "store_settings_admin_all" ON public.store_settings FOR ALL TO service_role USING (true);
+
 -- ============================================================================
--- 3. XÓA TẤT CẢ PHIÊN BẢN CŨ CỦA CÁC HÀM
+-- 3. XÓA TRIỆT ĐỂ TẤT CẢ PHIÊN BẢN CŨ CỦA CÁC HÀM (TRÁNH LỖI OVERLOAD PGRST203)
 -- ============================================================================
 DROP FUNCTION IF EXISTS public._bank_match_and_credit(UUID, TEXT, TEXT, BIGINT, TEXT);
 DROP FUNCTION IF EXISTS public.process_bank_webhook(TEXT, TEXT, BIGINT, TEXT, TIMESTAMP WITH TIME ZONE);
