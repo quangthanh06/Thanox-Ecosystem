@@ -1,4 +1,6 @@
+import React, { useState, useEffect } from 'react';
 import { Product } from '../../types';
+import { OptimizedImage } from './OptimizedImage';
 
 export interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   fallbackCategory?: string;
@@ -19,6 +21,18 @@ export const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
   'KEY VIP': '/gojo-eyes-banner.webp',
   'LIÊN QUÂN IOS': '/thanox-master-banner.webp',
   DEFAULT: '/placeholder-product.webp',
+};
+
+export const CATEGORY_EMOJIS: Record<string, string> = {
+  'FILE ANDROID': '🤖',
+  'FILE IOS': '🍎',
+  'MENU FF': '🎯',
+  'PROXY IOS': '🌐',
+  'PROXY RIÊNG': '⚡',
+  'ACC CLONE': '🎮',
+  'TÀI KHOẢN GAME': '💎',
+  'KEY VIP': '🔑',
+  'LIÊN QUÂN IOS': '⚔️',
 };
 
 /**
